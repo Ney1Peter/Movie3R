@@ -10,7 +10,7 @@ Use the command-line arguments to adjust parameters
 such as the model checkpoint path, image sequence directory, image size, device, etc.
 
 Example:
-    python demo.py --model_path src/human3r_896L.pth --size 512 \
+    python demo.py --size 512 \
         --seq_path examples/GoodMornin1.mp4 --subsample 1 --vis_threshold 2 \
         --downsample_factor 1 --use_ttt3r --reset_interval 100
 """
@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument(
         "--model_path",
         type=str,
-        default="src/cut3r_512_dpt_4_64.pth",
+        default="src/human3r_896L.pth",
         help="Path to the pretrained model checkpoint.",
     )
     parser.add_argument(
