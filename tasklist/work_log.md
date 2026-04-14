@@ -34,7 +34,7 @@ Output: /data/wangzheng/Movie3R-dataset/AvatarRex4Human3R/Training/
 
 ### 2. AABB 数据集类（avatarrex.py）
 
-**目的**：实现 A,A,B,B 镜头跳变采样——帧0,1来自相机A的t/t+1，帧2,3来自相机B的t/t+1。
+**目的**：实现 AABB 镜头跳变采样——帧0,1来自相机A的t/t+1，帧2,3来自相机B的t+2/t+3。时间连续，只是中间跳了相机视角。
 
 **关键修复**：
 
@@ -369,16 +369,16 @@ python convert_depth_to_uint16.py -i /path/to/dataset/Training --workers 32
 
 **数据集类**：
 - `AvatarReX_Video`：同一相机内连续帧采样（t, t+1, t+2, t+3），is_video=True
-- `AvatarReX_AABB`：AABB 镜头跳变采样（camA@t, camA@t+1, camB@t, camB@t+1），is_video=False
+- `AvatarReX_AABB`：AABB 镜头跳变采样（camA@t, camA@t+1, camB@t+2, camB@t+3），is_video=False
 - 两个类都继承自 BaseMultiViewDataset，支持 Human3R 标准接口
 
 **采样容量**：
 | 数据集 | 类型 | 序列数 | 帧/序列 | 采样数 |
 |--------|------|--------|---------|--------|
 | zzr | Video | 15 | 2001 | 29,970 |
-| zzr | AABB | 15 | 2001 | 420,000 |
+| zzr | AABB | 15 | 2001 | 419,580 |
 | lbn1 | Video | 16 | 1901 | 30,368 |
-| lbn1 | AABB | 16 | 1901 | 456,000 |
+| lbn1 | AABB | 16 | 1901 | 455,520 |
 
 **训练配置**（trian_human3r.yaml）：
 ```
@@ -405,8 +405,202 @@ train_dataset: 2000 @ ${dataset28}   # AvatarReX_Video zzr
 
 ---
 
-### 17. 待完成事项
+### 17. 训练测试（2026/04/14）
+
+**目标**：验证 AvatarReX 数据 + Human3R 训练流程能正常工作
+
+**数据集配置**：
+```
+train_dataset: 2000 @ AvatarReX_Video(zzr) + 2000 @ AvatarReX_Video(lbn1)
+            + 2000 @ AvatarReX_AABB(zzr) + 2000 @ AvatarReX_AABB(lbn1)
+= 8000 samples/epoch，Video/AABB 各 50%
+```
+
+**预训练模型**：`src/human3r_896L.pth`（1.2B 参数）
+
+**测试步骤与结果**：
+
+1. **数据加载测试** ✅
+   - AvatarReX_Video: 29,970 + 30,368 samples
+   - AvatarReX_AABB: 419,580 + 455,520 samples
+   - Batch shape: [4, 3, 288, 512] ✓
+
+2. **Loss 计算测试** ✅
+   - 成功计算 loss，输出包含：loss, pose_loss, RGBLoss, SMPLLoss
+
+3. **训练启动测试** ✅
+   - Test Epoch 前 11 batch 输出：
+     - loss: ~0.24
+     - pose_loss: ~0.02
+     - RGBLoss: ~0.04
+     - SMPLLoss: ~2.0
+   - GPU 内存：~23GB（batch_size=4）
+
+4. **Test Evaluation Bug**
+   - Crash: `ZeroDivisionError: division by zero` in smpl_model.py
+   - 原因：test dataset 的 SMPL betas 为空
+   - 不影响训练本身，训练正常进行
+
+**实验输出目录**：`Human3R/experiments/avatarrex_zzr_lbn1/`
+```
+experiments/
+└── avatarrex_zzr_lbn1/
+    ├── configs/trian_human3r.yaml  ← 配置副本
+    ├── checkpoints/       ← 模型权重
+    └── logs/             ← tensorboard 日志
+```
+
+**训练命令**：
+```bash
+cd Human3R/src
+source ../.venv/bin/activate
+CUDA_VISIBLE_DEVICES=1 python3 train.py \
+    epochs=1 \
+    batch_size=4 \
+    print_freq=10 \
+    eval_freq=0 \
+    output_dir=../experiments/avatarrex_zzr_lbn1
+```
+
+**当前状态**：正在 GPU 1 上运行 1 epoch 训练
+
+---
+
+### 19. SMPL 过滤坐标 bug（2026/04/14）
+
+**问题现象**：
+- 训练在 batch 31 抛出 `ZeroDivisionError: division by zero`
+- 错误位置：`smpl_model.py` 中 `smpl_mask.sum() == 0`
+- 即该 batch 内所有样本的 SMPL mask 全为 0
+
+**初步调查**：
+- 检查了 avatarrex.py 中 `smplx_transl` 的过滤条件：`smplx_transl[-1] > 0.01`
+- 发现大量帧的 `transl.z` 接近 0（约 0.01m），被过滤掉
+- 其中一个样本：transl = [0.426, 0.760, 0.012] → 过滤后 valid=False
+- 大量帧的 `transl.z ∈ [-0.03, +0.01]`，几乎全部接近 0
+
+**根本原因**：
+
+`smplx_transl` 存的是 **mocap 世界坐标系**（动作捕捉系统坐标），不是相机坐标：
+- X ~ 0.4m（人在 mocap 原点侧面 0.4m）
+- Y ~ 0.75m（人在 mocap 原点上方 0.75m，即身高）
+- Z ~ -0.03 ~ +0.01m（人在 mocap 原点前后，几乎在原点）
+
+而过滤条件 `smplx_transl[-1] > 0.01` 是在检查 mocap Z 是否 > 0.01：
+- mocap Z 几乎都在 0 附近（人在 mocap 原点前后）
+- 所以大量帧被错误过滤，导致 `smpl_mask.sum() == 0`
+
+**正确理解**：
+- 真正需要的是：人在相机前方（相机坐标系 Z > 0）
+- 相机坐标系下的 Z 约为 1.7m（人距相机约 1.7m）
+- 需要将 mocap 世界坐标变换到相机坐标：`smpl_cam = R_c2w.T @ (smpl_world - t_c2w)`
+
+**关键验证**：
+```
+序列 22070928 帧 00001419：
+- smplx_transl (mocap): [0.426, 0.760, 0.012]
+- 相机坐标系下: [?, ?, ~1.7m]  ← 人在相机前方 1.7m
+- 所有帧变换后 camera_z ∈ [1.6, 1.8m] → 100% valid
+```
+
+**修复方案**（avatarrex.py 两处）：
+
+1. **过滤前先变换到相机坐标系**：
+```python
+R_c2w = camera_pose[:3, :3]
+t_c2w = camera_pose[:3, 3]
+
+humans_with_cam_z = []
+for h in annots:
+    smpl_world = np.array(h.get("smplx_transl", [0, 0, 100]), dtype=np.float32)
+    smpl_cam = R_c2w.T @ (smpl_world - t_c2w)  # mocap世界 → 相机坐标
+    h = dict(h)
+    h["_smplx_transl_cam"] = smpl_cam
+    h["_smplx_transl_cam_z"] = smpl_cam[2]
+    humans_with_cam_z.append(h)
+```
+
+2. **按相机坐标 Z 排序和过滤**：
+```python
+# 排序（人在相机前方 Z > 0）
+l_dist = [hh["_smplx_transl_cam_z"] for hh in humans_with_cam_z]
+order = sorted(range(len(l_dist)), key=lambda i: l_dist[i])
+humans_with_cam_z = [humans_with_cam_z[i] for i in order]
+
+# 过滤：相机坐标系 Z > -0.5m 即有效（留足容差）
+humans = [hh for hh in humans_with_cam_z if hh["_smplx_transl_cam_z"] > -0.5]
+```
+
+3. **smpl_dict 使用变换后的值**：
+```python
+if k == "smplx_transl":
+    for h in range(len(humans)):
+        smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
+```
+
+**修复位置**：
+- `AvatarReX_AABB.__getitem__`（约 line 250-303）
+- `AvatarReX_Video.__getitem__`（约 line 496-538）
+
+**修复效果**：
+- 修复前：约 41-59% 帧被过滤（mocap Z 几乎都在 0 附近）
+- 修复后：100% 帧有效（camera_z ∈ [1.6, 1.8m]）
+
+**额外发现**：
+- 原始 `global_orient` 显示 ~90° 旋转，但这是 mocap 系统的旋转，不是 bug
+- SMPL mesh 本身没问题（mesh 渲染正常）
+
+**同时修复**：`smpl_model.py` 中的 `if nhv == 0: return target` guard（line 107），防止以后还有残留问题导致 crash。
+
+---
+
+### 21. 全量微调验证（2026/04/14）
+
+**目标**：将 AvatarReX 数据集 + Human3R 预训练模型跑通全量微调流程
+
+**配置修改**：
+- `freeze='none'`：全量微调（所有参数可训练）
+- `batch_size=1`：44GB 显卡全量微调刚好够用
+
+**模型规模**：
+| 项目 | 数值 |
+|------|------|
+| 参数量 | 1.18B |
+| FP16 显存（仅权重） | ~2.4GB |
+| 全量微调显存（batch=1） | ~42.8GB |
+
+**显存不足记录**：
+- batch_size=4：OOM（44GB 显卡不够）
+- batch_size=2：OOM
+- batch_size=1：通过
+
+**验证结果**（batch_size=1）：
+- batch 0: loss=0.061 ✓
+- batch 10: loss=0.068 ✓
+- batch 20: loss=0.071 ✓
+- batch 40: loss=0.067 ✓
+- GPU 显存：稳定在 42.8GB
+
+**加速方案**（可选）：
+- `batch_size=1 + accum_iter=4`：梯度累积，实际等效 batch_size=4
+- 效果相当于 batch_size=4，但分步计算节省显存
+
+**训练配置**（train.yaml）：
+```yaml
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='none', ...))
+epochs: 1
+batch_size: 1
+print_freq: 10
+eval_freq: 0
+```
+
+---
+
+### 22. 待完成事项
 
 1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（已完成）
-2. **lbn2 深度图**：迁移到其他服务器后继续生成
-3. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
+2. ✅ **训练测试**：数据加载、loss 计算正常（已完成）
+3. ✅ **SMPL 坐标 bug**：已修复并更新 work_log（已完成）
+4. ✅ **全量微调验证**：freeze=none, batch_size=1 通过（已完成）
+5. **lbn2 深度图**：迁移到其他服务器后继续生成
+6. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据

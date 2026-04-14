@@ -155,6 +155,11 @@ class SMPLModel(object):
         K = K.view(-1, *K.shape[2:])
         nhv = int(smpl_mask.sum())
 
+        # If no valid SMPL humans in this batch, return empty target
+        if nhv == 0:
+            target['has_smpl'] = False
+            return target
+
         # Get MHMR input image (high-res, square)
         imgs = torch.stack([view["img"] for view in views], dim=0)
         imgs = imgs.view(-1, *imgs.shape[2:])

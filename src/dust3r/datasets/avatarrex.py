@@ -139,17 +139,17 @@ class AvatarReX_AABB(BaseMultiViewDataset):
 
         # AABB: 两两跨序列组合（允许同序列但这里只有不同序列才有效）
         # seqA, seqB 来自不同的序列目录（不同相机）
-        # t ∈ [0, num_frames-2]（需要 t 和 t+1）
+        # t ∈ [0, num_frames-4]（需要 t, t+1, t+2, t+3 均有效）
         self.samples = []
         for i, seqA in enumerate(self.scenes):
             for j, seqB in enumerate(self.scenes):
                 if i == j:
                     continue  # 跳过同一相机
-                for t in range(self.num_frames - 1):
+                for t in range(self.num_frames - 3):
                     self.samples.append((seqA, seqB, t))
 
         print(f"  AvatarReX_AABB: {len(self.samples):,} samples "
-              f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-1} time steps)")
+              f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps)")
 
     def __len__(self):
         return len(self.samples)
@@ -162,20 +162,25 @@ class AvatarReX_AABB(BaseMultiViewDataset):
 
         seqA_name, seqB_name, t = self.samples[idx]
         t1 = t + 1
+        t2 = t + 2
+        t3 = t + 3
         cam = 0  # 每个序列只有 1 个相机，ID=0
 
         split_path = osp.join(self.ROOT, self.split)
 
-        # SMPL 来自 seqA（同一时刻 t/t1，所有序列 SMPL 相同）
+        # SMPL 来自 motion 序列（所有相机同一时刻的 SMPL 相同）
+        # 时间连续：t, t+1, t+2, t+3 对应 motion 的连续帧
         annots_t  = self._load_smpl(split_path, seqA_name, cam, t)
         annots_t1 = self._load_smpl(split_path, seqA_name, cam, t1)
+        annots_t2 = self._load_smpl(split_path, seqA_name, cam, t2)
+        annots_t3 = self._load_smpl(split_path, seqA_name, cam, t3)
 
         views = []
         view_specs = [
-            (seqA_name, cam, t,  annots_t),   # view 0: seqA @ t
-            (seqA_name, cam, t1, annots_t1),  # view 1: seqA @ t+1
-            (seqB_name, cam, t,  annots_t),   # view 2: seqB @ t (same SMPL)
-            (seqB_name, cam, t1, annots_t1),  # view 3: seqB @ t+1 (same SMPL)
+            (seqA_name, cam, t,  annots_t),   # view 0: 相机A @ t
+            (seqA_name, cam, t1, annots_t1),  # view 1: 相机A @ t+1
+            (seqB_name, cam, t2, annots_t2),  # view 2: 相机B @ t+2（时间连续）
+            (seqB_name, cam, t3, annots_t3),  # view 3: 相机B @ t+3（时间连续）
         ]
 
         for v, (seq_name, cam_id, frame_idx, annots) in enumerate(view_specs):
@@ -247,12 +252,35 @@ class AvatarReX_AABB(BaseMultiViewDataset):
                     resolution, rng=rng, info=f"{seq_name}/{cam_id}/{frame_idx}"
                 )
 
-        # SMPL 整理：按深度（z值）排序，距离近的排前面
-        humans = [h for h in annots if h.get("smplx_transl", [0, 0, 100])[-1] > 0.01]
-        if humans:
-            l_dist = [float(h["smplx_transl"][-1]) for h in humans]
+        # -------------------------------------------------------------------------
+        # smplx_transl 坐标系修复：
+        # 预处理脚本保存的 smplx_transl 是 mocap 世界坐标，
+        # 但过滤/排序时错误地用 mocap Z (> 0.01) 判断"人在相机前方"。
+        # 实际上需要变换到相机坐标系再判断和排序。
+        # camera_pose (c2w) = [R | -R @ (T - person_transl)]，已用 person_transl 调整。
+        # 逆变换：smpl_cam = R_c2w.T @ (smpl_world - t_c2w)
+        # -------------------------------------------------------------------------
+        R_c2w = camera_pose[:3, :3]
+        t_c2w = camera_pose[:3, 3]
+
+        humans_with_cam_z = []
+        for h in annots:
+            smpl_world = np.array(h.get("smplx_transl", [0, 0, 100]), dtype=np.float32)
+            smpl_cam = R_c2w.T @ (smpl_world - t_c2w)   # 变换到相机坐标系
+            h = dict(h)  # 复制，避免修改原始数据
+            h["_smplx_transl_cam"] = smpl_cam
+            h["_smplx_transl_cam_z"] = smpl_cam[2]
+            humans_with_cam_z.append(h)
+
+        # 按相机坐标系的 Z 值排序（人在相机前方 Z > 0）
+        if humans_with_cam_z:
+            l_dist = [hh["_smplx_transl_cam_z"] for hh in humans_with_cam_z]
             order = sorted(range(len(l_dist)), key=lambda i: l_dist[i])
-            humans = [humans[i] for i in order]
+            humans_with_cam_z = [humans_with_cam_z[i] for i in order]
+
+        # 过滤：人在相机前方即可（相机坐标系 Z > -0.5，留足容差）
+        # 注意：原来错误的 mocap Z > 0.01 条件已废弃
+        humans = [hh for hh in humans_with_cam_z if hh["_smplx_transl_cam_z"] > -0.5]
 
         smpl_mask = np.zeros(self.max_humans, dtype=np.bool_)
         if len(humans) > 0:
@@ -274,6 +302,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
                         smpl_dict[k][h] = val
                     else:
                         smpl_dict[k][h] = float(val)
+            # smplx_transl 使用变换后的相机坐标系值
+            if k == "smplx_transl":
+                for h in range(len(humans)):
+                    smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
 
         # img/ray mask
         img_mask, ray_mask = self.get_img_and_ray_masks(
@@ -467,11 +499,26 @@ class AvatarReX_Video(BaseMultiViewDataset):
                 )
 
         # SMPL 整理
-        humans = [h for h in annots if h.get("smplx_transl", [0, 0, 100])[-1] > 0.01]
-        if humans:
-            l_dist = [float(h["smplx_transl"][-1]) for h in humans]
+        # smplx_transl 坐标系修复：变换到相机坐标系后再判断和排序
+        R_c2w = camera_pose[:3, :3]
+        t_c2w = camera_pose[:3, 3]
+
+        humans_with_cam_z = []
+        for h in annots:
+            smpl_world = np.array(h.get("smplx_transl", [0, 0, 100]), dtype=np.float32)
+            smpl_cam = R_c2w.T @ (smpl_world - t_c2w)
+            h = dict(h)
+            h["_smplx_transl_cam"] = smpl_cam
+            h["_smplx_transl_cam_z"] = smpl_cam[2]
+            humans_with_cam_z.append(h)
+
+        if humans_with_cam_z:
+            l_dist = [hh["_smplx_transl_cam_z"] for hh in humans_with_cam_z]
             order = sorted(range(len(l_dist)), key=lambda i: l_dist[i])
-            humans = [humans[i] for i in order]
+            humans_with_cam_z = [humans_with_cam_z[i] for i in order]
+
+        # 相机坐标系 Z > -0.5 即可通过
+        humans = [hh for hh in humans_with_cam_z if hh["_smplx_transl_cam_z"] > -0.5]
 
         smpl_mask = np.zeros(self.max_humans, dtype=np.bool_)
         if len(humans) > 0:
@@ -490,8 +537,10 @@ class AvatarReX_Video(BaseMultiViewDataset):
                         if len(shape) > 1:
                             val = val.reshape(shape)
                         smpl_dict[k][h] = val
-                    else:
-                        smpl_dict[k][h] = float(val)
+            # smplx_transl 使用变换后的相机坐标系值
+            if k == "smplx_transl":
+                for h in range(len(humans)):
+                    smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
 
         # Masks
         img_mask, ray_mask = self.get_img_and_ray_masks(

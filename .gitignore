@@ -53,6 +53,7 @@ docs/_build/
 *.pth
 data
 src/checkpoints
+experiments
 
 # examples
 tmp
