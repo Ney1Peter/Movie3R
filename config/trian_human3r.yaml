@@ -150,33 +150,47 @@ dataset27: Spring(allow_repeat=True, split=None, ROOT="../../data/custom_data/pr
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset28: BEDLAM_Multi(allow_repeat=True, split='train', ROOT="/path/to/processed_bedlam/",
+dataset28: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset29: MVS_Synth_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_mvs_synth",
+dataset29: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset30: PointOdyssey_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_point_odyssey",
+dataset30: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset31: UASOL_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_uasol",
+dataset31: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset32: MP3D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_mp3d/",
+dataset32: MVS_Synth_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_mvs_synth",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset33: HOI4D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_hoi4d/",
+dataset33: PointOdyssey_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_point_odyssey",
+  aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
+  (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
+  num_views=${num_views}, n_corres=${n_corres_train})
+dataset34: UASOL_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_uasol",
+  aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
+  (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
+  num_views=${num_views}, n_corres=${n_corres_train})
+dataset35: MP3D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_mp3d/",
+  aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
+  (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
+  num_views=${num_views}, n_corres=${n_corres_train})
+dataset36: HOI4D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_hoi4d/",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
 
-train_dataset: 4000 @ ${dataset28}
-test_dataset: 1000 @ BEDLAM_Multi(split='test', ROOT='/path/to/processed_bedlam/', resolution=(512, 288), num_views=4, seed=42, n_corres=0)
+# AvatarReX 混合训练：2000 Video (zzr) + 2000 Video (lbn1) + 2000 AABB (zzr) + 2000 AABB (lbn1)
+# = 8000 samples/epoch，Video/AABB 各 50%
+train_dataset: 2000 @ ${dataset28} + 2000 @ ${dataset29} + 2000 @ ${dataset30} + 2000 @ ${dataset31}
+test_dataset: 500 @ AvatarReX_Video(split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R", resolution=(512, 288), num_views=4, seed=42, n_corres=0)
 
 seed: 0
 batch_size: 8
