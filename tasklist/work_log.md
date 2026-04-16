@@ -198,7 +198,7 @@ if os.path.exists(src_mask):
 ```bash
 source /data/wangzheng/Movie3R-dataset/Depth-Anything-3/env.sh
 python generate_depth_avatarrex.py \
-    --root /data/wangzheng/Movie3R-dataset/AvatarRex4Human3R \
+    --root /data/wangzheng/Movie3R-dataset/AvatarReX4Human3R \
     --da3_root /data/wangzheng/Movie3R-dataset/Depth-Anything-3 \
     --workers 16 --batch_size 8
 ```
@@ -228,7 +228,7 @@ depthmap range: 0.630m ~ 1.552m
 
 ---
 
-### 9. 深度图生成结果（2026/04/13 下午）
+### 8. 深度图生成结果与格式优化（2026/04/13-14）
 
 **运行结果**：15个序列全部完成，30015张深度图
 - 每序列：2001帧，0错误
@@ -239,31 +239,22 @@ depthmap range: 0.630m ~ 1.552m
 
 **逐序列检查**：全部 PASS ✓
 
----
-
-### 10. 深度图格式优化（2026/04/14）
-
-**发现**：DA3 输出的深度值精度实际上是 mm 级别（乘1000后为干净整数），float32 浪费空间。
-
-**优化方案**：改用 uint16（毫米整数）保存深度图
-- float32: 4B/像素 → 12.3MB/文件 (2048×1500)
-- uint16: 2B/像素 → 6.2MB/文件（省50%）
+**深度图格式优化**：
+- 发现：DA3 输出的深度值精度实际是 mm 级别（乘1000后为干净整数），float32 浪费空间
+- 优化方案：改用 uint16（毫米整数）保存深度图
+  - float32: 4B/像素 → 12.3MB/文件 (2048×1500)
+  - uint16: 2B/像素 → 6.2MB/文件（省50%）
+- 脚本修改：保存时乘1000转为 uint16
+  ```python
+  d_mm = (d_clean * 1000).astype(np.uint16)  # 米→毫米
+  cv2.imwrite(depth_path.replace('.npy', '.png'), d_mm)
+  ```
 - dataset 类无需修改：np.load() 读取 uint16 自动转为 float32
-- 精度不变：mm 级精度足够
-
-**脚本修改**：仅需修改 `generate_depth_avatarrex.py` 的保存部分
-```python
-# 原来
-np.save(depth_path, d_clean.astype(np.float32))
-
-# 改为
-d_mm = (d_clean * 1000).astype(np.uint16)  # 米→毫米
-cv2.imwrite(depth_path.replace('.npy', '.png'), d_mm)
-```
+- 精度验证：mm 整数存储，转换回去 max 误差 < 0.001m（1mm）
 
 ---
 
-### 11. avatarrex_lbn1 数据集处理（2026/04/14）
+### 9. avatarrex_lbn1 数据集处理（2026/04/14）
 
 **转换**：使用 `preprocess_avatarrex_fast.py`
 - 16序列 × 1901帧 = 30,416 帧
@@ -277,7 +268,7 @@ cv2.imwrite(depth_path.replace('.npy', '.png'), d_mm)
 
 ---
 
-### 12. avatarrex_lbn2 数据集处理（2026/04/14）
+### 10. avatarrex_lbn2 数据集处理（2026/04/14）
 
 **转换**：使用 `preprocess_avatarrex_fast.py`
 - 16序列 × 1871帧 = 29,936 帧
@@ -297,7 +288,7 @@ cv2.imwrite(depth_path.replace('.npy', '.png'), d_mm)
 
 ---
 
-### 13. 文档与脚本整理（2026/04/14）
+### 11. 文档与脚本整理（2026/04/14）
 
 **新增文件**：
 - `/data/wangzheng/Movie3R-dataset/README.md`：项目说明文档
@@ -316,33 +307,7 @@ cv2.imwrite(depth_path.replace('.npy', '.png'), d_mm)
 
 ---
 
-### 14. 深度图格式优化：uint16（2026/04/14）
-
-**发现**：DA3 输出精度实际是 mm 级别，float32 浪费空间
-
-**转换脚本** `convert_depth_to_uint16.py`：
-```bash
-python convert_depth_to_uint16.py -i /path/to/dataset/Training --workers 32
-```
-
-**格式对比**：
-| 格式 | 每文件 | 节省 |
-|------|--------|------|
-| float32 npy | 11.7 MB | - |
-| uint16 npy | 5.9 MB | **50%** |
-
-**精度验证**：
-- mm 整数存储，精度 1mm
-- 转换回去 max 误差 < 0.001m（1mm）
-- dataset 类无需修改：np.load() 读取 uint16 自动转 float32
-
-**生成脚本已更新**：`generate_depth_avatarrex.py`
-- 直接保存 uint16 npy（米→毫米×1000）
-- 包含写后验证
-
----
-
-### 15. 当前数据集状态（2026/04/14 更新）
+### 12. 当前数据集状态（2026/04/14 更新）
 
 | 数据集 | RGB | CAM | SMPL | Depth | Mask | 状态 |
 |--------|-----|-----|------|-------|------|------|
@@ -351,8 +316,8 @@ python convert_depth_to_uint16.py -i /path/to/dataset/Training --workers 32
 | avatarrex_lbn2 | ✅ | ✅ | ✅ | ⚠️ ~35% | ✅ | 待续 |
 
 **存储占用**（仅完整数据集）：
-- AvatarRex4Human3R: ~258GB（depth ~172GB uint16）
-- AvatarRex_lbn1_4Human3R: ~261GB（depth ~174GB uint16）
+- AvatarReX4Human3R: ~258GB（depth ~172GB uint16）
+- AvatarReX_lbn1_4Human3R: ~261GB（depth ~174GB uint16）
 
 **节省空间**：
 - float32→uint16 深度图节省约 50%
@@ -360,7 +325,7 @@ python convert_depth_to_uint16.py -i /path/to/dataset/Training --workers 32
 
 ---
 
-### 16. AvatarReX 训练数据集配置（2026/04/14）
+### 13. AvatarReX 训练数据集配置（2026/04/14）
 
 **背景**：
 - 原版 Human3R 使用 BEDLAM_Multi 作为训练数据（650人 × 3000+场景）
@@ -380,7 +345,7 @@ python convert_depth_to_uint16.py -i /path/to/dataset/Training --workers 32
 | lbn1 | Video | 16 | 1901 | 30,368 |
 | lbn1 | AABB | 16 | 1901 | 455,520 |
 
-**训练配置**（trian_human3r.yaml）：
+**训练配置**（train.yaml）：
 ```
 train_dataset: 2000 @ ${dataset28}   # AvatarReX_Video zzr
             + 2000 @ ${dataset29}    # AvatarReX_Video lbn1
@@ -390,8 +355,8 @@ train_dataset: 2000 @ ${dataset28}   # AvatarReX_Video zzr
 ```
 
 **数据路径**：
-- zzr: `../../../Movie3R-dataset/AvatarRex4Human3R`
-- lbn1: `../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R`
+- zzr: `../../../Movie3R-dataset/AvatarReX4Human3R`
+- lbn1: `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R`
 
 **验证结果**：
 - AvatarReX_Video: 29,970 samples ✓
@@ -405,68 +370,7 @@ train_dataset: 2000 @ ${dataset28}   # AvatarReX_Video zzr
 
 ---
 
-### 17. 训练测试（2026/04/14）
-
-**目标**：验证 AvatarReX 数据 + Human3R 训练流程能正常工作
-
-**数据集配置**：
-```
-train_dataset: 2000 @ AvatarReX_Video(zzr) + 2000 @ AvatarReX_Video(lbn1)
-            + 2000 @ AvatarReX_AABB(zzr) + 2000 @ AvatarReX_AABB(lbn1)
-= 8000 samples/epoch，Video/AABB 各 50%
-```
-
-**预训练模型**：`src/human3r_896L.pth`（1.2B 参数）
-
-**测试步骤与结果**：
-
-1. **数据加载测试** ✅
-   - AvatarReX_Video: 29,970 + 30,368 samples
-   - AvatarReX_AABB: 419,580 + 455,520 samples
-   - Batch shape: [4, 3, 288, 512] ✓
-
-2. **Loss 计算测试** ✅
-   - 成功计算 loss，输出包含：loss, pose_loss, RGBLoss, SMPLLoss
-
-3. **训练启动测试** ✅
-   - Test Epoch 前 11 batch 输出：
-     - loss: ~0.24
-     - pose_loss: ~0.02
-     - RGBLoss: ~0.04
-     - SMPLLoss: ~2.0
-   - GPU 内存：~23GB（batch_size=4）
-
-4. **Test Evaluation Bug**
-   - Crash: `ZeroDivisionError: division by zero` in smpl_model.py
-   - 原因：test dataset 的 SMPL betas 为空
-   - 不影响训练本身，训练正常进行
-
-**实验输出目录**：`Human3R/experiments/avatarrex_zzr_lbn1/`
-```
-experiments/
-└── avatarrex_zzr_lbn1/
-    ├── configs/trian_human3r.yaml  ← 配置副本
-    ├── checkpoints/       ← 模型权重
-    └── logs/             ← tensorboard 日志
-```
-
-**训练命令**：
-```bash
-cd Human3R/src
-source ../.venv/bin/activate
-CUDA_VISIBLE_DEVICES=1 python3 train.py \
-    epochs=1 \
-    batch_size=4 \
-    print_freq=10 \
-    eval_freq=0 \
-    output_dir=../experiments/avatarrex_zzr_lbn1
-```
-
-**当前状态**：正在 GPU 1 上运行 1 epoch 训练
-
----
-
-### 19. SMPL 过滤坐标 bug（2026/04/14）
+### 14. SMPL 过滤坐标 bug（2026/04/14）
 
 **问题现象**：
 - 训练在 batch 31 抛出 `ZeroDivisionError: division by zero`
@@ -554,11 +458,11 @@ if k == "smplx_transl":
 
 ---
 
-### 21. 全量微调验证（2026/04/14）
+### 15. 全量微调验证（2026/04/14）
 
 **目标**：将 AvatarReX 数据集 + Human3R 预训练模型跑通全量微调流程
 
-**配置修改**：
+**配置**：
 - `freeze='none'`：全量微调（所有参数可训练）
 - `batch_size=1`：44GB 显卡全量微调刚好够用
 
@@ -585,18 +489,9 @@ if k == "smplx_transl":
 - `batch_size=1 + accum_iter=4`：梯度累积，实际等效 batch_size=4
 - 效果相当于 batch_size=4，但分步计算节省显存
 
-**训练配置**（train.yaml）：
-```yaml
-model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='none', ...))
-epochs: 1
-batch_size: 1
-print_freq: 10
-eval_freq: 0
-```
-
 ---
 
-### 23. 多GPU训练调试（2026/04/16）
+### 16. 多GPU训练调试（2026/04/16）
 
 **问题**：多GPU训练时 NCCL allreduce 操作卡住
 
@@ -636,20 +531,25 @@ No plugin found (libnccl-net.so), using internal implementation
 
 ---
 
-### 24. 正式训练配置（2026/04/16）
+### 17. 正式训练配置（2026/04/16）
 
 **训练环境**：
 - 项目路径：`/data/wangzheng/Movie3R-new/Human3R/`
 - 训练脚本：`train.sh`
 - 虚拟环境：`.venv/`（torch==2.4.0+cu124）
 
+**注意事项**：
+- `train.sh` 中已添加 `export TORCH_HOME=~/.cache/torch`
+- 原因：`Dinov2Backbone` 使用 `torch.hub.load`，即使 `pretrained=False` 也需要读取本地缓存的模型定义
+- 该服务器无法访问 GitHub，必须设置 `TORCH_HOME` 使用离线模式
+
 **训练数据集**：
 | 数据集 | 类型 | 路径 |
 |--------|------|------|
-| AvatarReX_Video (zzr) | Video | `../../../Movie3R-dataset/AvatarRex4Human3R` |
-| AvatarReX_Video (lbn1) | Video | `../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R` |
-| AvatarReX_AABB (zzr) | AABB | `../../../Movie3R-dataset/AvatarRex4Human3R` |
-| AvatarReX_AABB (lbn1) | AABB | `../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R` |
+| AvatarReX_Video (zzr) | Video | `../../../Movie3R-dataset/AvatarReX4Human3R` |
+| AvatarReX_Video (lbn1) | Video | `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R` |
+| AvatarReX_AABB (zzr) | AABB | `../../../Movie3R-dataset/AvatarReX4Human3R` |
+| AvatarReX_AABB (lbn1) | AABB | `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R` |
 - 合计：8000 samples/epoch，Video/AABB 各 50%
 
 **正式训练参数**：
@@ -674,21 +574,16 @@ No plugin found (libnccl-net.so), using internal implementation
 - **1 epoch ≈ 35 分钟**
 - **40 epochs ≈ 23 小时**
 
-**多卡训练**（如果有空闲 GPU）：
+**训练命令**：
 ```bash
-# 4卡示例（effective batch = 8×4 = 32）
-./train.sh 4 40 8
-```
-
-**单卡正式训练**：
-```bash
-# 单卡（当前推荐，batch_size=8）
-CUDA_VISIBLE_DEVICES=5 ./train.sh 1 40 8
-```
-
-**检查 GPU 状态**：
-```bash
+# 1. 先查看 GPU 状态，选择空闲卡
 ./train.sh 0
+
+# 2. 单卡正式训练（batch_size=8）
+./train.sh 1 40 8
+
+# 3. 多卡训练（如有空闲 GPU，effective batch = 8 × num_gpus）
+./train.sh 4 40 8
 ```
 
 **实验输出**：
@@ -697,13 +592,80 @@ CUDA_VISIBLE_DEVICES=5 ./train.sh 1 40 8
 
 ---
 
-### 22. 待完成事项
+### 18. 模型架构与冻结配置（2026/04/16）
+
+**模型类**：`ARCroco3DStereo`（继承自 `CroCoNet`）
+
+**模型结构**：
+```
+ARCroco3DStereo
+├── 1. Patch Embedding
+│   ├── patch_embed           # 图像 patch embedding (3 → 1024 ch)
+│   └── patch_embed_ray_map  # Ray-map patch embedding (6 → 1024 ch)
+│
+├── 2. Encoder (ViT, 24 blocks)
+│   ├── enc_blocks            # 24 层 ViT Block, 1024 dim
+│   └── enc_blocks_ray_map   # 2 层 Ray-map Encoder Block
+│
+├── 3. MHMR (Dinov2Backbone)
+│   └── backbone (Dinov2-ViT-L/14)  # 独立 DINOv2 主干
+│
+├── 4. Decoder (12 blocks)
+│   ├── decoder_embed        # 1024 → 768 维度映射
+│   ├── dec_blocks           # 12 层 Decoder Block
+│   └── dec_blocks_state     # State decoder
+│
+└── 5. Downstream Head
+    ├── dpt_self / dpt_cross / dpt_rgb  # DPT 深度头
+    ├── pose_head                         # 姿态估计头
+    ├── mlp_classif / mlp_offset         # 分类/偏移 MLP
+    └── decpose / decshape / deccam / decexpression  # SMPL 参数头
+```
+
+**模型规模**（Human3R 896L）：
+| 项目 | 数值 |
+|------|------|
+| 参数量 | ~1.18B |
+| Encoder | ViT-L/14, 24 blocks, 1024 dim |
+| Decoder | 12 blocks, 768 dim |
+| 预训练权重 | `human3r_896L.pth` |
+
+**冻结选项**（`freeze` 参数）：
+| freeze 参数 | 冻结内容 | 说明 |
+|------------|---------|------|
+| `freeze='none'` | **无** | **全量微调（当前配置）** |
+| `freeze='encoder'` | enc_blocks + enc_blocks_ray_map | 仅微调 decoder + head |
+| `freeze='decoder'` | dec_blocks + dec_blocks_state | 仅微调 encoder + head |
+| `freeze='head'` | downstream_head | 仅微调 encoder + decoder |
+| `freeze='encoder_and_decoder_and_head'` | enc + dec + head | 全部冻结（纯推理）|
+
+**当前配置**：
+```yaml
+freeze='none'  # 全量微调
+```
+
+全量微调意味着所有模块都是可训练的：
+- ✅ 编码器（ViT encoder）
+- ✅ Ray-map 编码器
+- ✅ DINOv2 backbone (MHMR)
+- ✅ 解码器
+- ✅ 所有预测头（深度、姿态、SMPL）
+
+**配置文件位置**：
+- 模型定义：`src/dust3r/model.py`
+- CroCo 基类：`src/croco/models/croco.py`
+- 冻结逻辑：`src/dust3r/model.py` 第 509-635 行
+
+---
+
+### 19. 待完成事项
 
 1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（已完成）
 2. ✅ **训练测试**：数据加载、loss 计算正常（已完成）
 3. ✅ **SMPL 坐标 bug**：已修复并更新 work_log（已完成）
 4. ✅ **全量微调验证**：freeze=none, batch_size=1 通过（已完成）
 5. ✅ **正式训练参数**：已写入 work_log（已完成）
-6. ⚠️ **多GPU训练**：NCCL 问题，需联系管理员或换服务器
-7. **lbn2 深度图**：迁移到其他服务器后继续生成
-8. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
+6. ✅ **模型架构与冻结配置**：已写入 work_log（已完成）
+7. ⚠️ **多GPU训练**：NCCL 问题，需联系管理员或换服务器
+8. **lbn2 深度图**：迁移到其他服务器后继续生成
+9. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据

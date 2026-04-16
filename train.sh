@@ -10,6 +10,9 @@
 
 set -e
 
+# Torch hub offline mode - required for Dinov2Backbone even with pretrained=False
+export TORCH_HOME=~/.cache/torch
+
 NUM_GPUS=${1:-auto}
 EPOCHS=${2:-1}
 BATCH_SIZE=${3:-1}
