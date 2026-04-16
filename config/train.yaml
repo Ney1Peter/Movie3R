@@ -205,12 +205,7 @@ warmup_epochs: 5
 amp: 1
 
 num_workers: 8
-world_size: 1
-local-rank: -1
 dist_url: 'env://'
-rank: 0
-gpu: 0
-distributed: False
 dist_backend: 'nccl'
 
 eval_freq: 1

@@ -18,6 +18,8 @@ BATCH_SIZE=${3:-1}
 find_free_gpus() {
     local free_gpus=()
     while read -r gpu_idx mem_used; do
+        # 去掉 gpu_idx 末尾的逗号（如 "1," -> "1"）
+        gpu_idx="${gpu_idx%,}"
         # mem_used 格式如 "1234MiB" 或 "0MiB"
         mem_num=$(echo "$mem_used" | grep -oP '\d+')
         if [ "$mem_num" -lt 2000 ]; then
@@ -90,15 +92,15 @@ if [ ${#ALL_FREE_GPUS[@]} -lt "$NUM_GPUS" ]; then
     exit 1
 fi
 # 取前 NUM_GPUS 个空闲卡
-GPU_IDS=$(IFS=','; echo "${ALL_FREE_GPUS[*]:0:$NUM_GPUS}")
-export CUDA_VISIBLE_DEVICES="$GPU_IDS"
-echo "使用GPU:     ${GPU_IDS}"
+SELECTED_GPUS=$(IFS=','; echo "${ALL_FREE_GPUS[*]:0:$NUM_GPUS}")
+echo "使用GPU:     ${SELECTED_GPUS}"
 echo ""
 
 cd "$(dirname "$0")/src"
 source ../.venv/bin/activate
 
 if [ "$NUM_GPUS" -eq 1 ]; then
+    export CUDA_VISIBLE_DEVICES="$SELECTED_GPUS"
     echo "启动单卡训练..."
     python train.py \
         epochs=${EPOCHS} \
@@ -107,6 +109,7 @@ if [ "$NUM_GPUS" -eq 1 ]; then
         eval_freq=0 \
         output_dir=../experiments/avatarrex_zzr_lbn1
 else
+    # 多卡：torchrun 自己分配 GPU，不设置 CUDA_VISIBLE_DEVICES
     echo "启动多卡训练..."
     python -m torch.distributed.run --nproc_per_node=${NUM_GPUS} --master_port=29501 \
         train.py \

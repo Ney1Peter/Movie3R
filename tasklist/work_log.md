@@ -596,11 +596,114 @@ eval_freq: 0
 
 ---
 
+### 23. 多GPU训练调试（2026/04/16）
+
+**问题**：多GPU训练时 NCCL allreduce 操作卡住
+
+**测试环境**：
+- PyTorch: 2.4.0+cu124 → 2.5.0+cu124
+- NCCL: 2.20.5 → 2.21.5
+- 测试脚本：简单的 tensor allreduce
+
+**测试结果**：
+
+| 配置 | 结果 |
+|------|------|
+| NCCL init | ✓ 成功（GPU P2P/CUMEM 连接建立） |
+| NCCL allreduce | ✗ 卡住（所有GPU组合都测试过） |
+| Gloo allreduce | ✓ 正常 |
+| 不同GPU对 (0-1, 4-5, 6-7) | 全部卡住 |
+
+**NCCL 错误信息**：
+```
+NCCL INFO NET/Plugin : dlerror=libnccl-net.so: cannot open shared object file
+No plugin found (libnccl-net.so), using internal implementation
+```
+
+**结论**：
+- 这是**服务器级别的 NCCL 配置问题**
+- PyTorch 捆绑的 NCCL 2.20.5/2.21.5 在该服务器上 allreduce 操作无法完成
+- Gloo backend 可以工作但速度慢，不适合训练
+
+**解决方案**：
+1. 联系服务器管理员检查 NCCL 配置
+2. 使用单 GPU 训练（已验证正常工作）
+3. 或等待更换到其他服务器
+
+**环境恢复**：
+- 已将 torch 恢复为 requirements_Movie3R.txt 中的版本：torch==2.4.0
+- 单 GPU 训练已验证正常：batch 0 loss=0.0614, max mem=40261 MB
+
+---
+
+### 24. 正式训练配置（2026/04/16）
+
+**训练环境**：
+- 项目路径：`/data/wangzheng/Movie3R-new/Human3R/`
+- 训练脚本：`train.sh`
+- 虚拟环境：`.venv/`（torch==2.4.0+cu124）
+
+**训练数据集**：
+| 数据集 | 类型 | 路径 |
+|--------|------|------|
+| AvatarReX_Video (zzr) | Video | `../../../Movie3R-dataset/AvatarRex4Human3R` |
+| AvatarReX_Video (lbn1) | Video | `../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R` |
+| AvatarReX_AABB (zzr) | AABB | `../../../Movie3R-dataset/AvatarRex4Human3R` |
+| AvatarReX_AABB (lbn1) | AABB | `../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R` |
+- 合计：8000 samples/epoch，Video/AABB 各 50%
+
+**正式训练参数**：
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| epochs | 40 | 训练轮数 |
+| batch_size | 8 | 每卡 batch size |
+| lr | 1e-4 | 学习率 |
+| min_lr | 1e-6 | 最小学习率 |
+| warmup_epochs | 5 | warmup 轮数 |
+| weight_decay | 0.05 | 权重衰减 |
+| gradient_checkpointing | true | 梯度检查点（节省显存）|
+| amp | 1 | 混合精度训练 |
+| num_workers | 8 | 数据加载线程数 |
+
+**训练规模估算**（单卡 batch_size=8）：
+- samples/epoch：8000
+- batch_size：8
+- steps/epoch：1000
+- 每 step 约 2 秒
+- **1 epoch ≈ 35 分钟**
+- **40 epochs ≈ 23 小时**
+
+**多卡训练**（如果有空闲 GPU）：
+```bash
+# 4卡示例（effective batch = 8×4 = 32）
+./train.sh 4 40 8
+```
+
+**单卡正式训练**：
+```bash
+# 单卡（当前推荐，batch_size=8）
+CUDA_VISIBLE_DEVICES=5 ./train.sh 1 40 8
+```
+
+**检查 GPU 状态**：
+```bash
+./train.sh 0
+```
+
+**实验输出**：
+- 路径：`experiments/avatarrex_zzr_lbn1/`
+- 包含：checkpoints/, logs/, configs/
+
+---
+
 ### 22. 待完成事项
 
 1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（已完成）
 2. ✅ **训练测试**：数据加载、loss 计算正常（已完成）
 3. ✅ **SMPL 坐标 bug**：已修复并更新 work_log（已完成）
 4. ✅ **全量微调验证**：freeze=none, batch_size=1 通过（已完成）
-5. **lbn2 深度图**：迁移到其他服务器后继续生成
-6. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
+5. ✅ **正式训练参数**：已写入 work_log（已完成）
+6. ⚠️ **多GPU训练**：NCCL 问题，需联系管理员或换服务器
+7. **lbn2 深度图**：迁移到其他服务器后继续生成
+8. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
