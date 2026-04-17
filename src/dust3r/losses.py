@@ -1506,6 +1506,26 @@ class Regr3DPoseBatchList(Regr3DPose):
         pose_masks = pose_masks * gts[i]["img_mask"]
         details["pose_loss"] = self.compute_pose_loss(gt_poses, pr_poses, pose_masks)
 
+        # ===== AABB view2 pose loss =====
+        # AABB: view0,view1 from camA, view2,view3 from camB
+        # 对 AABB 数据的 view2（第一个 B 帧）单独计算 pose L2 loss
+        # gts[0]["is_video"] = True for Video, False for AABB
+        is_video = gts[0]["is_video"]
+        if not is_video.all():
+            is_aabb_mask = ~is_video
+            # gt_poses[2] 和 pr_poses[2] 是 tuple (trans: Bx3, quat: Bx4)
+            gt_trans_view2 = gt_poses[2][0][is_aabb_mask]
+            gt_quat_view2 = gt_poses[2][1][is_aabb_mask]
+            pr_trans_view2 = pr_poses[2][0][is_aabb_mask]
+            pr_quat_view2 = pr_poses[2][1][is_aabb_mask]
+            view2_pose_loss = (
+                torch.norm(pr_trans_view2 - gt_trans_view2, dim=-1).mean()
+                + torch.norm(pr_quat_view2 - gt_quat_view2, dim=-1).mean()
+            )
+            details["pose_loss_view2_AABB"] = float(view2_pose_loss)
+            # 添加到总 pose_loss（一起监督）
+            details["pose_loss"] = details["pose_loss"] + view2_pose_loss
+
         return Sum(*list(zip(ls, masks))), (details | monitoring)
 
 

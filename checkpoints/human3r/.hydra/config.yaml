@@ -206,7 +206,7 @@ dist_backend: nccl
 eval_freq: 0
 save_freq: 1
 keep_freq: 5
-print_freq: 50
+print_freq: 10
 print_img_freq: 300
 num_imgs_vis: 4
 save_dir: checkpoints

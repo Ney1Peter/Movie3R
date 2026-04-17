@@ -658,6 +658,192 @@ freeze='none'  # 全量微调
 
 ---
 
+### 20. AABB View2 位姿 Loss 增强（2026/04/17）
+
+**问题**：AABB 数据（跨相机跳变镜头）中，第一个 B 帧（view2，即 camB 的首帧）的相机位姿预测准确率明显低于其他帧。这是因为模型在跨相机跳变时缺乏足够的几何约束来精确定位新相机。
+
+**解决方案**：对 AABB 数据的 view2 帧（帧索引 2，即 `gt_poses[2]`），单独计算 L2 位姿 loss（translation + quaternion），并与原有 pose_loss 叠加监督。
+
+**实现位置**：`src/dust3r/losses.py`，`Regr3DPoseBatchList.compute_loss()`，约第 1509-1527 行。
+
+**新增代码**：
+```python
+# ===== AABB view2 pose loss =====
+# AABB: view0,view1 from camA, view2,view3 from camB
+# 对 AABB 数据的 view2（第一个 B 帧）单独计算 pose L2 loss
+# gts[0]["is_video"] = True for Video, False for AABB
+is_video = gts[0]["is_video"]
+if not is_video.all():
+    is_aabb_mask = ~is_video
+    gt_trans_view2 = gt_poses[2][0][is_aabb_mask]
+    gt_quat_view2 = gt_poses[2][1][is_aabb_mask]
+    pr_trans_view2 = pr_poses[2][0][is_aabb_mask]
+    pr_quat_view2 = pr_poses[2][1][is_aabb_mask]
+    view2_pose_loss = (
+        torch.norm(pr_trans_view2 - gt_trans_view2, dim=-1).mean()
+        + torch.norm(pr_quat_view2 - gt_quat_view2, dim=-1).mean()
+    )
+    details["pose_loss_view2_AABB"] = float(view2_pose_loss)
+    # 添加到总 pose_loss（一起监督）
+    details["pose_loss"] = details["pose_loss"] + view2_pose_loss
+```
+
+**训练验证**（2026/04/17，step 0-250）：
+- `pose_loss_view2_AABB` 正常计算并加入总 loss
+- `pose_loss_view2_AABB` avg 在 ~2500 范围波动，loss 趋势平稳
+- 训练可正常启动，数据加载、loss 反向传播均正常
+- 单卡 GPU 4 测试通过
+
+**验证命令**：
+```bash
+# 查看 GPU 状态
+./train.sh 0
+
+# 单卡测试（1 epoch，batch_size=1）
+./train.sh 1 1 1
+```
+
+**日志查看**：
+```bash
+# TensorBoard
+tensorboard --logdir experiments/avatarrex_zzr_lbn1/
+
+# 文本日志
+tail -f src/checkpoints/human3r/train.log
+```
+
+**关键指标**：`pose_loss_view2_AABB`（新增，TensorBoard 中的 `train_pose_loss_view2_AABB`）
+
+---
+
+### 21. 服务器迁移与环境配置指南（2026/04/17）
+
+#### 当前环境
+
+| 项目 | 版本/值 |
+|------|--------|
+| Python | 3.10.19 |
+| PyTorch | 2.4.0+cu124（CUDA 12.4） |
+| 虚拟环境 | `.venv`（uv 管理） |
+| 预训练权重 | `/data/wangzheng/Movie3R-new/Human3R/src/human3r_896L.pth` |
+| Dinov2 backbone | `TORCH_HOME=$HOME/.cache/torch`（离线模式） |
+
+#### 迁移步骤
+
+**1. 准备代码和数据**
+
+```bash
+# 1. 复制整个项目目录到新服务器
+scp -r /data/wangzheng/Movie3R-new/Human3R user@h800:/path/to/projects/
+
+# 2. 复制预训练权重（如果路径不同，需修改 config/train.yaml）
+scp /data/wangzheng/Movie3R-new/Human3R/src/human3r_896L.pth user@h800:/path/to/projects/Human3R/src/
+
+# 3. 复制数据集（两个 AvatarReX 预处理后的数据）
+scp -r /data/wangzheng/Movie3R-dataset/AvatarRex4Human3R user@h800:/path/to/datasets/
+scp -r /data/wangzheng/Movie3R-dataset/AvatarRex_lbn1_4Human3R user@h800:/path/to/datasets/
+```
+
+**2. uv 环境配置**
+
+```bash
+cd /path/to/projects/Human3R
+
+# 方法一：从项目已有的 .venv（推荐，确保 pip 版本一致）
+uv sync
+
+# 方法二：如果 .venv 损坏，用 pyproject.toml 重建
+uv sync --no-cache
+
+# 方法三：手动指定版本
+uv pip install python==3.10.19
+uv pip install torch==2.4.0 torchvision --index-url https://download.pytorch.org/whl/cu124
+```
+
+**3. 修改配置文件（必须）**
+
+编辑 `config/train.yaml`，将所有硬编码路径改为新服务器实际路径：
+
+```yaml
+# 预训练权重（必须改）
+pretrained: /path/to/projects/Human3R/src/human3r_896L.pth
+
+# AvatarReX 数据集（必须改，假设新路径为 /data/datasets/）
+dataset28: AvatarReX_Video(..., ROOT="/data/datasets/AvatarRex4Human3R", ...)
+dataset29: AvatarReX_Video(..., ROOT="/data/datasets/AvatarRex_lbn1_4Human3R", ...)
+dataset30: AvatarReX_AABB(..., ROOT="/data/datasets/AvatarRex4Human3R", ...)
+dataset31: AvatarReX_AABB(..., ROOT="/data/datasets/AvatarRex_lbn1_4Human3R", ...)
+
+# test_dataset 也要改
+test_dataset: 500 @ AvatarReX_Video(split='Training', ROOT="/data/datasets/AvatarRex4Human3R", ...)
+```
+
+**4. Dinov2 backbone（H800 离线模式）**
+
+train.sh 已设置 `TORCH_HOME=$HOME/.cache/torch`，确保 Dinov2 权重已缓存：
+
+```bash
+# 方法一：从本服务器拷贝缓存（已有约 2GB+）
+scp -r ~/.cache/torch user@h800:~/.cache/
+
+# 方法二：首次训练时会自动下载（如有网络）
+# torch.hub 会从 GitHub 下载 dinov2_vitl14 权重（约 300MB）
+```
+
+**5. 验证环境**
+
+```bash
+cd /path/to/projects/Human3R
+
+# 激活环境
+source .venv/bin/activate
+
+# 检查 Python 和 PyTorch
+python --version          # 应为 3.10.19
+python -c "import torch; print(torch.__version__)"  # 应为 2.4.0+cu124
+
+# 查看 GPU
+nvidia-smi
+
+# 测试单卡训练（1 step）
+./train.sh 1 1 1
+```
+
+**6. 启动正式训练**
+
+```bash
+# 查看 GPU 状态
+./train.sh 0
+
+# 单卡正式训练（40 epochs，batch_size=8）
+./train.sh 1 40 8
+
+# 4卡训练（如有 4 张 H800 80GB）
+./train.sh 4 40 2    # 每卡 batch=2，effective batch=8
+```
+
+#### 迁移检查清单
+
+| 项目 | 状态 | 说明 |
+|------|------|------|
+| Python 3.10 / PyTorch 2.4+cu124 | ✅ 兼容 | H800 服务器通常满足 |
+| 代码目录复制 | ❌ 需执行 | scp 整个 Human3R 目录 |
+| 预训练权重 | ❌ 需执行 | `human3r_896L.pth` 复制到新路径 |
+| 数据集路径修改 | ❌ 需执行 | 修改 `config/train.yaml` 中所有 ROOT |
+| uv 环境重建 | ⚠️ 建议 | `uv sync` 重建 .venv |
+| Dinov2 backbone | ⚠️ 建议 | 拷贝 `~/.cache/torch` 到新服务器 |
+| 数据预处理 | ⚠️ 按需 | 如数据集不存在则需运行预处理脚本 |
+| 实验输出路径 | ✅ 已是相对路径 | `experiments/` 无需修改 |
+
+#### 注意事项
+
+1. **数据集路径**：所有 `ROOT=` 必须使用**绝对路径**，不能依赖 `../../../Movie3R-dataset/` 相对路径
+2. **多卡 NCCL**：H800 服务器如遇 NCCL 初始化问题，参考 work_log Section 16 的排查方法
+3. **实验输出**：首次运行会在 `experiments/avatarrex_zzr_lbn1/` 下创建 checkpoint 和日志
+4. **TORCH_HOME**：train.sh 已在第 14 行设置 `export TORCH_HOME=$HOME/.cache/torch`，不要删除
+
+---
+
 ### 19. 待完成事项
 
 1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（已完成）
@@ -667,5 +853,6 @@ freeze='none'  # 全量微调
 5. ✅ **正式训练参数**：已写入 work_log（已完成）
 6. ✅ **模型架构与冻结配置**：已写入 work_log（已完成）
 7. ⚠️ **多GPU训练**：NCCL 问题，需联系管理员或换服务器
-8. **lbn2 深度图**：迁移到其他服务器后继续生成
-9. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
+8. ✅ **AABB view2 pose loss**：已实现并通过测试（已完成）
+9. **lbn2 深度图**：迁移到其他服务器后继续生成
+10. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
