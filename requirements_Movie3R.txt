@@ -1,3 +1,8 @@
+# Human3R / AvatarReX 训练依赖
+# 环境：Python 3.10 + PyTorch 2.4.0 + CUDA 12.4（cu124 wheel）
+# 说明：CUDA 12.4 由 PyTorch wheel 提供，无需单独安装 CUDA toolkit。
+#       系统 nvcc 版本（通常是 11.8）仅用于编译 curope，不影响训练。
+
 numpy==1.26.4
 torch==2.4.0
 torchvision==0.19.0

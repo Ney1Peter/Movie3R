@@ -5,10 +5,16 @@
 | 组件 | 版本要求 |
 |------|---------|
 | Python | **3.10**（必须） |
-| CUDA | **11.8**（必须，与 torch.cuda 版本匹配） |
-| 显卡 | NVIDIA GPU，**46GB+ 显存**推荐（如 L20/A100） |
+| CUDA | **12.4**（PyTorch 运行时通过 cu124 wheel 提供） |
+| 系统 nvcc | **11.8**（仅用于编译 curope，非必须；H800 环境通常已自带） |
+| 显卡驱动 | **≥ 525**（支持 CUDA 12.4；H800 服务器通常满足） |
+| 显存 | **≥ 46GB**（如 L20 48GB、H800 80GB） |
 
-> **注意**：本项目已在 Python 3.10 + CUDA 11.8 (torch 2.4.0+cu124) 环境下验证通过。其他 Python/CUDA 版本未测试。
+> **重要说明**：
+> - PyTorch 2.4.0 使用 `cu124` wheel，自带 CUDA 12.4 runtime 动态库。训练时 `torch.version.cuda` 返回 `12.4`。
+> - 系统 `nvcc --version` 显示的是 NVIDIA toolkit 编译器版本（可能是 11.8），与 PyTorch 运行时的 CUDA 版本是**两个不同概念**。
+> - curope（RoPE CUDA 加速）编译需要系统有 nvcc（11.8 或 12.x 均可），其他组件全部由 PyTorch wheel 提供。
+> - **只要显卡驱动支持 CUDA 12.4，H800 服务器即可直接使用本项目的 PyTorch wheel，无需额外安装 CUDA toolkit。**
 
 ## 2. 使用 uv 创建虚拟环境
 
@@ -27,17 +33,18 @@ source .venv/bin/activate
 pip install --upgrade pip
 ```
 
-## 3. 安装 PyTorch（CUDA 11.8）
+## 3. 安装 PyTorch（CUDA 12.4）
 
 ```bash
-# 确认 nvcc 版本
-nvcc --version
-# nvcc: NVIDIA (R) Cuda compiler driver
-# Copyright (c) 2005-2022 NVIDIA Corporation
-# Built on Wed_Sep_21_10:33:58_PDT_2022
-# Cuda compilation tools, release 11.8, V11.8.89
+# 安装 PyTorch 2.4.0 + CUDA 12.4（推荐）
+pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
 
-pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu118
+# 验证安装
+python -c "import torch; print(f'torch {torch.__version__}, CUDA runtime {torch.version.cuda}')"
+# 输出应为：torch 2.4.0+cu124, CUDA runtime 12.4
+
+# 注意：nvcc 版本（系统编译器）可能显示 11.8，这是正常的，不影响 PyTorch 运行
+nvcc --version 2>/dev/null || echo "nvcc not in PATH（无需在意，不影响训练）"
 ```
 
 ## 4. 安装其他依赖
@@ -57,7 +64,7 @@ pip install -r requirements_avatarrex.txt
 ```bash
 cd src/croco/models/curope
 
-# 编译（会自动检测 CUDA_ARCH）
+# 编译（会自动检测 CUDA_ARCH，使用系统 nvcc）
 python setup.py build
 
 # 编译产物为 .so 文件，检查是否生成：
@@ -65,8 +72,10 @@ ls *.so
 # 应该看到：curope.cpython-310-x86_64-linux-gnu.so
 ```
 
-> **如遇编译错误**：确认 `nvcc` 在 PATH 中，CUDA 版本为 11.8。
+> **编译前提**：系统有 `nvcc`（11.8 或 12.x 均可）。H800 服务器通常自带 nvcc 11.8。
+> **如遇编译错误**：确认 `nvcc` 在 PATH 中，执行 `which nvcc` 确认。
 > 编译成功后，将 `.so` 文件路径加入 `PYTHONPATH` 或确保从 `src/` 目录启动训练。
+> **其他组件**（模型推理、训练）不需要 nvcc，全部由 PyTorch cu124 提供。
 
 ## 6. 目录结构
 
@@ -237,4 +246,37 @@ experiments/avatarrex_zzr_lbn1/
 ├── checkpoints/      # 模型权重
 ├── logs/             # TensorBoard 日志
 └── code/             # 代码备份（训练时自动保存）
+```
+
+## 13. H800 服务器特别说明
+
+H800 80GB 服务器部署要点：
+
+| 项目 | 要求 |
+|------|------|
+| 驱动 | ≥ 525（支持 CUDA 12.4） |
+| Python | 3.10 |
+| PyTorch | `torch==2.4.0` + `torchvision==0.19.0` + **cu124** |
+| 显存 | 80GB，batch_size=2 轻松跑满 |
+| 多卡 | 推荐 4×batch_size=2=8，NVLink 利用率高 |
+| Dinov2 backbone | 离线模式：`export TORCH_HOME=$HOME/.cache/torch` |
+
+**完整环境搭建流程（H800）**：
+
+```bash
+# 1. 创建环境
+uv venv .venv --python 3.10
+source .venv/bin/activate
+
+# 2. 安装 PyTorch CUDA 12.4
+pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
+
+# 3. 安装其他依赖
+pip install -r requirements_Movie3R.txt
+
+# 4. 编译 curope（需要系统有 nvcc）
+cd src/croco/models/curope && python setup.py build && cd ../../../..
+
+# 5. 启动训练
+./train.sh 4 40 2   # 4卡，每卡 batch=2，等效 batch=8
 ```
