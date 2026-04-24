@@ -153,27 +153,27 @@ dataset27: Spring(allow_repeat=True, split=None, ROOT="../../data/custom_data/pr
 dataset28: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zzr_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset29: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_lbn1_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset30: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zzr_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset31: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_lbn1_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset32: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zxc_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset33: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zxc_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
-  num_views=${num_views}, n_corres=${n_corres_train})
+  num_views=${num_views}, n_corres=${n_corres_train}, seed=11)
 dataset34: MVS_Synth_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_mvs_synth",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
@@ -196,13 +196,13 @@ dataset38: HOI4D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_da
   num_views=${num_views}, n_corres=${n_corres_train})
 
 # AvatarReX 混合训练：800 Video × 3数据集 + 800 AABB × 3数据集 = 4800 samples/epoch
-# seed=11 确保采样不与 val/test 重叠
-train_dataset: 800 @ ${dataset28}(seed=11) + 800 @ ${dataset29}(seed=11) + 800 @ ${dataset32}(seed=11) + 800 @ ${dataset30}(seed=11) + 800 @ ${dataset31}(seed=11) + 800 @ ${dataset33}(seed=11)
+# seed=11 在 dataset28-33 定义中
+train_dataset: 800 @ ${dataset28} + 800 @ ${dataset29} + 800 @ ${dataset32} + 800 @ ${dataset30} + 800 @ ${dataset31} + 800 @ ${dataset33}
 # 验证集：100 Video × 3数据集 + 100 AABB × 3数据集 = 600 samples/epoch
-# seed=22 确保与 train/test 不重叠
+# seed=22
 val_dataset: 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0) + 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_lbn1_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0) + 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_zxc_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_lbn1_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_zxc_output", resolution=(512, 288), num_views=4, seed=22, n_corres=0)
 # 测试集：100 Video × 3数据集 + 100 AABB × 3数据集 = 600 samples/epoch
-# seed=33 确保与 train 不重叠，覆盖所有数据集
+# seed=33
 test_dataset: 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0) + 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_lbn1_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0) + 100 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_zxc_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_lbn1_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0) + 100 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_zxc_output", resolution=(512, 288), num_views=4, seed=33, n_corres=0)
 
 seed: 0
