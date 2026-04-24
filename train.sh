@@ -12,6 +12,7 @@ set -e
 
 # Torch hub offline mode - required for Dinov2Backbone even with pretrained=False
 export TORCH_HOME=$HOME/.cache/torch
+export TORCH_HUB_USE_HEURISTICS=0
 
 NUM_GPUS=${1:-auto}
 EPOCHS=${2:-1}
@@ -108,16 +109,19 @@ if [ "$NUM_GPUS" -eq 1 ]; then
     python train.py \
         epochs=${EPOCHS} \
         batch_size=${BATCH_SIZE} \
+        num_workers=0 \
         print_freq=50 \
         eval_freq=0 \
         output_dir=../experiments/avatarrex_zzr_lbn1
 else
     # 多卡：torchrun 自己分配 GPU，不设置 CUDA_VISIBLE_DEVICES
+    # 注意：多卡时也需要 num_workers=0 避免 /dev/shm 不足
     echo "启动多卡训练..."
     python -m torch.distributed.run --nproc_per_node=${NUM_GPUS} --master_port=29501 \
         train.py \
         epochs=${EPOCHS} \
         batch_size=${BATCH_SIZE} \
+        num_workers=0 \
         print_freq=50 \
         eval_freq=0 \
         output_dir=../experiments/avatarrex_zzr_lbn1

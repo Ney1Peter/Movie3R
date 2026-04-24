@@ -5,7 +5,7 @@ model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='none',
   conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
   enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
   backbone='dinov2_vitl14', mhmr_img_res=896))
-pretrained: /data/wangzheng/Movie3R-new/Human3R/src/human3r_896L.pth
+pretrained: /workspace/code/Movie3R/src/human3r_896L.pth
 pretrained_mhmr: null
 load_only_encoder: False
 long_context: False
@@ -150,47 +150,55 @@ dataset27: Spring(allow_repeat=True, split=None, ROOT="../../data/custom_data/pr
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset28: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R",
+dataset28: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zzr_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset29: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R",
+dataset29: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_lbn1_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset30: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R",
+dataset30: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zzr_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset31: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="../../../Movie3R-dataset/AvatarRex_lbn1_4Human3R",
+dataset31: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_lbn1_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset32: MVS_Synth_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_mvs_synth",
+dataset32: AvatarReX_Video(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zxc_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset33: PointOdyssey_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_point_odyssey",
+dataset33: AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/workspace/data/avatarrex_zxc_output",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset34: UASOL_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_uasol",
+dataset34: MVS_Synth_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_mvs_synth",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset35: MP3D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_mp3d/",
+dataset35: PointOdyssey_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_point_odyssey",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
-dataset36: HOI4D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_hoi4d/",
+dataset36: UASOL_Multi(allow_repeat=True, split='train', ROOT="../../data/custom_data/processed_uasol",
+  aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
+  (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
+  num_views=${num_views}, n_corres=${n_corres_train})
+dataset37: MP3D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_mp3d/",
+  aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
+  (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
+  num_views=${num_views}, n_corres=${n_corres_train})
+dataset38: HOI4D_Multi(allow_repeat=True, split=None, ROOT="../../data/custom_data/processed_hoi4d/",
   aug_crop=16, resolution=[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208),
   (512, 144), (384, 512), (336, 512), (288, 512), (256, 512)], transform=SeqColorJitter,
   num_views=${num_views}, n_corres=${n_corres_train})
 
-# AvatarReX 混合训练：2000 Video (zzr) + 2000 Video (lbn1) + 2000 AABB (zzr) + 2000 AABB (lbn1)
-# = 8000 samples/epoch，Video/AABB 各 50%
-train_dataset: 2000 @ ${dataset28} + 2000 @ ${dataset29} + 2000 @ ${dataset30} + 2000 @ ${dataset31}
-test_dataset: 500 @ AvatarReX_Video(split='Training', ROOT="../../../Movie3R-dataset/AvatarRex4Human3R", resolution=(512, 288), num_views=4, seed=42, n_corres=0)
+# AvatarReX 混合训练：1000 Video × 3数据集 + 1000 AABB × 3数据集 = 6000 samples/epoch
+train_dataset: 1000 @ ${dataset28} + 1000 @ ${dataset29} + 1000 @ ${dataset32} + 1000 @ ${dataset30} + 1000 @ ${dataset31} + 1000 @ ${dataset33}
+# 测试集：250 Video + 250 AABB，从3个数据集采样
+test_dataset: 250 @ AvatarReX_Video(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=42, n_corres=0) + 250 @ AvatarReX_AABB(split='Training', ROOT="/workspace/data/avatarrex_zzr_output", resolution=(512, 288), num_views=4, seed=42, n_corres=0)
 
 seed: 0
 batch_size: 8
