@@ -707,6 +707,13 @@ def test_one_epoch(
                 continue
             log_writer.add_scalar(prefix + "_" + name, val, 1000 * epoch)
 
+        # Skip visualization if print_img_freq is set to a very large value (disabled)
+        tb_vis_img = args.print_img_freq < 10000
+        if not tb_vis_img:
+            del loss_details, loss_value, batch
+            torch.cuda.empty_cache()
+            return results
+
         depths_self, gt_depths_self = get_render_results(
             batch, result["pred"], self_view=True
         )

@@ -67,4 +67,5 @@ python -m torch.distributed.run \
     print_freq=50 \
     eval_freq=1 \
     early_stopping_patience=10 \
+    print_img_freq=999999 \
     output_dir=../experiments/avatarrex_zzr_lbn1
