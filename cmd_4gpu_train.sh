@@ -65,5 +65,6 @@ python -m torch.distributed.run \
     batch_size=2 \
     num_workers=0 \
     print_freq=50 \
-    eval_freq=0 \
+    eval_freq=1 \
+    early_stopping_patience=10 \
     output_dir=../experiments/avatarrex_zzr_lbn1

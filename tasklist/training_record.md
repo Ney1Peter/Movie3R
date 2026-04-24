@@ -6,7 +6,27 @@
 - GPU: NVIDIA H800 (80GB)
 - 容器共享内存: /dev/shm 64MB (不足以支持多进程DataLoader)
 
-### 数据集
+### 数据集划分
+```
+train_dataset:
+  800 @ AvatarReX_Video(zzr, seed=11) + 800 @ AvatarReX_Video(lbn1, seed=11) + 800 @ AvatarReX_Video(zxc, seed=11)
+  + 800 @ AvatarReX_AABB(zzr, seed=11) + 800 @ AvatarReX_AABB(lbn1, seed=11) + 800 @ AvatarReX_AABB(zxc, seed=11)
+  = 4800 samples/epoch，Video/AABB 各 50%
+
+val_dataset:（10%）
+  100 @ AvatarReX_Video(zzr, seed=22) + 100 @ AvatarReX_Video(lbn1, seed=22) + 100 @ AvatarReX_Video(zxc, seed=22)
+  + 100 @ AvatarReX_AABB(zzr, seed=22) + 100 @ AvatarReX_AABB(lbn1, seed=22) + 100 @ AvatarReX_AABB(zxc, seed=22)
+  = 600 samples，Video/AABB 各 50%
+
+test_dataset:（10%）
+  100 @ AvatarReX_Video(zzr, seed=33) + 100 @ AvatarReX_Video(lbn1, seed=33) + 100 @ AvatarReX_Video(zxc, seed=33)
+  + 100 @ AvatarReX_AABB(zzr, seed=33) + 100 @ AvatarReX_AABB(lbn1, seed=33) + 100 @ AvatarReX_AABB(zxc, seed=33)
+  = 600 samples，Video/AABB 各 50%
+```
+
+**说明**: seed 不同确保 train/val/test 样本不重叠
+
+**原始数据分布**:
 | 数据集 | 类型 | 路径 | 样本数 |
 |--------|------|------|--------|
 | avatarrex_zzr | Video | /workspace/data/avatarrex_zzr_output | 1000 |
@@ -25,6 +45,8 @@
 - num_workers: 0 (单进程，规避/dev/shm限制)
 - amp: 混合精度训练
 - print_img_freq: 999999 (禁用可视化输出)
+- eval_freq: 1 (每epoch评估一次)
+- early_stopping_patience: 10 (连续10个epoch不下降则停止)
 
 ### Loss组成
 ```
