@@ -179,6 +179,22 @@ def train(args):
         for dataset in args.test_dataset.split("+")
     }
 
+    # validation dataset
+    data_loader_val = None
+    if hasattr(args, 'val_dataset') and args.val_dataset:
+        printer.info("Building val dataset %s", args.val_dataset)
+        data_loader_val = {
+            dataset.split("(")[0]: build_dataset(
+                dataset,
+                args.batch_size,
+                args.num_workers,
+                accelerator=accelerator,
+                test=True,
+                fixed_length=True
+            )
+            for dataset in args.val_dataset.split("+")
+        }
+
     # model
     printer.info("Loading model: %s", args.model)
     model: PreTrainedModel = eval(args.model)
@@ -247,7 +263,7 @@ def train(args):
         optimizer, model, data_loader_train
     )
 
-    def write_log_stats(epoch, train_stats, test_stats):
+    def write_log_stats(epoch, train_stats, test_stats, val_stats=None):
         if accelerator.is_main_process:
             if log_writer is not None:
                 log_writer.flush()
@@ -261,6 +277,14 @@ def train(args):
                 log_stats.update(
                     {test_name + "_" + k: v for k, v in test_stats[test_name].items()}
                 )
+            # Add val stats if available
+            if val_stats:
+                for val_name in data_loader_val:
+                    if val_name not in val_stats:
+                        continue
+                    log_stats.update(
+                        {val_name + "_val_" + k: v for k, v in val_stats[val_name].items()}
+                    )
 
             with open(
                 os.path.join(args.output_dir, "log.txt"), mode="a", encoding="utf-8"
@@ -292,6 +316,10 @@ def train(args):
     start_time = time.time()
     train_stats = test_stats = {}
 
+    # Early stopping state
+    epochs_without_improvement = 0
+    early_stop_patience = getattr(args, 'early_stopping_patience', 10)
+
     for epoch in range(args.start_epoch, args.epochs + 1):
 
         # Save immediately the last checkpoint
@@ -302,6 +330,25 @@ def train(args):
                 or epoch == args.epochs
             ):
                 save_model(epoch - 1, "last", best_so_far)
+
+        # Validation (run before training, except epoch 0)
+        val_stats = {}
+        if data_loader_val is not None and epoch >= 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0:
+            val_stats = {}
+            for val_name, valset in data_loader_val.items():
+                stats = test_one_epoch(
+                    model,
+                    test_criterion,
+                    valset,
+                    accelerator,
+                    device,
+                    epoch,
+                    log_writer=log_writer,
+                    args=args,
+                    prefix=val_name + "_val",
+                    smpl_model=smpl_model,
+                )
+                val_stats[val_name] = stats
 
         # Test on multiple datasets
         new_best = False
@@ -322,18 +369,38 @@ def train(args):
                 )
                 test_stats[test_name] = stats
 
-                # Save best of all
-                if stats["loss_med"] < best_so_far:
-                    best_so_far = stats["loss_med"]
+                # Save best based on val loss if available, else test loss
+                monitor_loss = None
+                if val_stats and val_name in val_stats:
+                    monitor_loss = val_stats[val_name]["loss_med"]
+                else:
+                    monitor_loss = stats["loss_med"]
+
+                if monitor_loss < best_so_far:
+                    best_so_far = monitor_loss
                     new_best = True
+
         # Save more stuff
-        write_log_stats(epoch, train_stats, test_stats)
+        write_log_stats(epoch, train_stats, test_stats, val_stats)
 
         if epoch > args.start_epoch:
             if args.keep_freq and epoch % args.keep_freq == 0:
                 save_model(epoch - 1, str(epoch), best_so_far)
             if new_best:
                 save_model(epoch - 1, "best", best_so_far)
+
+        # Early stopping check
+        if data_loader_val is not None and epoch >= 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0:
+            if new_best:
+                epochs_without_improvement = 0
+                printer.info(f"Validation improved: {best_so_far:.4f}")
+            else:
+                epochs_without_improvement += args.eval_freq
+                printer.info(f"No improvement for {epochs_without_improvement} epochs")
+                if epochs_without_improvement >= early_stop_patience:
+                    printer.info(f"Early stopping triggered after {epoch} epochs")
+                    break
+
         if epoch >= args.epochs:
             break  # exit after writing last test to disk
 
