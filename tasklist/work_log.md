@@ -723,3 +723,206 @@ tail -f src/checkpoints/human3r/train.log
 4. **checkpoint 区别**：
    - `checkpoint-final.pth`：仅模型权重 (~4.7GB)
    - `checkpoint-best.pth` / `checkpoint-last.pth`：模型 + 优化器 + AMP scaler (~11.5GB)
+
+---
+
+### 23. 微调后问题排查（2026/04/26）
+
+#### 问题现象
+全量微调（freeze='none'）后，在 h36.mp4 推理时出现：
+1. **SMPL 检测失败**：smpl_scores 最高只有 0.067，远低于检测阈值 0.3，导致 shape/rotvec/transl 全为 (0, ...)
+2. **相机位姿异常**：部分帧位姿偏移过大
+
+#### 根因分析
+
+**检测流程**：
+```
+图像 → backbone(Dinov2) → feat_mhmr_i → detect_mhmr → scores → apply_threshold(0.3)
+                                                    ↓
+                                          scores >= 0.3 → 有检测 → n_humans > 0
+                                          scores < 0.3 → 无检测 → n_humans = 0 → SMPL为空
+```
+
+**问题根因**：
+- 微调时 `freeze='none'` 导致 **backbone 也被微调**
+- backbone 在 AvatarReX 数据上过拟合，失去对 h36.mp4 等新数据的泛化能力
+- 输入 detect_mhmr 的特征质量下降
+- detect_mhmr 输出分数从 0.74 降到 0.09，低于阈值
+
+**对比数据**：
+| 模型 | detect_mhmr 最高分数 | SMPL 检测 |
+|------|---------------------|----------|
+| 原预训练 (h36m_test) | 0.74 | ✅ 正常 (1, 10) |
+| 微调后 (h36_test_2) | 0.067 | ❌ 失败 (0, 10) |
+
+#### 模型模块结构（总参数 1.17B）
+
+| 模块 | 参数 | 占比 | 作用 |
+|------|------|------|------|
+| backbone (Dinov2) | 304M | 26.1% | 通用视觉特征提取 |
+| enc_blocks (ViT) | 302M | 25.9% | 图像序列编码 |
+| pose_retriever | 152M | 13.0% | 相机位姿记忆查询 |
+| downstream_head | 152M | 13.0% | 深度/位姿/SMPL输出 |
+| dec_blocks | 113M | 9.7% | 多视角融合 |
+| dec_blocks_state | 113M | 9.7% | 时序状态更新 |
+| enc_blocks_ray_map | 25M | 2.2% | Ray-map编码 |
+
+#### freeze 选项对应的微调模块
+
+| freeze 选项 | 冻结的模块 | 微调的模块 |
+|------------|-----------|-----------|
+| `none` | 无 | 全部 (1.17B) |
+| `encoder` | patch_embed, enc_*, backbone | **decoder, pose_retriever, head** (~530M) |
+| `encoder_and_decoder` | encoder + decoder + pose_retriever | **head** (~152M) |
+| `encoder_and_decoder_and_head` | encoder + decoder + dpt_*, pose_head | backbone, mlp_classif, mlp_offset |
+
+#### 下一步微调方案（针对镜头跳变偏移修复）
+
+**目标**：修复 AABB 跨相机跳变时的相机位姿估计
+
+**推荐配置**：`freeze='encoder'`
+
+| 模块 | 参数 | 冻结/微调 | 说明 |
+|------|------|----------|------|
+| patch_embed | 0.8M | ❌ 冻结 | - |
+| enc_blocks (ViT) | 302M | ❌ 冻结 | - |
+| enc_blocks_ray_map | 25M | ❌ 冻结 | - |
+| **backbone (Dinov2)** | 304M | ❌ 冻结 | ✅ 保持泛化能力 |
+| **dec_blocks** | 113M | ✅ 微调 | 🎯 修复镜头跳变 - 多视角融合 |
+| **dec_blocks_state** | 113M | ✅ 微调 | 🎯 修复镜头跳变 - 时序状态 |
+| **pose_retriever** | 152M | ✅ 微调 | 🎯 **核心** - 相机位姿记忆查询 |
+| **downstream_head** | 152M | ✅ 微调 | ✅ |
+| - pose_head | 2.4M | ✅ 微调 | 🎯 **核心** - 相机位姿输出 |
+| - mlp_classif | 1M | ✅ 微调 | ⚠️ 需监控是否下降 |
+| - mlp_fuse/decpose等 | ~40M | ✅ 微调 | ✅ |
+
+**微调参数：约 530M (45.5%)**
+**冻结参数：约 632M (54.5%)**
+
+**更保守配置**（如 freeze='encoder' 仍有问题）：`freeze='encoder_and_decoder'`，只微调 head (~152M)
+
+**需监控指标**：
+- `smpl_scores` 分布（应 > 0.3）
+- AABB 的 `pose_loss`
+- 推理时 SMPL 是否正常输出
+
+---
+
+### 24. 后续优化方案：PoseCorrectionHead 与 Jump Token
+
+#### 核心判断（来自外部意见）
+
+> 问题不在底层视觉特征（backbone），而是 **pose_retriever / state readout / world-frame 对齐能力不足**。
+> 
+> 所以不建议一开始 full finetune，推荐 freeze="encoder"。
+
+#### 学习率分配建议
+
+| 模块 | 学习率 | 说明 |
+|------|--------|------|
+| pose_head | 1e-4 | 主训练 |
+| pose_retriever | 5e-5 | 主训练 |
+| world/depth/pose related heads | 2e-5 ~ 5e-5 | 适配 |
+| dec_blocks_state | 1e-5 ~ 2e-5 | 小学习率适配 |
+| dec_blocks | 1e-5 | 小学习率适配 |
+| SMPL / human classif | 0 或 1e-5 | 尽量少动 |
+| encoder / backbone | 0 | **冻结** |
+
+**重点**：pose_retriever 和 pose_head 主训练，decoder/state 小学习率适配，human 分支尽量少动。
+
+#### PoseCorrectionHead（推荐新增）
+
+**背景**：jump cut 下 pose_retriever / state readout / world-frame 对齐能力不足
+
+**结构**：
+```
+image/state features
+    ↓
+pose_retriever
+    ↓
+raw pose embedding
+    ↓
+PoseCorrectionHead (轻量 MLP)
+    ↓
+Δrot (6D rotation / so(3)), Δtrans (R3), confidence (0~1)
+    ↓
+T_final = exp(confidence * ξ) @ T_raw
+
+其中 ξ 是 SE(3) correction：
+- 连续帧：confidence ≈ 0，几乎用原始 pose
+- jump cut：confidence 变大，用修正 pose
+```
+
+**作用**：
+- 解耦连续帧和跳变帧的处理
+- 让模型自己学习什么时候该修正位姿
+- 实现简单，只在 pose_retriever 后加一个轻量 head
+
+**融合方式**：
+```
+T_final = exp(confidence * ξ) @ T_raw
+```
+confidence 控制修正程度，exp 是 so(3) 到 SO(3) 的指数映射。
+
+#### Jump Token / Relocalization Token（可选进阶）
+
+**结构**：
+在 decoder 或 pose_retriever 里加入一个额外 token，让它 attend to state，并输出：
+- jump probability：当前帧是否是视觉不连续
+- pose correction ΔT：位姿修正量
+- localization confidence：定位置信度
+
+**作用**：
+- 显式判断当前帧是否是跳变帧
+- 专门处理重新定位问题
+
+#### Global Anchor Memory（优先级低）
+
+更复杂的方案，增加全局锚点记忆，但优先级低于 PoseCorrectionHead 和 jump token。
+
+#### 训练数据采样建议
+
+| 类型 | 比例 | 目的 |
+|------|------|------|
+| normal continuous clips | 40% | 基础能力 |
+| AABB camera jump clips | 30% | **核心** - 镜头跳变训练 |
+| large-baseline same-scene | 20% | 大基线适配 |
+| shuffled / loop clips | 10% | 增强鲁棒性 |
+
+**目标**：让模型学会"时间连续 ≠ 相机运动连续"，jump frame 需要重新在已有 world/state 中定位。
+
+#### Loss 设计建议
+
+```
+L = L_pose_abs
+  + 2 * L_pose_rel_jump        # 跳变前后相对位姿
+  + L_world_pointmap            # 防止场景整体偏移
+  + 0.5 * L_cross_view_world_consistency
+  + 0.1 * L_pretrained_distill  # 防止能力退化
+  + human losses
+```
+
+**重点**：
+- `L_pose_rel_jump`：监督跳变前后相对位姿
+- `L_world_pointmap`：防止场景整体偏移
+- `L_pretrained_distill`：蒸馏原始预训练模型的能力，防止退化
+
+#### 实验顺序建议
+
+1. **freeze="encoder_and_decoder"**：只训 head，做 ablation
+2. **freeze="encoder"**：训 decoder/state/pose_retriever/head，主实验
+3. **freeze="encoder" + PoseCorrectionHead**：新增修正模块
+4. **freeze="encoder" + jump token**：显式跳变判断
+5. **小学习率 full finetune**：最后才考虑
+
+#### 推荐路线总结
+
+```
+1. freeze encoder
+2. 微调 pose_retriever + pose_head + decoder/state
+3. 新增 PoseCorrectionHead 或 jump token
+4. 增加 jump-cut / large-baseline 训练数据
+5. 使用 relative pose + world pointmap consistency loss
+```
+
+**这样更适合在不分段、不后处理的前提下，提升 Human3R 对镜头跳变的重定位能力。**

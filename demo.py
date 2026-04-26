@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument(
         "--model_path",
         type=str,
-        default="src/human3r_896L.pth",
+        default="experiments/formal_training-4gpu/checkpoint-final.pth",
         help="Path to the pretrained model checkpoint.",
     )
     parser.add_argument(
@@ -690,3 +690,20 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# cd /workspace/code/Movie3R
+
+# export PYTHONPATH=src:. && .venv/bin/python demo.py \
+#     --model_path experiments/formal_training-4gpu/checkpoint-final.pth \
+#     --size 512 \
+#     --seq_path data/h36.mp4 \
+#     --subsample 1 \
+#     --vis_threshold 2 \
+#     --downsample_factor 1 \
+#     --reset_interval 100 \
+#     --output_dir ./output/h36_test \
+#     --save \
+#     --render \
+#     --render_video
