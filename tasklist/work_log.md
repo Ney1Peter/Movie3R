@@ -108,8 +108,8 @@ Scene 22010708 @ t=0:
   rgb/{frame:08d}.png    ← 2001帧 BGR图像
   cam/{frame:08d}.npz    ← pose(4,4) + intrinsics(3,3)
   smpl/{frame:08d}.pkl    ← SMPLX参数（list of dict）
-  depth/                  ← 空（待生成）
-  mask/                   ← 空
+  depth/                  ← 空目录（由 Depth-Anything-3 生成）
+  mask/                   ← mask/pha/*.jpg 复制为 mask/*.png
 ```
 
 **数据处理环境**：`/data/wangzheng/Movie3R-dataset/.venv_data/`（uv虚拟环境，python3.10）
@@ -270,21 +270,12 @@ depthmap range: 0.630m ~ 1.552m
 
 ### 10. avatarrex_lbn2 数据集处理（2026/04/14）
 
-**转换**：使用 `preprocess_avatarrex_fast.py`
-- 16序列 × 1871帧 = 29,936 帧
-- 结果：done=5613 skipped=24323 errors=0 ✓
+**状态**：❌ **已废弃** - 最终训练方案仅使用 zzr、lbn1、zxc 三个数据集，lbn2 未使用
 
-**深度图**：使用 `generate_depth_avatarrex.py`（多GPU）
-- 遇到问题：生成过程中产生大量 0 字节损坏文件
-- 原因：DA3 对某些图像返回空/无效深度数组，异常被静默捕获
-- 修复：在保存后添加验证步骤，损坏文件自动删除并重生成
-- **完成状态**：⚠️ 约 10,425/29,936（35%）- 待续
-
-**磁盘空间问题**：
-- 处理过程中磁盘满（14TB 已用 100%）
-- lbn2 处理被迫多次中断
-- 用户决定：仅使用 zzr 和 lbn1 两个完整数据集
-- lbn2/lbn3 待迁移到其他服务器后继续
+**历史记录**（仅供参考）：
+- 转换：16序列 × 1871帧 = 29,936 帧
+- 深度图生成遇到问题：DA3 对某些图像返回空/无效深度数组，产生大量 0 字节损坏文件
+- 磁盘空间不足导致处理中断多次
 
 ---
 
@@ -307,66 +298,40 @@ depthmap range: 0.630m ~ 1.552m
 
 ---
 
-### 12. 当前数据集状态（2026/04/14 更新）
+### 12. 当前数据集状态
 
 | 数据集 | RGB | CAM | SMPL | Depth | Mask | 状态 |
 |--------|-----|-----|------|-------|------|------|
 | avatarrex_zzr | ✅ | ✅ | ✅ | ✅ uint16 | ✅ | ✅ 完成 |
 | avatarrex_lbn1 | ✅ | ✅ | ✅ | ✅ uint16 | ✅ | ✅ 完成 |
-| avatarrex_lbn2 | ✅ | ✅ | ✅ | ⚠️ ~35% | ✅ | 待续 |
+| avatarrex_zxc | ✅ | ✅ | ✅ | ✅ uint16 | ✅ | ✅ 完成 |
 
-**存储占用**（仅完整数据集）：
-- AvatarReX4Human3R: ~258GB（depth ~172GB uint16）
-- AvatarReX_lbn1_4Human3R: ~261GB（depth ~174GB uint16）
-
-**节省空间**：
-- float32→uint16 深度图节省约 50%
-- 两个完整数据集合计：~519GB（vs 原来 ~895GB，省 ~376GB）
+**当前使用的数据集路径**：
+- `/workspace/data/avatarrex_zzr`
+- `/workspace/data/avatarrex_lbn1`
+- `/workspace/data/avatarrex_zxc`
 
 ---
 
-### 13. AvatarReX 训练数据集配置（2026/04/14）
+### 13. AvatarReX 训练数据集配置
 
 **背景**：
 - 原版 Human3R 使用 BEDLAM_Multi 作为训练数据（650人 × 3000+场景）
-- 实际训练仅用 4000 samples/epoch × 40 epochs = 16万样本（BEDLAM 的 0.1%）
-- AvatarReX 数据（zzr + lbn1）规模：31 sequences，60k 帧，足够训练
+- AvatarReX 数据（zzr + lbn1 + zxc）三个数据集足够训练
 
 **数据集类**：
 - `AvatarReX_Video`：同一相机内连续帧采样（t, t+1, t+2, t+3），is_video=True
 - `AvatarReX_AABB`：AABB 镜头跳变采样（camA@t, camA@t+1, camB@t+2, camB@t+3），is_video=False
 - 两个类都继承自 BaseMultiViewDataset，支持 Human3R 标准接口
 
-**采样容量**：
-| 数据集 | 类型 | 序列数 | 帧/序列 | 采样数 |
-|--------|------|--------|---------|--------|
-| zzr | Video | 15 | 2001 | 29,970 |
-| zzr | AABB | 15 | 2001 | 419,580 |
-| lbn1 | Video | 16 | 1901 | 30,368 |
-| lbn1 | AABB | 16 | 1901 | 455,520 |
+**AABB 与 Video 格式定义**：
 
-**训练配置**（train.yaml）：
-```
-train_dataset: 2000 @ ${dataset28}   # AvatarReX_Video zzr
-            + 2000 @ ${dataset29}    # AvatarReX_Video lbn1
-            + 2000 @ ${dataset30}    # AvatarReX_AABB zzr
-            + 2000 @ ${dataset31}    # AvatarReX_AABB lbn1
-= 8000 samples/epoch，Video/AABB 各 50%
-```
+| 数据类型 | 帧0 | 帧1 | 帧2 | 帧3 | is_video |
+|----------|-----|-----|-----|-----|----------|
+| Video | camA@t | camA@t+1 | camA@t+2 | camA@t+3 | True |
+| AABB | camA@t | camA@t+1 | camB@t+2 | camB@t+3 | False |
 
-**数据路径**：
-- zzr: `../../../Movie3R-dataset/AvatarReX4Human3R`
-- lbn1: `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R`
-
-**验证结果**：
-- AvatarReX_Video: 29,970 samples ✓
-- AvatarReX_AABB: 420,000 samples ✓
-- 单样本测试：img [3,288,512], depth [288,512], is_video=True ✓
-
-**后续计划**：
-- 当前方案：先用 AvatarReX 数据集跑通训练流程
-- 如效果不好：可下载 BEDLAM subset（几十个序列）作为补充
-- lbn2/lbn3 深度图：迁移到其他服务器后继续生成
+**SMPL 说明**：AABB 中 view2、view3 的 SMPL 仍从 seqA 加载，因为 SMPL 是世界坐标系下的人体三维参数，不随视角变化。
 
 ---
 
@@ -529,66 +494,61 @@ No plugin found (libnccl-net.so), using internal implementation
 - 已将 torch 恢复为 requirements_Movie3R.txt 中的版本：torch==2.4.0
 - 单 GPU 训练已验证正常：batch 0 loss=0.0614, max mem=40261 MB
 
+**后续**：✅ **已解决** - 在云平台 H800 集群上 4GPU 训练成功完成
+
 ---
 
-### 17. 正式训练配置（2026/04/16）
+### 17. 正式训练配置
 
 **训练环境**：
-- 项目路径：`/data/wangzheng/Movie3R-new/Human3R/`
-- 训练脚本：`train.sh`
+- 项目路径：`/workspace/code/Movie3R/`
+- 训练脚本：`cmd_4gpu_train.sh`
 - 虚拟环境：`.venv/`（torch==2.4.0+cu124）
 
-**注意事项**：
-- `train.sh` 中已添加 `export TORCH_HOME=~/.cache/torch`
-- 原因：`Dinov2Backbone` 使用 `torch.hub.load`，即使 `pretrained=False` 也需要读取本地缓存的模型定义
-- 该服务器无法访问 GitHub，必须设置 `TORCH_HOME` 使用离线模式
-
-**训练数据集**：
+**训练数据集**（3 个数据集）：
 | 数据集 | 类型 | 路径 |
 |--------|------|------|
-| AvatarReX_Video (zzr) | Video | `../../../Movie3R-dataset/AvatarReX4Human3R` |
-| AvatarReX_Video (lbn1) | Video | `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R` |
-| AvatarReX_AABB (zzr) | AABB | `../../../Movie3R-dataset/AvatarReX4Human3R` |
-| AvatarReX_AABB (lbn1) | AABB | `../../../Movie3R-dataset/AvatarReX_lbn1_4Human3R` |
-- 合计：8000 samples/epoch，Video/AABB 各 50%
+| AvatarReX_Video (zzr) | Video | `/workspace/data/avatarrex_zzr` |
+| AvatarReX_Video (lbn1) | Video | `/workspace/data/avatarrex_lbn1` |
+| AvatarReX_Video (zxc) | Video | `/workspace/data/avatarrex_zxc` |
+| AvatarReX_AABB (zzr) | AABB | `/workspace/data/avatarrex_zzr` |
+| AvatarReX_AABB (lbn1) | AABB | `/workspace/data/avatarrex_lbn1` |
+| AvatarReX_AABB (zxc) | AABB | `/workspace/data/avatarrex_zxc` |
 
-**正式训练参数**：
+**数据集划分**（通过 seed 区分）：
+| Split | 样本数 | Seed | 说明 |
+|-------|--------|------|------|
+| train | 4800 | 11 | 800 × 6 datasets |
+| val | 600 | 22 | 100 × 6 datasets |
+| test | 600 | 33 | 100 × 6 datasets |
+
+**正式训练参数**（实际运行）：
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| epochs | 40 | 训练轮数 |
-| batch_size | 8 | 每卡 batch size |
+| epochs | 30 | 训练轮数 |
+| batch_size | 2 | 每卡 batch size |
+| num GPUs | 4 | 等效 batch_size=8 |
+| num_workers | 0 | 单进程模式（避免 /dev/shm 限制）|
 | lr | 1e-4 | 学习率 |
 | min_lr | 1e-6 | 最小学习率 |
 | warmup_epochs | 5 | warmup 轮数 |
 | weight_decay | 0.05 | 权重衰减 |
 | gradient_checkpointing | true | 梯度检查点（节省显存）|
 | amp | 1 | 混合精度训练 |
-| num_workers | 8 | 数据加载线程数 |
+| early_stopping_patience | 10 | 早停轮数 |
 
-**训练规模估算**（单卡 batch_size=8）：
-- samples/epoch：8000
-- batch_size：8
-- steps/epoch：1000
-- 每 step 约 2 秒
-- **1 epoch ≈ 35 分钟**
-- **40 epochs ≈ 23 小时**
-
-**训练命令**：
-```bash
-# 1. 先查看 GPU 状态，选择空闲卡
-./train.sh 0
-
-# 2. 单卡正式训练（batch_size=8）
-./train.sh 1 40 8
-
-# 3. 多卡训练（如有空闲 GPU，effective batch = 8 × num_gpus）
-./train.sh 4 40 8
-```
+**训练结果**（30 epochs 正式训练）：
+- 训练时长：20 小时 2 分钟
+- Val Loss：28.52 → 1.31（降低 95%）
+- SMPLLoss_j3d：0.47m → 0.04m（降低 92%）
+- 无过拟合迹象，Val loss 持续下降
 
 **实验输出**：
-- 路径：`experiments/avatarrex_zzr_lbn1/`
-- 包含：checkpoints/, logs/, configs/
+- 路径：`experiments/formal_training-4gpu/`
+- checkpoint-best.pth：11.5 GB（最佳验证模型）
+- checkpoint-final.pth：4.7 GB（最终模型）
+- checkpoint-last.pth：11.5 GB（最后一个 epoch）
 
 ---
 
@@ -632,7 +592,7 @@ ARCroco3DStereo
 
 **冻结选项**（`freeze` 参数）：
 | freeze 参数 | 冻结内容 | 说明 |
-|------------|---------|------|
+|------------|---------|-----|
 | `freeze='none'` | **无** | **全量微调（当前配置）** |
 | `freeze='encoder'` | enc_blocks + enc_blocks_ray_map | 仅微调 decoder + head |
 | `freeze='decoder'` | dec_blocks + dec_blocks_state | 仅微调 encoder + head |
@@ -655,6 +615,22 @@ freeze='none'  # 全量微调
 - 模型定义：`src/dust3r/model.py`
 - CroCo 基类：`src/croco/models/croco.py`
 - 冻结逻辑：`src/dust3r/model.py` 第 509-635 行
+
+---
+
+### 19. 训练完成事项
+
+1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（3 数据集）
+2. ✅ **训练测试**：数据加载、loss 计算正常
+3. ✅ **SMPL 坐标 bug**：已修复
+4. ✅ **全量微调验证**：freeze=none, batch_size=1 通过
+5. ✅ **正式训练参数**：已确定并成功运行
+6. ✅ **模型架构与冻结配置**：已记录
+7. ✅ **多GPU训练**：✅ 已解决 - 4GPU 30 epochs 训练成功完成
+8. ✅ **AABB view2 pose loss**：已实现并通过测试
+9. ✅ **Train/Val/Test 划分**：通过 seed 区分（11/22/33）
+10. ✅ **Early stopping**：patience=10 已实现
+11. ✅ **Best model 保存**：按 val loss 保存 checkpoint-best.pth
 
 ---
 
@@ -716,9 +692,11 @@ tail -f src/checkpoints/human3r/train.log
 
 ---
 
-### 21. 服务器迁移与环境配置指南（2026/04/17）
+### 21. 服务器迁移与环境配置指南（历史参考）
 
-#### 当前环境
+> ⚠️ **以下内容为历史参考**，基于旧服务器环境 `/data/wangzheng/Movie3R-new/Human3R/`。当前环境为 `/workspace/code/Movie3R/`，路径和配置可能不同。
+
+#### 旧环境配置（仅供参考）
 
 | 项目 | 版本/值 |
 |------|--------|
@@ -728,131 +706,20 @@ tail -f src/checkpoints/human3r/train.log
 | 预训练权重 | `/data/wangzheng/Movie3R-new/Human3R/src/human3r_896L.pth` |
 | Dinov2 backbone | `TORCH_HOME=$HOME/.cache/torch`（离线模式） |
 
-#### 迁移步骤
+#### 迁移要点（通用）
 
-**1. 准备代码和数据**
-
-```bash
-# 1. 复制整个项目目录到新服务器
-scp -r /data/wangzheng/Movie3R-new/Human3R user@h800:/path/to/projects/
-
-# 2. 复制预训练权重（如果路径不同，需修改 config/train.yaml）
-scp /data/wangzheng/Movie3R-new/Human3R/src/human3r_896L.pth user@h800:/path/to/projects/Human3R/src/
-
-# 3. 复制数据集（两个 AvatarReX 预处理后的数据）
-scp -r /data/wangzheng/Movie3R-dataset/AvatarRex4Human3R user@h800:/path/to/datasets/
-scp -r /data/wangzheng/Movie3R-dataset/AvatarRex_lbn1_4Human3R user@h800:/path/to/datasets/
-```
-
-**2. uv 环境配置**
-
-```bash
-cd /path/to/projects/Human3R
-
-# 方法一：从项目已有的 .venv（推荐，确保 pip 版本一致）
-uv sync
-
-# 方法二：如果 .venv 损坏，用 pyproject.toml 重建
-uv sync --no-cache
-
-# 方法三：手动指定版本
-uv pip install python==3.10.19
-uv pip install torch==2.4.0 torchvision --index-url https://download.pytorch.org/whl/cu124
-```
-
-**3. 修改配置文件（必须）**
-
-编辑 `config/train.yaml`，将所有硬编码路径改为新服务器实际路径：
-
-```yaml
-# 预训练权重（必须改）
-pretrained: /path/to/projects/Human3R/src/human3r_896L.pth
-
-# AvatarReX 数据集（必须改，假设新路径为 /data/datasets/）
-dataset28: AvatarReX_Video(..., ROOT="/data/datasets/AvatarRex4Human3R", ...)
-dataset29: AvatarReX_Video(..., ROOT="/data/datasets/AvatarRex_lbn1_4Human3R", ...)
-dataset30: AvatarReX_AABB(..., ROOT="/data/datasets/AvatarRex4Human3R", ...)
-dataset31: AvatarReX_AABB(..., ROOT="/data/datasets/AvatarRex_lbn1_4Human3R", ...)
-
-# test_dataset 也要改
-test_dataset: 500 @ AvatarReX_Video(split='Training', ROOT="/data/datasets/AvatarRex4Human3R", ...)
-```
-
-**4. Dinov2 backbone（H800 离线模式）**
-
-train.sh 已设置 `TORCH_HOME=$HOME/.cache/torch`，确保 Dinov2 权重已缓存：
-
-```bash
-# 方法一：从本服务器拷贝缓存（已有约 2GB+）
-scp -r ~/.cache/torch user@h800:~/.cache/
-
-# 方法二：首次训练时会自动下载（如有网络）
-# torch.hub 会从 GitHub 下载 dinov2_vitl14 权重（约 300MB）
-```
-
-**5. 验证环境**
-
-```bash
-cd /path/to/projects/Human3R
-
-# 激活环境
-source .venv/bin/activate
-
-# 检查 Python 和 PyTorch
-python --version          # 应为 3.10.19
-python -c "import torch; print(torch.__version__)"  # 应为 2.4.0+cu124
-
-# 查看 GPU
-nvidia-smi
-
-# 测试单卡训练（1 step）
-./train.sh 1 1 1
-```
-
-**6. 启动正式训练**
-
-```bash
-# 查看 GPU 状态
-./train.sh 0
-
-# 单卡正式训练（40 epochs，batch_size=8）
-./train.sh 1 40 8
-
-# 4卡训练（如有 4 张 H800 80GB）
-./train.sh 4 40 2    # 每卡 batch=2，effective batch=8
-```
-
-#### 迁移检查清单
-
-| 项目 | 状态 | 说明 |
-|------|------|------|
-| Python 3.10 / PyTorch 2.4+cu124 | ✅ 兼容 | H800 服务器通常满足 |
-| 代码目录复制 | ❌ 需执行 | scp 整个 Human3R 目录 |
-| 预训练权重 | ❌ 需执行 | `human3r_896L.pth` 复制到新路径 |
-| 数据集路径修改 | ❌ 需执行 | 修改 `config/train.yaml` 中所有 ROOT |
-| uv 环境重建 | ⚠️ 建议 | `uv sync` 重建 .venv |
-| Dinov2 backbone | ⚠️ 建议 | 拷贝 `~/.cache/torch` 到新服务器 |
-| 数据预处理 | ⚠️ 按需 | 如数据集不存在则需运行预处理脚本 |
-| 实验输出路径 | ✅ 已是相对路径 | `experiments/` 无需修改 |
-
-#### 注意事项
-
-1. **数据集路径**：所有 `ROOT=` 必须使用**绝对路径**，不能依赖 `../../../Movie3R-dataset/` 相对路径
-2. **多卡 NCCL**：H800 服务器如遇 NCCL 初始化问题，参考 work_log Section 16 的排查方法
-3. **实验输出**：首次运行会在 `experiments/avatarrex_zzr_lbn1/` 下创建 checkpoint 和日志
-4. **TORCH_HOME**：train.sh 已在第 14 行设置 `export TORCH_HOME=$HOME/.cache/torch`，不要删除
+1. **数据集路径**：所有 `ROOT=` 必须使用**绝对路径**
+2. **TORCH_HOME**：`train.sh` 中设置 `export TORCH_HOME=$HOME/.cache/torch`
+3. **num_workers**：建议 `num_workers=0` 避免 /dev/shm 限制
+4. **NCCL 问题**：如遇多GPU训练卡住，参考 Section 16 排查
 
 ---
 
-### 19. 待完成事项
+### 22. 已知问题与注意事项
 
-1. ✅ **训练配置**：AvatarReX Video + AABB 混合训练（已完成）
-2. ✅ **训练测试**：数据加载、loss 计算正常（已完成）
-3. ✅ **SMPL 坐标 bug**：已修复并更新 work_log（已完成）
-4. ✅ **全量微调验证**：freeze=none, batch_size=1 通过（已完成）
-5. ✅ **正式训练参数**：已写入 work_log（已完成）
-6. ✅ **模型架构与冻结配置**：已写入 work_log（已完成）
-7. ⚠️ **多GPU训练**：NCCL 问题，需联系管理员或换服务器
-8. ✅ **AABB view2 pose loss**：已实现并通过测试（已完成）
-9. **lbn2 深度图**：迁移到其他服务器后继续生成
-10. **BEDLAM subset**（可选）：如 AvatarReX 效果不佳，下载部分 BEDLAM 数据
+1. **Dinov2 网络问题**：如 `torch.hub.load` 超时，需要设置 `TORCH_HOME` 使用离线缓存
+2. **/dev/shm 限制**：容器环境可能只有 64MB，使用 `num_workers=0` 避免
+3. **batch_size 选择**：H800 80GB 单卡最大 batch_size=2（等效 4GPU × bs=2 = 8）
+4. **checkpoint 区别**：
+   - `checkpoint-final.pth`：仅模型权重 (~4.7GB)
+   - `checkpoint-best.pth` / `checkpoint-last.pth`：模型 + 优化器 + AMP scaler (~11.5GB)
