@@ -175,18 +175,25 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         annots_t2 = self._load_smpl(split_path, seqA_name, cam, t2)
         annots_t3 = self._load_smpl(split_path, seqA_name, cam, t3)
 
+        # shot_label: frame i-1 → frame i 是否发生 shot change
+        # view 0: 0 (first frame, 无 previous)
+        # view 1: 0 (seqA → seqA, 相机连续)
+        # view 2: 1 (seqA → seqB, 相机跳变)
+        # view 3: 0 (seqB → seqB, 相机连续)
+        shot_labels = [0, 0, 1, 0]
+
         views = []
         view_specs = [
-            (seqA_name, cam, t,  annots_t),   # view 0: 相机A @ t
-            (seqA_name, cam, t1, annots_t1),  # view 1: 相机A @ t+1
-            (seqB_name, cam, t2, annots_t2),  # view 2: 相机B @ t+2（时间连续）
-            (seqB_name, cam, t3, annots_t3),  # view 3: 相机B @ t+3（时间连续）
+            (seqA_name, cam, t,  annots_t,  0),   # view 0: 相机A @ t
+            (seqA_name, cam, t1, annots_t1, 1),   # view 1: 相机A @ t+1
+            (seqB_name, cam, t2, annots_t2, 2),   # view 2: 相机B @ t+2（跳变后）
+            (seqB_name, cam, t3, annots_t3, 3),   # view 3: 相机B @ t+3
         ]
 
-        for v, (seq_name, cam_id, frame_idx, annots) in enumerate(view_specs):
+        for v, (seq_name, cam_id, frame_idx, annots, shot_label) in enumerate(view_specs):
             views.append(self._load_view(
                 split_path, seq_name, cam_id, frame_idx, annots,
-                resolution, rng, v,
+                resolution, rng, v, shot_label,
             ))
 
         assert len(views) == num_views
@@ -206,7 +213,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         return annots
 
     def _load_view(self, split_path, seq_name, cam_id, frame_idx, annots,
-                   resolution, rng, v):
+                   resolution, rng, v, shot_label=0):
         """加载单个 view 的所有数据。"""
         frame_str = f"{frame_idx:08d}"  # 原始文件格式: 00000000.png
 
@@ -330,6 +337,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             depth_only=False,
             single_view=False,
             reset=False,
+            shot_label=shot_label,   # 0=连续, 1=相机跳变
             smpl_mask=smpl_mask,
             **smpl_dict,
         )
@@ -437,16 +445,20 @@ class AvatarReX_Video(BaseMultiViewDataset):
 
         split_path = osp.join(self.ROOT, self.split)
 
+        # Video 模式: 所有帧相机连续，shot_label 全为 0
+        shot_labels = [0] * num_views
+
         views = []
         for v in range(num_views):
             frame_idx = t + v
             views.append(self._load_view(
                 split_path, seq_name, cam, frame_idx, resolution, rng, v,
+                shot_labels[v],
             ))
 
         return views
 
-    def _load_view(self, split_path, seq_name, cam_id, frame_idx, resolution, rng, v):
+    def _load_view(self, split_path, seq_name, cam_id, frame_idx, resolution, rng, v, shot_label=0):
         """加载单个 view。"""
         frame_str = f"{frame_idx:08d}"
 
@@ -565,6 +577,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
             depth_only=False,
             single_view=False,
             reset=False,
+            shot_label=shot_label,   # 0=连续, Video 模式全为 0
             smpl_mask=smpl_mask,
             **smpl_dict,
         )
