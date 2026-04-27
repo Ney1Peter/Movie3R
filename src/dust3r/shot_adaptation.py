@@ -249,7 +249,6 @@ class LoRAWorldGlobalShift(nn.Module):
 
         x = torch.cat([img_global, q_out], dim=-1)  # [B, 1, 2*dec_dim]
         delta = self.lora(x)  # [B, 1, 3]
-        delta = delta.squeeze(1)  # [B, 3]
-        delta = delta.unsqueeze(-1).unsqueeze(-1)  # [B, 1, 1, 3]
+        delta = delta.squeeze(1).unsqueeze(1).unsqueeze(1)  # [B, 1, 1, 3]
 
         return world_base + self.gamma * delta

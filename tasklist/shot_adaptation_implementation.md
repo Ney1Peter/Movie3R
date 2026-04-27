@@ -21,14 +21,14 @@
 | StateGate | nn.Module | model.py | ~0.10M | 控制状态混合比例 |
 | LoRA Pose/Human/World | nn.Module | model.py | ~0.45M | 对输出做微调修正 |
 
-**总训练参数**: ~1.3M（待实际打印确认）
+**总训练参数**: 1,301,788 (≈1.3M，已实际打印确认)
 
 **参数估算**:
-- ShotTokenGenerator: Linear(3*768+1→256) ≈ 590K + Linear(256→768) ≈ 197K ≈ 787K
-- StateGate: Linear(768→128) ≈ 98K + Linear(128→1) ≈ 129 ≈ 98K
-- LoRAPoseHead: Linear(2*768→128) ≈ 197K + Linear(128→7) ≈ 900 ≈ 198K
-- LoRAHumanHead: Linear(2*768→10+3) ≈ 15K + 270 ≈ 15.3K (第一版只修 shape/transl)
-- LoRAWorldGlobalShift: Linear(2*768→128) ≈ 197K + Linear(128→3) ≈ 384 ≈ 197K
+- ShotTokenGenerator: 788,480 ≈ 787K
+- StateGate: 98,561 ≈ 99K
+- LoRAPoseHead: 197,640 ≈ 198K
+- LoRAHumanHead: 19,983 ≈ 20K (第一版只修 shape/transl)
+- LoRAWorldGlobalShift: 197,124 ≈ 197K
 
 ### 1.2 数据流
 

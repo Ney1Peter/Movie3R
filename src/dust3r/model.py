@@ -644,10 +644,14 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params(to_be_frozen["encoder"]) # requires_grad = False
             freeze_all_params(to_be_frozen["mhmr"])
         elif freeze == "shot_adaptation":
-            # 冻结所有原始模块
-            fix_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
             freeze_all_params(to_be_frozen["encoder"])
             freeze_all_params(to_be_frozen["mhmr"])
+            # downstream_head 有多个子模块，需要显式冻结整个模块
+            freeze_all_params([self.downstream_head])
+            # masked_smpl_token 也需要冻结
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             # 只训练 shot adaptation 模块
             fix_all_params([
                 self.shot_token_generator,
