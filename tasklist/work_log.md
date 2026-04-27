@@ -728,6 +728,8 @@ tail -f src/checkpoints/human3r/train.log
 
 ### 23. 微调后问题排查（2026/04/26）
 
+> ⚠️ **此方案已过时（2026/04/27）**：Section 23-24 的 `freeze='encoder'` 方案存在问题，会解冻 CUT3R decoder，破坏 Human3R 的核心假设。正确方向见 Section 25。
+
 #### 问题现象
 全量微调（freeze='none'）后，在 h36.mp4 推理时出现：
 1. **SMPL 检测失败**：smpl_scores 最高只有 0.067，远低于检测阈值 0.3，导致 shape/rotvec/transl 全为 (0, ...)
@@ -926,3 +928,330 @@ L = L_pose_abs
 ```
 
 **这样更适合在不分段、不后处理的前提下，提升 Human3R 对镜头跳变的重定位能力。**
+
+---
+
+### 25. Shot-Aware Adaptation 方案（正确方向，2026/04/27）
+
+#### 核心原则
+
+1. **不修改 CUT3R 基模**：CUT3R encoder/decoder 全部冻结
+2. **模仿 Human3R 的方式**：在冻结的 CUT3R 基础上，增加轻量可学习模块
+3. **不破坏原有推理流程**：新模块作为 residual/correction 添加
+
+#### 问题分析
+
+Human3R 在镜头连续、相机运动平滑的视频中表现较好，因为继承了 CUT3R 的 recurrent persistent state 机制。
+
+但在存在明显镜头切换的视频中，模型表现会明显变差：
+- 同一场景，时间连续，但相机视角突然变化
+- 问题根源：`S_{t-1}` 编码旧镜头视角的空间上下文，与新镜头 F_t 不兼容
+- decoder 交互时会从旧 state 读出不适合当前视角的上下文，导致 camera pose / world pointmap / human mesh 偏移
+
+#### 正确方案：Shot-Aware Token + State Gate + LoRA Heads
+
+**新结构：**
+```
+I_t -> Frozen Encoder -> F_t
+
+F_t, F_{t-1} -> ShotTokenGenerator -> q_t
+
+[z, F_t, H_t, q_t] + S_tilde_{t-1}
+  -> Frozen Decoder
+  -> [z'_t, F'_t, H'_t, q'_t] + S_t
+
+**Decoder token 排列顺序：[z, F_t, H_t, q_t]（q_t 在最后一位）
+q_out = tokens[:, -1:]（取最后一个 token 作为 q'_t）**
+
+LoRA 使用 q'_t（decoder 输出）作为 condition，不是 q_t（decoder 输入）
+
+F'_t + q'_t -> world LoRA
+z'_t + q'_t -> pose LoRA
+H'_t + q'_t -> human LoRA
+```
+
+**关键：q_t 与 q'_t 不混用**
+- **q_t**：进入 decoder 前的 shot token，由 ShotTokenGenerator 生成
+- **q'_t**：decoder 输出后的 refined shot token，已融合 image/state/camera/human 上下文
+- LoRA heads 必须用 **q'_t**
+
+#### 训练数据格式
+
+| 类型 | frame order | camera pattern | shot_label |
+|------|-------------|-----------------|------------|
+| Video | [t, t+1, t+2, t+3] | [A, A, A, A] | [0, 0, 0, 0] |
+| AABB | [t, t+1, t+2, t+3] | [A, A, B, B] | [0, 0, 1, 0] |
+
+**shot_label[i] 表示 frame i-1 → frame i 是否发生 shot change。**
+AABB 中 boundary 是 frame1 → frame2，所以 shot_label[2] = 1。
+
+**q_i 始终用相邻时间帧计算：q_2 = ShotGen(F_2, F_1)，不是 F_2 和 F_0。**
+
+#### 模块设计
+
+**1. ShotTokenGenerator V1（第一版）**
+
+使用 decoder 前的 F_t（维度 dec_dim）作为输入，避免额外投影：
+
+```python
+class ShotTokenGenerator(nn.Module):
+    """Global Difference Token - 使用 dec_dim 特征"""
+    def __init__(self, dec_dim=768):
+        # 输入: g_curr, g_prev, diff, sim = 3 * dec_dim + 1 (V1)
+        # V2 Patch Matching: 4 * dec_dim + 1 (多 d_match)
+        self.shot_mlp = nn.Sequential(
+            nn.Linear(dec_dim * 3 + 1, 256),  # V1: 3*dec_dim + 1
+            nn.GELU(),
+            nn.Linear(256, dec_dim),
+        )
+        # i=0 没有 previous frame，用可学习的 q_init
+        self.q_init = nn.Parameter(torch.randn(1, 1, dec_dim) * 0.02)
+
+    def forward(self, feat_curr, feat_prev, i):
+        # feat_curr, feat_prev: [B, N, dec_dim]
+        if i == 0:
+            return self.q_init.expand(feat_curr.shape[0], -1, -1)
+        g_curr = feat_curr.mean(dim=1)      # [B, dec_dim]
+        g_prev = feat_prev.mean(dim=1)      # [B, dec_dim]
+        diff = g_curr - g_prev              # [B, dec_dim]
+        sim = F.cosine_similarity(g_curr, g_prev, dim=-1)  # [B]
+        x = torch.cat([g_curr, g_prev, diff, sim.unsqueeze(-1)], dim=-1)  # [B, 3*dec_dim+1]
+        q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
+        return q_t
+```
+
+**V2（后续）：Patch Matching Token**
+```python
+# V2 输入: g_curr, g_prev, diff, d_match, sim = 4 * dec_dim + 1
+def forward_v2(self, feat_curr, feat_prev, i):
+    if i == 0:
+        return self.q_init.expand(feat_curr.shape[0], -1, -1)
+    g_curr = feat_curr.mean(dim=1)
+    g_prev = feat_prev.mean(dim=1)
+    diff = g_curr - g_prev
+
+    # Patch matching
+    A = F.softmax(feat_curr @ feat_prev.transpose(-2,-1) / math.sqrt(feat_curr.shape[-1]), dim=-1)
+    F_match = A @ feat_prev
+    d_match = (feat_curr - F_match).mean(dim=1)  # V2 多这个
+    sim = A.max(dim=-1)[0].mean(dim=-1)
+
+    x = torch.cat([g_curr, g_prev, diff, d_match, sim.unsqueeze(-1)], dim=-1)  # 4*dec_dim+1
+    return self.shot_mlp_v2(x).unsqueeze(1)
+```
+
+**2. StateGate（第一版：scalar alpha）**
+
+```python
+class StateGate(nn.Module):
+    """S_tilde = alpha * S_prev + (1 - alpha) * S0"""
+    def __init__(self, dec_dim=768):
+        self.gate_mlp = nn.Sequential(
+            nn.Linear(dec_dim, 128),
+            nn.GELU(),
+            nn.Linear(128, 1),  # 输出 scalar alpha
+        )
+
+    def forward(self, q_t):
+        # q_t: [B, 1, dec_dim]
+        # alpha: [B, 1, 1]
+        alpha = torch.sigmoid(self.gate_mlp(q_t))  # [B, 1, 1]
+        return alpha
+```
+
+**第一帧处理（i=0）：**
+```python
+if i == 0:
+    q_t = q_init          # 可学习参数
+    S_tilde = S0         # 直接用初始 state，不做 gate
+else:
+    q_t = ShotTokenGenerator(F_t, F_{t-1})
+    alpha = StateGate(q_t)
+    S_tilde = alpha * S_prev + (1 - alpha) * S0
+```
+
+**State Gate 计算细节：**
+```python
+# S_prev: [B, N_state, dec_dim]
+# S0: [1, N_state, dec_dim] (可学习初始 state)
+
+S0_expand = S0.expand_as(S_prev)  # [B, N_state, dec_dim]
+S_tilde = alpha * S_prev + (1 - alpha) * S0_expand  # [B, N_state, dec_dim]
+```
+
+**注意：必须加回 S0，不要只做 alpha * S_prev**
+
+#### 3. LoRA Heads（使用 q'_t 作为 condition）
+
+**3.1 Pose LoRA**
+
+Pose 表达：quaternion (4D) + translation (3D) = 7D
+
+```python
+class LoRAPoseHead(nn.Module):
+    """Pose residual: T_final = T_base + gamma * delta_T
+    输入: z'_t [B,1,C], q'_t [B,1,C], pose_base [B,7] (quat4 + trans3)
+    """
+    def __init__(self, dec_dim=768, shot_dim=768):
+        self.gamma = nn.Parameter(torch.tensor(0.01))
+        # delta: 4D quaternion residual + 3D translation residual = 7D
+        self.lora = nn.Sequential(
+            nn.Linear(dec_dim + shot_dim, 128),
+            nn.GELU(),
+            nn.Linear(128, 7),  # delta_quat(4) + delta_trans(3)
+        )
+
+    def forward(self, z_token, q_out, pose_base):
+        # z_token: [B,1,dec_dim], q_out: [B,1,shot_dim], pose_base: [B,7]
+        x = torch.cat([z_token, q_out], dim=-1)
+        delta = self.lora(x)  # [B, 1, 7]
+        delta = delta.squeeze(1)
+
+        # quaternion 加 residual 后必须 normalize
+        q_base = pose_base[:, :4]      # [B, 4]
+        t_base = pose_base[:, 4:]      # [B, 3]
+        delta_q = delta[:, :4]         # [B, 4]
+        delta_t = delta[:, 4:]         # [B, 3]
+
+        q_final = F.normalize(q_base + self.gamma * delta_q, dim=-1)  # normalize quaternion
+        t_final = t_base + self.gamma * delta_t
+
+        return torch.cat([q_final, t_final], dim=-1)  # [B, 7]
+```
+
+**3.2 Human LoRA**
+
+Human 输出是 dict，按实际字段名处理：
+
+```python
+class LoRAHumanHead(nn.Module):
+    """Human SMPL residual: y_final = y_base + gamma * delta_y
+    输入: H'_t [B,N_humans,C], q'_t [B,1,C]
+    Human 输出是 dict: body_pose, betas, cam, expression 等
+    """
+    def __init__(self, dec_dim=768, shot_dim=768):
+        # 每个参数单独 gamma
+        self.gamma_body_pose = nn.Parameter(torch.tensor(0.01))
+        self.gamma_betas = nn.Parameter(torch.tensor(0.01))
+        self.gamma_cam = nn.Parameter(torch.tensor(0.01))
+        # expression 不做 residual
+
+        in_dim = dec_dim + shot_dim
+        self.lora_body_pose = nn.Linear(in_dim, 318)  # 53*6
+        self.lora_betas = nn.Linear(in_dim, 10)
+        self.lora_cam = nn.Linear(in_dim, 3)
+
+    def forward(self, smpl_token, q_out, pred_smpl_dict):
+        # smpl_token: [B, N_humans, dec_dim]
+        # q_out: [B, 1, shot_dim] (q'_t)
+        # pred_smpl_dict: dict with keys body_pose, betas, cam, expression 等
+        q_expand = q_out.expand(-1, smpl_token.shape[1], -1)  # [B, N, shot_dim]
+        x = torch.cat([smpl_token, q_expand], dim=-1)  # [B, N, dec_dim+shot_dim]
+
+        delta_body_pose = self.lora_body_pose(x)
+        delta_betas = self.lora_betas(x)
+        delta_cam = self.lora_cam(x)
+
+        # 不要丢其他字段
+        out = pred_smpl_dict.copy()
+        out['body_pose'] = pred_smpl_dict['body_pose'] + self.gamma_body_pose * delta_body_pose
+        out['betas'] = pred_smpl_dict['betas'] + self.gamma_betas * delta_betas
+        out['cam'] = pred_smpl_dict['cam'] + self.gamma_cam * delta_cam
+        # expression 等其他字段保持不变
+        return out
+```
+
+**3.3 World LoRA**
+
+```python
+class LoRAWorldHead(nn.Module):
+    """World pointmap residual: X_world_final = X_world_base + gamma * Delta_X
+    输入: F'_t [B,N,C], z'_t [B,1,C], q'_t [B,1,C]
+    """
+    def __init__(self, dec_dim=768, shot_dim=768):
+        self.gamma = nn.Parameter(torch.tensor(0.01))
+        self.lora = nn.Sequential(
+            nn.Linear(dec_dim * 2 + shot_dim, 256),
+            nn.GELU(),
+            nn.Linear(256, 3),  # 3D point residual
+        )
+
+    def forward(self, img_feat, pose_token, q_out, world_base):
+        # img_feat: [B, N, dec_dim]
+        # pose_token: [B, 1, dec_dim] (z'_t)
+        # q_out: [B, 1, shot_dim] (q'_t)
+        N = img_feat.shape[1]
+        z_expand = pose_token.expand(-1, N, -1)  # [B, N, dec_dim]
+        q_expand = q_out.expand(-1, N, -1)          # [B, N, shot_dim]
+        x = torch.cat([img_feat, z_expand, q_expand], dim=-1)  # [B, N, 2*dec_dim+shot_dim]
+        delta = self.lora(x)  # [B, N, 3]
+        return world_base + self.gamma * delta
+```
+
+#### 实现顺序
+
+| Step | 内容 | 位置 | 优先级 |
+|------|------|------|--------|
+| 1 | ShotTokenGenerator V1 | model.py | 必做 |
+| 2 | StateGate | model.py | 必做 |
+| 3 | ARCroco3DStereo.__init__ 中创建实例 | model.py | 必做 |
+| 4 | 修改 _decoder 接受 f_shot | model.py | 必做 |
+| 5 | 修改 _forward_impl 循环，预计算 q_tokens，应用 State Gate | model.py | 必做 |
+| 6 | 修改 head split 分离 q_out | model.py | 必做 |
+| 7 | LoRAPoseHead | dpt_head.py | 必做 |
+| 8 | LoRAHumanHead | dpt_head.py | 必做 |
+| 9 | LoRAWorldHead | dpt_head.py | 推荐同时做 |
+| 10 | DPTPts3dPoseSMPL.forward 应用 LoRA | dpt_head.py | 必做 |
+| 11 | freeze='shot_adaptation' | model.py | 必做 |
+| 12 | train.yaml | config/train.yaml | 必做 |
+
+#### 第一版可跳过
+
+- ShotTokenGenerator V2（Patch Matching）
+- cam head LoRA
+- token-wise alpha
+- forward_recurrent_lighter
+- 解冻 decoder
+
+#### 第一版实现目标
+
+先保证：
+1. 稳定跑通
+2. 不破坏原 Human3R 推理流程
+3. LoRA residual 形式简单正确
+
+#### 实现注意事项
+
+**1. Pose LoRA 格式依赖**
+当前 Pose LoRA 实现假设 pose_base 格式为 quat4 + trans3（共 7D）。
+必须先确认原 `downstream_head.pose_head` / `decpose` 的实际输出格式：
+- 如果是 axis-angle (3D) + trans3 共 6D，需要调整 residual 维度
+- 如果是其他 rotation representation（6D、9D），需要相应修改
+- LoRA 输出维度必须与原 pose 维度匹配
+
+**2. Human LoRA 禁止 inplace 修改**
+```python
+# 错误（inplace 修改）：
+pred_smpl_dict['body_pose'] = pred_smpl_dict['body_pose'] + gamma * delta
+
+# 正确（copy 后返回）：
+out = pred_smpl_dict.copy()
+out['body_pose'] = pred_smpl_dict['body_pose'] + gamma * delta
+return out
+```
+
+**3. World LoRA 格式适配**
+world_base 可能有多种格式：
+- `[B, N, 3]`：标准 point cloud 格式，直接加 delta
+- `[B, H, W, 3]`：DPT 深度图格式，需要 reshape 后处理
+- `dict`：`{'pts3d': ..., 'conf': ...}` 等，需要按字段名处理
+
+实现时必须先检查实际格式，不能假定点 token 是唯一的 3D 输出。
+
+**4. Token 来源明确区分**
+- **ShotTokenGenerator**：使用 decoder **输入** token，即 F_t（编码后的图像特征）
+- **LoRA heads**：使用 decoder **输出** token，即 F'_t / z'_t / H'_t / q'_t
+  - `F'_t`：用于 world LoRA（场景点云）
+  - `z'_t`：用于 pose LoRA（相机位姿）
+  - `H'_t`：用于 human LoRA（人体 SMPL 参数）
+  - `q'_t`：用于所有 LoRA（shot condition）
