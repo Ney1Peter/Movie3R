@@ -1,4 +1,4 @@
-model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='none',
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='shot_adaptation',
   state_size=768, state_pe='2d', pos_embed='RoPE100',
   rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
   512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
