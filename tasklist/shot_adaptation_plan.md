@@ -72,24 +72,44 @@ S_tilde = alpha * S_prev + (1 - alpha) * S0_expand
 
 **S0 的来源**: 复用 CUT3R/Human3R 原始的 initial state（从预训练权重加载），不随机初始化，不加入 optimizer。
 
-#### 1.1.3 LoRA Heads
+#### 1.1.3 LoRA Heads（已确认格式）
 
-**LoRAPoseHead** (`src/dust3r/heads/dpt_head.py`)
+**LoRAPoseHead**
 - 输入: z'_t [B,1,dec_dim], q'_t [B,1,dec_dim], pose_base [B,7]
 - 输出: corrected pose [B,7]
-- **注意**: 先确认 pose_base 实际格式（quat4+trans3 或其他）
+- **确认**: pose_base 格式为 trans(3) + quat(4)，共 7D
 
-**LoRAHumanHead** (`src/dust3r/heads/dpt_head.py`)
-- 输入: H'_t [B,N,dec_dim], q'_t [B,1,dec_dim], pred_smpl_dict
+**LoRAHumanHead**
+- 输入: H'_t [B,N_humans,dec_dim], q'_t [B,1,dec_dim], pred_smpl_dict
 - 输出: corrected smpl dict
+- **确认**: SMPL dict 实际字段为 `smpl_shape`(10D), `smpl_transl`(3D), `smpl_rotmat`(6,3,3), `smpl_expression`(10D)
 - **注意**: 使用 `pred_smpl_dict.copy()` 避免 inplace 修改
 
-**LoRAWorldHead** (`src/dust3r/heads/dpt_head.py`)
-- 输入: F'_t [B,N,dec_dim], z'_t [B,1,dec_dim], q'_t [B,1,dec_dim], world_base
+**LoRAWorldHead**
+- 输入: F'_t [B,H,W,dec_dim], z'_t [B,1,dec_dim], q'_t [B,1,dec_dim], world_base
 - 输出: corrected world points
-- **注意**: world_base 可能是 [B,N,3] 或 [B,H,W,3] 或 dict，需适配
+- **确认**: world_base 格式为 [B,H,W,3]（DPT 深度图格式），不是 BxNx3
+- **注意**: 需要 global average pool 处理空间维度
 
-**gamma 初始化**: 建议初始化为 0（而非 0.01），让模型从零开始学习何时应用修正。
+**gamma 初始化**: 建议初始化为 0，让模型从零开始学习何时应用修正。
+
+#### 1.1.4 Token 提取位置（已确认）
+
+**Decoder 输出 token 顺序（来自 _forward_impl）**：
+```python
+# dec[dec_depth] 是最终输出
+pose_token = dec[dec_depth][:, 0:1]     # z' = 第一个 token
+img_tokens = dec[dec_depth][:, 1:-n_humans_i]  # F' = 中间 tokens
+smpl_token = dec[dec_depth][:, -n_humans_i:]   # H' = 最后 n_humans 个 tokens
+```
+
+**q_out 提取位置**：
+```python
+# 当前 shot adaptation 模式下，q' 在 decoder 输出末尾
+q_out = dec[-1][:, -1:]  # 最后一个 token
+```
+
+**注意**: 当前的 decoder 输出结构是 [z', F', H']，q' 还没有插入。当 q_t 插入 decoder 后，结构会变为 [z', F', H', q']。
 
 ### 1.2 ARCroco3DStereo 修改
 
@@ -438,9 +458,9 @@ for i in range(len(shot_label) - 1):
 
 ### Step 3: LoRA Heads（1天）
 
-- [ ] `LoRAPoseHead` - 先确认 pose_base 格式
-- [ ] `LoRAHumanHead`
-- [ ] `LoRAWorldHead` - 先确认 world_base 格式
+- [ ] `LoRAPoseHead` - pose_base 格式 Bx7 (trans3+quat4)
+- [ ] `LoRAHumanHead` - smpl dict 字段: smpl_shape(10), smpl_transl(3), smpl_rotmat(6,3,3), smpl_expression(10)
+- [ ] `LoRAWorldHead` - world_base 格式 BxHxWx3（DPT 格式）
 - [ ] LoRA 挂在 model 层，在 forward 末尾统一处理（不在 head 内部）
 - [ ] 验证 LoRA 输出维度正确
 
@@ -461,44 +481,38 @@ for i in range(len(shot_label) - 1):
 
 ---
 
-## Part 5: 关键检查点
+## Part 5: 已确认格式
 
-实现前必须确认的问题：
+### 5.1 Pose 格式（已确认）
 
-### 5.1 Pose 格式
+- **格式**: `Bx7` = trans(3) + quat(4)
+- **来源**: `PoseDecoder.mlp` 输出，来自 `postprocess_pose` 处理后
+- **字段名**: `camera_pose`
 
-**问题**: `decpose` 输出的 pose 格式是什么？
+### 5.2 SMPL 格式（已确认）
 
-需要检查 `src/dust3r/heads/dpt_head.py` 中 `downstream_head.pose_head` 的 forward 输出：
+- **smpl_shape**: (bs, max_humans, 10) - betas
+- **smpl_transl**: (bs, max_humans, 3) - camera translation
+- **smpl_rotmat**: (bs, max_humans, 6, 3, 3) - rotation matrix (from 6D rotvec)
+- **smpl_expression**: (bs, max_humans, 10)
+- **来源**: `postprocess_smpl(pred_smpl, self.depth_mode)` 返回
 
-```python
-# 在 DPTPts3dPoseSMPL 或 downstream_head 中找到 pose 输出
-# 确认是 quat4(4) + trans3(3) = 7D
-# 还是 rotvec(3) + trans3(3) = 6D
-# 还是其他格式
-```
+### 5.3 World pts3d 格式（已确认）
 
-### 5.2 World 格式
+- **格式**: `BxHxWx3`（DPT 深度图格式，不是 BxNx3）
+- **来源**: `postprocess(self_out, self.depth_mode, self.conf_mode)` 返回的 `pts3d`
 
-**问题**: world pointmap 的格式是什么？
-
-需要检查 `DPTPts3dPoseSMPL.forward` 中 `pts3d` 相关输出的 shape：
-
-```python
-# pts3d 可能是:
-# [B, N, 3]  - 点云格式
-# [B, H, W, 3] - DPT 深度图格式
-# {'pts3d': ..., 'conf': ...} - dict 格式
-```
-
-### 5.3 Decoder Token 顺序
-
-当前 decoder 的 token 顺序需要确认：
+### 5.4 Decoder Token 顺序（已确认）
 
 ```python
-# 在 _decoder 中，tokens 的排列是:
-# [z, F_t, H_t, ...其他?] → 需要确认 q_t 应该加在哪个位置
-# 按 Section 25 设计：[z, F_t, H_t, q_t]，q_t 在最后
+# dec[dec_depth] 最终输出结构：
+# [pose_token, img_tokens..., smpl_tokens...]
+#   pose_token = dec[dec_depth][:, 0:1]     # z'
+#   img_tokens = dec[dec_depth][:, 1:-n_humans_i]  # F'
+#   smpl_token = dec[dec_depth][:, -n_humans_i:]   # H'
+
+# 当前 shot adaptation 模式下，q' 还未插入 decoder
+# LoRA q_out = dec[-1][:, -1:]（最后一个 token）
 ```
 
 ---

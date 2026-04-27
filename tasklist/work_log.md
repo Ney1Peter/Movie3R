@@ -1121,70 +1121,83 @@ class LoRAPoseHead(nn.Module):
 
 **3.2 Human LoRA**
 
-Human 输出是 dict，按实际字段名处理：
+**实际 SMPL dict 字段（确认）**：
+- `smpl_shape`: (bs, max_humans, 10) - betas shape
+- `smpl_transl`: (bs, max_humans, 3) - camera translation
+- `smpl_rotmat`: (bs, max_humans, 6, 3, 3) - rotation matrix (from 6D rotvec)
+- `smpl_expression`: (bs, max_humans, 10)
+
+**注意**：postprocess_smpl 返回的 key 是 `smpl_shape`，不是 `betas`；是 `smpl_transl`，不是 `cam`。
+
+Human LoRA 实现：
 
 ```python
 class LoRAHumanHead(nn.Module):
     """Human SMPL residual: y_final = y_base + gamma * delta_y
     输入: H'_t [B,N_humans,C], q'_t [B,1,C]
-    Human 输出是 dict: body_pose, betas, cam, expression 等
+    Human 输出是 dict: smpl_shape, smpl_transl, smpl_rotmat, smpl_expression
     """
     def __init__(self, dec_dim=768, shot_dim=768):
         # 每个参数单独 gamma
-        self.gamma_body_pose = nn.Parameter(torch.tensor(0.01))
-        self.gamma_betas = nn.Parameter(torch.tensor(0.01))
-        self.gamma_cam = nn.Parameter(torch.tensor(0.01))
+        self.gamma_shape = nn.Parameter(torch.tensor(0.0))
+        self.gamma_transl = nn.Parameter(torch.tensor(0.0))
+        self.gamma_rotmat = nn.Parameter(torch.tensor(0.0))
         # expression 不做 residual
 
         in_dim = dec_dim + shot_dim
-        self.lora_body_pose = nn.Linear(in_dim, 318)  # 53*6
-        self.lora_betas = nn.Linear(in_dim, 10)
-        self.lora_cam = nn.Linear(in_dim, 3)
+        self.lora_shape = nn.Linear(in_dim, 10)      # betas: 10
+        self.lora_transl = nn.Linear(in_dim, 3)      # transl: 3
+        self.lora_rotmat = nn.Linear(in_dim, 54)    # rotmat: 6*3*3 = 54
 
     def forward(self, smpl_token, q_out, pred_smpl_dict):
         # smpl_token: [B, N_humans, dec_dim]
         # q_out: [B, 1, shot_dim] (q'_t)
-        # pred_smpl_dict: dict with keys body_pose, betas, cam, expression 等
+        # pred_smpl_dict: dict with keys smpl_shape, smpl_transl, smpl_rotmat, smpl_expression
         q_expand = q_out.expand(-1, smpl_token.shape[1], -1)  # [B, N, shot_dim]
         x = torch.cat([smpl_token, q_expand], dim=-1)  # [B, N, dec_dim+shot_dim]
 
-        delta_body_pose = self.lora_body_pose(x)
-        delta_betas = self.lora_betas(x)
-        delta_cam = self.lora_cam(x)
-
-        # 不要丢其他字段
+        # 不要 inplace 修改
         out = pred_smpl_dict.copy()
-        out['body_pose'] = pred_smpl_dict['body_pose'] + self.gamma_body_pose * delta_body_pose
-        out['betas'] = pred_smpl_dict['betas'] + self.gamma_betas * delta_betas
-        out['cam'] = pred_smpl_dict['cam'] + self.gamma_cam * delta_cam
+        out['smpl_shape'] = pred_smpl_dict['smpl_shape'] + self.gamma_shape * self.lora_shape(x)
+        out['smpl_transl'] = pred_smpl_dict['smpl_transl'] + self.gamma_transl * self.lora_transl(x)
+        # rotmat: [B, N, 6, 3, 3] -> flatten 后 54 维
+        delta_rotmat = self.lora_rotmat(x).unsqueeze(-1).unsqueeze(-1)  # [B, N, 54, 1, 1]
+        out['smpl_rotmat'] = pred_smpl_dict['smpl_rotmat'] + self.gamma_rotmat * delta_rotmat
         # expression 等其他字段保持不变
         return out
 ```
 
 **3.3 World LoRA**
 
+**实际 World pts3d 格式（确认）**：BxHxWx3（DPT 深度图格式），不是 BxNx3。
+
 ```python
 class LoRAWorldHead(nn.Module):
     """World pointmap residual: X_world_final = X_world_base + gamma * Delta_X
-    输入: F'_t [B,N,C], z'_t [B,1,C], q'_t [B,1,C]
+    输入: F'_t [B,H,W,C], z'_t [B,1,C], q'_t [B,1,C]
+    注意: world pts3d 是 BxHxWx3 格式，不是 BxNx3
     """
     def __init__(self, dec_dim=768, shot_dim=768):
-        self.gamma = nn.Parameter(torch.tensor(0.01))
+        self.gamma = nn.Parameter(torch.tensor(0.0))
+        # 输入: flatten(F'_t) + z'_t + q'_t = H*W*dec_dim + dec_dim + shot_dim
         self.lora = nn.Sequential(
-            nn.Linear(dec_dim * 2 + shot_dim, 256),
+            nn.Linear(dec_dim + shot_dim, 256),  # 先 pooled 特征
             nn.GELU(),
             nn.Linear(256, 3),  # 3D point residual
         )
 
     def forward(self, img_feat, pose_token, q_out, world_base):
-        # img_feat: [B, N, dec_dim]
+        # img_feat: [B, H, W, dec_dim] - DPT 图像特征
         # pose_token: [B, 1, dec_dim] (z'_t)
         # q_out: [B, 1, shot_dim] (q'_t)
-        N = img_feat.shape[1]
-        z_expand = pose_token.expand(-1, N, -1)  # [B, N, dec_dim]
-        q_expand = q_out.expand(-1, N, -1)          # [B, N, shot_dim]
-        x = torch.cat([img_feat, z_expand, q_expand], dim=-1)  # [B, N, 2*dec_dim+shot_dim]
-        delta = self.lora(x)  # [B, N, 3]
+        B, H, W, C = img_feat.shape
+        # Global average pool over spatial dimensions
+        img_global = img_feat.mean(dim=[1, 2])  # [B, dec_dim]
+        img_global = img_global.unsqueeze(1)  # [B, 1, dec_dim]
+
+        x = torch.cat([img_global, q_out], dim=-1)  # [B, 1, dec_dim+shot_dim]
+        delta = self.lora(x)  # [B, 1, 3]
+        delta = delta.squeeze(1).unsqueeze(-1).unsqueeze(-1)  # [B, 1, 1, 3]
         return world_base + self.gamma * delta
 ```
 
