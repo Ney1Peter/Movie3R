@@ -65,9 +65,9 @@ python -m torch.distributed.run \
 
 | 配置 | 命令 | batch_size | 等效全局 batch |
 |------|------|------------|----------------|
-| 单卡 | `python train.py` | 2 | 2 |
-| 4卡 | `torchrun --nproc_per_node=4 ...` | 2 | 8 |
-| 8卡 | `torchrun --nproc_per_node=8 ...` | 2 | 16 |
+| 单卡 | `python train.py` | 8 | 8 |
+| 4卡 | `torchrun --nproc_per_node=4 ...` | 8 | 32 |
+| 8卡 | `torchrun --nproc_per_node=8 ...` | 8 | 64 |
 
 ---
 
@@ -97,26 +97,13 @@ batch_size=8: ~53GB   (+5GB)
 
 **注意**: 使用 `gradient_checkpointing=true` 时，batch_size 从 2 到 4 显存几乎不增加，因为 checkpointing 用计算换显存。
 
-### 3.3 Batch Size 选择建议
+### 3.3 Batch Size 选择
 
-**场景 1: 单卡训练（推荐）**
-```bash
-./train.sh 1 40 8    # 1卡, 40 epochs, batch_size=8
-```
-
-**场景 2: 4卡训练**
-```bash
-./train.sh 4 40 8    # 4卡, 40 epochs, batch_size=8 per GPU
-                        # 等效全局 batch_size = 32
-```
-
-**场景 3: 8卡训练**
-```bash
-./train.sh 8 40 8    # 8卡, 40 epochs, batch_size=8 per GPU
-                        # 等效全局 batch_size = 64
-```
-
-**推荐配置**: 单卡 batch_size=8，训练时间约 2h/epoch
+| batch_size | 适用场景 | 备注 |
+|------------|----------|------|
+| 8 | 单卡推荐 | 充分利用显存，训练速度最快 |
+| 4 | 备用选项 | 如果显存不足可降低 |
+| 2 | 保守配置 | 显存紧张时使用 |
 
 ### 3.4 梯度累积 (accum_iter)
 
@@ -209,9 +196,9 @@ model: ARCroco3DStereo(
 |------|--------|----------|
 | ShotTokenGenerator | ~787K | ✅ 训练 |
 | StateGate | ~99K | ✅ 训练 |
-| LoRAPoseHead | ~198K | ✅ 训练 |
-| LoRAHumanHead | ~20K | ✅ 训练 |
-| LoRAWorldGlobalShift | ~197K | ✅ 训练 |
+| PoseResidualAdapter | ~198K | ✅ 训练 |
+| HumanResidualAdapter | ~20K | ✅ 训练 |
+| WorldResidualAdapter | ~197K | ✅ 训练 |
 | **新增模块总计** | **~1.3M** | ✅ 训练 |
 | encoder (ViT) | ~600M | ❌ 冻结 |
 | decoder | ~226M | ❌ 冻结 |
@@ -222,14 +209,14 @@ model: ARCroco3DStereo(
 
 ### 5.3 显存预估 (freeze='shot_adaptation')
 
-由于大部分参数冻结，显存占用应该比 freeze='none' 小很多：
+测试结果：使用 gradient_checkpointing=true 时，batch_size=8 可正常运行。
 
-| 配置 | 预估显存 |
-|------|----------|
-| freeze='none', batch_size=1 | ~51GB |
-| freeze='none', batch_size=2 | ~53GB |
-| freeze='shot_adaptation', batch_size=2 | < 40GB (预估) |
-| freeze='shot_adaptation', batch_size=4 | 可能可行 (待测试) |
+| 配置 | 显存使用 | 状态 |
+|------|----------|------|
+| freeze='shot_adaptation', batch_size=1 | ~46GB | ✅ OK |
+| freeze='shot_adaptation', batch_size=2 | ~48GB | ✅ OK |
+| freeze='shot_adaptation', batch_size=4 | ~48GB | ✅ OK |
+| freeze='shot_adaptation', batch_size=8 | ~53GB | ✅ OK |
 
 ---
 
@@ -355,37 +342,44 @@ experiments/
 ### 10.1 Shot Adaptation 训练 (推荐)
 
 ```bash
-# 4卡训练，batch_size=2 per GPU
-./train.sh 4 40 2
+# 单卡训练，batch_size=8
+./train.sh 1 40 8
 ```
 
 **配置**:
-- GPU: 4 × H800
-- batch_size per GPU: 2
-- 等效全局 batch: 8
+- GPU: 1 × H800
+- batch_size: 8
 - epochs: 40
-- 预估训练时间: ~20-30 小时
+- 每 epoch 时间: ~2小时
+- 预估总训练时间: ~80小时 (约3-4天)
 
-### 10.2 如果显存允许更大 batch
+### 10.2 多卡训练
 
 ```bash
-# 4卡训练，batch_size=4 per GPU (如果 freeze='shot_adaptation' 显存够用)
-./train.sh 4 40 4
+# 4卡训练
+./train.sh 4 40 8
+
+# 8卡训练
+./train.sh 8 40 8
 ```
 
-**配置**:
-- GPU: 4 × H800
-- batch_size per GPU: 4
-- 等效全局 batch: 16
-- epochs: 40
+| 场景 | 命令 | batch/GPU | 总 batch | 每 epoch 时间 |
+|------|------|-----------|----------|--------------|
+| 单卡 | `./train.sh 1 40 8` | 8 | 8 | ~2h |
+| 4卡 | `./train.sh 4 40 8` | 8 | 32 | ~30min |
+| 8卡 | `./train.sh 8 40 8` | 8 | 64 | ~15min |
 
-### 10.3 梯度累积配置 (如果需要更大等效 batch)
+### 10.3 梯度累积配置
+
+当需要更大等效 batch 但显存受限时使用：
 
 ```yaml
 # train.yaml
-batch_size: 2
-accum_iter: 4    # 等效全局 batch = 2 × 4 × num_gpus
+batch_size: 8
+accum_iter: 4    # 等效全局 batch = 8 × 4 × num_gpus
 ```
+
+通常 batch_size=8 时不需要梯度累积。
 
 ---
 
@@ -400,6 +394,28 @@ accum_iter: 4    # 等效全局 batch = 2 × 4 × num_gpus
 解决：使用 `num_workers=0` 单进程模式
 
 ### 11.3 Batch Size 选择
-- 单卡最大: batch_size=2
+- 单卡最大: batch_size=8 (H800 80GB)
 - 多卡时: batch_size 是每卡的数量，不是全局数量
 - 等效全局 batch = batch_size × num_gpus × accum_iter
+
+### 11.4 模型输出与 Loss 计算
+
+**重要**: Residual Adapter 修正后的 final outputs 直接用于 loss 计算，无需额外配置。
+
+```
+Model Forward:
+  base_heads_output → res (base)
+      ↓
+  res = residual_adapter(res)  → res (final)
+      ↓
+  ress.append({**res, ...})
+      ↓
+Criterion 计算:
+  loss = criterion(batch, preds)
+  # preds 包含 final outputs
+```
+
+梯度反向传播路径：
+```
+GT → criterion → final outputs → residual adapters → ShotTokenGenerator/StateGate
+```
