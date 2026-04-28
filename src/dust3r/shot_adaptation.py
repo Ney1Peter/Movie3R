@@ -8,7 +8,14 @@ Shot-Aware Adaptation Modules
 包含三个轻量模块用于处理镜头跳变：
 1. ShotTokenGenerator: 生成 shot token q_t
 2. StateGate: 调制 state 的更新
-3. LoRA Heads: 对输出做微调修正
+3. Residual Adapters: 对 base model 输出做残差修正
+   - PoseResidualAdapter: 对相机位姿做微调修正
+   - HumanResidualAdapter: 对 SMPL 人体参数做微调修正
+   - WorldResidualAdapter: 对场景点云做全局平移修正
+
+注意：这些不是标准 LoRA（低秩分解插入已有层），而是
+low-rank residual adapter / residual correction head，
+用于学习在 refined tokens (z_out, q_out) 条件下如何修正 base prediction。
 """
 
 import torch
@@ -19,13 +26,13 @@ import math
 
 class ShotTokenGenerator(nn.Module):
     """
-    Global Difference Token - 使用相邻帧差异生成 shot token
+    Shot Token Generator - 使用相邻帧差异生成 shot token
 
-    V1: 基于全局特征差异
+    基于全局特征差异：
     输入: F_dec[i] 和 F_dec[i-1]（decoder 输入的图像 token）
     输出: q_t [B, 1, dec_dim]
 
-    q_t 编码了两帧之间的"不连续程度"，供后续 StateGate 和 LoRA 使用。
+    q_t 编码了两帧之间的"不连续程度"，供后续 StateGate 和 Residual Adapter 使用。
     """
 
     def __init__(self, dec_dim=768):
@@ -101,25 +108,27 @@ class StateGate(nn.Module):
         return alpha
 
 
-class LoRAPoseHead(nn.Module):
+class PoseResidualAdapter(nn.Module):
     """
-    Pose LoRA - 对相机位姿做微调修正
+    Pose Residual Adapter - 对相机位姿做微调修正
 
-    y_final = y_base + gamma * delta_y
+    pose_final = pose_base + gamma * delta_pose
+    其中 delta_pose 由 refined tokens (z_out, q_out) 作为 condition 预测得到。
 
-    输入:
-        z_token: [B, 1, dec_dim] - decoder 输出的 pose token (z')
-        q_out: [B, 1, dec_dim] - decoder 输出的 shot token (q')
-        pose_base: [B, 7] - trans(3) + quat(4)
+    输入 (作为 condition/input):
+        z_token: [B, 1, dec_dim] - decoder 输出的 refined pose token (z')
+        q_out: [B, 1, dec_dim] - decoder 输出的 refined shot token (q')
+        pose_base: [B, 7] - base model 输出的 trans(3) + quat(4)
 
     输出:
-        pose_final: [B, 7] - trans(3) + quat(4)
+        pose_final: [B, 7] - 修正后的 trans(3) + quat(4)
     """
 
     def __init__(self, dec_dim=768):
         super().__init__()
-        self.gamma = nn.Parameter(torch.tensor(0.01))  # 工程建议值：0.01
-        self.lora = nn.Sequential(
+        # 初始为 0，确保初始状态 final = base，不破坏 frozen base model
+        self.gamma = nn.Parameter(torch.tensor(0.0))
+        self.adapter = nn.Sequential(
             nn.Linear(dec_dim * 2, 128),
             nn.GELU(),
             nn.Linear(128, 7),  # delta_trans(3) + delta_quat(4)
@@ -128,14 +137,14 @@ class LoRAPoseHead(nn.Module):
     def forward(self, z_token, q_out, pose_base):
         """
         Args:
-            z_token: [B, 1, dec_dim]
-            q_out: [B, 1, dec_dim]
-            pose_base: [B, 7] - trans(3) + quat(4)
+            z_token: [B, 1, dec_dim] - refined pose token (condition)
+            q_out: [B, 1, dec_dim] - refined shot token (condition)
+            pose_base: [B, 7] - base prediction
         Returns:
             pose_final: [B, 7]
         """
         x = torch.cat([z_token, q_out], dim=-1)  # [B, 1, 2*dec_dim]
-        delta = self.lora(x).squeeze(1)  # [B, 7]
+        delta = self.adapter(x).squeeze(1)  # [B, 7]
 
         t_base = pose_base[:, :3]      # [B, 3]
         q_base = pose_base[:, 3:7]    # [B, 4]
@@ -148,18 +157,18 @@ class LoRAPoseHead(nn.Module):
         return torch.cat([t_final, q_final], dim=-1)
 
 
-class LoRAHumanHead(nn.Module):
+class HumanResidualAdapter(nn.Module):
     """
-    Human LoRA - 对 SMPL 人体参数做微调修正（第一版）
+    Human Residual Adapter - 对 SMPL 人体参数做微调修正
 
     y_final = y_base + gamma * delta_y
+    其中 delta 由 refined tokens (smpl_token, q_out) 作为 condition 预测得到。
 
-    第一版只修正 smpl_shape 和 smpl_transl，不修正 smpl_rotmat（rotation matrix
-    直接相加后不再是合法旋转矩阵，需要用 axis-angle / 6D rotation residual）
+    当前版本只修正 smpl_shape 和 smpl_transl，不修正 smpl_rotmat。
 
-    输入:
+    输入 (作为 condition/input):
         smpl_token: [B, N_humans, dec_dim] - decoder 输出的人体 token (H')
-        q_out: [B, 1, dec_dim] - decoder 输出的 shot token (q')
+        q_out: [B, 1, dec_dim] - decoder 输出的 refined shot token (q')
         pred_smpl_dict: dict with keys smpl_shape, smpl_transl, smpl_rotmat, smpl_expression
 
     输出:
@@ -168,22 +177,23 @@ class LoRAHumanHead(nn.Module):
 
     def __init__(self, dec_dim=768):
         super().__init__()
-        self.gamma_shape = nn.Parameter(torch.tensor(0.01))  # 工程建议值：0.01
-        self.gamma_transl = nn.Parameter(torch.tensor(0.01))  # 工程建议值：0.01
+        # 初始为 0，确保初始状态 final = base，不破坏 frozen base model
+        self.gamma_shape = nn.Parameter(torch.tensor(0.0))
+        self.gamma_transl = nn.Parameter(torch.tensor(0.0))
 
         in_dim = dec_dim * 2  # smpl_token + q_out
 
         # smpl_shape: betas 10D
-        self.lora_shape = nn.Linear(in_dim, 10)
+        self.adapter_shape = nn.Linear(in_dim, 10)
         # smpl_transl: 3D
-        self.lora_transl = nn.Linear(in_dim, 3)
-        # 注意：第一版不修 rotmat（rotation matrix 直接相加不再是合法旋转矩阵）
+        self.adapter_transl = nn.Linear(in_dim, 3)
+        # 注意：当前版本不修 rotmat
 
     def forward(self, smpl_token, q_out, pred_smpl_dict):
         """
         Args:
-            smpl_token: [B, N_humans, dec_dim]
-            q_out: [B, 1, dec_dim]
+            smpl_token: [B, N_humans, dec_dim] - human token (condition)
+            q_out: [B, 1, dec_dim] - refined shot token (condition)
             pred_smpl_dict: dict with smpl_shape(B,N,10), smpl_transl(B,N,3),
                           smpl_rotmat(B,N,6,3,3), smpl_expression(B,N,10)
         Returns:
@@ -196,28 +206,29 @@ class LoRAHumanHead(nn.Module):
         # 不 inplace 修改原 dict
         out = pred_smpl_dict.copy()
 
-        out['smpl_shape'] = pred_smpl_dict['smpl_shape'] + self.gamma_shape * self.lora_shape(x)
+        out['smpl_shape'] = pred_smpl_dict['smpl_shape'] + self.gamma_shape * self.adapter_shape(x)
 
-        out['smpl_transl'] = pred_smpl_dict['smpl_transl'] + self.gamma_transl * self.lora_transl(x)
+        out['smpl_transl'] = pred_smpl_dict['smpl_transl'] + self.gamma_transl * self.adapter_transl(x)
 
         # rotmat / expression 保持不变
         return out
 
 
-class LoRAWorldGlobalShift(nn.Module):
+class WorldResidualAdapter(nn.Module):
     """
-    World LoRA (Global Shift) - 对场景点云做全局平移修正
+    World Residual Adapter (Global Shift) - 对场景点云做全局平移修正
 
-    y_final = y_base + gamma * delta_y
+    world_final = world_base + gamma * delta_world
+    其中 delta_world 由 refined tokens (img_tokens, pose_token, q_out) 作为 condition 预测得到。
 
     注意：当前实现本质上是给整张 pointmap 加一个全局 3D 平移 residual，
     能修全局 world alignment / camera offset，但不能修局部几何。
 
-    输入:
+    输入 (作为 condition/input):
         img_tokens: [B, N, dec_dim] - decoder 输出的图像 token (F')，内部做全局平均池化
-        pose_token: [B, 1, dec_dim] - decoder 输出的 pose token (z')
-        q_out: [B, 1, dec_dim] - decoder 输出的 shot token (q')
-        world_base: [B, H, W, 3] - DPT 输出的 pts3d
+        pose_token: [B, 1, dec_dim] - decoder 输出的 refined pose token (z')
+        q_out: [B, 1, dec_dim] - decoder 输出的 refined shot token (q')
+        world_base: [B, H, W, 3] - base model 输出的 pts3d
 
     输出:
         world_final: [B, H, W, 3]
@@ -225,10 +236,11 @@ class LoRAWorldGlobalShift(nn.Module):
 
     def __init__(self, dec_dim=768):
         super().__init__()
-        self.gamma = nn.Parameter(torch.tensor(0.01))  # 工程建议值：0.01
+        # 初始为 0，确保初始状态 final = base，不破坏 frozen base model
+        self.gamma = nn.Parameter(torch.tensor(0.0))
 
         in_dim = dec_dim * 2  # pooled img feat + q_out
-        self.lora = nn.Sequential(
+        self.adapter = nn.Sequential(
             nn.Linear(in_dim, 128),
             nn.GELU(),
             nn.Linear(128, 3),  # delta xyz
@@ -237,10 +249,10 @@ class LoRAWorldGlobalShift(nn.Module):
     def forward(self, img_tokens, pose_token, q_out, world_base):
         """
         Args:
-            img_tokens: [B, N, dec_dim] - decoder 输出的图像 token，内部做全局平均池化
-            pose_token: [B, 1, dec_dim] - z'
-            q_out: [B, 1, dec_dim] - q'
-            world_base: [B, H, W, 3] - pts3d
+            img_tokens: [B, N, dec_dim] - decoder 输出的图像 token (condition)
+            pose_token: [B, 1, dec_dim] - refined pose token (condition)
+            q_out: [B, 1, dec_dim] - refined shot token (condition)
+            world_base: [B, H, W, 3] - base prediction
         Returns:
             world_final: [B, H, W, 3]
         """
@@ -248,7 +260,7 @@ class LoRAWorldGlobalShift(nn.Module):
         img_global = img_tokens.mean(dim=1, keepdim=True)  # [B, 1, dec_dim]
 
         x = torch.cat([img_global, q_out], dim=-1)  # [B, 1, 2*dec_dim]
-        delta = self.lora(x)  # [B, 1, 3]
+        delta = self.adapter(x)  # [B, 1, 3]
         delta = delta.squeeze(1).unsqueeze(1).unsqueeze(1)  # [B, 1, 1, 3]
 
         return world_base + self.gamma * delta

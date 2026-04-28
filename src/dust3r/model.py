@@ -48,7 +48,7 @@ from einops import rearrange
 from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
-from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, LoRAPoseHead, LoRAHumanHead, LoRAWorldGlobalShift
+from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -394,10 +394,10 @@ class ARCroco3DStereo(CroCoNet):
         # Shot-Aware Adaptation modules
         self.shot_token_generator = ShotTokenGenerator(dec_dim=self.dec_embed_dim)
         self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
-        # LoRA heads - 挂在 model 层
-        self.lora_pose = LoRAPoseHead(dec_dim=self.dec_embed_dim)
-        self.lora_human = LoRAHumanHead(dec_dim=self.dec_embed_dim)
-        self.lora_world_global_shift = LoRAWorldGlobalShift(dec_dim=self.dec_embed_dim)
+        # Residual adapters - 挂在 model 层
+        self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
+        self.human_residual_adapter = HumanResidualAdapter(dec_dim=self.dec_embed_dim)
+        self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
 
@@ -652,14 +652,17 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.downstream_head])
             # masked_smpl_token 也需要冻结
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
-            # 只训练 shot adaptation 模块
-            fix_all_params([
+            # 只训练 shot adaptation 模块 - 注意：必须设置 requires_grad=True，不是 _is_frozen=True
+            # 因为 get_parameter_groups 会跳过 _is_frozen=True 和 requires_grad=False 的参数
+            for module in [
                 self.shot_token_generator,
                 self.state_gate,
-                self.lora_pose,
-                self.lora_human,
-                self.lora_world_global_shift,
-            ])
+                self.pose_residual_adapter,
+                self.human_residual_adapter,
+                self.world_residual_adapter,
+            ]:
+                for p in module.parameters():
+                    p.requires_grad = True
             # enable_shot_adaptation 开关打开
             self.enable_shot_adaptation = True
         else:
@@ -896,8 +899,8 @@ class ARCroco3DStereo(CroCoNet):
         # Shot-Aware Adaptation: append shot token q_t if provided
         if f_shot is not None:
             f_img = torch.cat([f_img, f_shot], dim=1)
-            # pos_shot: dummy position for shot token (will not be used in attention)
-            pos_shot = torch.zeros_like(f_shot)[:, :, :2]  # [B, 1, 2]
+            # pos_shot: dummy position for shot token (must be Long type for RoPE)
+            pos_shot = torch.zeros_like(f_shot)[:, :, :2].long()  # [B, 1, 2]
             pos_img = torch.cat([pos_img, pos_shot], dim=1)
         final_output.append((f_state, f_img))
         cross_attn_states = []
@@ -1436,24 +1439,24 @@ class ARCroco3DStereo(CroCoNet):
             if self.msk_head_flag:
                 res['msk'] = msks[i]
 
-            # Shot-Aware Adaptation: apply LoRA corrections
+            # Shot-Aware Adaptation: apply residual corrections
             if self.enable_shot_adaptation and q_out is not None:
                 # Use helper to safely slice decoder tokens
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
                     dec, n_humans_i, enable_shot_adaptation=True)
 
-                # Pose LoRA: camera_pose is [B, 7] trans+quat
+                # Pose Residual Adapter: camera_pose is [B, 7] trans+quat
                 if 'camera_pose' in res:
-                    res['camera_pose'] = self.lora_pose(z_out, q_out, res['camera_pose'])
+                    res['camera_pose'] = self.pose_residual_adapter(z_out, q_out, res['camera_pose'])
 
-                # Human LoRA: smpl dict
+                # Human Residual Adapter: smpl dict
                 if n_humans_i > 0 and 'smpl_shape' in res:
-                    res = self.lora_human(h_token, q_out, res)
+                    res = self.human_residual_adapter(h_token, q_out, res)
 
-                # World LoRA: pts3d is [B, H, W, 3]
-                # img_tokens [B,N,D] passed directly, LoRA does pooling internally
+                # World Residual Adapter: pts3d is [B, H, W, 3]
+                # img_tokens [B,N,D] passed directly, adapter does pooling internally
                 if 'pts3d_in_self_view' in res:
-                    res['pts3d_in_self_view'] = self.lora_world_global_shift(
+                    res['pts3d_in_self_view'] = self.world_residual_adapter(
                         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
 
             ress.append({
