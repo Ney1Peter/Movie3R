@@ -73,52 +73,62 @@ python -m torch.distributed.run \
 
 ## 3. Batch Size 与显存
 
-### 3.1 单卡最大 Batch Size
+### 3.1 单卡 Batch Size 测试结果
 
-| batch_size | 显存使用 | 状态 |
-|------------|----------|------|
-| 1 | ~51GB | ✅ OK |
-| 2 | ~53GB | ✅ OK |
-| 4 | ~77GB | ❌ OOM |
+**测试环境**: H800 80GB, freeze='shot_adaptation' 模式
 
-**结论**: 单卡最大 batch_size = 2
+| batch_size | 显存使用 | 每 epoch 时间 | 状态 |
+|------------|----------|---------------|------|
+| 1 | ~46GB | ~4h | ✅ OK |
+| 2 | ~48GB | ~2.5h | ✅ OK |
+| 4 | ~48GB | ~2.5h | ✅ OK |
+| 8 | ~53GB | ~2h | ✅ OK |
+
+**结论**: 单卡最大 batch_size = 8（受限于 H800 80GB 显存）
 
 ### 3.2 Batch Size 与显存关系
 
 ```
-batch_size=1: ~51GB  (基础显存占用)
-batch_size=2: ~53GB  (+2GB)
-batch_size=4: OOM    (超过80GB)
+batch_size=1: ~46GB  (基础显存占用)
+batch_size=2: ~48GB  (+2GB)
+batch_size=4: ~48GB  (几乎不增加，gradient checkpointing 生效)
+batch_size=8: ~53GB   (+5GB)
 ```
+
+**注意**: 使用 `gradient_checkpointing=true` 时，batch_size 从 2 到 4 显存几乎不增加，因为 checkpointing 用计算换显存。
 
 ### 3.3 Batch Size 选择建议
 
-**场景 1: 单卡训练**
+**场景 1: 单卡训练（推荐）**
 ```bash
-./train.sh 1 40 2    # 1卡, 40 epochs, batch_size=2
+./train.sh 1 40 8    # 1卡, 40 epochs, batch_size=8
 ```
 
 **场景 2: 4卡训练**
 ```bash
-./train.sh 4 40 2    # 4卡, 40 epochs, batch_size=2 per GPU
-                        # 等效全局 batch_size = 8
+./train.sh 4 40 8    # 4卡, 40 epochs, batch_size=8 per GPU
+                        # 等效全局 batch_size = 32
 ```
 
 **场景 3: 8卡训练**
 ```bash
-./train.sh 8 40 2    # 8卡, 40 epochs, batch_size=2 per GPU
-                        # 等效全局 batch_size = 16
+./train.sh 8 40 8    # 8卡, 40 epochs, batch_size=8 per GPU
+                        # 等效全局 batch_size = 64
 ```
+
+**推荐配置**: 单卡 batch_size=8，训练时间约 2h/epoch
 
 ### 3.4 梯度累积 (accum_iter)
 
-当显存不足以支持更大的 batch size 时，可使用梯度累积：
+当需要更大的等效 batch size 但显存受限时，可使用梯度累积：
 
 ```yaml
-batch_size: 2
+batch_size: 8
 accum_iter: 4    # 累积4个 batch 再更新梯度
-# 等效 batch_size = 2 × 4 = 8
+# 等效 batch_size = 8 × 4 = 32
 ```
+
+**注意**: 使用 batch_size=8 时通常不需要梯度累积，直接用更大 batch 效率更高。
 
 **原理**:
 ```

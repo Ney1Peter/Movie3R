@@ -184,10 +184,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
 
         views = []
         view_specs = [
-            (seqA_name, cam, t,  annots_t,  0),   # view 0: 相机A @ t
-            (seqA_name, cam, t1, annots_t1, 1),   # view 1: 相机A @ t+1
-            (seqB_name, cam, t2, annots_t2, 2),   # view 2: 相机B @ t+2（跳变后）
-            (seqB_name, cam, t3, annots_t3, 3),   # view 3: 相机B @ t+3
+            (seqA_name, cam, t,  annots_t,  shot_labels[0]),   # view 0: 相机A @ t
+            (seqA_name, cam, t1, annots_t1, shot_labels[1]),  # view 1: 相机A @ t+1
+            (seqB_name, cam, t2, annots_t2, shot_labels[2]),  # view 2: 相机B @ t+2（跳变后）
+            (seqB_name, cam, t3, annots_t3, shot_labels[3]),  # view 3: 相机B @ t+3
         ]
 
         for v, (seq_name, cam_id, frame_idx, annots, shot_label) in enumerate(view_specs):
