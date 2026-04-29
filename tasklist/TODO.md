@@ -40,6 +40,44 @@ class NativeScalerWithGradNormCount:
 - ✅ NativeScaler 只做 loss scaling（bf16）和梯度裁剪
 - ✅ 梯度累积由 Accelerate 的 `accumulate()` 控制
 
+#### 参数更新流程（重要）
+
+```
+train.py L512: with accelerator.accumulate(model):
+                    │
+                    ├── 决定是否允许更新
+                    │   (accum_iter 控制)
+                    ▼
+                loss_scaler(loss, optimizer, ...)
+                    │
+                    ├── accelerator.backward(loss)
+                    │       ↓
+                    │   反向传播，梯度累加到 .grad
+                    │
+                    ├── accelerator.clip_grad_norm_(...)
+                    │       ↓
+                    │   梯度裁剪 (clip_grad=1.0)
+                    │
+                    └── optimizer.step()
+                            ↓
+                        AdamW 实际更新参数
+                            ↓
+                        optimizer.zero_grad()
+                            ↓
+                        清空 .grad，准备下一轮
+```
+
+**三方职责分工**：
+
+| 组件 | 职责 | 谁负责 |
+|------|------|--------|
+| 控制"何时"更新 | 梯度累积逻辑 | `accelerator.accumulate(model)` |
+| 执行反向传播 | bf16 scaling + backward | `NativeScaler` |
+| 执行参数更新 | `optimizer.step()` | `AdamW (optimizer)` |
+| 梯度裁剪 | `clip_grad_norm_` | `NativeScaler` |
+
+> 注：虽然 NativeScaler 调用了 `optimizer.step()`，但 optimizer 本身是独立创建的（AdamW），NativeScaler 只是"调用者"。
+
 ---
 
 ### 2. 分布式训练框架设计
@@ -231,10 +269,9 @@ class PoseLoRAHead(nn.Module):
 ### 已确认事项（不改）
 - ✅ 分布式框架：DDP + Accelerate，当前规模足够
 - ✅ bf16 混合精度：保持 NativeScaler
-- ✅ 梯度累积：由 Accelerate 处理，可选是否改为官方实现
+- ✅ 梯度累积 + 参数更新流程：Accelerate + NativeScaler + AdamW 协同工作，无需改动
 
 ### 待决策/待实现
-- [TODO] 是否将 gradient accumulation 改为官方 PyTorch 实现
 - [TODO] StateGate 移除方案
 - [TODO] Residual Adapter → LoRA 的 rank 选择和实现
 - [TODO] LoRA 层的具体实现细节
