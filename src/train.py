@@ -42,6 +42,7 @@ from dust3r.viz import colorize
 from dust3r.utils.render import get_render_results, get_render_smpl
 import dust3r.utils.path_to_croco  # noqa: F401
 import croco.utils.misc as misc  # noqa
+# change to gradient accu 
 from croco.utils.misc import NativeScalerWithGradNormCount as NativeScaler  # noqa
 
 import hydra
