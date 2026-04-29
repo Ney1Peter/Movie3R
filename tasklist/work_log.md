@@ -1268,3 +1268,72 @@ world_base 可能有多种格式：
   - `z'_t`：用于 pose LoRA（相机位姿）
   - `H'_t`：用于 human LoRA（人体 SMPL 参数）
   - `q'_t`：用于所有 LoRA（shot condition）
+
+---
+
+## 2026/04/29
+
+### 1. 移除 StateGate 模块
+
+**commit**: `5fd582e` - refactor: 移除 StateGate 模块，直接使用 S0 重置状态（保留原始代码注释）
+
+**变更**：
+- 注释掉 `StateGate` 导入和实例化
+- 从训练参数列表中移除 `state_gate`
+- 修改状态更新逻辑：直接使用 `S0_expand`，不再使用门控
+- `ShotTokenGenerator` 保留，用于生成 `q_t`
+
+**影响**：可训练参数从 ~1.3M 减少到 ~1.2M
+
+### 2. 将 Residual Adapter 改为 LoRA
+
+**commit**: `30bf533` - refactor: 将 Residual Adapter 改为 LoRA（保留原始代码注释）
+
+**变更**：
+- `PoseResidualAdapter` → `PoseLoRALayer`
+- `HumanResidualAdapter` → `HumanLoRALayer`
+- `WorldResidualAdapter` → `WorldLoRALayer`
+- LoRA rank=64
+- gamma 初始化保持为 0
+
+**LoRA 架构**：
+```python
+class PoseLoRALayer(nn.Module):
+    def __init__(self, dec_dim=768, rank=64):
+        self.gamma = nn.Parameter(torch.tensor(0.0))
+        self.lora_A = nn.Linear(dec_dim * 2, rank, bias=False)  # 1536→64
+        self.lora_B = nn.Linear(rank, 7, bias=False)  # 64→7
+
+class HumanLoRALayer(nn.Module):
+    def __init__(self, dec_dim=768, rank=64):
+        self.gamma_shape = nn.Parameter(torch.tensor(0.0))
+        self.gamma_transl = nn.Parameter(torch.tensor(0.0))
+        self.lora_A_shape = nn.Linear(dec_dim * 2, rank, bias=False)
+        self.lora_B_shape = nn.Linear(rank, 10, bias=False)
+        self.lora_A_transl = nn.Linear(dec_dim * 2, rank, bias=False)
+        self.lora_B_transl = nn.Linear(rank, 3, bias=False)
+
+class WorldLoRALayer(nn.Module):
+    def __init__(self, dec_dim=768, rank=64):
+        self.gamma = nn.Parameter(torch.tensor(0.0))
+        self.lora_A = nn.Linear(dec_dim * 2, rank, bias=False)  # 1536→64
+        self.lora_B = nn.Linear(rank, 3, bias=False)  # 64→3
+```
+
+### 3. 更新 model.py 以使用 LoRA layers
+
+**commit**: `89337c9` - refactor: 更新 model.py 以使用 LoRA layers
+
+**变更**：
+- 导入改为 `PoseLoRALayer, HumanLoRALayer, WorldLoRALayer`
+- 模块声明改为 `pose_lora, human_lora, world_lora`
+- 训练参数列表和调用位置已更新
+
+### 4. 验证测试
+
+**测试结果**：
+- 参数数量：LoRA rank=64 配置下约 ~395K 参数
+- Forward pass 正常
+- gamma=0 时输出与 base model 一致（验证 residual 形式正确）
+
+**已推送至远程仓库**
