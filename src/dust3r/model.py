@@ -48,7 +48,11 @@ from einops import rearrange
 from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
-from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
+# **========== 原始代码 ==========**
+# from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
+# **========== 新代码 ==========**
+from dust3r.shot_adaptation import ShotTokenGenerator, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
+# **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -393,7 +397,11 @@ class ARCroco3DStereo(CroCoNet):
 
         # Shot-Aware Adaptation modules
         self.shot_token_generator = ShotTokenGenerator(dec_dim=self.dec_embed_dim)
-        self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
+        # **========== 原始代码 ==========**
+        # self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
+        # **========== 新代码 ==========**
+        # StateGate 已移除：直接使用 S0 重置，不再使用门控
+        # **========== 结束 ==========**
         # Residual adapters - 挂在 model 层
         self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
         self.human_residual_adapter = HumanResidualAdapter(dec_dim=self.dec_embed_dim)
@@ -654,13 +662,23 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             # 只训练 shot adaptation 模块 - 注意：必须设置 requires_grad=True，不是 _is_frozen=True
             # 因为 get_parameter_groups 会跳过 _is_frozen=True 和 requires_grad=False 的参数
+            # **========== 原始代码 ==========**
+            # for module in [
+            #     self.shot_token_generator,
+            #     self.state_gate,
+            #     self.pose_residual_adapter,
+            #     self.human_residual_adapter,
+            #     self.world_residual_adapter,
+            # ]:
+            # **========== 新代码 ==========**
             for module in [
                 self.shot_token_generator,
-                self.state_gate,
+                # StateGate 已移除
                 self.pose_residual_adapter,
                 self.human_residual_adapter,
                 self.world_residual_adapter,
             ]:
+            # **========== 结束 ==========**
                 for p in module.parameters():
                     p.requires_grad = True
             # enable_shot_adaptation 开关打开
@@ -1351,19 +1369,27 @@ class ARCroco3DStereo(CroCoNet):
                 pose_feat_i = None
                 pose_pos_i = None
 
-            # Shot-Aware Adaptation: reset takes priority over StateGate
-            # If reset=True, skip blend and use S0 directly
-            reset_mask_frame = views[i].get("reset", None)
+            # Shot-Aware Adaptation: 直接使用 S0 重置
+            # **========== 原始代码 ==========**
+            # reset_mask_frame = views[i].get("reset", None)
+            # if self.enable_shot_adaptation and i > 0:
+            #     S0_expand = S0.expand_as(state_feat)
+            #     if reset_mask_frame is not None and reset_mask_frame.any():
+            #         # reset优先：跳过blend，直接用S0
+            #         state_for_recurrent = S0_expand
+            #     else:
+            #         alpha = self.state_gate(q_tokens[i])
+            #         state_for_recurrent = alpha * state_feat + (1 - alpha) * S0_expand
+            # else:
+            #     state_for_recurrent = state_feat
+            # **========== 新代码 ==========**
+            # StateGate 已移除：直接使用 S0 重置状态，不再使用门控
             if self.enable_shot_adaptation and i > 0:
                 S0_expand = S0.expand_as(state_feat)
-                if reset_mask_frame is not None and reset_mask_frame.any():
-                    # reset优先：跳过blend，直接用S0
-                    state_for_recurrent = S0_expand
-                else:
-                    alpha = self.state_gate(q_tokens[i])
-                    state_for_recurrent = alpha * state_feat + (1 - alpha) * S0_expand
+                state_for_recurrent = S0_expand  # 直接重置
             else:
                 state_for_recurrent = state_feat
+            # **========== 结束 ==========**
 
             # Shot-Aware Adaptation: pass q_token to decoder if enabled
             f_shot = q_tokens[i] if self.enable_shot_adaptation else None
