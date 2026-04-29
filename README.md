@@ -212,21 +212,6 @@ Final Predictions
 
 ---
 
-## 引用
-
-如果 Movie3R 对你的研究有帮助，请引用：
-
-```bibtex
-@article{chen2025human3r,
-    title={Human3R: Everyone Everywhere All at Once},
-    author={Chen, Yue and Chen, Xingyu and Xue, Yuxuan and Chen, Anpei and Xiu, Yuliang and Pons-Moll, Gerard},
-    journal={arXiv preprint arXiv:2510.06219},
-    year={2025}
-}
-```
-
----
-
 ## 致谢
 
 我们的代码基于以下开源项目：
