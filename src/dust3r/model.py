@@ -48,10 +48,10 @@ from einops import rearrange
 from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
-# **========== 原始代码 ==========**
+# **========== 原始代码 (Residual Adapter) ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
-# **========== 新代码 ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
+# **========== 新代码 (LoRA) ==========**
+from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
@@ -397,15 +397,17 @@ class ARCroco3DStereo(CroCoNet):
 
         # Shot-Aware Adaptation modules
         self.shot_token_generator = ShotTokenGenerator(dec_dim=self.dec_embed_dim)
-        # **========== 原始代码 ==========**
+        # **========== 原始代码 (Residual Adapter) ==========**
         # self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
-        # **========== 新代码 ==========**
-        # StateGate 已移除：直接使用 S0 重置，不再使用门控
+        # self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
+        # self.human_residual_adapter = HumanResidualAdapter(dec_dim=self.dec_embed_dim)
+        # self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
+        # **========== 新代码 (LoRA) ==========**
+        # LoRA layers - 挂在 model 层
+        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
+        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
+        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
         # **========== 结束 ==========**
-        # Residual adapters - 挂在 model 层
-        self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
-        self.human_residual_adapter = HumanResidualAdapter(dec_dim=self.dec_embed_dim)
-        self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
 
@@ -662,7 +664,7 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             # 只训练 shot adaptation 模块 - 注意：必须设置 requires_grad=True，不是 _is_frozen=True
             # 因为 get_parameter_groups 会跳过 _is_frozen=True 和 requires_grad=False 的参数
-            # **========== 原始代码 ==========**
+            # **========== 原始代码 (Residual Adapter) ==========**
             # for module in [
             #     self.shot_token_generator,
             #     self.state_gate,
@@ -670,13 +672,12 @@ class ARCroco3DStereo(CroCoNet):
             #     self.human_residual_adapter,
             #     self.world_residual_adapter,
             # ]:
-            # **========== 新代码 ==========**
+            # **========== 新代码 (LoRA) ==========**
             for module in [
                 self.shot_token_generator,
-                # StateGate 已移除
-                self.pose_residual_adapter,
-                self.human_residual_adapter,
-                self.world_residual_adapter,
+                self.pose_lora,
+                self.human_lora,
+                self.world_lora,
             ]:
             # **========== 结束 ==========**
                 for p in module.parameters():
@@ -1471,19 +1472,31 @@ class ARCroco3DStereo(CroCoNet):
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
                     dec, n_humans_i, enable_shot_adaptation=True)
 
+                # **========== 原始代码 (Residual Adapter) ==========**
                 # Pose Residual Adapter: camera_pose is [B, 7] trans+quat
-                if 'camera_pose' in res:
-                    res['camera_pose'] = self.pose_residual_adapter(z_out, q_out, res['camera_pose'])
-
+                # if 'camera_pose' in res:
+                #     res['camera_pose'] = self.pose_residual_adapter(z_out, q_out, res['camera_pose'])
                 # Human Residual Adapter: smpl dict
-                if n_humans_i > 0 and 'smpl_shape' in res:
-                    res = self.human_residual_adapter(h_token, q_out, res)
-
+                # if n_humans_i > 0 and 'smpl_shape' in res:
+                #     res = self.human_residual_adapter(h_token, q_out, res)
                 # World Residual Adapter: pts3d is [B, H, W, 3]
-                # img_tokens [B,N,D] passed directly, adapter does pooling internally
+                # if 'pts3d_in_self_view' in res:
+                #     res['pts3d_in_self_view'] = self.world_residual_adapter(
+                #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                # **========== 新代码 (LoRA) ==========**
+                # Pose LoRA: camera_pose is [B, 7] trans+quat
+                if 'camera_pose' in res:
+                    res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
+
+                # Human LoRA: smpl dict
+                if n_humans_i > 0 and 'smpl_shape' in res:
+                    res = self.human_lora(h_token, q_out, res)
+
+                # World LoRA: pts3d is [B, H, W, 3]
                 if 'pts3d_in_self_view' in res:
-                    res['pts3d_in_self_view'] = self.world_residual_adapter(
+                    res['pts3d_in_self_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                # **========== 结束 ==========**
 
             ress.append({
                 **res, 'smpl_scores': scores[i], 'smpl_loc': smpl_loc[i]})
