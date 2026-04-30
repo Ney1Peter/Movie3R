@@ -70,4 +70,4 @@ python -m torch.distributed.run \
     eval_freq=1 \
     early_stopping_patience=10 \
     print_img_freq=999999 \
-    output_dir=../experiments/avatarrex_zzr_lbn1
+    output_dir=../experiments/formal_training-4gpu-lora-128

@@ -404,9 +404,9 @@ class ARCroco3DStereo(CroCoNet):
         # self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
         # **========== 新代码 (LoRA) ==========**
         # LoRA layers - 挂在 model 层
-        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
-        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
-        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=64)
+        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
