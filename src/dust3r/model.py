@@ -152,6 +152,9 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         is_shallow=False,
         prompt_size=None,
         backbone='dinov2_vitl14',
+        # **========== 原始代码备份：未配置 lora_rank ==========**
+        # mhmr_img_res=None,
+        # **========== 结束 ==========**
         mhmr_img_res=None,
         **croco_kwargs,
     ):
@@ -404,6 +407,11 @@ class ARCroco3DStereo(CroCoNet):
         # self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
         # **========== 新代码 (LoRA) ==========**
         # LoRA layers - 挂在 model 层
+        # **========== 原始代码备份：LoRA rank 硬编码为 128 ==========**
+        # self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        # self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        # self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        # **========== 结束 ==========**
         self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
@@ -1788,6 +1796,23 @@ class ARCroco3DStereo(CroCoNet):
             else:
                 pose_feat_i = None
                 pose_pos_i = None
+            # **========== 原始代码备份：inference 未传入 shot token ==========**
+            # new_state_feat, dec, cross_attn_states = self._recurrent_rollout(
+            #     state_feat,
+            #     state_pos,
+            #     feat_i,
+            #     pos_i,
+            #     pose_feat_i,
+            #     pose_pos_i,
+            #     smpl_feat_i,
+            #     smpl_pos_i,
+            #     init_state_feat,
+            #     img_mask=view["img_mask"],
+            #     reset_mask=view["reset"],
+            #     update=view.get("update", None),
+            #     use_ttt3r=use_ttt3r,
+            # )
+            # **========== 结束 ==========**
             new_state_feat, dec, cross_attn_states = self._recurrent_rollout(
                 state_feat,
                 state_pos,
@@ -1808,6 +1833,26 @@ class ARCroco3DStereo(CroCoNet):
                 mem, global_img_feat_i, out_pose_feat_i
             )
             assert len(dec) == self.dec_depth + 1
+            # **========== 原始代码备份：inference 原始 head token slicing ==========**
+            # if n_humans_i > 0:
+            #     head_input = [
+            #         dec[0].float(),
+            #         dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i].float(),
+            #         dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i].float(),
+            #         dec[self.dec_depth][:, :-n_humans_i].float(),
+            #     ]
+            #     smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
+            #     smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
+            # else:
+            #     head_input = [
+            #         dec[0].float(),
+            #         dec[self.dec_depth * 2 // 4][:, 1:].float(),
+            #         dec[self.dec_depth * 3 // 4][:, 1:].float(),
+            #         dec[self.dec_depth].float(),
+            #     ]
+            #     smpl_token = None
+            #     smpl_token_cat = None
+            # **========== 结束 ==========**
             if n_humans_i > 0:
                 head_input = [
                     dec[0].float(),
