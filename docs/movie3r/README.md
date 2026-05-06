@@ -51,6 +51,18 @@ python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 .
 - **StateGate**：（计划移除）软性门控状态更新
 - **Residual Adapter**：对 base model 输出做微调修正
 
+### 当前实现（LoRA Head V1）
+
+当前训练版本保持原 Human3R recurrent state 行为，不再强制重置到 `S0`，也暂不启用 StateGate。
+
+- **ShotTokenGenerator**：基于相邻帧 decoder image token 差异生成 `q_t`
+- **Shot token prompt**：将 `q_t` 拼接到 `[pose, image, human]` token 后进入 decoder cross-attention
+- **PoseLoRALayer**：修正 `camera_pose` 的 translation + quaternion
+- **HumanLoRALayer**：只修正 `smpl_transl`，不改 shape / rotmat / expression
+- **WorldLoRALayer**：对 `pts3d_in_self_view` 和 `pts3d_in_other_view` 做全局 3D shift
+
+`shot_label` 当前不作为显式监督使用。V1 依赖相邻帧特征差异和最终任务 loss 隐式学习 shot-aware correction；后续如需显式检测镜头跳变，可增加 `shot_label` 辅助 BCE loss。
+
 ### 训练策略
 
 - 只训练 ~1.3M 参数（0.1%）

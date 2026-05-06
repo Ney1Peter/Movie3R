@@ -1540,3 +1540,39 @@ class PoseLoRALayer(nn.Module):
 1. Inference 路径 `forward_recurrent_lighter` 仍未接入 ShotToken/LoRA
 2. LoRA rank 仍硬编码在 `model.py`，后续应写入 config
 3. 如需真正检测 shot change，后续应使用 `shot_label` 或增加辅助 loss
+
+### 5. shot_label 使用决策
+
+**当前 V1 决策**：暂不使用 `shot_label` 作为显式监督。
+
+**当前判断机制**：
+```
+F_i, F_{i-1}
+    → ShotTokenGenerator
+    → q_i
+    → decoder cross-attention
+    → q'_i
+    → LoRA heads 修正 camera/world/human 输出
+    → task loss 反向传播
+```
+
+也就是说，当前不是训练一个显式的 shot-change classifier，而是让 `q_i/q'_i` 通过最终任务 loss 隐式学习相邻帧差异和修正量之间的关系。
+
+**理由**：
+- V1 优先验证 `shot token + LoRA correction` 主路径是否有效
+- 避免一开始引入额外 BCE loss 权重和训练不稳定因素
+- `shot_label` 后续可以作为辅助监督增强 shot token 的可解释性
+
+**后续 V2 方案**：
+- 在 ShotTokenGenerator 上增加 `shot_logit`
+- 用数据集已有 `shot_label` 做 BCE 辅助 loss
+- `shot_label` 不直接硬开关 LoRA，只作为辅助监督
+- 如重新加入 StateGate，可用预测的 shot probability 控制 state mixing
+
+### 6. 文档同步
+
+已同步更新：
+- `docs/movie3r/README.md`：新增当前 LoRA Head V1 简述
+- `docs/movie3r/model.md`：新增当前实现、state 行为、LoRA 修正范围、shot_label 使用策略
+- `docs/movie3r/training.md`：新增当前 Shot Adaptation V1 训练范围和参数量说明
+- `tasklist/TODO.md`：新增 LoRA Head V1 参数估算和 shot_label 后续 TODO

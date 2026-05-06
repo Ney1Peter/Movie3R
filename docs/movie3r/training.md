@@ -76,6 +76,31 @@ optimizer, model, data_loader = accelerator.prepare(
 
 ## 3. 多卡训练
 
+### 3.0 当前 Shot Adaptation V1 训练范围
+
+当前推荐训练配置为 `freeze='shot_adaptation'`。该模式冻结 Human3R/CUT3R 主体，只训练新增 shot-aware 模块。
+
+训练模块：
+- `ShotTokenGenerator`
+- `PoseLoRALayer`
+- `HumanLoRALayer`
+- `WorldLoRALayer`
+
+冻结模块：
+- CUT3R encoder / decoder
+- Human3R downstream heads
+- DINOv2/MHMR backbone
+- 原始 pose / world / human prediction heads
+
+当前 LoRA Head V1 只针对位置和朝向修正：
+- `camera_pose` translation + quaternion
+- `smpl_transl`
+- `pts3d_in_self_view` / `pts3d_in_other_view` 的全局 3D shift
+
+`shot_label` 暂不参与训练 loss。当前版本依靠相邻帧 image token 差异和最终任务 loss 隐式学习 shot-aware correction。后续如需显式 shot change 检测，可增加 `shot_label` 辅助 BCE loss。
+
+当前 rank=128 估算可训练参数量约 `1.38M`。旧 LoRA checkpoint 与当前 V1 HumanLoRA 结构不完全兼容，建议基于当前结构重新训练。
+
 ### 3.1 启动方式
 
 使用 `torchrun`（PyTorch 原生分布式）：

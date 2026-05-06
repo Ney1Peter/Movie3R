@@ -2,6 +2,131 @@
 
 > **旧版内容备份**：本文原始内容记录的是 StateGate + Residual Adapter 设计，其中 StateGate、Residual Adapter、强制/门控 state reset 等描述已经过时。当前实现已更新为 ShotTokenGenerator + LoRA Head V1，并保持原 Human3R recurrent state 行为。新设计说明将在文档前部新增，旧内容保留用于回溯。
 
+## 当前实现（2026/05/06）
+
+### 0.1 设计目标
+
+当前 Movie3R V1 目标不是重新训练 CUT3R/Human3R 主体，而是在冻结原模型参数的前提下，通过新增 shot token 和 LoRA-style 低秩修正模块，对镜头跳变导致的位置、朝向和全局对齐问题做小范围修正。
+
+重点修正：
+- 相机位置和朝向
+- 场景/背景 pointmap 的全局位置偏移
+- 人体整体平移
+
+暂不修正：
+- 人体 shape
+- 人体 body pose 细节
+- 表情 expression
+- pointmap 局部几何细节
+
+### 0.2 与原 Human3R 的关系
+
+原 Human3R 主路径保持不变：
+
+```text
+image
+  -> CUT3R encoder image tokens
+  -> MHMR/DINOv2 检测人体位置
+  -> 提取 MHMR token + CUT3R token
+  -> mlp_fuse 得到 human token
+  -> [pose, image, human] 进入 recurrent decoder
+  -> 输出 camera pose / pointmap / SMPL 参数
+```
+
+Movie3R V1 只在该路径上增加 shot token：
+
+```text
+F_i, F_{i-1}
+  -> ShotTokenGenerator
+  -> q_i
+  -> [pose, image, human, q_i] 进入 recurrent decoder
+  -> [z', F', H', q'_i]
+  -> LoRA Head V1 修正最终输出
+```
+
+### 0.3 State 行为
+
+当前 V1 不使用 StateGate，也不使用 shot token 控制 state reset。
+
+训练路径默认保持原 Human3R 行为：
+
+```python
+state_for_recurrent = state_feat
+```
+
+也就是说，decoder 仍参考前一帧 recurrent state。Shot token 只作为额外 prompt 参与 decoder cross-attention，不改变 state 更新策略。
+
+### 0.4 ShotTokenGenerator
+
+Shot token 使用 decoder 输入 image token 生成：
+
+```python
+g_curr = feat_curr.mean(dim=1)
+g_prev = feat_prev.mean(dim=1)
+diff = g_curr - g_prev
+sim = cosine_similarity(g_curr, g_prev)
+q_t = MLP([g_curr, g_prev, diff, sim])
+```
+
+`q_t` 进入 decoder 前是输入 shot token，decoder 输出后的最后一个 token 是 `q'_t`。LoRA heads 使用 `q'_t` 作为 condition。
+
+### 0.5 LoRA Head V1 修正范围
+
+| 模块 | 输入 condition | 修正输出 | 不修正 |
+|------|-----------------|----------|--------|
+| PoseLoRALayer | `z' + q'` | `camera_pose` translation + quaternion | - |
+| HumanLoRALayer | `H' + q'` | `smpl_transl` | `smpl_shape` / `smpl_rotmat` / `smpl_expression` |
+| WorldLoRALayer | pooled `F' + q'` | `pts3d_in_self_view` / `pts3d_in_other_view` 全局 3D shift | 局部 pointmap 几何 |
+
+当前 LoRA 是新增低秩修正模块，形式为：
+
+```python
+delta = lora_B(lora_A(condition))
+output = base_output + gamma * delta
+```
+
+原 Human3R/CUT3R 参数被冻结，不被 LoRA 直接修改。
+
+### 0.6 可训练参数范围
+
+`freeze='shot_adaptation'` 下训练：
+
+| 模块 | 当前作用 | rank=128 估算参数量 |
+|------|----------|--------------------|
+| ShotTokenGenerator | 生成 shot token | ~788K |
+| PoseLoRALayer | 修正相机位姿 | ~198K |
+| HumanLoRALayer | 修正人体平移 | ~197K |
+| WorldLoRALayer | 修正 pointmap 全局平移 | ~197K |
+| **总计** | | **~1.38M** |
+
+冻结：encoder、decoder、DINOv2/MHMR backbone、downstream heads、原始 human heads、原始 state tokens。
+
+### 0.7 shot_label 使用策略
+
+当前 V1 暂不使用 `shot_label` 作为显式监督。
+
+当前判断方式是隐式的：
+
+```text
+相邻帧 image token 差异 -> q_t -> decoder -> q'_t -> LoRA 修正 -> task loss 反向传播
+```
+
+也就是说，模型通过最终 camera/world/human task loss 学习何时需要更大修正，而不是直接训练一个 shot-change classifier。
+
+后续 V2 可选方案：
+- 给 ShotTokenGenerator 增加 `shot_logit`
+- 使用数据集中的 `shot_label` 做 BCE 辅助监督
+- 仅作为辅助 loss，不直接硬开关 LoRA
+- 如重新引入 StateGate，再用 shot probability 控制 state mixing
+
+### 0.8 当前限制
+
+- Inference 路径 `forward_recurrent_lighter` 尚未接入 ShotToken/LoRA
+- LoRA rank 仍硬编码在 `model.py`，后续应进入 config
+- 旧 LoRA checkpoint 与 LoRA Head V1 的 HumanLoRA 结构不完全兼容，需要重新训练
+
+---
+
 ## 1. 概述
 
 ### 1.1 任务背景

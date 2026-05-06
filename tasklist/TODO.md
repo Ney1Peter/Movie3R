@@ -184,6 +184,24 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 
 **说明**：V1 目标是修正镜头跳变带来的位置/朝向偏移，不修改人体形状、姿态细节、表情，也不做局部 pointmap 自由形变。
 
+#### LoRA Head V1 当前可训练参数估算（rank=128）
+
+| 模块 | 当前作用 | 参数量估算 |
+|------|----------|------------|
+| ShotTokenGenerator | 生成 shot token | ~788K |
+| PoseLoRALayer | 修正 `camera_pose` | ~198K |
+| HumanLoRALayer | 只修正 `smpl_transl` | ~197K |
+| WorldLoRALayer | 修正 pointmap 全局 shift | ~197K |
+| **总计** | | **~1.38M** |
+
+#### shot_label 使用策略
+
+- ✅ V1 暂不使用 `shot_label` 作为显式监督
+- ✅ 当前通过相邻帧 image token 差异生成 `q_t`，再由最终 task loss 隐式学习何时需要修正
+- ⚠️ 当前 `q_t` 更准确是 shot-conditioned adaptation token，不是显式 shot-change classifier
+- [TODO] V2 可增加 `shot_logit` + `shot_label` BCE 辅助 loss
+- [TODO] 如后续重新加入 StateGate，可用 shot probability 控制 state mixing
+
 ---
 
 ### 3. Inference LoRA 支持问题 🚨
