@@ -156,6 +156,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         # mhmr_img_res=None,
         # **========== 结束 ==========**
         mhmr_img_res=None,
+        lora_rank=64,
         **croco_kwargs,
     ):
         super().__init__()
@@ -179,6 +180,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.msk_head = msk_head
         self.backbone = backbone
         self.mhmr_img_res = mhmr_img_res
+        self.lora_rank = lora_rank
         self.croco_kwargs = croco_kwargs
 
 
@@ -412,9 +414,9 @@ class ARCroco3DStereo(CroCoNet):
         # self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         # self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         # **========== 结束 ==========**
-        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
-        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
-        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
+        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
@@ -1685,6 +1687,7 @@ class ARCroco3DStereo(CroCoNet):
         last_smpl_id = None
         max_smpl_id = -1
         reset_mask = False
+        prev_f_dec = None
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
@@ -1715,6 +1718,14 @@ class ARCroco3DStereo(CroCoNet):
             shape = shapes
             feat_i = img_out[-1]
             pos_i = img_pos
+            f_shot = None
+            if self.enable_shot_adaptation:
+                f_dec_i = self.decoder_embed(feat_i)
+                if prev_f_dec is None:
+                    f_shot = self.shot_token_generator(f_dec_i, f_dec_i, i=0)
+                else:
+                    f_shot = self.shot_token_generator(f_dec_i, prev_f_dec, i)
+                prev_f_dec = f_dec_i.detach()
             
             # MHMR vit
             imgs_mhmr = view["img_mhmr"].unsqueeze(0)  # Shape: (1, batch_size, C, H, W)
@@ -1826,6 +1837,7 @@ class ARCroco3DStereo(CroCoNet):
                 img_mask=view["img_mask"],
                 reset_mask=view["reset"],
                 update=view.get("update", None),
+                f_shot=f_shot,
                 use_ttt3r=use_ttt3r,
             )
             out_pose_feat_i = dec[-1][:, 0:1]
@@ -1853,26 +1865,63 @@ class ARCroco3DStereo(CroCoNet):
             #     smpl_token = None
             #     smpl_token_cat = None
             # **========== 结束 ==========**
-            if n_humans_i > 0:
-                head_input = [
-                    dec[0].float(),
-                    dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i].float(),
-                    dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i].float(),
-                    dec[self.dec_depth][:, :-n_humans_i].float(),
-                ]
-                smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
-                smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
+            if self.enable_shot_adaptation:
+                if n_humans_i > 0:
+                    head_input = [
+                        dec[0].float(),
+                        dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i-1].float(),
+                        dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i-1].float(),
+                        dec[self.dec_depth][:, :-n_humans_i-1].float(),
+                    ]
+                    smpl_token = dec[self.dec_depth][:, -n_humans_i-1:-1].float()
+                    smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
+                else:
+                    head_input = [
+                        dec[0].float(),
+                        dec[self.dec_depth * 2 // 4][:, 1:-1].float(),
+                        dec[self.dec_depth * 3 // 4][:, 1:-1].float(),
+                        dec[self.dec_depth][:, :-1].float(),
+                    ]
+                    smpl_token = None
+                    smpl_token_cat = None
             else:
-                head_input = [
-                    dec[0].float(),
-                    dec[self.dec_depth * 2 // 4][:, 1:].float(),
-                    dec[self.dec_depth * 3 // 4][:, 1:].float(),
-                    dec[self.dec_depth].float(),
-                ]
-                smpl_token = None
-                smpl_token_cat = None
+                if n_humans_i > 0:
+                    head_input = [
+                        dec[0].float(),
+                        dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i].float(),
+                        dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i].float(),
+                        dec[self.dec_depth][:, :-n_humans_i].float(),
+                    ]
+                    smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
+                    smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
+                else:
+                    head_input = [
+                        dec[0].float(),
+                        dec[self.dec_depth * 2 // 4][:, 1:].float(),
+                        dec[self.dec_depth * 3 // 4][:, 1:].float(),
+                        dec[self.dec_depth].float(),
+                    ]
+                    smpl_token = None
+                    smpl_token_cat = None
             res = self._downstream_head(
                 head_input, shape, pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token_cat)
+
+            if self.enable_shot_adaptation:
+                z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
+                    dec, n_humans_i, enable_shot_adaptation=True)
+
+                if 'camera_pose' in res:
+                    res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
+
+                if n_humans_i > 0 and 'smpl_transl' in res:
+                    res = self.human_lora(h_token, q_out, res)
+
+                if 'pts3d_in_self_view' in res:
+                    res['pts3d_in_self_view'] = self.world_lora(
+                        img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                if 'pts3d_in_other_view' in res:
+                    res['pts3d_in_other_view'] = self.world_lora(
+                        img_tokens, z_out, q_out, res['pts3d_in_other_view'])
 
             # tracking
             num_miss_match0 = 0
