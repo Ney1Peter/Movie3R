@@ -1488,6 +1488,21 @@ class ARCroco3DStereo(CroCoNet):
                 #     res['pts3d_in_self_view'] = self.world_residual_adapter(
                 #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
                 # **========== 新代码 (LoRA) ==========**
+                # **========== 原始代码备份：LoRA 输出修正调用 ==========**
+                # Pose LoRA: camera_pose is [B, 7] trans+quat
+                # if 'camera_pose' in res:
+                #     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
+
+                # Human LoRA: smpl dict
+                # if n_humans_i > 0 and 'smpl_shape' in res:
+                #     res = self.human_lora(h_token, q_out, res)
+
+                # World LoRA: pts3d is [B, H, W, 3]
+                # if 'pts3d_in_self_view' in res:
+                #     res['pts3d_in_self_view'] = self.world_lora(
+                #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                # **========== 结束 ==========**
+
                 # Pose LoRA: camera_pose is [B, 7] trans+quat
                 if 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])

@@ -218,6 +218,71 @@ class PoseLoRALayer(nn.Module):
         return torch.cat([t_final, q_final], dim=-1)
 
 
+# **========== 原始代码备份：HumanLoRALayer（shape + transl 修正） ==========**
+# class HumanLoRALayer(nn.Module):
+#     """
+#     Human LoRA Layer - 对 SMPL 人体参数做 LoRA 微调修正
+#
+#     标准 LoRA 形式: y_final = y_base + gamma * delta
+#     其中 delta = B @ A(x)
+#
+#     当前版本只修正 smpl_shape 和 smpl_transl，不修正 smpl_rotmat。
+#
+#     输入 (作为 condition/input):
+#         smpl_token: [B, N_humans, dec_dim] - decoder 输出的人体 token (H')
+#         q_out: [B, 1, dec_dim] - decoder 输出的 refined shot token (q')
+#         pred_smpl_dict: dict with keys smpl_shape, smpl_transl, smpl_rotmat, smpl_expression
+#
+#     输出:
+#         smpl_dict_final: dict (同输入结构)
+#     """
+#
+#     def __init__(self, dec_dim=768, rank=64):
+#         super().__init__()
+#         self.rank = rank
+#         # 初始为 0，确保初始状态 final = base，不破坏 frozen base model
+#         self.gamma_shape = nn.Parameter(torch.tensor(0.0))
+#         self.gamma_transl = nn.Parameter(torch.tensor(0.0))
+#
+#         in_dim = dec_dim * 2  # smpl_token + q_out
+#
+#         # LoRA for smpl_shape (10D)
+#         self.lora_A_shape = nn.Linear(in_dim, rank, bias=False)
+#         self.lora_B_shape = nn.Linear(rank, 10, bias=False)
+#
+#         # LoRA for smpl_transl (3D)
+#         self.lora_A_transl = nn.Linear(in_dim, rank, bias=False)
+#         self.lora_B_transl = nn.Linear(rank, 3, bias=False)
+#
+#     def forward(self, smpl_token, q_out, pred_smpl_dict):
+#         """
+#         Args:
+#             smpl_token: [B, N_humans, dec_dim] - human token (condition)
+#             q_out: [B, 1, dec_dim] - refined shot token (condition)
+#             pred_smpl_dict: dict with smpl_shape(B,N,10), smpl_transl(B,N,3),
+#                           smpl_rotmat(B,N,6,3,3), smpl_expression(B,N,10)
+#         Returns:
+#             smpl_dict_final: dict
+#         """
+#         N = smpl_token.shape[1]
+#         q_expand = q_out.expand(-1, N, -1)  # [B, N, dec_dim]
+#         x = torch.cat([smpl_token, q_expand], dim=-1)  # [B, N, 2*dec_dim]
+#
+#         # 不 inplace 修改原 dict
+#         out = pred_smpl_dict.copy()
+#
+#         # LoRA: delta = B @ A(x)
+#         delta_shape = self.lora_B_shape(self.lora_A_shape(x))  # [B, N, 10]
+#         delta_transl = self.lora_B_transl(self.lora_A_transl(x))  # [B, N, 3]
+#
+#         out['smpl_shape'] = pred_smpl_dict['smpl_shape'] + self.gamma_shape * delta_shape
+#         out['smpl_transl'] = pred_smpl_dict['smpl_transl'] + self.gamma_transl * delta_transl
+#
+#         # rotmat / expression 保持不变
+#         return out
+# **========== 结束 ==========**
+
+
 class HumanLoRALayer(nn.Module):
     """
     Human LoRA Layer - 对 SMPL 人体参数做 LoRA 微调修正
