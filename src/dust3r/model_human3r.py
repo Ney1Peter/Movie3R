@@ -48,11 +48,6 @@ from einops import rearrange
 from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
-# **========== 原始代码 (Residual Adapter) ==========**
-# from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
-# **========== 新代码 (LoRA) ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
-# **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -394,23 +389,6 @@ class ARCroco3DStereo(CroCoNet):
             config.msk_head,
             **self.croco_args,
         )
-
-        # Shot-Aware Adaptation modules
-        self.shot_token_generator = ShotTokenGenerator(dec_dim=self.dec_embed_dim)
-        # **========== 原始代码 (Residual Adapter) ==========**
-        # self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
-        # self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
-        # self.human_residual_adapter = HumanResidualAdapter(dec_dim=self.dec_embed_dim)
-        # self.world_residual_adapter = WorldResidualAdapter(dec_dim=self.dec_embed_dim)
-        # **========== 新代码 (LoRA) ==========**
-        # LoRA layers - 挂在 model 层
-        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
-        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
-        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
-        # **========== 结束 ==========**
-        # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
-        self.enable_shot_adaptation = False
-
         self.set_freeze(config.freeze)
 
     @classmethod
@@ -653,37 +631,6 @@ class ARCroco3DStereo(CroCoNet):
             fix_all_params(to_be_frozen["encoder_and_decoder_and_head"]) # will not be updated
             freeze_all_params(to_be_frozen["encoder"]) # requires_grad = False
             freeze_all_params(to_be_frozen["mhmr"])
-        elif freeze == "shot_adaptation":
-            # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
-            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
-            freeze_all_params(to_be_frozen["encoder"])
-            freeze_all_params(to_be_frozen["mhmr"])
-            # downstream_head 有多个子模块，需要显式冻结整个模块
-            freeze_all_params([self.downstream_head])
-            # masked_smpl_token 也需要冻结
-            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
-            # 只训练 shot adaptation 模块 - 注意：必须设置 requires_grad=True，不是 _is_frozen=True
-            # 因为 get_parameter_groups 会跳过 _is_frozen=True 和 requires_grad=False 的参数
-            # **========== 原始代码 (Residual Adapter) ==========**
-            # for module in [
-            #     self.shot_token_generator,
-            #     self.state_gate,
-            #     self.pose_residual_adapter,
-            #     self.human_residual_adapter,
-            #     self.world_residual_adapter,
-            # ]:
-            # **========== 新代码 (LoRA) ==========**
-            for module in [
-                self.shot_token_generator,
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
-            ]:
-            # **========== 结束 ==========**
-                for p in module.parameters():
-                    p.requires_grad = True
-            # enable_shot_adaptation 开关打开
-            self.enable_shot_adaptation = True
         else:
             freeze_all_params(to_be_frozen[freeze])
 
@@ -903,7 +850,7 @@ class ARCroco3DStereo(CroCoNet):
             [mhmr_out.chunk(len(views), dim=0) for mhmr_out in mhmr_full_out],
         )
 
-    def _decoder(self, f_state, pos_state, f_img, pos_img, f_pose, pos_pose, f_smpl, pos_smpl, f_shot=None, use_ttt3r=False):
+    def _decoder(self, f_state, pos_state, f_img, pos_img, f_pose, pos_pose, f_smpl, pos_smpl, use_ttt3r=False):
         final_output = [(f_state, f_img)]  # before projection
         assert f_state.shape[-1] == self.dec_embed_dim
         f_img = self.decoder_embed(f_img)
@@ -915,12 +862,6 @@ class ARCroco3DStereo(CroCoNet):
             else:
                 f_img = torch.cat([f_pose, f_img], dim=1) # used for naive CUT3R+MHMR
                 pos_img = torch.cat([pos_pose, pos_img], dim=1) # used for naive CUT3R+MHMR
-        # Shot-Aware Adaptation: append shot token q_t if provided
-        if f_shot is not None:
-            f_img = torch.cat([f_img, f_shot], dim=1)
-            # pos_shot: dummy position for shot token (must be Long type for RoPE)
-            pos_shot = torch.zeros_like(f_shot)[:, :, :2].long()  # [B, 1, 2]
-            pos_img = torch.cat([pos_img, pos_shot], dim=1)
         final_output.append((f_state, f_img))
         cross_attn_states = []
         for blk_state, blk_img in zip(self.dec_blocks_state, self.dec_blocks):
@@ -987,66 +928,16 @@ class ARCroco3DStereo(CroCoNet):
         img_mask=None,
         reset_mask=None,
         update=None,
-        f_shot=None,
         use_ttt3r=False,
     ):
         (new_state_feat, dec), cross_attn_states = self._decoder(
-            state_feat, state_pos, current_feat, current_pos, pose_feat, pose_pos, smpl_feat, smpl_pos, f_shot, use_ttt3r
+            state_feat, state_pos, current_feat, current_pos, pose_feat, pose_pos, smpl_feat, smpl_pos, use_ttt3r
         )
         new_state_feat = new_state_feat[-1]
         return new_state_feat, dec, cross_attn_states
 
     def _get_img_level_feat(self, feat):
         return torch.mean(feat, dim=1, keepdim=True)
-
-    def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation):
-        """
-        Helper function to safely slice decoder output tokens.
-
-        当 enable_shot_adaptation=True 时，decoder 输出末尾追加了 q_t，
-        故 token 顺序为 [z', F', H', q']；否则为 [z', F', H']。
-
-        Args:
-            dec: list of decoder outputs, dec[-1] is the final output
-            n_humans: number of human tokens
-            enable_shot_adaptation: bool
-
-        Returns:
-            z_out: [B, 1, D] pose token
-            img_tokens: [B, N_img, D] image tokens (for LoRA world)
-            smpl_token: [B, N_humans, D] human tokens (for LoRA human) or None
-            q_out: [B, 1, D] shot token or None (only when enable_shot_adaptation=True)
-        """
-        if enable_shot_adaptation:
-            # Token 顺序: [z', F', H', q'] → q' 在最后
-            z_out = dec[-1][:, 0:1]  # pose token
-            q_out = dec[-1][:, -1:]   # shot token
-
-            if n_humans > 0:
-                # img tokens: 去掉 pose(0:1) 和 smpl 和 q
-                img_tokens = dec[-1][:, 1:-n_humans-1]
-                # smpl tokens: 去掉 pose 和 q
-                smpl_token = dec[-1][:, -n_humans-1:-1]
-            else:
-                # img tokens: 去掉 pose 和 q
-                img_tokens = dec[-1][:, 1:-1]
-                smpl_token = None
-        else:
-            # Token 顺序: [z', F', H'] → 无 q_t
-            z_out = dec[-1][:, 0:1]  # pose token
-            q_out = None
-
-            if n_humans > 0:
-                # img tokens: 去掉 pose 和 smpl
-                img_tokens = dec[-1][:, 1:-n_humans]
-                # smpl tokens: 去掉 pose
-                smpl_token = dec[-1][:, -n_humans:]
-            else:
-                # img tokens: 去掉 pose
-                img_tokens = dec[-1][:, 1:]
-                smpl_token = None
-
-        return z_out, img_tokens, smpl_token, q_out
 
     def embedd_camera(self, K, n_patch):
         """ Embed viewing directions using fourrier encoding."""
@@ -1335,20 +1226,6 @@ class ARCroco3DStereo(CroCoNet):
         init_state_feat = state_feat.clone()
         init_mem = mem.clone()
         all_state_args = [(state_feat, state_pos, init_state_feat, mem, init_mem)]
-
-        # Shot-Aware Adaptation: pre-compute q_tokens using decoder input image tokens
-        if self.enable_shot_adaptation:
-            # F_dec[i] = self.decoder_embed(feat[i]) is the decoder input image token
-            f_dec = [self.decoder_embed(f) for f in feat]  # list of [B, N, dec_dim]
-            q_tokens = []
-            for i in range(len(views)):
-                if i == 0:
-                    q_tokens.append(self.shot_token_generator(f_dec[0], f_dec[0], i=0))
-                else:
-                    q_tokens.append(self.shot_token_generator(f_dec[i], f_dec[i-1], i))
-            # S0 = init_state_feat (reused, not trained)
-            S0 = init_state_feat
-
         ress = []
         for i in range(len(views)):
             feat_i = feat[i]
@@ -1370,37 +1247,8 @@ class ARCroco3DStereo(CroCoNet):
                 pose_feat_i = None
                 pose_pos_i = None
 
-            # Shot-Aware Adaptation: 直接使用 S0 重置
-            # **========== 原始代码 ==========**
-            # reset_mask_frame = views[i].get("reset", None)
-            # if self.enable_shot_adaptation and i > 0:
-            #     S0_expand = S0.expand_as(state_feat)
-            #     if reset_mask_frame is not None and reset_mask_frame.any():
-            #         # reset优先：跳过blend，直接用S0
-            #         state_for_recurrent = S0_expand
-            #     else:
-            #         alpha = self.state_gate(q_tokens[i])
-            #         state_for_recurrent = alpha * state_feat + (1 - alpha) * S0_expand
-            # else:
-            #     state_for_recurrent = state_feat
-            # **========== 新代码 ==========**
-            # **========== 原始代码（错误版本：强制 S0 重置） ==========**
-            # StateGate 已移除：直接使用 S0 重置状态，不再使用门控
-            # if self.enable_shot_adaptation and i > 0:
-            #     S0_expand = S0.expand_as(state_feat)
-            #     state_for_recurrent = S0_expand  # 直接重置
-            # else:
-            #     state_for_recurrent = state_feat
-            # **========== 新代码 ==========**
-            # Shot token 只作为 decoder prompt，不改变原 Human3R recurrent state 行为。
-            state_for_recurrent = state_feat
-            # **========== 结束 ==========**
-
-            # Shot-Aware Adaptation: pass q_token to decoder if enabled
-            f_shot = q_tokens[i] if self.enable_shot_adaptation else None
-
             new_state_feat, dec, _ = self._recurrent_rollout(
-                state_for_recurrent,
+                state_feat,
                 state_pos,
                 feat_i,
                 pos_i,
@@ -1412,7 +1260,6 @@ class ARCroco3DStereo(CroCoNet):
                 img_mask=views[i]["img_mask"],
                 reset_mask=views[i]["reset"],
                 update=views[i].get("update", None),
-                f_shot=f_shot,
             )
             out_pose_feat_i = dec[-1][:, 0:1]   # After Cross-Attention, refined pose feat: [b, 1, 768]
             new_mem = self.pose_retriever.update_mem(
@@ -1420,88 +1267,27 @@ class ARCroco3DStereo(CroCoNet):
             )   # [b, 256, 1536]
 
             assert len(dec) == self.dec_depth + 1
-
-            # Shot-Aware Adaptation: extract q_out from decoder output
-            # When f_shot is inserted: dec = [z', F', H', q'] → q_out = dec[-1][:, -1:]
-            # When no f_shot: dec = [z', F', H'] → no q_out
-            if self.enable_shot_adaptation:
-                q_out = dec[-1][:, -1:]  # [B, 1, dec_dim]
-                # Token indices when f_shot is inserted: [z', F', H', q']
-                # pose = dec[-1][:, 0:1], img = dec[-1][:, 1:-n_humans-1], smpl = dec[-1][:, -n_humans-1:-1], q' = dec[-1][:, -1:]
-                if n_humans_i > 0:
-                    head_input = [
-                        dec[0].float(),
-                        dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i-1].float(),
-                        dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i-1].float(),
-                        dec[self.dec_depth][:, :-n_humans_i-1].float(),
-                    ]
-                    smpl_token = dec[self.dec_depth][:, -n_humans_i-1:-1].float()
-                    smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
-                else:
-                    head_input = [
-                        dec[0].float(),
-                        dec[self.dec_depth * 2 // 4][:, 1:-1].float(),
-                        dec[self.dec_depth * 3 // 4][:, 1:-1].float(),
-                        dec[self.dec_depth][:, :-1].float(),
-                    ]
-                    smpl_token = None
+            if n_humans_i > 0:
+                head_input = [
+                    dec[0].float(),
+                    dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i].float(),
+                    dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i].float(),
+                    dec[self.dec_depth][:, :-n_humans_i].float(),
+                ]
+                smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
+                smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
             else:
-                q_out = None
-                if n_humans_i > 0:
-                    head_input = [
-                        dec[0].float(),
-                        dec[self.dec_depth * 2 // 4][:, 1:-n_humans_i].float(),
-                        dec[self.dec_depth * 3 // 4][:, 1:-n_humans_i].float(),
-                        dec[self.dec_depth][:, :-n_humans_i].float(),
-                    ]
-                    smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
-                    smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
-                else:
-                    head_input = [
-                        dec[0].float(),
-                        dec[self.dec_depth * 2 // 4][:, 1:].float(),
-                        dec[self.dec_depth * 3 // 4][:, 1:].float(),
-                        dec[self.dec_depth].float(),
-                    ]
-                    smpl_token = None
-
+                head_input = [
+                    dec[0].float(),
+                    dec[self.dec_depth * 2 // 4][:, 1:].float(),
+                    dec[self.dec_depth * 3 // 4][:, 1:].float(),
+                    dec[self.dec_depth].float(),
+                ]
+                smpl_token = None
             res = self._downstream_head(
                 head_input, shape[i], pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token)
             if self.msk_head_flag:
                 res['msk'] = msks[i]
-
-            # Shot-Aware Adaptation: apply residual corrections
-            if self.enable_shot_adaptation and q_out is not None:
-                # Use helper to safely slice decoder tokens
-                z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
-                    dec, n_humans_i, enable_shot_adaptation=True)
-
-                # **========== 原始代码 (Residual Adapter) ==========**
-                # Pose Residual Adapter: camera_pose is [B, 7] trans+quat
-                # if 'camera_pose' in res:
-                #     res['camera_pose'] = self.pose_residual_adapter(z_out, q_out, res['camera_pose'])
-                # Human Residual Adapter: smpl dict
-                # if n_humans_i > 0 and 'smpl_shape' in res:
-                #     res = self.human_residual_adapter(h_token, q_out, res)
-                # World Residual Adapter: pts3d is [B, H, W, 3]
-                # if 'pts3d_in_self_view' in res:
-                #     res['pts3d_in_self_view'] = self.world_residual_adapter(
-                #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
-                # **========== 新代码 (LoRA) ==========**
-                # Pose LoRA: camera_pose is [B, 7] trans+quat
-                if 'camera_pose' in res:
-                    res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
-
-                # Human LoRA: smpl dict
-                if n_humans_i > 0 and 'smpl_shape' in res:
-                    res = self.human_lora(h_token, q_out, res)
-
-                # World LoRA: pts3d is [B, H, W, 3]
-                if 'pts3d_in_self_view' in res:
-                    res['pts3d_in_self_view'] = self.world_lora(
-                        img_tokens, z_out, q_out, res['pts3d_in_self_view'])
-                # **========== 结束 ==========**
-
             ress.append({
                 **res, 'smpl_scores': scores[i], 'smpl_loc': smpl_loc[i]})
             img_mask = views[i]["img_mask"]
