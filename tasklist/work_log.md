@@ -1495,3 +1495,48 @@ class PoseLoRALayer(nn.Module):
 | `src/dust3r/model.py` | LoRA 集成、freeze 模式 |
 | `config/train.yaml` | 训练配置 |
 | `demo.py` | 推理入口 |
+
+---
+
+## 2026/05/06 - LoRA Head V1 修正范围收窄
+
+### 1. State 行为修正
+
+**问题**：此前 `freeze='shot_adaptation'` 训练路径中，`i > 0` 时强制使用 `S0` 重置 recurrent state。
+
+**结论**：这不符合当前设计。当前第一版不引入 StateGate，也不改变 Human3R 原始 recurrent state 行为。
+
+**修正**：
+- Shot token 只作为额外 prompt 进入 decoder
+- recurrent state 仍默认使用前一帧 `state_feat`
+- 后续如需自适应重置，再单独引入 StateGate 或 shot-label 控制
+
+### 2. LoRA Head V1 设计目标
+
+**目标**：优先修正镜头跳变导致的位置/朝向偏移，不追求修改重建细节。
+
+**修正范围**：
+
+| 模块 | V1 修正 | V1 不修正 |
+|------|---------|-----------|
+| PoseLoRALayer | `camera_pose` translation + quaternion | - |
+| HumanLoRALayer | `smpl_transl` | `smpl_shape` / `smpl_rotmat` / `smpl_expression` |
+| WorldLoRALayer | `pts3d_in_self_view` + `pts3d_in_other_view` 全局 shift | 局部 pointmap 几何 |
+
+**理由**：
+- 镜头跳变主要影响相机位姿、world alignment 和人体在相机/world 中的位置
+- 人体 shape、body pose 细节、expression 不应由 shot adaptation 第一版直接修改
+- world pointmap 先只做全局 shift，避免破坏局部重建质量
+
+### 3. 实现说明
+
+- `HumanLoRALayer` 移除 active `smpl_shape` 修正分支，只保留 `smpl_transl` 低秩修正
+- `WorldLoRALayer` 同时应用到 `pts3d_in_self_view` 和 `pts3d_in_other_view`
+- 原始 `shape + transl` HumanLoRA 和旧 model 调用方式已用注释块保留
+- 旧 LoRA checkpoint 与该 V1 结构的 HumanLoRA 参数不完全一致，需要基于新结构重新训练
+
+### 4. 仍待解决
+
+1. Inference 路径 `forward_recurrent_lighter` 仍未接入 ShotToken/LoRA
+2. LoRA rank 仍硬编码在 `model.py`，后续应写入 config
+3. 如需真正检测 shot change，后续应使用 `shot_label` 或增加辅助 loss

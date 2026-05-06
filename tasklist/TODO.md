@@ -150,7 +150,8 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 
 #### 状态
 - ✅ StateGate 已移除
-- ✅ 状态更新改为直接使用 S0 重置
+- ~~✅ 状态更新改为直接使用 S0 重置~~（已废弃，不符合当前训练设计）
+- ✅ 状态更新已恢复为原 Human3R 行为：默认继续使用前一帧 recurrent state
 - 减少约 98K 参数
 
 ---
@@ -160,6 +161,7 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 #### 当前状态
 - ✅ LoRA rank=64 实现完成
 - ✅ LoRA rank=128 实现完成
+- ✅ LoRA Head V1 范围收窄：优先修正位置/朝向，不修人体细节和表情
 - ⚠️ **Inference 路径不支持 LoRA** (问题)
 
 #### LoRA 架构
@@ -171,6 +173,16 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 | WorldLoRALayer | 98K | 131K |
 | ShotTokenGenerator | 526K | 526K |
 | **总计** | **789K** | **1,053K** |
+
+#### LoRA Head V1 修正范围（当前位置/朝向优先）
+
+| 模块 | 修正内容 | 不修正内容 |
+|------|----------|------------|
+| PoseLoRALayer | `camera_pose` 的 translation + quaternion | - |
+| HumanLoRALayer | `smpl_transl` | `smpl_shape` / `smpl_rotmat` / `smpl_expression` |
+| WorldLoRALayer | `pts3d_in_self_view` 和 `pts3d_in_other_view` 的全局 3D shift | 局部几何细节 |
+
+**说明**：V1 目标是修正镜头跳变带来的位置/朝向偏移，不修改人体形状、姿态细节、表情，也不做局部 pointmap 自由形变。
 
 ---
 

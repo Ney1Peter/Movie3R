@@ -1507,14 +1507,17 @@ class ARCroco3DStereo(CroCoNet):
                 if 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
 
-                # Human LoRA: smpl dict
-                if n_humans_i > 0 and 'smpl_shape' in res:
+                # Human LoRA V1: only correct SMPL translation, keep body details unchanged.
+                if n_humans_i > 0 and 'smpl_transl' in res:
                     res = self.human_lora(h_token, q_out, res)
 
-                # World LoRA: pts3d is [B, H, W, 3]
+                # World LoRA V1: global shift for self/other pointmaps, no local geometry edit.
                 if 'pts3d_in_self_view' in res:
                     res['pts3d_in_self_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                if 'pts3d_in_other_view' in res:
+                    res['pts3d_in_other_view'] = self.world_lora(
+                        img_tokens, z_out, q_out, res['pts3d_in_other_view'])
                 # **========== 结束 ==========**
 
             ress.append({

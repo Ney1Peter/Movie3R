@@ -9,7 +9,7 @@ Shot-Aware Adaptation Modules
 1. ShotTokenGenerator: 生成 shot token q_t
 2. LoRA Layers: 对 base model 输出做 LoRA 风格微调修正
    - PoseLoRALayer: 对相机位姿做微调修正
-   - HumanLoRALayer: 对 SMPL 人体参数做微调修正
+   - HumanLoRALayer: 对 SMPL 人体平移做微调修正
    - WorldLoRALayer: 对场景点云做全局平移修正
 
 设计原则：使用标准 LoRA 低秩分解形式 (W' = W + BA)
@@ -285,12 +285,12 @@ class PoseLoRALayer(nn.Module):
 
 class HumanLoRALayer(nn.Module):
     """
-    Human LoRA Layer - 对 SMPL 人体参数做 LoRA 微调修正
+    Human LoRA Layer - 对 SMPL 人体平移做 LoRA 微调修正
 
     标准 LoRA 形式: y_final = y_base + gamma * delta
     其中 delta = B @ A(x)
 
-    当前版本只修正 smpl_shape 和 smpl_transl，不修正 smpl_rotmat。
+    V1 只修正 smpl_transl，不修正 shape / rotmat / expression。
 
     输入 (作为 condition/input):
         smpl_token: [B, N_humans, dec_dim] - decoder 输出的人体 token (H')
@@ -305,14 +305,9 @@ class HumanLoRALayer(nn.Module):
         super().__init__()
         self.rank = rank
         # 初始为 0，确保初始状态 final = base，不破坏 frozen base model
-        self.gamma_shape = nn.Parameter(torch.tensor(0.0))
         self.gamma_transl = nn.Parameter(torch.tensor(0.0))
 
         in_dim = dec_dim * 2  # smpl_token + q_out
-
-        # LoRA for smpl_shape (10D)
-        self.lora_A_shape = nn.Linear(in_dim, rank, bias=False)
-        self.lora_B_shape = nn.Linear(rank, 10, bias=False)
 
         # LoRA for smpl_transl (3D)
         self.lora_A_transl = nn.Linear(in_dim, rank, bias=False)
@@ -336,13 +331,11 @@ class HumanLoRALayer(nn.Module):
         out = pred_smpl_dict.copy()
 
         # LoRA: delta = B @ A(x)
-        delta_shape = self.lora_B_shape(self.lora_A_shape(x))  # [B, N, 10]
         delta_transl = self.lora_B_transl(self.lora_A_transl(x))  # [B, N, 3]
 
-        out['smpl_shape'] = pred_smpl_dict['smpl_shape'] + self.gamma_shape * delta_shape
         out['smpl_transl'] = pred_smpl_dict['smpl_transl'] + self.gamma_transl * delta_transl
 
-        # rotmat / expression 保持不变
+        # shape / rotmat / expression 保持不变，避免影响人体细节和表情。
         return out
 
 
