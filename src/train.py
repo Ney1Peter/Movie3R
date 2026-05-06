@@ -5,6 +5,11 @@
 # CUT3R: https://github.com/CUT3R/CUT3R
 # DUSt3R: https://github.com/naver/dust3r
 # --------------------------------------------------------
+#
+# 阅读建议：这个文件是训练编排层，不直接实现模型结构。
+# 主要职责是把 Hydra 配置、DataLoader、模型、loss、optimizer、Accelerate/DDP、
+# checkpoint、TensorBoard 串起来。真正的模型 forward 在 dust3r/model.py，
+# 真正的 forward+loss 调用入口在 dust3r/inference.py::loss_of_one_batch。
 import argparse
 import datetime
 import json
@@ -83,6 +88,8 @@ def setup_for_distributed(accelerator: Accelerator):
 
 
 def save_current_code(outdir):
+    # 训练开始时保存当前代码快照到 output_dir/code/时间戳。
+    # 这样后续回看 checkpoint 时，可以知道当时使用的是哪一版源码。
     now = datetime.datetime.now()  # current date and time
     date_time = now.strftime("%m_%d-%H:%M:%S")
     src_dir = "."
@@ -118,7 +125,20 @@ def save_current_code(outdir):
 
 
 def train(args):
+    """
+    训练总入口。
 
+    这个函数负责完整训练生命周期：
+    1. 初始化 Accelerate/DDP、随机种子和输出目录。
+    2. 构建 train/val/test DataLoader。
+    3. 构建模型、SMPLModel、loss、optimizer。
+    4. 加载 pretrained 或自动 resume。
+    5. 进入 epoch loop，按顺序执行 eval、保存、early stopping、train_one_epoch。
+    """
+
+    # Accelerator 封装了多卡 DDP、混合精度、梯度累积、梯度裁剪等逻辑。
+    # torchrun 会启动多个进程，每个进程都会执行 train(args)，
+    # accelerator 会根据环境变量自动判断 rank/world_size/local device。
     accelerator = Accelerator(
         gradient_accumulation_steps=args.accum_iter,
         mixed_precision="bf16",
@@ -129,8 +149,11 @@ def train(args):
     )
     device = accelerator.device
 
+    # 非主进程默认不打印，避免多卡训练日志重复刷屏。
     setup_for_distributed(accelerator)
 
+    # output_dir 是当前实验的根目录。注意：如果里面已有 checkpoint-last.pth，
+    # 后面会自动 resume，所以新实验建议使用新的 output_dir。
     printer.info("output_dir: " + args.output_dir)
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
@@ -140,6 +163,8 @@ def train(args):
         printer.info(f"Saving current code to {dst_dir}")
 
     # auto resume
+    # 如果命令行没有显式传 resume，但 output_dir 里有 checkpoint-last.pth，
+    # 就自动恢复训练。这个机制很方便，但也容易误把新实验接到旧目录上。
     if not args.resume:
         last_ckpt_fname = os.path.join(args.output_dir, f"checkpoint-last.pth")
         args.resume = last_ckpt_fname if os.path.isfile(last_ckpt_fname) else None
@@ -147,6 +172,7 @@ def train(args):
     printer.info("job dir: {}".format(os.path.dirname(os.path.realpath(__file__))))
 
     # fix the seed
+    # 多卡时每个进程 seed 稍微不同，避免不同 rank 采样完全一致。
     seed = args.seed + accelerator.state.process_index
     printer.info(
         f"Setting seed to {seed} for process {accelerator.state.process_index}"
@@ -157,6 +183,9 @@ def train(args):
     cudnn.benchmark = args.benchmark
 
     # training dataset and loader
+    # args.train_dataset 是一个字符串表达式，例如：
+    # "800 @ AvatarReX_Video(...) + 800 @ AvatarReX_AABB(...)"。
+    # get_data_loader 内部会 eval 这个字符串并构造真正的 PyTorch Dataset。
     printer.info("Building train dataset %s", args.train_dataset)
     #  dataset and loader
     data_loader_train = build_dataset(
@@ -167,6 +196,8 @@ def train(args):
         test=False,
         fixed_length=args.fixed_length
     )
+    # test/val dataset 允许用 "+" 拼多个数据集，这里拆开后分别构建 loader，
+    # 方便后续分别统计每个数据集的 loss。
     printer.info("Building test dataset %s", args.test_dataset)
     data_loader_test = {
         dataset.split("(")[0]: build_dataset(
@@ -197,8 +228,11 @@ def train(args):
         }
 
     # model
+    # args.model 也是字符串表达式，来自 config/train.yaml。
+    # 当前 Movie3R 典型值是 ARCroco3DStereo(ARCroco3DStereoConfig(... lora_rank=64))。
     printer.info("Loading model: %s", args.model)
     model: PreTrainedModel = eval(args.model)
+    # SMPLModel 用于把 GT / prediction 的 SMPL 参数转换成 joints、vertices、render 等监督信号。
     smpl_model: SMPLModel = SMPLModel(
         device, 
         model_args={
@@ -214,6 +248,8 @@ def train(args):
         f"Decoder parameters: {sum(p.numel() for p in model.dec_blocks.parameters())}"
     )
 
+    # train/test criterion 也是字符串表达式，eval 后得到真正的 loss module。
+    # 当前训练 loss 大致是 3D point/pose loss + RGB loss + SMPL loss。
     printer.info(f">> Creating train criterion = {args.train_criterion}")
     train_criterion = eval(args.train_criterion).to(device)
     printer.info(
@@ -223,11 +259,14 @@ def train(args):
 
     model.to(device)
 
+    # gradient checkpointing 用更多计算换显存，适合大模型和多视角输入。
     if args.gradient_checkpointing:
         model.gradient_checkpointing_enable()
     if args.long_context:
         model.fixed_input_length = False
 
+    # 新实验：从 pretrained Human3R/CUT3R 权重初始化。
+    # resume 实验：跳过这里，后面 misc.load_model 会恢复完整训练状态。
     if args.pretrained and not args.resume:
         printer.info(f"Loading pretrained: {args.pretrained}")
         ckpt = torch.load(args.pretrained, map_location=device)
@@ -254,17 +293,25 @@ def train(args):
         )
 
     # # following timm: set wd as 0 for bias and norm layers
+    # 只会把 requires_grad=True 的参数放进 optimizer。
+    # 当前 freeze='shot_adaptation' 时，主模型冻结，optimizer 里只有 ShotToken/LoRA 参数。
     param_groups = misc.get_parameter_groups(model, args.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
     # print(optimizer)
+    # NativeScaler 在这里主要负责 accelerator.backward、梯度裁剪和 optimizer.step。
     loss_scaler = NativeScaler(accelerator=accelerator)
 
+    # prepare 是 Accelerate 的关键步骤：
+    # - 多卡时把 model 包装成 DDP
+    # - 包装 optimizer
+    # - 包装 train dataloader，使每个 rank 拿到自己的数据切片
     accelerator.even_batches = False
     optimizer, model, data_loader_train = accelerator.prepare(
         optimizer, model, data_loader_train
     )
 
     def write_log_stats(epoch, train_stats, test_stats, val_stats=None):
+        # 只在主进程写 JSON 日志，避免多卡同时写同一个 log.txt。
         if accelerator.is_main_process:
             if log_writer is not None:
                 log_writer.flush()
@@ -293,6 +340,7 @@ def train(args):
                 f.write(json.dumps(log_stats) + "\n")
 
     def save_model(epoch, fname, best_so_far):
+        # 中间 checkpoint 保存，包括模型、optimizer、scaler、epoch、best_so_far 等训练状态。
         misc.save_model(
             accelerator=accelerator,
             args=args,
@@ -304,6 +352,7 @@ def train(args):
             best_so_far=best_so_far,
         )
 
+    # 如果 args.resume 指向 checkpoint，这里会恢复模型和 optimizer 状态。
     best_so_far = misc.load_model(
         args=args, model_without_ddp=model, optimizer=optimizer, loss_scaler=loss_scaler
     )
@@ -324,6 +373,7 @@ def train(args):
     for epoch in range(args.start_epoch, args.epochs + 1):
 
         # Save immediately the last checkpoint
+        # epoch 开头先保存上一轮 last，这样即使后面训练中断，也有最近 checkpoint。
         if epoch > args.start_epoch:
             if (
                 args.save_freq
@@ -333,6 +383,8 @@ def train(args):
                 save_model(epoch - 1, "last", best_so_far)
 
         # Validation (run before training, except epoch 0)
+        # 注意：eval 发生在当前 epoch 的训练之前。
+        # 因此 epoch=0 且 eval_freq=1 时，会先跑一轮 val/test 再开始第 0 轮训练。
         val_stats = {}
         if data_loader_val is not None and epoch >= 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0:
             val_stats = {}
@@ -352,6 +404,7 @@ def train(args):
                 val_stats[val_name] = stats
 
         # Test on multiple datasets
+        # test 和 val 都通过 test_one_epoch 执行，区别只是 prefix 和数据集来源。
         new_best = False
         if epoch >= 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0:
             test_stats = {}
@@ -382,6 +435,7 @@ def train(args):
                     new_best = True
 
         # Save more stuff
+        # 每个 epoch 写一行 JSON 到 output_dir/log.txt，同时刷新 TensorBoard。
         write_log_stats(epoch, train_stats, test_stats, val_stats)
 
         if epoch > args.start_epoch:
@@ -391,6 +445,7 @@ def train(args):
                 save_model(epoch - 1, "best", best_so_far)
 
         # Early stopping check
+        # early stopping 依赖 eval_freq；如果 eval_freq=0，就不会触发 early stopping。
         if data_loader_val is not None and epoch >= 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0:
             if new_best:
                 epochs_without_improvement = 0
@@ -406,6 +461,7 @@ def train(args):
             break  # exit after writing last test to disk
 
         # Train
+        # 真正的一轮训练在 train_one_epoch 里完成。
         train_stats = train_one_epoch(
             model,
             train_criterion,
@@ -427,6 +483,8 @@ def train(args):
 
 
 def save_final_model(accelerator, args, epoch, model_without_ddp, best_so_far=None):
+    # 训练结束时额外保存一个 checkpoint-final.pth。
+    # 它主要用于记录最终模型权重；resume 训练通常依赖 checkpoint-last.pth。
     output_dir = Path(args.output_dir)
     checkpoint_path = output_dir / "checkpoint-final.pth"
     to_save = {
@@ -445,6 +503,9 @@ def save_final_model(accelerator, args, epoch, model_without_ddp, best_so_far=No
 
 
 def build_dataset(dataset, batch_size, num_workers, accelerator, test=False, fixed_length=False):
+    # 统一封装 DataLoader 创建逻辑。
+    # train loader 会 shuffle/drop_last；test/val loader 不 shuffle、不 drop_last。
+    # 多卡时 sampler 会根据 accelerator.num_processes 把数据切给不同 rank。
     split = ["Train", "Test"][test]
     printer.info(f"Building {split} Data loader for dataset: {dataset}")
     loader = get_data_loader(
@@ -472,6 +533,17 @@ def train_one_epoch(
     log_writer=None,
     smpl_model: SMPLModel = None
 ):
+    """
+    执行一个 epoch 的训练。
+
+    单个 iteration 的核心顺序：
+    1. 从 DataLoader 取 batch。
+    2. 根据 epoch_f 调整 learning rate。
+    3. loss_of_one_batch 执行 model forward + criterion。
+    4. accelerator.backward 反传。
+    5. clip grad、optimizer.step、optimizer.zero_grad。
+    6. 记录终端日志、TensorBoard scalar，可选写可视化图。
+    """
     assert torch.backends.cuda.matmul.allow_tf32 == True
 
     model.train(True)
@@ -495,6 +567,7 @@ def train_one_epoch(
     if log_writer is not None:
         printer.info("log_dir: {}".format(log_writer.log_dir))
 
+    # 对支持 set_epoch 的 dataset/sampler，显式设置 epoch，保证多卡 shuffle 可复现。
     if hasattr(data_loader, "dataset") and hasattr(data_loader.dataset, "set_epoch"):
         data_loader.dataset.set_epoch(epoch)
     if (
@@ -506,16 +579,22 @@ def train_one_epoch(
 
     optimizer.zero_grad()
 
+    # metric_logger.log_every 包装了 dataloader，会周期性打印当前 loss、ETA、显存等信息。
     for data_iter_step, batch in enumerate(
         metric_logger.log_every(data_loader, args.print_freq, accelerator, header)
     ):
+        # accelerator.accumulate 根据 args.accum_iter 决定何时同步梯度/更新参数。
+        # 当前 accum_iter=1，因此每个 batch 都会更新一次参数。
         with accelerator.accumulate(model):
+            # epoch_f 是浮点 epoch，用于 iteration-level learning rate schedule。
             epoch_f = epoch + data_iter_step / len(data_loader)
             step = int(epoch_f * len(data_loader))
             # we use a per iteration (instead of per epoch) lr scheduler
             if data_iter_step % accum_iter == 0:
                 misc.adjust_learning_rate(optimizer, epoch_f, args)
             if not args.long_context:
+                # loss_of_one_batch 是训练 step 的核心：
+                # smpl_model.update_smpl_gt(batch) -> model(batch) -> criterion(batch, preds)。
                 result = loss_of_one_batch(
                     batch,
                     model,
@@ -537,6 +616,8 @@ def train_one_epoch(
                 )
                 sys.exit(1)
             if not result.get("already_backprop", False):
+                # 这里完成 backward、梯度裁剪和 optimizer.step。
+                # 对 Movie3R LoRA 训练来说，只有 ShotToken/LoRA 参数有梯度会被更新。
                 loss_scaler(
                     loss,
                     optimizer,
@@ -546,6 +627,7 @@ def train_one_epoch(
                 )
                 optimizer.zero_grad()
 
+            # batch 是 list[view_dict]，curr_num_view 通常等于 config.num_views。
             is_metric = batch[0]["is_metric"]
             curr_num_view = len(batch)
 
@@ -563,11 +645,13 @@ def train_one_epoch(
             metric_logger.update(lr=lr)
             metric_logger.update(step=step)
 
+            # loss_details 里包含各个子 loss，例如 pointmap、RGB、SMPL、mask 等。
             metric_logger.update(loss=loss_value, **loss_details)
 
             if (data_iter_step + 1) % accum_iter == 0 and (
                 (data_iter_step + 1) % (accum_iter * args.print_freq)
             ) == 0:
+                # 多卡时先 gather 再 mean，保证 TensorBoard 上是全局平均 loss。
                 loss_value_reduce = accelerator.gather(
                     torch.tensor(loss_value).to(accelerator.device)
                 ).mean()  # MUST BE EXECUTED BY ALL NODES
@@ -590,6 +674,7 @@ def train_one_epoch(
                     log_writer.add_scalar("train_" + name, val, step)
 
             if tb_vis_img:
+                # 可视化很耗时/显存，正式训练通常通过 print_img_freq=999999 关闭。
                 if log_writer is None:
                     continue
                 with torch.no_grad():
@@ -632,10 +717,13 @@ def train_one_epoch(
             and data_iter_step != 0
             and data_iter_step != len(data_loader) - 1
         ):
+            # 按 step 保存中间 checkpoint。
+            # 注意 save_freq 不能设为 0，否则 int(args.save_freq * len(data_loader)) 会导致除零。
             print("saving at step", data_iter_step)
             save_model(epoch - 1, "last", float("inf"))
 
     # gather the stats from all processes
+    # 多卡训练结束后同步各 rank 的指标，返回全局平均值。
     metric_logger.synchronize_between_processes(accelerator)
     printer.info("Averaged stats: %s", metric_logger)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
@@ -654,6 +742,15 @@ def test_one_epoch(
     prefix="test",
     smpl_model: SMPLModel = None
 ):
+    """
+    执行一个 validation/test epoch。
+
+    与 train_one_epoch 的区别：
+    - 使用 model.eval() 和 @torch.no_grad()。
+    - 不做 backward / optimizer.step。
+    - 汇总 avg 和 median 两套指标。
+    - 可选写 TensorBoard 可视化。
+    """
 
     model.eval()
     metric_logger = misc.MetricLogger(delimiter="  ")
@@ -663,6 +760,7 @@ def test_one_epoch(
     if log_writer is not None:
         printer.info("log_dir: {}".format(log_writer.log_dir))
 
+    # eval 阶段固定 epoch=0，保证测试集顺序稳定。
     if hasattr(data_loader, "dataset") and hasattr(data_loader.dataset, "set_epoch"):
         data_loader.dataset.set_epoch(0)
     if (
@@ -675,6 +773,7 @@ def test_one_epoch(
     for _, batch in enumerate(
         metric_logger.log_every(data_loader, args.print_freq, accelerator, header)
     ):
+        # eval loader 没有经过 accelerator.prepare，这里显式搬到当前 device。
         batch = todevice(batch, device)
         result = loss_of_one_batch(
             batch,
@@ -692,6 +791,7 @@ def test_one_epoch(
 
     printer.info("Averaged stats: %s", metric_logger)
 
+    # 同时返回平均值和中位数。best checkpoint 当前主要使用 loss_med 作为监控指标。
     aggs = [("avg", "global_avg"), ("med", "median")]
     results = {
         f"{k}_{tag}": getattr(meter, attr)
@@ -709,6 +809,7 @@ def test_one_epoch(
             log_writer.add_scalar(prefix + "_" + name, val, 1000 * epoch)
 
         # Skip visualization if print_img_freq is set to a very large value (disabled)
+        # print_img_freq>=10000 时跳过可视化，减少正式训练时的评估开销。
         tb_vis_img = args.print_img_freq < 10000
         if not tb_vis_img:
             del loss_details, loss_value, batch
@@ -1114,7 +1215,10 @@ def get_vis_imgs_new(loss_details, num_imgs_vis, num_views, is_metric, has_msk=F
     config_name="train.yaml",
 )
 def run(cfg: OmegaConf):
+    # Hydra 入口。启动命令中的 overrides 会在这里合并到 config/train.yaml。
+    # 例如：python train.py epochs=30 batch_size=2 output_dir=...
     OmegaConf.resolve(cfg)
+    # 创建 logdir 后进入真正的训练主函数。
     logdir = pathlib.Path(cfg.logdir)
     logdir.mkdir(parents=True, exist_ok=True)
     train(cfg)
