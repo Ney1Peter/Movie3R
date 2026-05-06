@@ -47,6 +47,8 @@ DistributedDataParallel (DDP)
 | DeepSpeed | 微软 | 超大模型，ZeRO 优化器（分片 optimizer/gradient/param） |
 
 **Movie3R 场景**：
+> **旧版参数量备份**：下面 `~1.3M` 是早期 StateGate/Residual Adapter 阶段的近似表述；当前 LoRA Head V1 的可训练参数量需要以后续新增说明为准。
+
 - 可训练参数 ~1.3M（shot adaptation 模块）
 - H800 80GB 显存充足
 - DDP + Accelerate **完全够用**，无需更复杂的优化

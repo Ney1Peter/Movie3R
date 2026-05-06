@@ -1,5 +1,7 @@
 # Movie3R 模型设计文档
 
+> **旧版内容备份**：本文原始内容记录的是 StateGate + Residual Adapter 设计，其中 StateGate、Residual Adapter、强制/门控 state reset 等描述已经过时。当前实现已更新为 ShotTokenGenerator + LoRA Head V1，并保持原 Human3R recurrent state 行为。新设计说明将在文档前部新增，旧内容保留用于回溯。
+
 ## 1. 概述
 
 ### 1.1 任务背景

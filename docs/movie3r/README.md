@@ -43,6 +43,8 @@ python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 .
 
 ### Shot-Aware Adaptation
 
+> **旧版内容备份**：下面三条是早期 StateGate + Residual Adapter 方案描述，当前实现已更新为 ShotTokenGenerator + LoRA Head V1。新设计说明将在下方新增。
+
 处理镜头跳变的轻量微调模块：
 
 - **ShotTokenGenerator**：基于相邻帧差异生成 shot token
