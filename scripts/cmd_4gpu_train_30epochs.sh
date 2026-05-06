@@ -41,7 +41,7 @@ echo "Torch cache: $TORCH_HOME"
 [ -d "$TORCH_HOME" ] && echo "  ✓ 存在" || echo "  ✗ 不存在"
 
 # 创建输出目录
-mkdir -p /workspace/code/Movie3R/experiments/avatarrex_zzr_lbn1
+mkdir -p /workspace/code/Movie3R/experiments/formal_training-4gpu-lora-64
 
 # ============================================
 # 4GPU 正式训练 (30 epochs)
@@ -70,4 +70,4 @@ python -m torch.distributed.run \
     eval_freq=1 \
     early_stopping_patience=10 \
     print_img_freq=999999 \
-    output_dir=../experiments/formal_training-4gpu-lora-128
+    output_dir=../experiments/formal_training-4gpu-lora-64
