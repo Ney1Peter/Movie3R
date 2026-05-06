@@ -1337,3 +1337,161 @@ class WorldLoRALayer(nn.Module):
 - gamma=0 时输出与 base model 一致（验证 residual 形式正确）
 
 **已推送至远程仓库**
+
+---
+
+## 2026/04/30 - 2026/05/01
+
+### 1. rank=128 LoRA 训练
+
+**训练配置**：
+- LoRA rank: 64 → 128
+- epochs: 30
+- batch_size: 2 (per GPU, 4 GPUs = 8)
+
+**参数量变化**：
+
+| 模块 | rank=64 | rank=128 |
+|------|---------|----------|
+| ShotTokenGenerator | 526K | 526K (不变) |
+| PoseLoRA | 99K | 132K |
+| HumanLoRA | 197K | 264K |
+| WorldLoRA | 98K | 131K |
+| **总计** | 789K | **1,053K** |
+
+**commit**: `xxxxxx` - refactor: LoRA rank 64→128
+
+### 2. Inference 代码问题 🚨
+
+**问题**：发现 inference 时没有使用 LoRA！
+
+**原因**：`forward_recurrent_lighter` (inference 路径) 不经过 LoRA layers
+
+**修复尝试**：修改 `forward_recurrent_lighter` 以支持 shot token 生成和 LoRA 应用
+
+**结果**：❌ **推理结果完全错误**，需要回滚
+
+**状态**：待修复
+
+### 3. 后续计划
+
+1. **回滚 inference 修改**：恢复原始 inference 代码
+2. **调查 LoRA 在 inference 不生效的原因**
+3. **可能方案**：
+   - 方案A：重新设计 inference 路径以支持 LoRA
+   - 方案B：在 demo.py 中使用 training 路径进行 inference
+   - 方案C：添加 StateGate 并重新评估架构
+
+---
+
+## 模型改动总结（2026/04 - 2026/05）
+
+### 架构演进
+
+```
+原始 Human3R
+    │
+    ▼
+添加 Shot-Aware Adaptation
+    ├── ShotTokenGenerator     — 检测相邻帧不连续程度
+    ├── StateGate             — 软门控状态重置
+    ├── PoseResidualAdapter  — 位姿修正
+    ├── HumanResidualAdapter — SMPL 参数修正
+    └── WorldResidualAdapter — 场景点云修正
+    │
+    ▼
+Movie3R v1 (StateGate + Residual Adapter)
+    │
+    ▼
+Movie3R v2 (移除 StateGate，改为 LoRA)
+    ├── ShotTokenGenerator — 保留
+    ├── StateGate        — ❌ 已移除
+    ├── PoseLoRA         — rank=128
+    ├── HumanLoRA        — rank=128
+    └── WorldLoRA        — rank=128
+```
+
+### 改动原因与思路
+
+#### 1. 移除 StateGate
+**原因**：
+- StateGate 的软门控机制增加了复杂性
+- 直接使用 S0 重置状态更简单，可能足够解决问题
+
+**变更**：
+- 状态更新从 `S_t = α*S_{t-1} + (1-α)*S0` 简化为 `S_t = S0`（直接重置）
+
+**影响**：减少 ~98K 参数
+
+#### 2. Residual Adapter → LoRA
+**原因**：
+- LoRA 有更好的正则化效果（低秩约束）
+- 参数量更少，适合小数据集微调
+- 初始状态更接近原始模型（gamma=0）
+
+**LoRA 形式**：
+```python
+# 标准 LoRA: W' = W + BA
+# delta = B @ A(x)
+# output = base + gamma * delta
+
+class PoseLoRALayer(nn.Module):
+    def __init__(self, dec_dim=768, rank=64):
+        self.gamma = nn.Parameter(torch.tensor(0.0))  # 初始化为0
+        self.lora_A = nn.Linear(dec_dim * 2, rank, bias=False)
+        self.lora_B = nn.Linear(rank, 7, bias=False)
+```
+
+#### 3. LoRA rank: 64 → 128
+**原因**：
+- rank=64 训练时 loss 很快 plateau
+- 增加容量看是否能学到更多
+
+**参数量变化**：
+| 模块 | rank=64 | rank=128 |
+|------|---------|----------|
+| ShotTokenGenerator | 526K | 526K |
+| PoseLoRA | 99K | 132K |
+| HumanLoRA | 197K | 264K |
+| WorldLoRA | 98K | 131K |
+| **总计** | **789K** | **1,053K** |
+
+### 当前问题
+
+#### 🚨 Inference 路径不支持 LoRA
+
+**发现**：
+- Training 路径 (`_forward_impl`) ✅ 使用 LoRA
+- Inference 路径 (`forward_recurrent_lighter`) ❌ 不使用 LoRA
+
+**影响**：
+- 训练时 LoRA 正常更新
+- 但推理时完全不走 LoRA 路径
+- **导致训练效果无法在推理时体现**
+
+**尝试修复**：
+- 在 `forward_recurrent_lighter` 中添加 shot token 生成和 LoRA 应用
+- ❌ 结果：推理结果完全错误（已回滚）
+
+**待解决**：
+1. 分析原始 Human3R inference 架构
+2. 确定正确的 inference + LoRA 方案
+
+### Git Commits
+
+| Commit | 内容 |
+|--------|------|
+| `5fd582e` | refactor: 移除 StateGate 模块 |
+| `30bf533` | refactor: 将 Residual Adapter 改为 LoRA |
+| `89337c9` | refactor: 更新 model.py 以使用 LoRA layers |
+| `94ba8f6` | docs: 同步 git 历史到 work_log.md |
+| (rank=128) | refactor: LoRA rank 64→128 (未单独 commit) |
+
+### 关键文件
+
+| 文件 | 改动 |
+|------|------|
+| `src/dust3r/shot_adaptation.py` | LoRA 类实现 |
+| `src/dust3r/model.py` | LoRA 集成、freeze 模式 |
+| `config/train.yaml` | 训练配置 |
+| `demo.py` | 推理入口 |

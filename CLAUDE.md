@@ -85,6 +85,13 @@ def new_function():
 3. commit 时说明："保留原始代码注释"
 4. 确认新代码稳定后，再考虑是否删除注释掉的旧代码
 
+### 分步提交流程（重要）
+1. 第一版 commit：只做原代码注释备份，不新增替代实现，commit message 标明“注释保留原始代码”
+2. 第二版 commit：在注释块下方新增实现，commit message 标明“新增实现”
+3. 多个相关 commit 完成后再统一 push，便于回退和审查
+4. 除非用户明确要求，不要把注释备份和新实现压成一个 commit
+5. 除非用户明确要求，不要直接 push
+
 ### Commit 规范
 ```bash
 git commit -m "refactor: 移除 StateGate 模块（保留原始代码注释）"
