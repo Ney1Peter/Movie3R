@@ -929,6 +929,12 @@ class ARCroco3DStereo(CroCoNet):
                 f_img = torch.cat([f_pose, f_img], dim=1) # used for naive CUT3R+MHMR
                 pos_img = torch.cat([pos_pose, pos_img], dim=1) # used for naive CUT3R+MHMR
         # Shot-Aware Adaptation: append shot token q_t if provided
+        # **========== Layer 2 原始代码备份：无 gate/scale 的 q_t 直接 append 到 decoder ==========**
+        # if f_shot is not None:
+        #     f_img = torch.cat([f_img, f_shot], dim=1)
+        #     pos_shot = torch.zeros_like(f_shot)[:, :, :2].long()
+        #     pos_img = torch.cat([pos_img, pos_shot], dim=1)
+        # **========== 结束 ==========**
         if f_shot is not None:
             f_img = torch.cat([f_img, f_shot], dim=1)
             # pos_shot: dummy position for shot token (must be Long type for RoPE)

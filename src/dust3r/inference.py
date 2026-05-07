@@ -113,6 +113,12 @@ def _compute_shot_bce_loss(batch, preds, model):
     return shot_bce * weight, details
 
 
+# **========== Layer 2 原始代码备份：无连续帧 q_t 能量正则 ==========**
+# def _compute_shot_q0_loss(batch, preds, model):
+#     return None, {}
+# **========== 结束 ==========**
+
+
 def loss_of_one_batch(
     batch,
     model,

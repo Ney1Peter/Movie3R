@@ -134,6 +134,10 @@ class ShotTokenGenerator(nn.Module):
         # 拼接: [g_curr, g_prev, diff, sim]
         x = torch.cat([g_curr, g_prev, diff, sim.unsqueeze(-1)], dim=-1)  # [B, 3*dec_dim+1]
 
+        # **========== Layer 2 原始代码备份：q_t 未经过 gate / LayerNorm / shot_scale ==========**
+        # q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
+        # shot_logit = self.shot_logit_mlp(x).squeeze(-1)  # [B]
+        # **========== 结束 ==========**
         # 生成 shot token
         q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
         shot_logit = self.shot_logit_mlp(x).squeeze(-1)  # [B]
