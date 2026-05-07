@@ -1651,3 +1651,160 @@ F_i, F_{i-1}
 - 连续/跳变二分类的 AUC 或阈值可分性
 
 如果 `g` 特征本身无法区分 AABB 跳变，问题在数据或特征选择；如果 `g` 可分但 `q_t` 不可分，问题在 ShotTokenGenerator 训练；如果 `q_t` 可分但推理仍崩，问题在 `q_t` 注入 decoder 的方式和训练 loss 约束。
+
+---
+
+## 2026/05/07 - Shot Token 质量验证结果
+
+### 1. 新增诊断脚本
+
+**脚本**：`scripts/analyze_shot_token.py`
+
+**用途**：独立验证 AvatarReX `shot_label`、相邻帧 decoder image token 特征差异，以及 `ShotTokenGenerator` 输出 `q_t` 的统计质量。
+
+**典型命令**：
+
+```bash
+PYTHONPATH=src:. .venv/bin/python scripts/analyze_shot_token.py \
+    --num_samples 20 \
+    --output output/shot_token_analysis/labels_only.json
+
+PYTHONPATH=src:. TORCH_HOME=/workspace/cache/torch TORCH_HUB_USE_HEURISTICS=0 \
+    .venv/bin/python scripts/analyze_shot_token.py \
+    --model_path experiments/formal_training-4gpu-lora-64/checkpoint-best.pth \
+    --num_samples 20 \
+    --quiet \
+    --output output/shot_token_analysis/lora64_best_20_view.json
+```
+
+### 2. 数据集格式验证
+
+对三个 root 每类抽样 20 个 sample：
+- `/workspace/data/avatarrex_zzr_output`
+- `/workspace/data/avatarrex_lbn1_output`
+- `/workspace/data/avatarrex_zxc_output`
+
+结果：
+
+| 数据类型 | 期望格式 | 实测结果 | invalid |
+|----------|----------|----------|---------|
+| `AvatarReX_Video` | `[0, 0, 0, 0]` | 全部 `[0, 0, 0, 0]` | 0 |
+| `AvatarReX_AABB` | `[0, 0, 1, 0]` | 全部 `[0, 0, 1, 0]` | 0 |
+
+结构校验也通过：
+- Video：4 帧来自同一 sequence，frame 连续
+- AABB：view0/1 来自 seqA，view2/3 来自 seqB，seqA != seqB，frame 连续，跳变发生在 view1 -> view2
+
+**结论**：当前未发现 Video/AABB 数据集格式或 `shot_label` 问题。
+
+### 3. Shot token 输入特征验证
+
+统计 `g_curr/g_prev`：
+
+| 指标 | 连续帧 label=0 | 跳变帧 label=1 | AUC |
+|------|----------------|----------------|-----|
+| `cosine(g_curr, g_prev)` | `0.9990` | `0.9889` | `0.9997`（使用负 cosine） |
+| `||g_curr - g_prev||` | `0.697` | `2.445` | `0.9997` |
+
+**结论**：decoder image token 的全局特征本身几乎可以完美区分连续/跳变。问题不在输入特征不可分。
+
+### 4. 训练后 `q_t` 统计
+
+LoRA64 `checkpoint-best.pth` 的 `q_t`：
+
+| 指标 | 连续帧 label=0 | 跳变帧 label=1 | 结论 |
+|------|----------------|----------------|------|
+| `||q_t||` | `62.17` | `62.21` | 几乎无区分，且幅度非常大 |
+| `cos(q_t, q_{t-1})` | median `0.9987` | median `0.9971` | 方向变化很小 |
+| view2 `||q_t-q_{t-1}||` 连续 vs 跳变 | `1.21` | `5.22` | 有一定跳变响应 |
+| `q_norm` AUC | `0.51` | - | 不能用范数区分跳变 |
+| `q_delta_norm` overall AUC | `0.55` | - | 受 view1/q_init 影响，整体可分性弱 |
+
+与 decoder token 尺度比较：
+
+| 指标 | 均值 |
+|------|------|
+| decoder image token norm | `23.15` |
+| pooled image token `g` norm | `17.03` |
+| trained `q_t` norm | `63.56` |
+| `q_t / decoder token norm` | `2.75x` |
+
+**结论**：
+- `q_t` 不是完全没有感知跳变：view2 的 `q_delta_norm` 在跳变处明显变大
+- 但 `q_t` 的绝对幅度失控，连续帧和跳变帧都维持约 `62` 的大范数
+- 这个大范数 token 被直接 append 到 frozen decoder，容易在所有帧上强行扰动 base 输出
+- 这解释了为什么 LoRA gamma 全置 0 时 pointmap 仍然崩：问题来自 trained shot token 本身进入 decoder，而不是仅来自 LoRA output residual
+
+### 5. 当前定性判断
+
+**数据集没有明显问题。输入特征没有明显问题。Shot token 训练结果有问题。**
+
+具体问题不是“shot token 完全没学到跳变”，而是：
+- 学到了过强的全局 prompt
+- 没有学到连续帧 no-op 行为
+- 缺少显式 shot-label/gating/范数约束
+- `q_t` 进入 decoder 的方式对 frozen base 不安全
+
+### 6. 下一步改进方向
+
+建议保留 shot token 进入 decoder 的思路，但必须增加约束：
+
+1. 在 `ShotTokenGenerator` 增加 `shot_logit`，用 `shot_label` 做 BCE 辅助监督
+2. 用 `shot_prob` 或 `shot_label` gate 控制 `q_t` 强度，连续帧接近 no-op
+3. 对 `q_t` 做 `LayerNorm` 或显式范数约束，使其尺度接近 decoder token，而不是 2.7x
+4. 增加训练/验证指标：`q_norm`、`q_delta_norm`、`shot_auc`、camera/pointmap/SMPL 尺度监控
+5. 如继续 append token，建议从小强度初始化，例如 `q_t = shot_scale * LN(q_raw)`，`shot_scale` 初始接近 0
+
+### 7. 术语和约束方案补充
+
+关于 `cosine(g_curr, g_prev)`：连续帧约 `0.9990`、跳变帧约 `0.9889`，单看数值都接近 1，但在高维 decoder token 特征里该差异很稳定；同时 `||g_curr-g_prev||` 从连续帧 `0.697` 增至跳变帧 `2.445`，AUC 约 `0.9997`，因此可以判断输入特征足够区分 shot change。
+
+关于 no-op：这里指连续帧时 shot token 应尽量“不操作”，即不明显改变原 Human3R 的 camera、pointmap、SMPL 输出；只有在 `shot_label=1` 的跳变帧才允许更强干预。
+
+下一版推荐结构：
+
+```text
+q_raw, shot_logit = ShotTokenGenerator(g_curr, g_prev, diff, sim)
+shot_prob = sigmoid(shot_logit)
+q_t = shot_scale * shot_prob * LayerNorm(q_raw)
+```
+
+推荐先实现以下约束：
+
+| 约束 | 目的 | 优先级 |
+|------|------|--------|
+| `BCE(shot_logit, shot_label)` | 显式训练 shot/change 判断 | 最高 |
+| `shot_prob` gate | 连续帧弱化 `q_t`，跳变帧增强 `q_t` | 最高 |
+| `LayerNorm(q_raw)` | 控制 `q_t` 尺度，避免大范数 token 破坏 decoder | 高 |
+| `shot_scale` 初始接近 0 | 训练初期保持近似 base Human3R | 高 |
+| `(1-shot_label) * ||q_t||^2` | 连续帧 no-op 正则 | 高 |
+| 输出尺度监控 | 避免 loss 下降但 demo 尺度崩坏 | 高 |
+
+可选输出级 no-op loss：
+
+```text
+L_noop = (1 - shot_label) * ||pred_with_shot - stopgrad(pred_without_shot)||
+```
+
+该项只约束连续帧，不限制跳变帧；目的是保护原 Human3R 在正常连续视频上的行为。
+
+### 8. 三层改造与提交计划
+
+接下来按三层约束逐层实现，每层都遵循“先注释备份原代码并 commit，再新增实现并 commit”的流程，便于回退。
+
+| 层级 | 目标 | 备份 commit | 实现 commit |
+|------|------|-------------|-------------|
+| Layer 1 | `ShotTokenGenerator` 输出 `shot_logit`，用 `shot_label` 做 BCE 辅助监督 | 注释保留原 `ShotTokenGenerator.forward` 和当前训练 loss 调用点 | 新增 `shot_logit`、`shot_loss` 监控与训练项 |
+| Layer 2 | 给 `q_t` 加 `shot_prob` gate、`LayerNorm` 和 `shot_scale`，控制 token 强度 | 注释保留当前无约束 `q_t` 注入 decoder 逻辑 | 新增 `q_t = shot_scale * shot_prob * LayerNorm(q_raw)` |
+| Layer 3 | 连续帧 no-op 输出约束，保护 base Human3R 行为 | 注释保留当前单路 forward/loss 逻辑 | 新增 `pred_with_shot` vs `pred_without_shot` 的连续帧 no-op loss |
+
+推荐最终训练目标：
+
+```text
+L = L_task
+  + lambda_shot * BCE(shot_logit, shot_label)
+  + lambda_q0 * (1 - shot_label) * ||q_t||^2
+  + lambda_noop * (1 - shot_label) * ||pred_with_shot - stopgrad(pred_without_shot)||
+```
+
+其中 Layer 1/2 先解决“知道哪里是跳变”和“连续帧不要强扰动 decoder”；Layer 3 再直接约束连续帧输出接近 shot-off/base 输出。

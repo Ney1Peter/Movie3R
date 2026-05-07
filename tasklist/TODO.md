@@ -245,6 +245,49 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 
 ### 4. Shot Token 质量验证计划
 
+#### 当前验证结果（2026/05/07）
+
+已新增脚本：`scripts/analyze_shot_token.py`
+
+| 层级 | 结果 | 结论 |
+|------|------|------|
+| 数据集 `shot_label` | 3 个 root 每类抽样 20 个，Video 全 `[0,0,0,0]`，AABB 全 `[0,0,1,0]`，invalid=0 | ✅ 数据格式正确 |
+| 输入特征 `g_curr/g_prev` | `g_diff_norm` 连续约 `0.697`，跳变约 `2.445`，AUC `0.9997` | ✅ 输入特征足够区分跳变 |
+| 训练后 `q_t` 范数 | 连续约 `62.17`，跳变约 `62.21`，AUC `0.51` | ❌ 范数不能区分跳变且幅度失控 |
+| view2 `q_delta_norm` | 连续约 `1.21`，跳变约 `5.22` | ⚠️ 有跳变响应，但不是 no-op 安全 |
+| 相对 decoder token 尺度 | `q_t` norm 约为 decoder image token norm 的 `2.75x` | ❌ prompt 过强，容易扰动 frozen decoder |
+
+当前判断：数据集和输入特征没有明显问题；ShotTokenGenerator 不是完全无效，但训练出的 `q_t` 过强、缺少连续帧 no-op/gating/范数约束，是这次推理崩坏的主要风险点。
+
+补充解释：`cosine(g_curr, g_prev)` 的 `0.9990` 和 `0.9889` 虽然都接近 1，但高维特征中该差异很稳定；结合 `diff_norm` 跳变帧约为连续帧 3.5 倍，以及 AUC `0.9997`，可以判断输入特征本身可分。no-op 指连续帧时 shot token 应基本“不操作”，不明显改变原 Human3R 输出。
+
+#### 下一版约束方案
+
+推荐结构：
+
+```text
+q_raw, shot_logit = ShotTokenGenerator(g_curr, g_prev, diff, sim)
+shot_prob = sigmoid(shot_logit)
+q_t = shot_scale * shot_prob * LayerNorm(q_raw)
+```
+
+优先实现：
+
+| 约束 | 目的 |
+|------|------|
+| `shot_logit + BCE(shot_label)` | 显式监督 shot/change 判断 |
+| `shot_prob` gate | 连续帧弱化 `q_t`，跳变帧增强 `q_t` |
+| `LayerNorm(q_raw)` | 限制 `q_t` 尺度 |
+| `shot_scale` 初始接近 0 | 保持训练初期接近原 Human3R |
+| `(1-shot_label) * ||q_t||^2` | 连续帧 no-op 正则 |
+| 输出尺度监控 | 防止 loss 下降但推理尺度崩坏 |
+
+可选加强：连续帧输出级 no-op loss。
+
+```text
+L_noop = (1 - shot_label) * ||pred_with_shot - stopgrad(pred_without_shot)||
+```
+
 #### 验证目标
 
 在继续训练前，先判断问题来自哪里：
@@ -283,11 +326,20 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 - ✅ 梯度累积 + 参数更新流程：无需改动
 - ✅ LoRA 训练路径工作正常
 - ✅ Inference 已接入 ShotToken/LoRA
+- ✅ 数据集 `shot_label` 格式检查通过
+- ✅ `g_curr/g_prev` 输入特征可高质量区分连续/跳变
 - ❌ LoRA64 `checkpoint-best.pth` 推理失败，问题集中在 shot adaptation 分支
+- ❌ 训练后 `q_t` 幅度过强，连续帧也不是 no-op
 - ❌ 当前 loss/val 指标不能充分代表 demo 视觉质量
 
 ### 待决策/待实现
-- [TODO] **Shot token 质量验证**（优先级最高）
-- [TODO] 数据集 `shot_label` 检查
-- [TODO] `g_curr/g_prev` 和 `q_t` 的连续/跳变可分性分析
-- [TODO] 设计更安全的 shot token 注入或约束方式
+- [TODO] Layer 1：给 `ShotTokenGenerator` 增加 `shot_logit` + `shot_label` BCE 辅助监督
+- [TODO] Layer 2：给 `q_t` 增加 `shot_prob` gate / `LayerNorm` / `shot_scale`
+- [TODO] Layer 3：增加连续帧 no-op 输出约束，保护 base Human3R 行为
+- [TODO] 增加 `q_norm`、`q_delta_norm`、`shot_auc` 和输出尺度监控指标
+
+### 分层提交要求
+- Layer 1/2/3 每层先做“原代码注释备份”并单独 commit
+- 每层备份 commit 后，再新增实现并单独 commit
+- 不把备份和新实现压到同一个 commit
+- 不主动 push

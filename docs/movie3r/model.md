@@ -151,6 +151,81 @@ LoRA64 正式训练完成后，`checkpoint-best.pth` 在 `data/h36.mp4` 上出�
 - 统计训练前/训练后 `q_t` 的范数、cosine、聚类和二分类可分性
 - 增加输出尺度诊断指标，确认 `q_t` 注入不会无约束破坏 base 输出
 
+### 0.10 Shot Token 质量验证补充（2026/05/07）
+
+诊断脚本：`scripts/analyze_shot_token.py`
+
+数据集格式检查通过：
+
+| 数据集 | 期望 `shot_label` | 实测 | 结论 |
+|------|------------------|------|------|
+| `AvatarReX_Video` | `[0, 0, 0, 0]` | 全部符合 | 数据格式正确 |
+| `AvatarReX_AABB` | `[0, 0, 1, 0]` | 全部符合 | 数据格式正确 |
+
+`ShotTokenGenerator` 的输入特征 `g_curr/g_prev` 本身具备很强区分度：
+
+| 指标 | 连续帧 | 跳变帧 | AUC |
+|------|--------|--------|-----|
+| `cosine(g_curr, g_prev)` | `0.9990` | `0.9889` | `0.9997` |
+| `||g_curr - g_prev||` | `0.697` | `2.445` | `0.9997` |
+
+虽然 `0.9990` 和 `0.9889` 都接近 1，但在高维 token 特征中这个差距已经足够稳定；同时 `diff_norm` 跳变帧约为连续帧的 3.5 倍，AUC 接近 1，说明输入信号不是瓶颈。
+
+训练后的 `q_t` 存在尺度和 no-op 问题：
+
+| 指标 | 连续帧 | 跳变帧 | 结论 |
+|------|--------|--------|------|
+| `||q_t||` | `62.17` | `62.21` | 范数不区分跳变，且过大 |
+| view2 `||q_t - q_{t-1}||` | `1.21` | `5.22` | 有跳变响应 |
+| decoder image token norm | `23.15` | - | `q_t` 约为普通 token 的 2.75 倍 |
+
+当前判断：`q_t` 不是完全没学到跳变，而是学成了一个始终很强的全局 prompt。连续帧也会强干预 decoder，没有学到 no-op 行为。
+
+这里的 no-op 指连续帧时 `q_t` 应尽量“不产生操作”：不明显改变原 Human3R 的 camera、pointmap 和 SMPL 输出；只有在 `shot_label=1` 的跳变帧才允许更强干预。
+
+### 0.11 下一版 Shot Token 约束方案
+
+推荐保留 shot token 进入 decoder 的设计，但必须让它可控：
+
+```text
+g_curr, g_prev, diff, sim
+    -> ShotTokenGenerator
+    -> q_raw, shot_logit
+    -> shot_prob = sigmoid(shot_logit)
+    -> q_t = shot_scale * shot_prob * LayerNorm(q_raw)
+    -> [pose, image, human, q_t]
+```
+
+建议新增约束：
+
+| 约束 | 目的 | 建议优先级 |
+|------|------|-----------|
+| `shot_logit + BCE(shot_label)` | 让模块显式知道哪里是跳变 | 最高 |
+| `shot_prob` gate | 连续帧自动弱化 `q_t`，跳变帧增强 `q_t` | 最高 |
+| `LayerNorm(q_raw)` | 控制 `q_t` 尺度，不再比 decoder token 大数倍 | 高 |
+| `shot_scale` 初始接近 0 | 保证训练初期接近原 Human3R，避免一开始破坏 base | 高 |
+| 连续帧 no-op loss | 约束 `shot_label=0` 时输出接近 shot-off/base 输出 | 高 |
+| `q_norm` / 输出尺度监控 | 防止再次出现 loss 降但推理尺度崩 | 高 |
+
+训练 loss 可加入：
+
+```text
+L = L_task
+  + lambda_shot * BCE(shot_logit, shot_label)
+  + lambda_q0 * (1 - shot_label) * ||q_t||^2
+  + lambda_noop * (1 - shot_label) * ||pred_on - pred_off||
+```
+
+其中 `pred_off` 可以是关闭 shot token 的 frozen base 输出或 stop-gradient teacher 输出。第一版可先实现 `BCE + gate + LayerNorm + q_norm/no-op 监控`，再决定是否加入完整 `pred_on/pred_off` no-op loss。
+
+当前执行计划改为三层都做：
+
+1. Layer 1：新增 `shot_logit` 和 `shot_label` BCE 辅助监督。
+2. Layer 2：新增 `shot_prob` gate、`LayerNorm(q_raw)` 和 `shot_scale`，控制 `q_t` 强度。
+3. Layer 3：新增连续帧 no-op output distillation，直接约束 `shot_label=0` 时 `pred_with_shot` 接近 `pred_without_shot`。
+
+为了方便回退，每层都拆成两个 commit：先注释备份旧代码，再新增实现。
+
 ---
 
 ## 1. 概述

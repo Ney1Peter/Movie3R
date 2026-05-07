@@ -126,6 +126,53 @@ optimizer, model, data_loader = accelerator.prepare(
 - 统计训练前/训练后 `q_t` 的范数、cosine 和连续/跳变可分性
 - 对打开/关闭 `enable_shot_adaptation` 的输出尺度差异做自动化监控
 
+**验证结论**：
+- 数据集格式正确，Video/AABB 的 `shot_label` 符合预期
+- `g_curr/g_prev` 输入特征可高质量区分连续/跳变，`g_diff_norm` AUC 约 `0.9997`
+- 训练后 `q_t` 有一定跳变响应，但 `q_norm` 连续/跳变都约 `62`，约为 decoder image token norm 的 `2.75x`
+- 主要问题是 `q_t` 过强且连续帧不是 no-op，而不是数据或输入特征不可分
+
+### 3.0.2 下一版训练约束建议
+
+下一版应把 shot token 从“无约束 prompt”改为“带显式 shot 监督和强度 gate 的 prompt”。
+
+推荐结构：
+
+```text
+ShotTokenGenerator(g_curr, g_prev)
+    -> q_raw, shot_logit
+shot_prob = sigmoid(shot_logit)
+q_t = shot_scale * shot_prob * LayerNorm(q_raw)
+```
+
+新增训练项：
+
+| 项 | 目的 |
+|----|------|
+| `BCE(shot_logit, shot_label)` | 显式监督 shot/change 分类 |
+| `(1 - shot_label) * ||q_t||^2` | 连续帧压低 shot token 强度 |
+| `LayerNorm(q_raw)` | 控制 token 尺度 |
+| `shot_scale` 初始接近 0 | 训练初期保持接近 base Human3R |
+| 输出尺度监控 | 防止 camera/pointmap/SMPL 尺度再次崩坏 |
+
+可选更强约束：连续帧 no-op loss。
+
+```text
+L_noop = (1 - shot_label) * ||pred_with_shot - stopgrad(pred_without_shot)||
+```
+
+该 loss 的目的不是让所有帧都等于 base，而是只约束连续帧不要被 shot token 无意义扰动；跳变帧仍允许 `q_t` 进入 decoder 修正 camera/world/human。
+
+实施顺序按三层拆分：
+
+| 层级 | 改动 | 目标 |
+|------|------|------|
+| Layer 1 | `shot_logit + BCE(shot_label)` | 先让模型显式知道哪里是跳变 |
+| Layer 2 | `shot_prob * LayerNorm(q_raw) * shot_scale` | 控制 `q_t` 强度，让连续帧趋近 no-op |
+| Layer 3 | 连续帧 no-op output distillation | 直接保护 shot-off/base 输出 |
+
+每层都先做原代码注释备份并单独 commit，再新增实现并单独 commit。
+
 ### 3.1 启动方式
 
 使用 `torchrun`（PyTorch 原生分布式）：
