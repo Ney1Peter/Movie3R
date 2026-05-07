@@ -269,7 +269,31 @@ def train(args):
     # resume 实验：跳过这里，后面 misc.load_model 会恢复完整训练状态。
     if args.pretrained and not args.resume:
         printer.info(f"Loading pretrained: {args.pretrained}")
-        ckpt = torch.load(args.pretrained, map_location=device)
+        # **========== 原始代码备份：pretrained 直接加载到训练 device，merge_state_dict 会在 train() 内持续占用显存 ==========**
+        # ckpt = torch.load(args.pretrained, map_location=device)
+        # load_only_encoder = getattr(args, "load_only_encoder", False)
+        # if load_only_encoder:
+        #     filtered_state_dict = {
+        #         k: v
+        #         for k, v in ckpt["model"].items()
+        #         if "enc_blocks" in k or "patch_embed" in k
+        #     }
+        #     merge_state_dict = strip_module(filtered_state_dict)
+        # else:
+        #     merge_state_dict = strip_module(ckpt["model"])
+        # del ckpt  # in case it occupies memory
+        #
+        # if args.pretrained_mhmr:
+        #     printer.info(f"Loading Multi-HMR pretrained: {args.pretrained_mhmr}")
+        #     ckpt_mhmr = torch.load(args.pretrained_mhmr, map_location=device)
+        #     merge_state_dict.update(strip_module_mhmr(ckpt_mhmr["model_state_dict"]))
+        #     del ckpt_mhmr  # in case it occupies memory
+        #
+        # printer.info(
+        #     model.load_state_dict(merge_state_dict, strict=False)
+        # )
+        # **========== 新代码：先加载到 CPU，load_state_dict 后释放临时权重，避免微调时额外常驻一份 GPU checkpoint ==========**
+        ckpt = torch.load(args.pretrained, map_location="cpu")
         load_only_encoder = getattr(args, "load_only_encoder", False)
         if load_only_encoder:
             filtered_state_dict = {
@@ -284,13 +308,16 @@ def train(args):
 
         if args.pretrained_mhmr:
             printer.info(f"Loading Multi-HMR pretrained: {args.pretrained_mhmr}")
-            ckpt_mhmr = torch.load(args.pretrained_mhmr, map_location=device)
+            ckpt_mhmr = torch.load(args.pretrained_mhmr, map_location="cpu")
             merge_state_dict.update(strip_module_mhmr(ckpt_mhmr["model_state_dict"]))
             del ckpt_mhmr  # in case it occupies memory
 
-        printer.info(
-            model.load_state_dict(merge_state_dict, strict=False)
-        )
+        load_result = model.load_state_dict(merge_state_dict, strict=False)
+        printer.info(load_result)
+        del merge_state_dict
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        # **========== 结束 ==========**
 
     # # following timm: set wd as 0 for bias and norm layers
     # 只会把 requires_grad=True 的参数放进 optimizer。

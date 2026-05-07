@@ -21,7 +21,11 @@ load_only_encoder: False
 long_context: False
 fixed_length: True
 resume: null
-benchmark: True
+# **========== 原始配置备份：开启 cuDNN benchmark ==========**
+# benchmark: True
+# **========== 新配置：关闭 benchmark，避免 cuDNN backward 选择大 workspace 算法导致显存峰值异常 ==========**
+benchmark: False
+# **========== 结束 ==========**
 num_views : 4
 num_test_views : 4
 n_corres_train: 0
