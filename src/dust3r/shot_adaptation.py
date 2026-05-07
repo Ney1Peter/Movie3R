@@ -82,7 +82,7 @@ class ShotTokenGenerator(nn.Module):
 
     基于全局特征差异：
     输入: F_dec[i] 和 F_dec[i-1]（decoder 输入的图像 token）
-    输出: q_t [B, 1, dec_dim]
+    输出: q_t [B, 1, dec_dim]，以及可选的 shot_logit [B]
 
     q_t 编码了两帧之间的"不连续程度"，供后续 LoRA 层使用。
     """
@@ -95,20 +95,31 @@ class ShotTokenGenerator(nn.Module):
             nn.GELU(),
             nn.Linear(256, dec_dim),
         )
+        self.shot_logit_mlp = nn.Sequential(
+            nn.Linear(dec_dim * 3 + 1, 256),
+            nn.GELU(),
+            nn.Linear(256, 1),
+        )
         # i=0 没有 previous frame，用可学习的 q_init
         self.q_init = nn.Parameter(torch.randn(1, 1, dec_dim) * 0.02)
+        self.shot_logit_init = nn.Parameter(torch.tensor([-6.0]))
 
-    def forward(self, feat_curr, feat_prev, i):
+    def forward(self, feat_curr, feat_prev, i, return_info=False):
         """
         Args:
             feat_curr: [B, N, dec_dim] 当前帧 decoder 输入特征
             feat_prev: [B, N, dec_dim] 上一帧 decoder 输入特征
             i: int 帧索引，i=0 时使用 q_init
+            return_info: True 时额外返回 shot_logit/shot_prob/q_norm 供训练约束和日志使用
         Returns:
             q_t: [B, 1, dec_dim]
         """
         if i == 0:
-            return self.q_init.expand(feat_curr.shape[0], -1, -1)
+            q_t = self.q_init.expand(feat_curr.shape[0], -1, -1)
+            shot_logit = self.shot_logit_init.expand(feat_curr.shape[0])
+            if return_info:
+                return q_t, self._build_info(q_t, shot_logit)
+            return q_t
 
         # 全局特征：mean pooling
         g_curr = feat_curr.mean(dim=1)      # [B, dec_dim]
@@ -125,8 +136,18 @@ class ShotTokenGenerator(nn.Module):
 
         # 生成 shot token
         q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
+        shot_logit = self.shot_logit_mlp(x).squeeze(-1)  # [B]
 
+        if return_info:
+            return q_t, self._build_info(q_t, shot_logit)
         return q_t
+
+    def _build_info(self, q_t, shot_logit):
+        return {
+            "shot_logit": shot_logit,
+            "shot_prob": torch.sigmoid(shot_logit.detach()),
+            "shot_q_norm": q_t.detach().norm(dim=-1).squeeze(1),
+        }
 
 
 # **========== 原始代码 (Residual Adapter) ==========**

@@ -1,5 +1,6 @@
 import tqdm
 import torch
+import torch.nn.functional as F
 from dust3r.utils.device import to_cpu, collate_with_cat
 from dust3r.utils.misc import invalid_to_nans
 from dust3r.utils.geometry import depthmap_to_pts3d, geotrf
@@ -53,6 +54,65 @@ def make_batch_symmetric(batch):
     return view1, view2
 
 
+def _unwrap_model(model):
+    return getattr(model, "module", model)
+
+
+def _as_shot_label(view, ref_tensor):
+    shot_label = view.get("shot_label", None)
+    if shot_label is None:
+        return None
+    if torch.is_tensor(shot_label):
+        shot_label = shot_label.to(device=ref_tensor.device)
+    else:
+        shot_label = torch.as_tensor(shot_label, device=ref_tensor.device)
+    return shot_label.to(dtype=ref_tensor.dtype).reshape(-1)
+
+
+def _compute_shot_bce_loss(batch, preds, model):
+    base_model = _unwrap_model(model)
+    weight = float(getattr(base_model, "shot_loss_weight", 0.0))
+    if weight <= 0:
+        return None, {}
+
+    logits, labels = [], []
+    for view, pred in zip(batch, preds):
+        shot_logit = pred.get("shot_logit", None)
+        if shot_logit is None:
+            continue
+        shot_logit = shot_logit.reshape(-1).float()
+        shot_label = _as_shot_label(view, shot_logit)
+        if shot_label is None:
+            continue
+        logits.append(shot_logit)
+        labels.append(shot_label.float())
+
+    if not logits:
+        return None, {}
+
+    shot_logits = torch.cat(logits, dim=0)
+    shot_labels = torch.cat(labels, dim=0)
+    shot_bce = F.binary_cross_entropy_with_logits(shot_logits, shot_labels)
+
+    with torch.no_grad():
+        shot_prob = torch.sigmoid(shot_logits)
+        shot_pred = shot_prob >= 0.5
+        shot_acc = (shot_pred == (shot_labels >= 0.5)).float().mean()
+        pos_mask = shot_labels >= 0.5
+        neg_mask = ~pos_mask
+        shot_prob_pos = shot_prob[pos_mask].mean() if pos_mask.any() else shot_prob.new_tensor(0.0)
+        shot_prob_neg = shot_prob[neg_mask].mean() if neg_mask.any() else shot_prob.new_tensor(0.0)
+
+    details = {
+        "shot_bce": float(shot_bce.detach()),
+        "shot_bce_weighted": float((shot_bce * weight).detach()),
+        "shot_acc": float(shot_acc.detach()),
+        "shot_prob_pos": float(shot_prob_pos.detach()),
+        "shot_prob_neg": float(shot_prob_neg.detach()),
+    }
+    return shot_bce * weight, details
+
+
 def loss_of_one_batch(
     batch,
     model,
@@ -89,6 +149,13 @@ def loss_of_one_batch(
         # **========== 结束 ==========**
         with torch.cuda.amp.autocast(enabled=False):
             loss = criterion(batch, preds) if criterion is not None else None
+            if loss is not None:
+                main_loss, loss_details = loss
+                shot_loss, shot_details = _compute_shot_bce_loss(batch, preds, model)
+                if shot_loss is not None:
+                    main_loss = main_loss + shot_loss
+                    loss_details.update(shot_details)
+                    loss = (main_loss, loss_details)
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result

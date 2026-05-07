@@ -157,6 +157,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         # **========== 结束 ==========**
         mhmr_img_res=None,
         lora_rank=64,
+        shot_loss_weight=0.1,
         **croco_kwargs,
     ):
         super().__init__()
@@ -181,6 +182,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.backbone = backbone
         self.mhmr_img_res = mhmr_img_res
         self.lora_rank = lora_rank
+        self.shot_loss_weight = shot_loss_weight
         self.croco_kwargs = croco_kwargs
 
 
@@ -420,6 +422,7 @@ class ARCroco3DStereo(CroCoNet):
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
+        self.shot_loss_weight = config.shot_loss_weight
 
         self.set_freeze(config.freeze)
 
@@ -1009,6 +1012,14 @@ class ARCroco3DStereo(CroCoNet):
     def _get_img_level_feat(self, feat):
         return torch.mean(feat, dim=1, keepdim=True)
 
+    def _attach_shot_info(self, res, shot_info):
+        if shot_info is None:
+            return res
+        res["shot_logit"] = shot_info["shot_logit"]
+        res["shot_prob"] = shot_info["shot_prob"]
+        res["shot_q_norm"] = shot_info["shot_q_norm"]
+        return res
+
     def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation):
         """
         Helper function to safely slice decoder output tokens.
@@ -1347,6 +1358,7 @@ class ARCroco3DStereo(CroCoNet):
         all_state_args = [(state_feat, state_pos, init_state_feat, mem, init_mem)]
 
         # Shot-Aware Adaptation: pre-compute q_tokens using decoder input image tokens
+        shot_infos = [None] * len(views)
         if self.enable_shot_adaptation:
             # **========== Layer 1 原始代码备份：generator 只返回 q_t ==========**
             # f_dec = [self.decoder_embed(f) for f in feat]
@@ -1362,9 +1374,13 @@ class ARCroco3DStereo(CroCoNet):
             q_tokens = []
             for i in range(len(views)):
                 if i == 0:
-                    q_tokens.append(self.shot_token_generator(f_dec[0], f_dec[0], i=0))
+                    q_token, shot_info = self.shot_token_generator(
+                        f_dec[0], f_dec[0], i=0, return_info=True)
                 else:
-                    q_tokens.append(self.shot_token_generator(f_dec[i], f_dec[i-1], i))
+                    q_token, shot_info = self.shot_token_generator(
+                        f_dec[i], f_dec[i-1], i, return_info=True)
+                q_tokens.append(q_token)
+                shot_infos[i] = shot_info
             # S0 = init_state_feat (reused, not trained)
             S0 = init_state_feat
 
@@ -1538,6 +1554,9 @@ class ARCroco3DStereo(CroCoNet):
                     res['pts3d_in_other_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
                 # **========== 结束 ==========**
+
+            if self.enable_shot_adaptation:
+                res = self._attach_shot_info(res, shot_infos[i])
 
             ress.append({
                 **res, 'smpl_scores': scores[i], 'smpl_loc': smpl_loc[i]})
@@ -1728,6 +1747,7 @@ class ARCroco3DStereo(CroCoNet):
             feat_i = img_out[-1]
             pos_i = img_pos
             f_shot = None
+            shot_info = None
             if self.enable_shot_adaptation:
                 # **========== Layer 1 原始代码备份：inference generator 只返回 q_t ==========**
                 # f_dec_i = self.decoder_embed(feat_i)
@@ -1739,9 +1759,11 @@ class ARCroco3DStereo(CroCoNet):
                 # **========== 结束 ==========**
                 f_dec_i = self.decoder_embed(feat_i)
                 if prev_f_dec is None:
-                    f_shot = self.shot_token_generator(f_dec_i, f_dec_i, i=0)
+                    f_shot, shot_info = self.shot_token_generator(
+                        f_dec_i, f_dec_i, i=0, return_info=True)
                 else:
-                    f_shot = self.shot_token_generator(f_dec_i, prev_f_dec, i)
+                    f_shot, shot_info = self.shot_token_generator(
+                        f_dec_i, prev_f_dec, i, return_info=True)
                 prev_f_dec = f_dec_i.detach()
             
             # MHMR vit
@@ -1939,6 +1961,8 @@ class ARCroco3DStereo(CroCoNet):
                 if 'pts3d_in_other_view' in res:
                     res['pts3d_in_other_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
+
+                res = self._attach_shot_info(res, shot_info)
 
             # tracking
             num_miss_match0 = 0
