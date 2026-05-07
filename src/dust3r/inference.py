@@ -66,7 +66,10 @@ def _as_shot_label(view, ref_tensor):
         shot_label = shot_label.to(device=ref_tensor.device)
     else:
         shot_label = torch.as_tensor(shot_label, device=ref_tensor.device)
-    return shot_label.to(dtype=ref_tensor.dtype).reshape(-1)
+    shot_label = shot_label.to(dtype=ref_tensor.dtype).reshape(-1)
+    if shot_label.numel() == 1 and ref_tensor.numel() > 1:
+        shot_label = shot_label.expand(ref_tensor.numel())
+    return shot_label
 
 
 def _compute_shot_bce_loss(batch, preds, model):
@@ -119,6 +122,56 @@ def _compute_shot_bce_loss(batch, preds, model):
 # **========== 结束 ==========**
 
 
+def _compute_shot_q0_loss(batch, preds, model):
+    base_model = _unwrap_model(model)
+    weight = float(getattr(base_model, "shot_q0_loss_weight", 0.0))
+    if weight <= 0:
+        return None, {}
+
+    energies, labels = [], []
+    for view, pred in zip(batch, preds):
+        shot_energy = pred.get("shot_q_energy", None)
+        if shot_energy is None:
+            continue
+        shot_energy = shot_energy.reshape(-1).float()
+        shot_label = _as_shot_label(view, shot_energy)
+        if shot_label is None:
+            continue
+        energies.append(shot_energy)
+        labels.append(shot_label.float())
+
+    if not energies:
+        return None, {}
+
+    shot_energy = torch.cat(energies, dim=0)
+    shot_labels = torch.cat(labels, dim=0)
+    cont_mask = (shot_labels < 0.5).float()
+    denom = cont_mask.sum().clamp_min(1.0)
+    q0_loss = (shot_energy * cont_mask).sum() / denom
+
+    with torch.no_grad():
+        jump_mask = shot_labels >= 0.5
+        cont_energy = q0_loss.detach()
+        jump_energy = shot_energy[jump_mask].mean() if jump_mask.any() else shot_energy.new_tensor(0.0)
+
+    details = {
+        "shot_q0_loss": float(q0_loss.detach()),
+        "shot_q0_loss_weighted": float((q0_loss * weight).detach()),
+        "shot_q_energy_cont": float(cont_energy.detach()),
+        "shot_q_energy_jump": float(jump_energy.detach()),
+    }
+    return q0_loss * weight, details
+
+
+def _add_aux_loss(loss, aux_loss, aux_details):
+    if loss is None or aux_loss is None:
+        return loss
+    main_loss, loss_details = loss
+    main_loss = main_loss + aux_loss
+    loss_details.update(aux_details)
+    return main_loss, loss_details
+
+
 def loss_of_one_batch(
     batch,
     model,
@@ -156,12 +209,10 @@ def loss_of_one_batch(
         with torch.cuda.amp.autocast(enabled=False):
             loss = criterion(batch, preds) if criterion is not None else None
             if loss is not None:
-                main_loss, loss_details = loss
                 shot_loss, shot_details = _compute_shot_bce_loss(batch, preds, model)
-                if shot_loss is not None:
-                    main_loss = main_loss + shot_loss
-                    loss_details.update(shot_details)
-                    loss = (main_loss, loss_details)
+                loss = _add_aux_loss(loss, shot_loss, shot_details)
+                q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
+                loss = _add_aux_loss(loss, q0_loss, q0_details)
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result

@@ -87,7 +87,7 @@ class ShotTokenGenerator(nn.Module):
     q_t 编码了两帧之间的"不连续程度"，供后续 LoRA 层使用。
     """
 
-    def __init__(self, dec_dim=768):
+    def __init__(self, dec_dim=768, shot_scale_init=0.05):
         super().__init__()
         # V1: g_curr, g_prev, diff, sim = 3 * dec_dim + 1
         self.shot_mlp = nn.Sequential(
@@ -100,6 +100,8 @@ class ShotTokenGenerator(nn.Module):
             nn.GELU(),
             nn.Linear(256, 1),
         )
+        self.shot_norm = nn.LayerNorm(dec_dim)
+        self.shot_scale = nn.Parameter(torch.tensor(float(shot_scale_init)))
         # i=0 没有 previous frame，用可学习的 q_init
         self.q_init = nn.Parameter(torch.randn(1, 1, dec_dim) * 0.02)
         self.shot_logit_init = nn.Parameter(torch.tensor([-6.0]))
@@ -115,10 +117,11 @@ class ShotTokenGenerator(nn.Module):
             q_t: [B, 1, dec_dim]
         """
         if i == 0:
-            q_t = self.q_init.expand(feat_curr.shape[0], -1, -1)
+            q_raw = self.q_init.expand(feat_curr.shape[0], -1, -1)
             shot_logit = self.shot_logit_init.expand(feat_curr.shape[0])
+            q_t = self._gate_and_scale(q_raw, shot_logit)
             if return_info:
-                return q_t, self._build_info(q_t, shot_logit)
+                return q_t, self._build_info(q_t, q_raw, shot_logit)
             return q_t
 
         # 全局特征：mean pooling
@@ -138,19 +141,27 @@ class ShotTokenGenerator(nn.Module):
         # q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
         # shot_logit = self.shot_logit_mlp(x).squeeze(-1)  # [B]
         # **========== 结束 ==========**
-        # 生成 shot token
-        q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
+        # 生成 raw shot token，再用 shot_prob gate 和 shot_scale 控制实际注入强度。
+        q_raw = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
         shot_logit = self.shot_logit_mlp(x).squeeze(-1)  # [B]
+        q_t = self._gate_and_scale(q_raw, shot_logit)
 
         if return_info:
-            return q_t, self._build_info(q_t, shot_logit)
+            return q_t, self._build_info(q_t, q_raw, shot_logit)
         return q_t
 
-    def _build_info(self, q_t, shot_logit):
+    def _gate_and_scale(self, q_raw, shot_logit):
+        shot_prob = torch.sigmoid(shot_logit).view(-1, 1, 1)
+        return self.shot_scale * shot_prob * self.shot_norm(q_raw)
+
+    def _build_info(self, q_t, q_raw, shot_logit):
         return {
             "shot_logit": shot_logit,
             "shot_prob": torch.sigmoid(shot_logit.detach()),
             "shot_q_norm": q_t.detach().norm(dim=-1).squeeze(1),
+            "shot_q_raw_norm": q_raw.detach().norm(dim=-1).squeeze(1),
+            "shot_q_energy": q_t.pow(2).mean(dim=(1, 2)),
+            "shot_scale": self.shot_scale.detach().expand_as(shot_logit),
         }
 
 

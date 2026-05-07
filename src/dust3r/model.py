@@ -158,6 +158,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         mhmr_img_res=None,
         lora_rank=64,
         shot_loss_weight=0.1,
+        shot_q0_loss_weight=0.1,
+        shot_scale_init=0.05,
         **croco_kwargs,
     ):
         super().__init__()
@@ -183,6 +185,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.mhmr_img_res = mhmr_img_res
         self.lora_rank = lora_rank
         self.shot_loss_weight = shot_loss_weight
+        self.shot_q0_loss_weight = shot_q0_loss_weight
+        self.shot_scale_init = shot_scale_init
         self.croco_kwargs = croco_kwargs
 
 
@@ -403,7 +407,10 @@ class ARCroco3DStereo(CroCoNet):
         )
 
         # Shot-Aware Adaptation modules
-        self.shot_token_generator = ShotTokenGenerator(dec_dim=self.dec_embed_dim)
+        self.shot_token_generator = ShotTokenGenerator(
+            dec_dim=self.dec_embed_dim,
+            shot_scale_init=config.shot_scale_init,
+        )
         # **========== 原始代码 (Residual Adapter) ==========**
         # self.state_gate = StateGate(dec_dim=self.dec_embed_dim)
         # self.pose_residual_adapter = PoseResidualAdapter(dec_dim=self.dec_embed_dim)
@@ -423,6 +430,7 @@ class ARCroco3DStereo(CroCoNet):
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
         self.shot_loss_weight = config.shot_loss_weight
+        self.shot_q0_loss_weight = config.shot_q0_loss_weight
 
         self.set_freeze(config.freeze)
 
@@ -1024,6 +1032,9 @@ class ARCroco3DStereo(CroCoNet):
         res["shot_logit"] = shot_info["shot_logit"]
         res["shot_prob"] = shot_info["shot_prob"]
         res["shot_q_norm"] = shot_info["shot_q_norm"]
+        res["shot_q_raw_norm"] = shot_info["shot_q_raw_norm"]
+        res["shot_q_energy"] = shot_info["shot_q_energy"]
+        res["shot_scale"] = shot_info["shot_scale"]
         return res
 
     def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation):
