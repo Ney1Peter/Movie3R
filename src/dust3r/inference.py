@@ -198,6 +198,11 @@ def loss_of_one_batch(
             result = dict(views=batch, pred=preds)
             return result[ret] if ret else result, state_args
         else:
+            # **========== Layer 3 原始代码备份：训练只做单路 shot-on forward ==========**
+            # smpl_model.update_smpl_gt(batch)
+            # output = model(batch)
+            # preds, batch = output.ress, output.views
+            # **========== 结束 ==========**
             smpl_model.update_smpl_gt(batch)
             output = model(batch)
             preds, batch = output.ress, output.views
@@ -213,6 +218,9 @@ def loss_of_one_batch(
                 loss = _add_aux_loss(loss, shot_loss, shot_details)
                 q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
                 loss = _add_aux_loss(loss, q0_loss, q0_details)
+                # **========== Layer 3 原始代码备份：无 pred_off 连续帧 no-op 输出约束 ==========**
+                # 当前只使用主任务 loss、shot BCE 和 q_t 能量正则。
+                # **========== 结束 ==========**
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result
