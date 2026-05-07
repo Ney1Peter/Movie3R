@@ -83,6 +83,10 @@ def loss_of_one_batch(
             output = model(batch)
             preds, batch = output.ress, output.views
 
+        # **========== Layer 1 原始代码备份：训练 loss 仅来自主 criterion ==========**
+        # with torch.cuda.amp.autocast(enabled=False):
+        #     loss = criterion(batch, preds) if criterion is not None else None
+        # **========== 结束 ==========**
         with torch.cuda.amp.autocast(enabled=False):
             loss = criterion(batch, preds) if criterion is not None else None
 

@@ -21,6 +21,61 @@ import torch.nn.functional as F
 import math
 
 
+# **========== Layer 1 原始代码备份：ShotTokenGenerator 仅输出 q_t ==========**
+# class ShotTokenGenerator(nn.Module):
+#     """
+#     Shot Token Generator - 使用相邻帧差异生成 shot token
+#
+#     基于全局特征差异：
+#     输入: F_dec[i] 和 F_dec[i-1]（decoder 输入的图像 token）
+#     输出: q_t [B, 1, dec_dim]
+#
+#     q_t 编码了两帧之间的"不连续程度"，供后续 LoRA 层使用。
+#     """
+#
+#     def __init__(self, dec_dim=768):
+#         super().__init__()
+#         # V1: g_curr, g_prev, diff, sim = 3 * dec_dim + 1
+#         self.shot_mlp = nn.Sequential(
+#             nn.Linear(dec_dim * 3 + 1, 256),
+#             nn.GELU(),
+#             nn.Linear(256, dec_dim),
+#         )
+#         # i=0 没有 previous frame，用可学习的 q_init
+#         self.q_init = nn.Parameter(torch.randn(1, 1, dec_dim) * 0.02)
+#
+#     def forward(self, feat_curr, feat_prev, i):
+#         """
+#         Args:
+#             feat_curr: [B, N, dec_dim] 当前帧 decoder 输入特征
+#             feat_prev: [B, N, dec_dim] 上一帧 decoder 输入特征
+#             i: int 帧索引，i=0 时使用 q_init
+#         Returns:
+#             q_t: [B, 1, dec_dim]
+#         """
+#         if i == 0:
+#             return self.q_init.expand(feat_curr.shape[0], -1, -1)
+#
+#         # 全局特征：mean pooling
+#         g_curr = feat_curr.mean(dim=1)      # [B, dec_dim]
+#         g_prev = feat_prev.mean(dim=1)      # [B, dec_dim]
+#
+#         # 差异特征
+#         diff = g_curr - g_prev              # [B, dec_dim]
+#
+#         # 相似度（余弦）
+#         sim = F.cosine_similarity(g_curr, g_prev, dim=-1)  # [B]
+#
+#         # 拼接: [g_curr, g_prev, diff, sim]
+#         x = torch.cat([g_curr, g_prev, diff, sim.unsqueeze(-1)], dim=-1)  # [B, 3*dec_dim+1]
+#
+#         # 生成 shot token
+#         q_t = self.shot_mlp(x).unsqueeze(1)  # [B, 1, dec_dim]
+#
+#         return q_t
+# **========== 结束 ==========**
+
+
 class ShotTokenGenerator(nn.Module):
     """
     Shot Token Generator - 使用相邻帧差异生成 shot token

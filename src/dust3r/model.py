@@ -1348,6 +1348,15 @@ class ARCroco3DStereo(CroCoNet):
 
         # Shot-Aware Adaptation: pre-compute q_tokens using decoder input image tokens
         if self.enable_shot_adaptation:
+            # **========== Layer 1 原始代码备份：generator 只返回 q_t ==========**
+            # f_dec = [self.decoder_embed(f) for f in feat]
+            # q_tokens = []
+            # for i in range(len(views)):
+            #     if i == 0:
+            #         q_tokens.append(self.shot_token_generator(f_dec[0], f_dec[0], i=0))
+            #     else:
+            #         q_tokens.append(self.shot_token_generator(f_dec[i], f_dec[i-1], i))
+            # **========== 结束 ==========**
             # F_dec[i] = self.decoder_embed(feat[i]) is the decoder input image token
             f_dec = [self.decoder_embed(f) for f in feat]  # list of [B, N, dec_dim]
             q_tokens = []
@@ -1720,6 +1729,14 @@ class ARCroco3DStereo(CroCoNet):
             pos_i = img_pos
             f_shot = None
             if self.enable_shot_adaptation:
+                # **========== Layer 1 原始代码备份：inference generator 只返回 q_t ==========**
+                # f_dec_i = self.decoder_embed(feat_i)
+                # if prev_f_dec is None:
+                #     f_shot = self.shot_token_generator(f_dec_i, f_dec_i, i=0)
+                # else:
+                #     f_shot = self.shot_token_generator(f_dec_i, prev_f_dec, i)
+                # prev_f_dec = f_dec_i.detach()
+                # **========== 结束 ==========**
                 f_dec_i = self.decoder_embed(feat_i)
                 if prev_f_dec is None:
                     f_shot = self.shot_token_generator(f_dec_i, f_dec_i, i=0)
