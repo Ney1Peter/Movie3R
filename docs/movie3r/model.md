@@ -2,7 +2,7 @@
 
 > **旧版内容备份**：本文原始内容记录的是 StateGate + Residual Adapter 设计，其中 StateGate、Residual Adapter、强制/门控 state reset 等描述已经过时。当前实现已更新为 ShotTokenGenerator + LoRA Head V1，并保持原 Human3R recurrent state 行为。新设计说明将在文档前部新增，旧内容保留用于回溯。
 
-## 当前实现（2026/05/06）
+## 当前实现（2026/05/07）
 
 ### 0.1 设计目标
 
@@ -121,9 +121,35 @@ output = base_output + gamma * delta
 
 ### 0.8 当前限制
 
-- Inference 路径 `forward_recurrent_lighter` 尚未接入 ShotToken/LoRA
-- LoRA rank 仍硬编码在 `model.py`，后续应进入 config
-- 旧 LoRA checkpoint 与 LoRA Head V1 的 HumanLoRA 结构不完全兼容，需要重新训练
+- Inference 路径 `forward_recurrent_lighter` 已接入 ShotToken/LoRA，但 LoRA64 正式训练权重推理失败
+- LoRA rank 已进入 config，当前正式训练使用 `lora_rank=64`
+- 当前 `q_t` 直接 append 到 decoder token 序列，不是 residual-safe；即使 LoRA gamma=0，额外 token 也会通过 decoder attention 改变 base 输出
+- 当前 loss/val 指标不能充分代表 demo 可视化质量，缺少 camera/pointmap/SMPL 的绝对尺度监控
+- 旧 LoRA checkpoint 与 LoRA Head V1 的 HumanLoRA 结构不完全兼容，不建议继续使用
+
+### 0.9 LoRA64 推理失败诊断（2026/05/07）
+
+LoRA64 正式训练完成后，`checkpoint-best.pth` 在 `data/h36.mp4` 上出现严重视觉错误：相机尺度异常、人体过小、场景点云和人体乱成一团。
+
+同一段视频前 8 帧的消融结果：
+
+| 模式 | camera 平移均值 | pointmap 范围均值 | SMPL 平移均值 | 结论 |
+|------|----------------|------------------|---------------|------|
+| base Human3R | `0.010` | `9.049` | `4.935` | 原模型尺度正常 |
+| LoRA64 checkpoint，关闭 `enable_shot_adaptation` | `0.010` | `9.049` | `4.935` | checkpoint 中冻结 base 权重正常 |
+| LoRA64 checkpoint，打开 `enable_shot_adaptation` | `0.042` | `3.844` | `3.067` | shot adaptation 分支破坏尺度 |
+| LoRA64 checkpoint，LoRA gamma 全置 0，仅保留 trained shot token | `0.020` | `3.844` | `1.966` | pointmap 崩坏主要来自 trained shot token 进入 decoder |
+
+当前判断：
+- checkpoint 加载正常，base 权重没有被破坏
+- `enable_shot_adaptation=False` 只是推理时跳过新增 shot/LoRA 分支，因为 base 在训练中被冻结，所以输出恢复到原 Human3R 水平
+- LoRA residual 不是唯一问题，trained shot token 本身进入 frozen decoder 后就足以改变输出尺度
+
+下一步需要先验证 shot token 质量，而不是继续训练：
+- 检查 `AvatarReX_Video` / `AvatarReX_AABB` 的 `shot_label`
+- 统计 `g_curr/g_prev` 的 cosine similarity 和 diff norm 是否区分连续/跳变
+- 统计训练前/训练后 `q_t` 的范数、cosine、聚类和二分类可分性
+- 增加输出尺度诊断指标，确认 `q_t` 注入不会无约束破坏 base 输出
 
 ---
 

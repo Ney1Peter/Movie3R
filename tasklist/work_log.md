@@ -1576,3 +1576,78 @@ F_i, F_{i-1}
 - `docs/movie3r/model.md`：新增当前实现、state 行为、LoRA 修正范围、shot_label 使用策略
 - `docs/movie3r/training.md`：新增当前 Shot Adaptation V1 训练范围和参数量说明
 - `tasklist/TODO.md`：新增 LoRA Head V1 参数估算和 shot_label 后续 TODO
+
+---
+
+## 2026/05/07 - LoRA64 正式训练与推理消融结论
+
+### 1. 正式训练结果
+
+**实验目录**：`experiments/formal_training-4gpu-lora-64`
+
+**配置摘要**：
+- `freeze='shot_adaptation'`
+- LoRA rank: `64`
+- 只训练 `ShotTokenGenerator`、`PoseLoRALayer`、`HumanLoRALayer`、`WorldLoRALayer`
+- 原 Human3R/CUT3R 主体冻结
+
+**checkpoint**：
+- `checkpoint-best.pth`：epoch 19 保存，`best_so_far=13.534343719482422`
+- `checkpoint-final.pth`：训练结束保存
+
+**日志现象**：
+- train loss 明显下降
+- val/test 的 AvatarReX 指标也有下降
+- 但 demo 推理视觉结果严重错误：相机尺度异常、人很小、场景/人体乱成一团
+
+### 2. 推理消融结果
+
+同一段 `data/h36.mp4` 前 8 帧，比较 base 与 LoRA64 checkpoint：
+
+| 模式 | camera 平移均值 | pointmap 范围均值 | SMPL 平移均值 | 结论 |
+|------|----------------|------------------|---------------|------|
+| base Human3R | `0.010` | `9.049` | `4.935` | 原模型尺度正常 |
+| LoRA64 checkpoint，关闭 `enable_shot_adaptation` | `0.010` | `9.049` | `4.935` | checkpoint 中冻结的 base 权重正常 |
+| LoRA64 checkpoint，打开 `enable_shot_adaptation` | `0.042` | `3.844` | `3.067` | shot adaptation 分支破坏尺度 |
+| LoRA64 checkpoint，LoRA gamma 全置 0，仅保留 trained shot token | `0.020` | `3.844` | `1.966` | pointmap 崩坏主要来自 trained shot token 进入 decoder |
+
+**结论**：
+- checkpoint 加载正常，`<All keys matched successfully>`
+- 原 Human3R/base 参数没有被破坏
+- 错误主要来自 `enable_shot_adaptation=True` 后启用的新增分支
+- LoRA residual 不是唯一问题；即使 LoRA gamma 置 0，trained shot token 进入 decoder 后仍会显著改变输出尺度
+
+### 3. 当前判断
+
+当前 V1 设计中，`q_t` 被直接 append 到 frozen decoder token 序列：
+
+```text
+[pose, image, human] -> [pose, image, human, q_t]
+```
+
+这不是严格 residual-safe 的改动。即使 LoRA residual 初始化或置零，额外 token 仍会通过 decoder self-attention 改变 pose/image/human token。因此“LoRA gamma=0 不破坏 base”的假设只对 LoRA 最后加法成立，不对 shot token 进入 decoder 成立。
+
+### 4. 指标问题
+
+当前 loss 下降不能直接说明 demo 视觉质量提升，原因包括：
+- 训练/验证主要统计 AvatarReX 数据上的 task loss，不能覆盖 H36/demo 域外效果
+- 日志没有监控 demo 里最敏感的绝对尺度指标，如 camera translation norm、pointmap extent、SMPL translation norm、human/scene scale ratio
+- val/test dataset key 存在重复/覆盖风险，`dataset.split("(")[0]` 会让多个 `AvatarReX_Video` 或 `AvatarReX_AABB` 数据集名称混淆
+- best checkpoint 监控逻辑更偏向最后一个 val/test key，不等价于整体视觉质量最优
+
+### 5. 下一步方向：先验证 shot token 质量
+
+在继续训练前，需要先独立检查两件事：
+
+1. 数据集标签是否可靠：`AvatarReX_Video` 应全为连续帧，`shot_label=0`；`AvatarReX_AABB` 应为 `[0, 0, 1, 0]`
+2. Shot token 是否有可解释区分度：连续帧与跳变帧的 `g_curr/g_prev` 差异、cosine similarity、`q_t` 范数和聚类分布应明显不同
+
+建议新增诊断脚本，对训练前的 pretrained base 和训练后的 checkpoint 分别统计：
+- `shot_label`
+- `cosine_similarity(g_curr, g_prev)`
+- `||g_curr - g_prev||`
+- `||q_t||`
+- `q_t` 与 `q_{t-1}` cosine
+- 连续/跳变二分类的 AUC 或阈值可分性
+
+如果 `g` 特征本身无法区分 AABB 跳变，问题在数据或特征选择；如果 `g` 可分但 `q_t` 不可分，问题在 ShotTokenGenerator 训练；如果 `q_t` 可分但推理仍崩，问题在 `q_t` 注入 decoder 的方式和训练 loss 约束。

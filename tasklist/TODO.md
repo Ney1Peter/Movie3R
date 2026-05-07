@@ -162,17 +162,18 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 - ✅ LoRA rank=64 实现完成
 - ✅ LoRA rank=128 实现完成
 - ✅ LoRA Head V1 范围收窄：优先修正位置/朝向，不修人体细节和表情
-- ⚠️ **Inference 路径不支持 LoRA** (问题)
+- ✅ `forward_recurrent_lighter` 已接入 ShotToken/LoRA 推理路径
+- 🚨 LoRA64 正式训练权重推理失败：打开 `enable_shot_adaptation` 后相机/人体/pointmap 尺度崩坏
 
 #### LoRA 架构
 
 | 模块 | rank=64 参数量 | rank=128 参数量 |
 |------|---------------|-----------------|
-| PoseLoRALayer | 99K | 132K |
-| HumanLoRALayer | 197K | 264K |
-| WorldLoRALayer | 98K | 131K |
-| ShotTokenGenerator | 526K | 526K |
-| **总计** | **789K** | **1,053K** |
+| ShotTokenGenerator | 788K | 788K |
+| PoseLoRALayer | 99K | 198K |
+| HumanLoRALayer | 98K | 197K |
+| WorldLoRALayer | 98K | 197K |
+| **总计** | **1.08M** | **1.38M** |
 
 #### LoRA Head V1 修正范围（当前位置/朝向优先）
 
@@ -204,28 +205,73 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 
 ---
 
-### 3. Inference LoRA 支持问题 🚨
+### 3. Shot Adaptation 推理消融问题 🚨
 
 #### 问题描述
-- **Training 路径** (`_forward_impl`)：✅ 使用 LoRA
-- **Inference 路径** (`forward_recurrent_lighter`)：❌ 不使用 LoRA
+- **Training 路径** (`_forward_impl`)：✅ 使用 ShotToken/LoRA
+- **Inference 路径** (`forward_recurrent_lighter`)：✅ 已接入 ShotToken/LoRA
+- **当前问题**：LoRA64 `checkpoint-best.pth` 推理视觉结果严重错误，相机尺度异常、人很小、场景乱成一团
 
 #### 影响
-- 训练时 LoRA 正常更新参数
-- 但推理时完全不走 LoRA 路径
-- **导致训练效果无法在推理时体现**
+- 训练 loss 和 AvatarReX val/test loss 下降，但 demo 视觉质量崩坏
+- 说明当前指标不能充分约束 demo 关心的绝对尺度与可视化质量
+- 需要先验证 shot token 本身和数据集 `shot_label` 质量，再决定是否继续训练或调整架构
 
-#### 修复尝试
-1. 在 `forward_recurrent_lighter` 中添加 shot token 生成
-2. 修改 token slicing 以支持 q' 在末尾
-3. 添加 LoRA application
+#### 已完成消融
 
-**结果**：❌ 推理结果完全错误，已回滚
+同一段 `data/h36.mp4` 前 8 帧：
+
+| 模式 | camera 平移均值 | pointmap 范围均值 | SMPL 平移均值 | 结论 |
+|------|----------------|------------------|---------------|------|
+| base Human3R | `0.010` | `9.049` | `4.935` | 原模型正常 |
+| LoRA64 checkpoint，关闭 `enable_shot_adaptation` | `0.010` | `9.049` | `4.935` | base 权重正常，checkpoint 加载正常 |
+| LoRA64 checkpoint，打开 `enable_shot_adaptation` | `0.042` | `3.844` | `3.067` | shot adaptation 分支破坏尺度 |
+| LoRA64 checkpoint，LoRA gamma 全置 0，仅保留 trained shot token | `0.020` | `3.844` | `1.966` | pointmap 崩坏主要来自 trained shot token 进入 decoder |
+
+#### 当前判断
+- `enable_shot_adaptation=False` 不是恢复 checkpoint，而是推理时跳过新增 shot/LoRA 分支
+- 因为训练时 base Human3R 参数被冻结，所以关闭分支后基本等价于原 Human3R
+- `q_t` 直接 append 到 frozen decoder token 序列不是 residual-safe；即使 LoRA gamma=0，额外 token 仍会通过 decoder attention 改变所有输出 token
 
 #### 待解决
-- [TODO] 分析原始 Human3R inference 架构
-- [TODO] 确定正确的 inference + LoRA 方案
-- [TODO] 实现修复
+- [TODO] 验证 `AvatarReX_Video` / `AvatarReX_AABB` 的 `shot_label` 是否符合预期
+- [TODO] 统计训练前 `g_curr/g_prev` 的 cosine similarity 和差异范数，看是否天然区分连续/跳变
+- [TODO] 统计训练前/训练后 `q_t` 的范数、cosine、连续/跳变可分性
+- [TODO] 增加可视化/诊断指标：camera translation norm、pointmap extent、SMPL translation norm、human/scene scale ratio
+- [TODO] 修复 val/test dataset key 重复/覆盖问题
+- [TODO] 重新评估 `q_t` 进入 decoder 的注入方式，避免无约束破坏 base 输出
+
+---
+
+### 4. Shot Token 质量验证计划
+
+#### 验证目标
+
+在继续训练前，先判断问题来自哪里：
+
+| 层级 | 要回答的问题 | 通过标准 |
+|------|--------------|----------|
+| 数据集 | `shot_label` 是否正确 | Video 全 0，AABB 为 `[0, 0, 1, 0]` |
+| 特征 | `g_curr/g_prev` 是否能区分跳变 | AABB 跳变帧 cosine 更低、diff norm 更高 |
+| ShotTokenGenerator | `q_t` 是否有区分度 | 连续/跳变 `q_t` 分布可分，AUC 明显高于随机 |
+| 注入方式 | `q_t` 是否破坏 base | 未训练/小幅 `q_t` 注入不应大幅改变 pointmap/camera/SMPL 尺度 |
+
+#### 建议诊断统计
+
+- `shot_label`
+- `cosine_similarity(g_curr, g_prev)`
+- `||g_curr - g_prev||`
+- `||q_t||`
+- `cosine_similarity(q_t, q_{t-1})`
+- 打开/关闭 `enable_shot_adaptation` 的输出差异
+- pointmap extent、camera translation norm、SMPL translation norm
+
+#### 决策规则
+
+- 如果 `shot_label` 错：先修数据集
+- 如果 `g_curr/g_prev` 不可分：改 shot token 输入特征
+- 如果 `g` 可分但 `q_t` 不可分：给 ShotTokenGenerator 加 `shot_logit` + BCE 辅助监督
+- 如果 `q_t` 可分但输出崩：改 `q_t` 注入 decoder 的方式或增加 no-op/scale 约束
 
 ---
 
@@ -236,8 +282,12 @@ steps_per_epoch = 训练样本数 / (batch_size × num_gpus)
 - ✅ bf16 混合精度：保持 NativeScaler
 - ✅ 梯度累积 + 参数更新流程：无需改动
 - ✅ LoRA 训练路径工作正常
-- ❌ **Inference 不支持 LoRA**（待解决）
+- ✅ Inference 已接入 ShotToken/LoRA
+- ❌ LoRA64 `checkpoint-best.pth` 推理失败，问题集中在 shot adaptation 分支
+- ❌ 当前 loss/val 指标不能充分代表 demo 视觉质量
 
 ### 待决策/待实现
-- [TODO] **Inference LoRA 支持**（优先级最高）
-- [TODO] 验证 LoRA 在 inference 时生效
+- [TODO] **Shot token 质量验证**（优先级最高）
+- [TODO] 数据集 `shot_label` 检查
+- [TODO] `g_curr/g_prev` 和 `q_t` 的连续/跳变可分性分析
+- [TODO] 设计更安全的 shot token 注入或约束方式

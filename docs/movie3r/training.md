@@ -97,9 +97,34 @@ optimizer, model, data_loader = accelerator.prepare(
 - `smpl_transl`
 - `pts3d_in_self_view` / `pts3d_in_other_view` 的全局 3D shift
 
-`shot_label` 暂不参与训练 loss。当前版本依靠相邻帧 image token 差异和最终任务 loss 隐式学习 shot-aware correction。后续如需显式 shot change 检测，可增加 `shot_label` 辅助 BCE loss。
+`shot_label` 暂不参与训练 loss。当前版本依靠相邻帧 image token 差异和最终任务 loss 隐式学习 shot-aware correction。LoRA64 正式训练后的推理结果表明，仅靠最终 task loss 隐式约束不够安全，下一步应优先验证 `shot_label`、`g_curr/g_prev` 和 `q_t` 的质量，再决定是否增加 `shot_label` 辅助 BCE loss。
 
-当前 rank=128 估算可训练参数量约 `1.38M`。旧 LoRA checkpoint 与当前 V1 HumanLoRA 结构不完全兼容，建议基于当前结构重新训练。
+当前正式训练使用 `lora_rank=64`。旧 LoRA checkpoint 与当前 V1 HumanLoRA 结构不完全兼容，不建议继续使用。
+
+### 3.0.1 LoRA64 正式训练复盘（2026/05/07）
+
+**实验目录**：`experiments/formal_training-4gpu-lora-64`
+
+**现象**：
+- train loss 和 AvatarReX val/test loss 下降
+- `checkpoint-best.pth` 推理 demo 失败，视觉上相机尺度异常、人体过小、场景乱成一团
+
+**消融结论**：
+- 关闭 `enable_shot_adaptation` 后，LoRA64 checkpoint 输出恢复到 base Human3R 尺度，说明 base 权重和 checkpoint 加载正常
+- 打开 `enable_shot_adaptation` 后，camera/pointmap/SMPL 尺度明显改变
+- 将 LoRA gamma 全置 0 后，pointmap 仍然崩坏，说明 trained shot token 进入 decoder 本身就会破坏输出
+
+**训练指标缺口**：
+- 当前 best 监控不能代表 demo 视觉质量
+- 日志缺少 camera translation norm、pointmap extent、SMPL translation norm、human/scene scale ratio 等尺度指标
+- val/test dataset key 存在重复/覆盖风险，多个同名 `AvatarReX_Video` / `AvatarReX_AABB` 在日志中不够清晰
+
+**继续训练前必须补充的验证**：
+- 检查 `AvatarReX_Video` 的 `shot_label` 是否全为 0
+- 检查 `AvatarReX_AABB` 的 `shot_label` 是否为 `[0, 0, 1, 0]`
+- 统计 `g_curr/g_prev` 的 cosine similarity 和 diff norm 是否能区分连续/跳变
+- 统计训练前/训练后 `q_t` 的范数、cosine 和连续/跳变可分性
+- 对打开/关闭 `enable_shot_adaptation` 的输出尺度差异做自动化监控
 
 ### 3.1 启动方式
 

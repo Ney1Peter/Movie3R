@@ -8,6 +8,8 @@
 
 **方案**: Shot-Aware Adaptation - 在冻结的 CUT3R 基础上增加轻量可学习模块，让模型学会处理镜头跳变。
 
+**2026/05/07 最新状态**：LoRA64 正式训练已完成，但 `checkpoint-best.pth` 推理失败。消融显示 base Human3R 权重正常，错误集中在 `enable_shot_adaptation=True` 后启用的 shot adaptation 分支，尤其是 trained shot token 进入 decoder 后会破坏输出尺度。下一步优先验证数据集 `shot_label` 和 shot token 质量。
+
 ---
 
 ## 2. 数据集处理
@@ -106,23 +108,18 @@
 
 | 模块 | 参数量 | 作用 |
 |------|--------|------|
-| `ShotTokenGenerator` | ~787K | 基于相邻帧差异生成 shot token q_t |
-| `StateGate` | ~99K | 控制 state 混合比例 alpha |
-| `LoRAPoseHead` | ~198K | 修正相机位姿 (trans+quat, 7D) |
-| `LoRAHumanHead` | ~20K | 修正 SMPL 参数 (shape/transl) |
-| `LoRAWorldGlobalShift` | ~197K | 全局平移修正点云 |
-| **总计** | **~1.3M** | |
+| `ShotTokenGenerator` | ~788K | 基于相邻帧差异生成 shot token q_t |
+| `PoseLoRALayer` | ~99K (rank=64) | 修正相机位姿 (trans+quat, 7D) |
+| `HumanLoRALayer` | ~98K (rank=64) | 只修正 SMPL 平移 |
+| `WorldLoRALayer` | ~98K (rank=64) | 全局平移修正点云 |
+| **总计** | **~1.08M** | 当前 LoRA64 配置 |
 
 ### 4.3 数据流
 
 ```
 F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
                                           ↓
-                                StateGate → α
-                                          ↓
-                            S_tilde = α·S_prev + (1-α)·S0
-                                          ↓
-                      [z, F_t, H_t, q_t] + S_tilde → Decoder
+                      [z, F_t, H_t, q_t] + 原 Human3R recurrent state → Decoder
                                           ↓
                                 [z', F', H', q']
                                           ↓
@@ -139,14 +136,14 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 |------|------------------------------|----------------------------|
 | 路径 | 原 Human3R | Shot Adaptation |
 | q_t | 不生成 | 预计算后传入 decoder |
-| StateGate | 不使用 | alpha 控制 S_tilde |
+| StateGate | 不使用 | 不使用，已移除 |
 | LoRA | 不应用 | 修正 pose/human/world |
 | 输出 | 等价原 Human3R | 修正后的输出 |
 
 ### 4.5 freeze='shot_adaptation' 冻结内容
 
-- **冻结**: encoder / decoder / base heads / S0 (原始 initial state)
-- **训练**: ShotTokenGenerator / StateGate / LoRA heads / gamma parameters
+- **冻结**: encoder / decoder / base heads / 原 Human3R recurrent state 相关参数
+- **训练**: ShotTokenGenerator / LoRA heads / gamma parameters
 
 ---
 
@@ -187,10 +184,10 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 
 ### 5.4 训练结果 (30 epochs)
 
-- 训练时长: 20 小时 2 分钟
-- Val Loss: 28.52 → 1.31 (降低 95%)
-- SMPLLoss_j3d: 0.47m → 0.04m (降低 92%)
-- 无过拟合迹象
+- LoRA64 正式训练目录: `experiments/formal_training-4gpu-lora-64`
+- train loss 和 AvatarReX val/test loss 下降
+- `checkpoint-best.pth` 推理 demo 失败，不能作为可用模型
+- 消融结果：关闭 `enable_shot_adaptation` 后恢复 base Human3R 尺度，打开后 camera/pointmap/SMPL 尺度崩坏
 
 ---
 
@@ -224,7 +221,8 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 | LoRA Heads 实现 | ✅ 完成 |
 | freeze='shot_adaptation' 配置 | ✅ 完成 |
 | 数据集 shot_label 添加 | ✅ 完成 |
-| Shot Adaptation 训练 | ⏳ 待进行 |
+| Shot Adaptation 训练 | ⚠️ LoRA64 已完成但推理失败 |
+| Shot token 质量验证 | ⏳ 下一步优先 |
 
 ---
 

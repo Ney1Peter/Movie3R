@@ -55,6 +55,8 @@ python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 .
 
 当前训练版本保持原 Human3R recurrent state 行为，不再强制重置到 `S0`，也暂不启用 StateGate。
 
+> **2026/05/07 复盘**：LoRA64 正式训练权重 `checkpoint-best.pth` 推理失败。消融显示 base Human3R 权重正常，问题集中在 `enable_shot_adaptation=True` 后启用的 shot adaptation 分支。下一步优先验证 `shot_label`、`g_curr/g_prev` 和 `q_t` 质量，不建议直接继续使用该 LoRA64 权重。
+
 - **ShotTokenGenerator**：基于相邻帧 decoder image token 差异生成 `q_t`
 - **Shot token prompt**：将 `q_t` 拼接到 `[pose, image, human]` token 后进入 decoder cross-attention
 - **PoseLoRALayer**：修正 `camera_pose` 的 translation + quaternion
@@ -65,7 +67,7 @@ python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 .
 
 ### 训练策略
 
-- 只训练 ~1.3M 参数（0.1%）
+- 当前 LoRA64 配置只训练约 ~1.08M 新参数
 - 支持单卡/多卡训练
 - bf16 混合精度
 - Gradient Checkpointing 节省显存
