@@ -953,6 +953,11 @@ class Regr3DPose(Criterion, MultiLoss):
         pr_poses = [
             (pr[:, :3] / pose_norm_factor_pr.clip(eps), pr[:, 3:]) for pr in pr_poses
         ]
+        # **========== 原始代码备份：batch size 1 时 squeeze 会产生 0-d pose_masks ==========**
+        # pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
+        #     pose_norm_factor_pr.squeeze() > eps
+        # )
+        # **========== 结束 ==========**
         pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
             pose_norm_factor_pr.squeeze() > eps
         )
@@ -1121,6 +1126,11 @@ class Regr3DPose(Criterion, MultiLoss):
             (pr[:, :3] / pose_norm_factor_pr.clip(eps), pr[:, 3:]) for pr in pr_poses
         ]
 
+        # **========== 原始代码备份：batch size 1 时 squeeze 会产生 0-d pose_masks ==========**
+        # pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
+        #     pose_norm_factor_pr.squeeze() > eps
+        # )
+        # **========== 结束 ==========**
         pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
             pose_norm_factor_pr.squeeze() > eps
         )
