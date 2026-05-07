@@ -67,8 +67,9 @@ def _as_shot_label(view, ref_tensor):
     else:
         shot_label = torch.as_tensor(shot_label, device=ref_tensor.device)
     shot_label = shot_label.to(dtype=ref_tensor.dtype).reshape(-1)
-    if shot_label.numel() == 1 and ref_tensor.numel() > 1:
-        shot_label = shot_label.expand(ref_tensor.numel())
+    target_numel = ref_tensor.shape[0] if ref_tensor.ndim > 0 else ref_tensor.numel()
+    if shot_label.numel() == 1 and target_numel > 1:
+        shot_label = shot_label.expand(target_numel)
     return shot_label
 
 
@@ -163,6 +164,74 @@ def _compute_shot_q0_loss(batch, preds, model):
     return q0_loss * weight, details
 
 
+def _compute_shot_off_preds(batch, model):
+    base_model = _unwrap_model(model)
+    if not bool(getattr(base_model, "enable_shot_adaptation", False)):
+        return None
+
+    prev_enabled = base_model.enable_shot_adaptation
+    try:
+        base_model.enable_shot_adaptation = False
+        with torch.no_grad():
+            output_off = model(batch)
+            return output_off.ress
+    finally:
+        base_model.enable_shot_adaptation = prev_enabled
+
+
+def _masked_l1_on_continuous(pred_on, pred_off, cont_mask):
+    if pred_on is None or pred_off is None or pred_on.numel() == 0 or pred_off.numel() == 0:
+        return None
+    diff = (pred_on.float() - pred_off.float().detach()).abs()
+    per_sample = diff.reshape(diff.shape[0], -1).mean(dim=1)
+    return (per_sample * cont_mask).sum() / cont_mask.sum().clamp_min(1.0)
+
+
+def _compute_shot_noop_loss(batch, preds_on, preds_off, model):
+    base_model = _unwrap_model(model)
+    weight = float(getattr(base_model, "shot_noop_loss_weight", 0.0))
+    if weight <= 0 or preds_off is None:
+        return None, {}
+
+    component_losses = []
+    component_details = {}
+    for view, pred_on, pred_off in zip(batch, preds_on, preds_off):
+        ref_tensor = pred_on.get("camera_pose", None)
+        if ref_tensor is None:
+            ref_tensor = next((v for v in pred_on.values() if torch.is_tensor(v)), None)
+        if ref_tensor is None:
+            continue
+
+        shot_label = _as_shot_label(view, ref_tensor)
+        if shot_label is None:
+            continue
+        cont_mask = (shot_label < 0.5).float()
+        if cont_mask.sum() <= 0:
+            continue
+
+        for key in ["camera_pose", "pts3d_in_self_view", "pts3d_in_other_view", "smpl_transl"]:
+            if key not in pred_on or key not in pred_off:
+                continue
+            comp_loss = _masked_l1_on_continuous(pred_on[key], pred_off[key], cont_mask)
+            if comp_loss is None:
+                continue
+            component_losses.append(comp_loss)
+            component_details.setdefault(key, []).append(comp_loss.detach())
+
+    if not component_losses:
+        return None, {}
+
+    noop_loss = torch.stack(component_losses).mean()
+    details = {
+        "shot_noop_loss": float(noop_loss.detach()),
+        "shot_noop_loss_weighted": float((noop_loss * weight).detach()),
+    }
+    for key, values in component_details.items():
+        details[f"shot_noop_{key}"] = float(torch.stack(values).mean())
+
+    return noop_loss * weight, details
+
+
 def _add_aux_loss(loss, aux_loss, aux_details):
     if loss is None or aux_loss is None:
         return loss
@@ -206,6 +275,8 @@ def loss_of_one_batch(
             smpl_model.update_smpl_gt(batch)
             output = model(batch)
             preds, batch = output.ress, output.views
+            preds_off = _compute_shot_off_preds(batch, model)
+            noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
 
         # **========== Layer 1 原始代码备份：训练 loss 仅来自主 criterion ==========**
         # with torch.cuda.amp.autocast(enabled=False):
@@ -221,6 +292,7 @@ def loss_of_one_batch(
                 # **========== Layer 3 原始代码备份：无 pred_off 连续帧 no-op 输出约束 ==========**
                 # 当前只使用主任务 loss、shot BCE 和 q_t 能量正则。
                 # **========== 结束 ==========**
+                loss = _add_aux_loss(loss, noop_loss, noop_details)
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result

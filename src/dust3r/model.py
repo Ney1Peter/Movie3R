@@ -160,6 +160,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         shot_loss_weight=0.1,
         shot_q0_loss_weight=0.1,
         shot_scale_init=0.05,
+        shot_noop_loss_weight=1.0,
         **croco_kwargs,
     ):
         super().__init__()
@@ -187,6 +188,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.shot_loss_weight = shot_loss_weight
         self.shot_q0_loss_weight = shot_q0_loss_weight
         self.shot_scale_init = shot_scale_init
+        self.shot_noop_loss_weight = shot_noop_loss_weight
         self.croco_kwargs = croco_kwargs
 
 
@@ -431,6 +433,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_shot_adaptation = False
         self.shot_loss_weight = config.shot_loss_weight
         self.shot_q0_loss_weight = config.shot_q0_loss_weight
+        self.shot_noop_loss_weight = config.shot_noop_loss_weight
 
         self.set_freeze(config.freeze)
 
