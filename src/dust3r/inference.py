@@ -106,6 +106,7 @@ def _compute_shot_bce_loss(batch, preds, model):
         neg_mask = ~pos_mask
         shot_prob_pos = shot_prob[pos_mask].mean() if pos_mask.any() else shot_prob.new_tensor(0.0)
         shot_prob_neg = shot_prob[neg_mask].mean() if neg_mask.any() else shot_prob.new_tensor(0.0)
+        shot_label_pos_frac = pos_mask.float().mean()
 
     details = {
         "shot_bce": float(shot_bce.detach()),
@@ -113,6 +114,8 @@ def _compute_shot_bce_loss(batch, preds, model):
         "shot_acc": float(shot_acc.detach()),
         "shot_prob_pos": float(shot_prob_pos.detach()),
         "shot_prob_neg": float(shot_prob_neg.detach()),
+        "shot_label_pos_frac": float(shot_label_pos_frac.detach()),
+        "shot_label_count": float(shot_labels.numel()),
     }
     return shot_bce * weight, details
 

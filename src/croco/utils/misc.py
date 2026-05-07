@@ -116,10 +116,22 @@ class MetricLogger(object):
         )
 
     def __str__(self):
+        # **========== 原始代码备份：终端打印所有 meter，训练日志会被 per-view loss 刷屏 ==========**
+        # loss_str = []
+        # for name, meter in self.meters.items():
+        #     loss_str.append("{}: {}".format(name, str(meter)))
+        # return self.delimiter.join(loss_str)
+        # **========== 新代码：display_keys 只影响终端展示，不影响 meter 统计和返回 ==========**
         loss_str = []
-        for name, meter in self.meters.items():
+        display_keys = getattr(self, "display_keys", None)
+        if display_keys:
+            items = [(name, self.meters[name]) for name in display_keys if name in self.meters]
+        else:
+            items = list(self.meters.items())
+        for name, meter in items:
             loss_str.append("{}: {}".format(name, str(meter)))
         return self.delimiter.join(loss_str)
+        # **========== 结束 ==========**
 
     def synchronize_between_processes(self, accelerator):
         for meter in self.meters.values():

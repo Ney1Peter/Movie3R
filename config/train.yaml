@@ -224,7 +224,11 @@ early_stopping_patience: 10
 batch_size: 8
 accum_iter: 1
 gradient_checkpointing: true
-epochs: 40
+# **========== 原始配置备份：默认训练 40 epochs ==========**
+# epochs: 40
+# **========== 新配置：正式训练先跑 30 epochs，避免大 batch 下过长训练 ==========**
+epochs: 30
+# **========== 结束 ==========**
 start_epoch: 0
 weight_decay: 0.05
 lr: 1.0e-04
@@ -242,6 +246,50 @@ keep_freq: 5
 print_freq: 100
 print_img_freq: 300
 num_imgs_vis: 4
+save_code: false
+structured_log_freq: 100
+console_log_keys:
+- lr
+- loss
+- regr_self_pts3d_avg
+- regr_cross_pts3d_avg
+- rgb_loss_avg
+- pose_loss
+- smpl_transl_avg
+- shot_bce
+- shot_acc
+- shot_prob_gap
+- shot_q_energy_cont
+- shot_q_energy_jump
+- shot_noop_loss
+step_log_keys:
+- loss
+- lr
+- regr_self_pts3d_avg
+- regr_cross_pts3d_avg
+- conf_loss_avg
+- rgb_loss_avg
+- pose_loss
+- pose_loss_view2_AABB
+- smpl_scores_avg
+- smpl_rotmat_avg
+- smpl_transl_avg
+- smpl_shape_avg
+- smpl_j3d_avg
+- shot_bce
+- shot_acc
+- shot_prob_pos
+- shot_prob_neg
+- shot_prob_gap
+- shot_label_pos_frac
+- shot_q0_loss
+- shot_q_energy_cont
+- shot_q_energy_jump
+- shot_noop_loss
+- shot_noop_camera_pose
+- shot_noop_pts3d_in_self_view
+- shot_noop_pts3d_in_other_view
+- shot_noop_smpl_transl
 save_dir: 'checkpoints'
 exp_name: 'human3r'
 task: 'cut3r'
@@ -249,6 +297,10 @@ logdir: ./${save_dir}/${exp_name}/logs
 output_dir: ./${save_dir}/${exp_name}/
 
 hydra:
-  verbose: True
+  # **========== 原始配置备份：启动时打印完整 Hydra 配置 ==========**
+  # verbose: True
+  # **========== 新配置：关闭启动配置刷屏，训练过程看 JSONL/TensorBoard ==========**
+  verbose: False
+  # **========== 结束 ==========**
   run:
     dir: ./${save_dir}/${exp_name}

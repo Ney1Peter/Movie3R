@@ -124,6 +124,136 @@ def save_current_code(outdir):
     return dst_dir
 
 
+DEFAULT_CONSOLE_LOG_KEYS = [
+    "lr",
+    "loss",
+    "regr_self_pts3d_avg",
+    "regr_cross_pts3d_avg",
+    "rgb_loss_avg",
+    "pose_loss",
+    "smpl_transl_avg",
+    "shot_bce",
+    "shot_acc",
+    "shot_prob_gap",
+    "shot_q_energy_cont",
+    "shot_q_energy_jump",
+    "shot_noop_loss",
+]
+
+DEFAULT_STEP_LOG_KEYS = [
+    "loss",
+    "lr",
+    "regr_self_pts3d_avg",
+    "regr_cross_pts3d_avg",
+    "conf_loss_avg",
+    "rgb_loss_avg",
+    "pose_loss",
+    "pose_loss_view2_AABB",
+    "smpl_scores_avg",
+    "smpl_rotmat_avg",
+    "smpl_transl_avg",
+    "smpl_shape_avg",
+    "smpl_j3d_avg",
+    "shot_bce",
+    "shot_acc",
+    "shot_prob_pos",
+    "shot_prob_neg",
+    "shot_prob_gap",
+    "shot_label_pos_frac",
+    "shot_q0_loss",
+    "shot_q_energy_cont",
+    "shot_q_energy_jump",
+    "shot_noop_loss",
+    "shot_noop_camera_pose",
+    "shot_noop_pts3d_in_self_view",
+    "shot_noop_pts3d_in_other_view",
+    "shot_noop_smpl_transl",
+]
+
+
+def _safe_float(value):
+    if isinstance(value, torch.Tensor):
+        if value.ndim > 0:
+            return None
+        value = value.detach().float().item()
+    if isinstance(value, np.generic):
+        value = value.item()
+    if isinstance(value, (float, int)) and math.isfinite(float(value)):
+        return float(value)
+    return None
+
+
+def _as_bool(value):
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+    return bool(value)
+
+
+def _mean_loss_detail(loss_details, predicate):
+    values = []
+    for name, value in loss_details.items():
+        if not predicate(name):
+            continue
+        value = _safe_float(value)
+        if value is not None:
+            values.append(value)
+    if not values:
+        return None
+    return float(sum(values) / len(values))
+
+
+def summarize_loss_details(loss_details):
+    """Aggregate verbose per-view loss_details into stable diagnostic signals."""
+    groups = {
+        "regr_self_pts3d_avg": lambda k: "self_pts3d" in k,
+        "regr_cross_pts3d_avg": lambda k: "Regr3DPose" in k and "_pts3d/" in k and "self_pts3d" not in k,
+        "conf_loss_avg": lambda k: "_conf_loss" in k,
+        "rgb_loss_avg": lambda k: k.startswith("RGBLoss_rgb"),
+        "smpl_scores_avg": lambda k: k.startswith("SMPLLoss_scores"),
+        "smpl_rotmat_avg": lambda k: k.startswith("SMPLLoss_rotmat"),
+        "smpl_transl_avg": lambda k: k.startswith("SMPLLoss_transl"),
+        "smpl_shape_avg": lambda k: k.startswith("SMPLLoss_shape"),
+        "smpl_j3d_avg": lambda k: k.startswith("SMPLLoss_j3d"),
+        "smpl_j2d_avg": lambda k: k.startswith("SMPLLoss_j2d"),
+    }
+    summary = {}
+    for name, predicate in groups.items():
+        value = _mean_loss_detail(loss_details, predicate)
+        if value is not None:
+            summary[name] = value
+
+    shot_prob_pos = _safe_float(loss_details.get("shot_prob_pos"))
+    shot_prob_neg = _safe_float(loss_details.get("shot_prob_neg"))
+    if shot_prob_pos is not None and shot_prob_neg is not None:
+        summary["shot_prob_gap"] = shot_prob_pos - shot_prob_neg
+    return summary
+
+
+def _get_list_arg(args, name, default):
+    value = getattr(args, name, None)
+    if value is None:
+        return list(default)
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return list(value)
+
+
+def _write_jsonl(path, record):
+    with open(path, mode="a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _make_compact_record(source, keys):
+    record = {}
+    for key in keys:
+        if key not in source:
+            continue
+        value = _safe_float(source[key])
+        if value is not None:
+            record[key] = value
+    return record
+
+
 def train(args):
     """
     训练总入口。
@@ -159,8 +289,16 @@ def train(args):
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if accelerator.is_main_process:
-        dst_dir = save_current_code(outdir=args.output_dir)
-        printer.info(f"Saving current code to {dst_dir}")
+        # **========== 原始代码备份：每次启动训练都复制一份完整源码快照 ==========**
+        # dst_dir = save_current_code(outdir=args.output_dir)
+        # printer.info(f"Saving current code to {dst_dir}")
+        # **========== 新代码：默认不复制源码快照，避免正式训练目录膨胀；需要时可设置 save_code=true ==========**
+        if _as_bool(getattr(args, "save_code", False)):
+            dst_dir = save_current_code(outdir=args.output_dir)
+            printer.info(f"Saving current code to {dst_dir}")
+        else:
+            printer.info("Skipping code snapshot; set save_code=true to enable it")
+        # **========== 结束 ==========**
 
     # auto resume
     # 如果命令行没有显式传 resume，但 output_dir 里有 checkpoint-last.pth，
@@ -340,6 +478,10 @@ def train(args):
     def write_log_stats(epoch, train_stats, test_stats, val_stats=None):
         # 只在主进程写 JSON 日志，避免多卡同时写同一个 log.txt。
         if accelerator.is_main_process:
+            if not train_stats and not test_stats and not val_stats:
+                printer.info("Skipping empty epoch log before first train step")
+                return
+
             if log_writer is not None:
                 log_writer.flush()
 
@@ -365,6 +507,18 @@ def train(args):
                 os.path.join(args.output_dir, "log.txt"), mode="a", encoding="utf-8"
             ) as f:
                 f.write(json.dumps(log_stats) + "\n")
+
+            compact_record = {"phase": "epoch", "epoch": epoch}
+            compact_keys = _get_list_arg(args, "step_log_keys", DEFAULT_STEP_LOG_KEYS)
+            train_source = {f"train_{k}": v for k, v in train_stats.items()}
+            compact_record.update(_make_compact_record(train_source, [f"train_{k}" for k in compact_keys]))
+            compact_record.update(
+                _make_compact_record(
+                    log_stats,
+                    [k for k in log_stats if k.endswith("loss_avg") or k.endswith("loss_med")],
+                )
+            )
+            _write_jsonl(os.path.join(args.output_dir, "metrics_epoch.jsonl"), compact_record)
 
     def save_model(epoch, fname, best_so_far):
         # 中间 checkpoint 保存，包括模型、optimizer、scaler、epoch、best_so_far 等训练状态。
@@ -576,6 +730,7 @@ def train_one_epoch(
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter("lr", misc.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    metric_logger.display_keys = _get_list_arg(args, "console_log_keys", DEFAULT_CONSOLE_LOG_KEYS)
     header = "Epoch: [{}]".format(epoch)
     accum_iter = args.accum_iter
 
@@ -610,6 +765,7 @@ def train_one_epoch(
     for data_iter_step, batch in enumerate(
         metric_logger.log_every(data_loader, args.print_freq, accelerator, header)
     ):
+        iter_start_time = time.time()
         # accelerator.accumulate 根据 args.accum_iter 决定何时同步梯度/更新参数。
         # 当前 accum_iter=1，因此每个 batch 都会更新一次参数。
         with accelerator.accumulate(model):
@@ -673,7 +829,34 @@ def train_one_epoch(
             metric_logger.update(step=step)
 
             # loss_details 里包含各个子 loss，例如 pointmap、RGB、SMPL、mask 等。
-            metric_logger.update(loss=loss_value, **loss_details)
+            loss_summary = summarize_loss_details(loss_details)
+            metric_logger.update(loss=loss_value, **loss_details, **loss_summary)
+
+            structured_log_freq = int(getattr(args, "structured_log_freq", args.print_freq))
+            if structured_log_freq > 0 and (data_iter_step + 1) % structured_log_freq == 0:
+                if accelerator.is_main_process:
+                    elapsed = time.time() - iter_start_time
+                    global_batch_size = int(args.batch_size) * int(accelerator.num_processes)
+                    step_source = {"loss": loss_value, "lr": lr, **loss_details, **loss_summary}
+                    step_record = {
+                        "phase": "train",
+                        "epoch": float(epoch_f),
+                        "epoch_int": int(epoch),
+                        "iter": int(data_iter_step),
+                        "step": int(step),
+                        "global_batch_size": global_batch_size,
+                        "iter_time_sec": elapsed,
+                        "samples_per_sec": global_batch_size / elapsed if elapsed > 0 else 0.0,
+                    }
+                    if torch.cuda.is_available():
+                        step_record["max_mem_mb"] = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+                    step_record.update(
+                        _make_compact_record(
+                            step_source,
+                            _get_list_arg(args, "step_log_keys", DEFAULT_STEP_LOG_KEYS),
+                        )
+                    )
+                    _write_jsonl(os.path.join(args.output_dir, "train_steps.jsonl"), step_record)
 
             if (data_iter_step + 1) % accum_iter == 0 and (
                 (data_iter_step + 1) % (accum_iter * args.print_freq)
@@ -692,6 +875,8 @@ def train_one_epoch(
                 log_writer.add_scalar("train_loss", loss_value_reduce, step)
                 log_writer.add_scalar("train_lr", lr, step)
                 log_writer.add_scalar("train_iter", epoch_1000x, step)
+                for name, val in loss_summary.items():
+                    log_writer.add_scalar("train_summary/" + name, val, step)
                 for name, val in loss_details.items():
                     if isinstance(val, torch.Tensor):
                         if val.ndim > 0:
@@ -782,6 +967,7 @@ def test_one_epoch(
     model.eval()
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.meters = defaultdict(lambda: misc.SmoothedValue(window_size=9**9))
+    metric_logger.display_keys = _get_list_arg(args, "console_log_keys", DEFAULT_CONSOLE_LOG_KEYS)
     header = "Test Epoch: [{}]".format(epoch)
 
     if log_writer is not None:
@@ -814,7 +1000,8 @@ def test_one_epoch(
 
         has_msk = "msk" in result["pred"][0]
         loss_value, loss_details = result["loss"]  # criterion returns two values
-        metric_logger.update(loss=float(loss_value), **loss_details)
+        loss_summary = summarize_loss_details(loss_details)
+        metric_logger.update(loss=float(loss_value), **loss_details, **loss_summary)
 
     printer.info("Averaged stats: %s", metric_logger)
 
