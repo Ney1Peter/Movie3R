@@ -958,8 +958,8 @@ class Regr3DPose(Criterion, MultiLoss):
         #     pose_norm_factor_pr.squeeze() > eps
         # )
         # **========== 结束 ==========**
-        pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
-            pose_norm_factor_pr.squeeze() > eps
+        pose_masks = (pose_norm_factor_gt.reshape(-1) > eps) & (
+            pose_norm_factor_pr.reshape(-1) > eps
         )
 
         if any(camera_only):
@@ -1131,8 +1131,8 @@ class Regr3DPose(Criterion, MultiLoss):
         #     pose_norm_factor_pr.squeeze() > eps
         # )
         # **========== 结束 ==========**
-        pose_masks = (pose_norm_factor_gt.squeeze() > eps) & (
-            pose_norm_factor_pr.squeeze() > eps
+        pose_masks = (pose_norm_factor_gt.reshape(-1) > eps) & (
+            pose_norm_factor_pr.reshape(-1) > eps
         )
 
         if any(camera_only):
