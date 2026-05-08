@@ -143,6 +143,11 @@ def parse_args():
         default=10,
         help="Mask morphology for the viewer",
     )
+    parser.add_argument(
+        "--disable_shot_adaptation",
+        action="store_true",
+        help="Disable ShotToken path after loading checkpoint for ablation.",
+    )
     return parser.parse_args()
 
 
@@ -599,6 +604,9 @@ def run_inference(args):
     # Load and prepare the model.
     print(f"Loading model from {args.model_path}...")
     model = ARCroco3DStereo.from_pretrained(args.model_path).to(device)
+    if args.disable_shot_adaptation and hasattr(model, "enable_shot_adaptation"):
+        model.enable_shot_adaptation = False
+        print("Shot adaptation disabled for ablation.")
     model.eval()
 
     # Prepare input views.
