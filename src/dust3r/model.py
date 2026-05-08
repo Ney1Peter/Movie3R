@@ -54,7 +54,7 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== 原始代码备份：V2 使用 PoseLoRA/HumanLoRA/WorldLoRA ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
 # **========== 结束 ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
+from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
@@ -164,6 +164,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         shot_q0_loss_weight=0.1,
         shot_scale_init=0.05,
         shot_noop_loss_weight=1.0,
+        pose_delta_t_max=0.5,
         **croco_kwargs,
     ):
         super().__init__()
@@ -192,6 +193,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.shot_q0_loss_weight = shot_q0_loss_weight
         self.shot_scale_init = shot_scale_init
         self.shot_noop_loss_weight = shot_noop_loss_weight
+        self.pose_delta_t_max = pose_delta_t_max
         self.croco_kwargs = croco_kwargs
 
 
@@ -431,6 +433,11 @@ class ARCroco3DStereo(CroCoNet):
         self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
         self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
         self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        self.pose_translation_adapter = PoseTranslationAdapter(
+            dec_dim=self.dec_embed_dim,
+            rank=config.lora_rank,
+            max_delta=config.pose_delta_t_max,
+        )
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
@@ -440,11 +447,13 @@ class ARCroco3DStereo(CroCoNet):
         # self.enable_human_lora = True
         # self.enable_world_lora = True
         # **========== 结束 ==========**
-        # Inference ablation flags. These do not change checkpoint weights.
-        self.enable_shot_decoder_token = True
-        self.enable_pose_lora = True
-        self.enable_human_lora = True
-        self.enable_world_lora = True
+        # V3: q_t 不进入 decoder，只给 camera translation adapter 做条件输入。
+        self.enable_shot_decoder_token = False
+        self.enable_pose_translation_adapter = True
+        self.enable_pose_lora = False
+        self.enable_human_lora = False
+        self.enable_world_lora = False
+        self.pose_delta_t_max = config.pose_delta_t_max
         self.shot_loss_weight = config.shot_loss_weight
         self.shot_q0_loss_weight = config.shot_q0_loss_weight
         self.shot_noop_loss_weight = config.shot_noop_loss_weight
@@ -719,11 +728,10 @@ class ARCroco3DStereo(CroCoNet):
             #     self.world_lora,
             # ]:
             # **========== 结束 ==========**
+            freeze_all_params([self.pose_lora, self.human_lora, self.world_lora])
             for module in [
                 self.shot_token_generator,
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
+                self.pose_translation_adapter,
             ]:
             # **========== 结束 ==========**
                 for p in module.parameters():
@@ -1599,6 +1607,10 @@ class ARCroco3DStereo(CroCoNet):
                 #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
                 # **========== 结束 ==========**
 
+                # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
+                if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
+                    res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
+
                 # Pose LoRA: camera_pose is [B, 7] trans+quat
                 if q_out is not None and getattr(self, "enable_pose_lora", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
@@ -2053,6 +2065,10 @@ class ARCroco3DStereo(CroCoNet):
                 #     res['pts3d_in_other_view'] = self.world_lora(
                 #         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
                 # **========== 结束 ==========**
+
+                # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
+                if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
+                    res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
 
                 if q_out is not None and getattr(self, "enable_pose_lora", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])

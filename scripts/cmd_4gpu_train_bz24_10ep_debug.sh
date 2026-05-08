@@ -20,7 +20,7 @@ MASTER_PORT=${MASTER_PORT:-29502}
 # **========== 原始代码备份：V2 debug run name ==========**
 # RUN_NAME=${RUN_NAME:-debug_training-4gpu-bz24-10ep-shot-v2-$(date +%Y%m%d-%H%M%S)}
 # **========== 结束 ==========**
-RUN_NAME=${RUN_NAME:-debug_training-4gpu-bz24-10ep-shot-v2-$(date +%Y%m%d-%H%M%S)}
+RUN_NAME=${RUN_NAME:-debug_training-4gpu-bz24-10ep-shot-v3-$(date +%Y%m%d-%H%M%S)}
 OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/${RUN_NAME}}
 
 # 如果调度系统已经设置了 CUDA_VISIBLE_DEVICES，则尊重调度系统设置。

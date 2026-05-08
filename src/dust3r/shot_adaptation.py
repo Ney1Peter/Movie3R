@@ -7,8 +7,9 @@ Shot-Aware Adaptation Modules
 
 包含两个轻量模块用于处理镜头跳变：
 1. ShotTokenGenerator: 生成 shot token q_t
-2. LoRA Layers: 对 base model 输出做 LoRA 风格微调修正
+2. LoRA / Adapter Layers: 对 base model 输出做轻量修正
    - PoseLoRALayer: 对相机位姿做微调修正
+   - PoseTranslationAdapter: V3 只对相机平移做限幅修正
    - HumanLoRALayer: 对 SMPL 人体平移做微调修正
    - WorldLoRALayer: 对场景点云做全局平移修正
 
@@ -306,6 +307,41 @@ class PoseLoRALayer(nn.Module):
         t_final = t_base + self.gamma * delta_t
         q_final = F.normalize(q_base + self.gamma * delta_q, dim=-1)
 
+        return torch.cat([t_final, q_final], dim=-1)
+
+
+class PoseTranslationAdapter(nn.Module):
+    """
+    V3 Pose Adapter - 只修相机 translation，不修 rotation。
+
+    输入:
+        z_token: [B, 1, dec_dim] - 原 decoder 输出的 pose token
+        q_t: [B, 1, dec_dim] - ShotTokenGenerator 输出的条件 token，不进入 decoder
+        pose_base: [B, 7] - base camera pose, translation(3) + quaternion(4)
+
+    输出:
+        pose_final: [B, 7] - translation 做限幅 residual，quaternion 保持 base 不变
+    """
+
+    def __init__(self, dec_dim=768, rank=64, max_delta=0.5):
+        super().__init__()
+        self.rank = rank
+        self.max_delta = float(max_delta)
+        in_dim = dec_dim * 2
+        self.adapter = nn.Sequential(
+            nn.Linear(in_dim, rank),
+            nn.GELU(),
+            nn.Linear(rank, 3),
+        )
+        # 初始严格等于 base pose，避免刚开始训练时破坏 Human3R 输出。
+        nn.init.zeros_(self.adapter[-1].weight)
+        nn.init.zeros_(self.adapter[-1].bias)
+
+    def forward(self, z_token, q_t, pose_base):
+        x = torch.cat([z_token, q_t], dim=-1)
+        delta_t = self.max_delta * torch.tanh(self.adapter(x).squeeze(1))
+        t_final = pose_base[:, :3] + delta_t
+        q_final = pose_base[:, 3:7]
         return torch.cat([t_final, q_final], dim=-1)
 
 

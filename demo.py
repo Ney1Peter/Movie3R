@@ -159,6 +159,11 @@ def parse_args():
         help="Disable PoseLoRA camera pose correction for ablation.",
     )
     parser.add_argument(
+        "--disable_pose_translation_adapter",
+        action="store_true",
+        help="Disable V3 translation-only camera adapter for ablation.",
+    )
+    parser.add_argument(
         "--disable_human_lora",
         action="store_true",
         help="Disable HumanLoRA SMPL translation correction for ablation.",
@@ -638,6 +643,9 @@ def run_inference(args):
     if args.disable_pose_lora and hasattr(model, "enable_pose_lora"):
         model.enable_pose_lora = False
         print("PoseLoRA disabled for ablation.")
+    if args.disable_pose_translation_adapter and hasattr(model, "enable_pose_translation_adapter"):
+        model.enable_pose_translation_adapter = False
+        print("PoseTranslationAdapter disabled for ablation.")
     if args.disable_human_lora and hasattr(model, "enable_human_lora"):
         model.enable_human_lora = False
         print("HumanLoRA disabled for ablation.")
