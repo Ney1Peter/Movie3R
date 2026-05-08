@@ -51,6 +51,9 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== 原始代码 (Residual Adapter) ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, StateGate, PoseResidualAdapter, HumanResidualAdapter, WorldResidualAdapter
 # **========== 新代码 (LoRA) ==========**
+# **========== 原始代码备份：V2 使用 PoseLoRA/HumanLoRA/WorldLoRA ==========**
+# from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
+# **========== 结束 ==========**
 from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
@@ -431,6 +434,12 @@ class ARCroco3DStereo(CroCoNet):
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
+        # **========== 原始代码备份：V2 默认启用 decoder q_t 和全部 LoRA ==========**
+        # self.enable_shot_decoder_token = True
+        # self.enable_pose_lora = True
+        # self.enable_human_lora = True
+        # self.enable_world_lora = True
+        # **========== 结束 ==========**
         # Inference ablation flags. These do not change checkpoint weights.
         self.enable_shot_decoder_token = True
         self.enable_pose_lora = True
@@ -702,6 +711,14 @@ class ARCroco3DStereo(CroCoNet):
             #     self.world_residual_adapter,
             # ]:
             # **========== 新代码 (LoRA) ==========**
+            # **========== 原始代码备份：V2 训练全部 ShotToken/LoRA 模块 ==========**
+            # for module in [
+            #     self.shot_token_generator,
+            #     self.pose_lora,
+            #     self.human_lora,
+            #     self.world_lora,
+            # ]:
+            # **========== 结束 ==========**
             for module in [
                 self.shot_token_generator,
                 self.pose_lora,
