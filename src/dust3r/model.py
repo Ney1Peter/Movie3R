@@ -431,6 +431,11 @@ class ARCroco3DStereo(CroCoNet):
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
+        # Inference ablation flags. These do not change checkpoint weights.
+        self.enable_shot_decoder_token = True
+        self.enable_pose_lora = True
+        self.enable_human_lora = True
+        self.enable_world_lora = True
         self.shot_loss_weight = config.shot_loss_weight
         self.shot_q0_loss_weight = config.shot_q0_loss_weight
         self.shot_noop_loss_weight = config.shot_noop_loss_weight
@@ -1379,6 +1384,11 @@ class ARCroco3DStereo(CroCoNet):
 
         # Shot-Aware Adaptation: pre-compute q_tokens using decoder input image tokens
         shot_infos = [None] * len(views)
+        q_tokens = [None] * len(views)
+        use_shot_decoder_token = (
+            self.enable_shot_adaptation
+            and getattr(self, "enable_shot_decoder_token", True)
+        )
         if self.enable_shot_adaptation:
             # **========== Layer 1 原始代码备份：generator 只返回 q_t ==========**
             # f_dec = [self.decoder_embed(f) for f in feat]
@@ -1390,8 +1400,10 @@ class ARCroco3DStereo(CroCoNet):
             #         q_tokens.append(self.shot_token_generator(f_dec[i], f_dec[i-1], i))
             # **========== 结束 ==========**
             # F_dec[i] = self.decoder_embed(feat[i]) is the decoder input image token
+            # **========== 原始代码备份：启用时创建空 q_tokens 再 append ==========**
+            # q_tokens = []
+            # **========== 结束 ==========**
             f_dec = [self.decoder_embed(f) for f in feat]  # list of [B, N, dec_dim]
-            q_tokens = []
             for i in range(len(views)):
                 if i == 0:
                     q_token, shot_info = self.shot_token_generator(
@@ -1399,7 +1411,10 @@ class ARCroco3DStereo(CroCoNet):
                 else:
                     q_token, shot_info = self.shot_token_generator(
                         f_dec[i], f_dec[i-1], i, return_info=True)
-                q_tokens.append(q_token)
+                # **========== 原始代码备份：按顺序 append q_token ==========**
+                # q_tokens.append(q_token)
+                # **========== 结束 ==========**
+                q_tokens[i] = q_token
                 shot_infos[i] = shot_info
             # S0 = init_state_feat (reused, not trained)
             S0 = init_state_feat
@@ -1451,8 +1466,12 @@ class ARCroco3DStereo(CroCoNet):
             state_for_recurrent = state_feat
             # **========== 结束 ==========**
 
-            # Shot-Aware Adaptation: pass q_token to decoder if enabled
-            f_shot = q_tokens[i] if self.enable_shot_adaptation else None
+            # **========== 原始代码备份：ShotToken 始终进入 decoder ==========**
+            # f_shot = q_tokens[i] if self.enable_shot_adaptation else None
+            # **========== 结束 ==========**
+            # 消融用：q_t 可以只作为 LoRA condition，不进入 decoder attention。
+            q_cond = q_tokens[i] if self.enable_shot_adaptation else None
+            f_shot = q_cond if use_shot_decoder_token else None
 
             new_state_feat, dec, _ = self._recurrent_rollout(
                 state_for_recurrent,
@@ -1479,7 +1498,10 @@ class ARCroco3DStereo(CroCoNet):
             # Shot-Aware Adaptation: extract q_out from decoder output
             # When f_shot is inserted: dec = [z', F', H', q'] → q_out = dec[-1][:, -1:]
             # When no f_shot: dec = [z', F', H'] → no q_out
-            if self.enable_shot_adaptation:
+            # **========== 原始代码备份：只要启用 Shot Adaptation 就按追加 q_t 切 token ==========**
+            # if self.enable_shot_adaptation:
+            # **========== 结束 ==========**
+            if use_shot_decoder_token:
                 q_out = dec[-1][:, -1:]  # [B, 1, dec_dim]
                 # Token indices when f_shot is inserted: [z', F', H', q']
                 # pose = dec[-1][:, 0:1], img = dec[-1][:, 1:-n_humans-1], smpl = dec[-1][:, -n_humans-1:-1], q' = dec[-1][:, -1:]
@@ -1526,10 +1548,12 @@ class ARCroco3DStereo(CroCoNet):
                 res['msk'] = msks[i]
 
             # Shot-Aware Adaptation: apply residual corrections
-            if self.enable_shot_adaptation and q_out is not None:
+            if self.enable_shot_adaptation:
                 # Use helper to safely slice decoder tokens
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
-                    dec, n_humans_i, enable_shot_adaptation=True)
+                    dec, n_humans_i, enable_shot_adaptation=use_shot_decoder_token)
+                if q_out is None:
+                    q_out = q_cond
 
                 # **========== 原始代码 (Residual Adapter) ==========**
                 # Pose Residual Adapter: camera_pose is [B, 7] trans+quat
@@ -1559,18 +1583,18 @@ class ARCroco3DStereo(CroCoNet):
                 # **========== 结束 ==========**
 
                 # Pose LoRA: camera_pose is [B, 7] trans+quat
-                if 'camera_pose' in res:
+                if q_out is not None and getattr(self, "enable_pose_lora", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
 
                 # Human LoRA V1: only correct SMPL translation, keep body details unchanged.
-                if n_humans_i > 0 and 'smpl_transl' in res:
+                if q_out is not None and getattr(self, "enable_human_lora", True) and n_humans_i > 0 and 'smpl_transl' in res:
                     res = self.human_lora(h_token, q_out, res)
 
                 # World LoRA V1: global shift for self/other pointmaps, no local geometry edit.
-                if 'pts3d_in_self_view' in res:
+                if q_out is not None and getattr(self, "enable_world_lora", True) and 'pts3d_in_self_view' in res:
                     res['pts3d_in_self_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
-                if 'pts3d_in_other_view' in res:
+                if q_out is not None and getattr(self, "enable_world_lora", True) and 'pts3d_in_other_view' in res:
                     res['pts3d_in_other_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
                 # **========== 结束 ==========**
@@ -1736,6 +1760,10 @@ class ARCroco3DStereo(CroCoNet):
         max_smpl_id = -1
         reset_mask = False
         prev_f_dec = None
+        use_shot_decoder_token = (
+            self.enable_shot_adaptation
+            and getattr(self, "enable_shot_decoder_token", True)
+        )
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
@@ -1767,6 +1795,7 @@ class ARCroco3DStereo(CroCoNet):
             feat_i = img_out[-1]
             pos_i = img_pos
             f_shot = None
+            q_cond = None
             shot_info = None
             if self.enable_shot_adaptation:
                 # **========== Layer 1 原始代码备份：inference generator 只返回 q_t ==========**
@@ -1785,6 +1814,9 @@ class ARCroco3DStereo(CroCoNet):
                     f_shot, shot_info = self.shot_token_generator(
                         f_dec_i, prev_f_dec, i, return_info=True)
                 prev_f_dec = f_dec_i.detach()
+                q_cond = f_shot
+                if not use_shot_decoder_token:
+                    f_shot = None
             
             # MHMR vit
             imgs_mhmr = view["img_mhmr"].unsqueeze(0)  # Shape: (1, batch_size, C, H, W)
@@ -1883,6 +1915,24 @@ class ARCroco3DStereo(CroCoNet):
             #     use_ttt3r=use_ttt3r,
             # )
             # **========== 结束 ==========**
+            # **========== 原始代码备份：inference 始终把 f_shot 传入 decoder ==========**
+            # new_state_feat, dec, cross_attn_states = self._recurrent_rollout(
+            #     state_feat,
+            #     state_pos,
+            #     feat_i,
+            #     pos_i,
+            #     pose_feat_i,
+            #     pose_pos_i,
+            #     smpl_feat_i,
+            #     smpl_pos_i,
+            #     init_state_feat,
+            #     img_mask=view["img_mask"],
+            #     reset_mask=view["reset"],
+            #     update=view.get("update", None),
+            #     f_shot=f_shot,
+            #     use_ttt3r=use_ttt3r,
+            # )
+            # **========== 结束 ==========**
             new_state_feat, dec, cross_attn_states = self._recurrent_rollout(
                 state_feat,
                 state_pos,
@@ -1924,7 +1974,10 @@ class ARCroco3DStereo(CroCoNet):
             #     smpl_token = None
             #     smpl_token_cat = None
             # **========== 结束 ==========**
-            if self.enable_shot_adaptation:
+            # **========== 原始代码备份：只要启用 Shot Adaptation 就按追加 q_t 切 token ==========**
+            # if self.enable_shot_adaptation:
+            # **========== 结束 ==========**
+            if use_shot_decoder_token:
                 if n_humans_i > 0:
                     head_input = [
                         dec[0].float(),
@@ -1967,18 +2020,33 @@ class ARCroco3DStereo(CroCoNet):
 
             if self.enable_shot_adaptation:
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
-                    dec, n_humans_i, enable_shot_adaptation=True)
+                    dec, n_humans_i, enable_shot_adaptation=use_shot_decoder_token)
+                if q_out is None:
+                    q_out = q_cond
 
-                if 'camera_pose' in res:
+                # **========== 原始代码备份：inference 始终启用全部 LoRA 修正 ==========**
+                # if 'camera_pose' in res:
+                #     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
+                # if n_humans_i > 0 and 'smpl_transl' in res:
+                #     res = self.human_lora(h_token, q_out, res)
+                # if 'pts3d_in_self_view' in res:
+                #     res['pts3d_in_self_view'] = self.world_lora(
+                #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
+                # if 'pts3d_in_other_view' in res:
+                #     res['pts3d_in_other_view'] = self.world_lora(
+                #         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
+                # **========== 结束 ==========**
+
+                if q_out is not None and getattr(self, "enable_pose_lora", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_lora(z_out, q_out, res['camera_pose'])
 
-                if n_humans_i > 0 and 'smpl_transl' in res:
+                if q_out is not None and getattr(self, "enable_human_lora", True) and n_humans_i > 0 and 'smpl_transl' in res:
                     res = self.human_lora(h_token, q_out, res)
 
-                if 'pts3d_in_self_view' in res:
+                if q_out is not None and getattr(self, "enable_world_lora", True) and 'pts3d_in_self_view' in res:
                     res['pts3d_in_self_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
-                if 'pts3d_in_other_view' in res:
+                if q_out is not None and getattr(self, "enable_world_lora", True) and 'pts3d_in_other_view' in res:
                     res['pts3d_in_other_view'] = self.world_lora(
                         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
 

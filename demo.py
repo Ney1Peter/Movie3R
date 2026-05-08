@@ -148,6 +148,26 @@ def parse_args():
         action="store_true",
         help="Disable ShotToken path after loading checkpoint for ablation.",
     )
+    parser.add_argument(
+        "--disable_shot_decoder_token",
+        action="store_true",
+        help="Do not append q_t to decoder tokens; keep it only as LoRA condition.",
+    )
+    parser.add_argument(
+        "--disable_pose_lora",
+        action="store_true",
+        help="Disable PoseLoRA camera pose correction for ablation.",
+    )
+    parser.add_argument(
+        "--disable_human_lora",
+        action="store_true",
+        help="Disable HumanLoRA SMPL translation correction for ablation.",
+    )
+    parser.add_argument(
+        "--disable_world_lora",
+        action="store_true",
+        help="Disable WorldLoRA pointmap correction for ablation.",
+    )
     return parser.parse_args()
 
 
@@ -604,9 +624,26 @@ def run_inference(args):
     # Load and prepare the model.
     print(f"Loading model from {args.model_path}...")
     model = ARCroco3DStereo.from_pretrained(args.model_path).to(device)
+    # **========== 原始代码备份：只支持整体关闭 Shot Adaptation ==========**
+    # if args.disable_shot_adaptation and hasattr(model, "enable_shot_adaptation"):
+    #     model.enable_shot_adaptation = False
+    #     print("Shot adaptation disabled for ablation.")
+    # **========== 结束 ==========**
     if args.disable_shot_adaptation and hasattr(model, "enable_shot_adaptation"):
         model.enable_shot_adaptation = False
         print("Shot adaptation disabled for ablation.")
+    if args.disable_shot_decoder_token and hasattr(model, "enable_shot_decoder_token"):
+        model.enable_shot_decoder_token = False
+        print("Shot decoder token disabled for ablation.")
+    if args.disable_pose_lora and hasattr(model, "enable_pose_lora"):
+        model.enable_pose_lora = False
+        print("PoseLoRA disabled for ablation.")
+    if args.disable_human_lora and hasattr(model, "enable_human_lora"):
+        model.enable_human_lora = False
+        print("HumanLoRA disabled for ablation.")
+    if args.disable_world_lora and hasattr(model, "enable_world_lora"):
+        model.enable_world_lora = False
+        print("WorldLoRA disabled for ablation.")
     model.eval()
 
     # Prepare input views.
