@@ -757,3 +757,118 @@ ShotToken V2 不能作为最终方案。
 即使在训练集内构造的连续时间相机切换视频上，V2 仍然会破坏 camera pose、scale 和 background reconstruction。
 V3 应该先缩小作用范围，只修相机/人体位置，不再直接改 decoder image tokens 和 pointmap。
 ```
+
+## 第四部分：V2 细粒度消融结论与 V3 设计
+
+### 1. 细粒度消融现象
+
+基于同一个 checkpoint：
+
+```text
+experiments/formal_training-4gpu-bz24-shot-v2/checkpoint-best.pth
+```
+
+基于同一个训练集内连续时间相机切换视频：
+
+```text
+data/avatarrex_train_camjump_contiguous_0300_0309_10f.mp4
+```
+
+观察到四组结果：
+
+```text
+1. baseline / shot-off：背景和人物重建正常。B 段开始后整体相机有水平偏移。
+2. full-on：背景重建错误，相机位置像固定在第一帧，相机尺度也错误。
+3. no decoder q_t + no WorldLoRA，只保留 PoseLoRA 和 HumanLoRA：背景和人物恢复正常，但 B 段仍有偏移，并额外出现竖直方向旋转/前倾偏移。
+4. q_t-only，关闭所有 LoRA：背景错误，表现接近 full-on；相机位置仍像固定在第一帧，但尺度不像 full-on 那样变化。
+```
+
+### 2. 结论
+
+这组消融把问题拆开了：
+
+```text
+1. decoder q_t 单独就足以破坏背景 pointmap 和 camera token。
+2. WorldLoRA 不应该继续修改 pointmap，因为 baseline 的重建本身是对的。
+3. PoseLoRA 当前没有学成可靠修正，特别是 rotation residual 会带来额外前倾/竖直方向偏移。
+4. full-on 的尺度错误更可能来自 PoseLoRA / WorldLoRA 的 residual 叠加，而不是 decoder q_t 单独造成。
+```
+
+所以 V2 的主要失败原因不是数据集外泛化，而是结构作用范围过大：
+
+```text
+ShotToken 进入 decoder 后影响了 pose/image/human tokens。
+WorldLoRA 又显式修改 pointmap。
+PoseLoRA 同时修 translation 和 rotation，导致相机姿态也可能被修坏。
+```
+
+### 3. reset_interval 的观察
+
+把 demo 的 `reset_interval` 改为 5 后，B 段偏移会减轻，但不会完全消失。
+
+这说明 reset state/memory 是有效的止损手段：
+
+```text
+shot change 时不要让前一个 shot 的 recurrent state 和 pose memory 继续污染后一个 shot。
+```
+
+但 reset 不是最终对齐方案，因为它没有学习：
+
+```text
+新 shot 的 camera pose 应该如何对齐到前一个 shot 的世界坐标系。
+```
+
+因此 reset 只能减轻跨 shot 偏移，不能真正解决 camera alignment。
+
+### 4. V3 设计原则
+
+V3 的核心原则是缩小 ShotToken 的作用范围：
+
+```text
+ShotToken 不再参与 decoder attention。
+ShotToken 不再影响 image tokens / pointmap / background reconstruction。
+ShotToken 只作为 camera translation correction 的条件信号。
+```
+
+具体结构：
+
+```text
+q_t, shot_logit = ShotTokenGenerator(F_i, F_{i-1})
+base outputs = 原 Human3R decoder/head 正常输出
+delta_t = PoseTranslationAdapter(z_out, q_t)
+camera_translation_final = camera_translation_base + gate * delta_t
+camera_rotation_final = camera_rotation_base
+pointmap_final = pointmap_base
+smpl_final = smpl_base
+```
+
+其中 `gate` 来自 `shot_prob = sigmoid(shot_logit)`，并且训练时要保证连续帧 no-op：
+
+```text
+连续帧：delta_t 应接近 0，camera_pose_final 等于 base。
+shot change：只允许小幅 translation correction。
+```
+
+### 5. V3 首版实现范围
+
+V3 首版只实现最保守版本：
+
+```text
+1. 永久关闭 decoder q_t 注入。
+2. 关闭 WorldLoRA，不再修改 pts3d_in_self_view / pts3d_in_other_view。
+3. 关闭 HumanLoRA，暂时不修 smpl_transl。
+4. 用 PoseTranslationAdapter 代替 PoseLoRA。
+5. PoseTranslationAdapter 只修 camera_pose[:3] translation。
+6. 保持 camera_pose[3:7] rotation 不变。
+7. 对 translation residual 使用 tanh 限幅。
+8. 保留 shot_bce、shot_q0_loss 和 continuous no-op 约束。
+```
+
+V3 首版目标不是一次性完全解决所有跨镜头偏移，而是保证：
+
+```text
+重建质量不再被破坏。
+背景 / pointmap 接近 shot-off baseline。
+连续帧严格接近 no-op。
+shot change 时只学习 camera translation 对齐。
+```
