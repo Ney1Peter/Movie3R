@@ -598,3 +598,162 @@ pointmap / camera / SMPL transl 不再崩
 新版没有删除 ShotToken，而是给它加 gate、scale、shot 分类监督、连续帧 q0 约束和 no-op 约束。
 目标是让连续帧时 ShotToken 尽量不影响原模型，只有镜头跳变时才发挥作用。
 ```
+
+## 第三部分：ShotToken V2 失败现象记录
+
+### 1. 本次额外验证视频
+
+为了排除 `h36.mp4` 是训练集外数据导致异常，我们从 AvatarReX 训练集里构造了一个 10 帧测试视频：
+
+```text
+data/avatarrex_train_camjump_contiguous_0300_0309_10f.mp4
+```
+
+构造方式是同一训练集时间连续、相机切换：
+
+```text
+A 段：Training/22010708/rgb/00000300.png 到 00000304.png
+B 段：Training/22010710/rgb/00000305.png 到 00000309.png
+```
+
+也就是：
+
+```text
+A(t) A(t+1) A(t+2) A(t+3) A(t+4) B(t+5) B(t+6) B(t+7) B(t+8) B(t+9)
+```
+
+这个视频的目的不是测试泛化，而是验证：在训练分布内、时间连续但相机突然切换的情况下，Shot Adaptation 是否能稳定工作。
+
+### 2. 推理现象
+
+使用 checkpoint：
+
+```text
+experiments/formal_training-4gpu-bz24-shot-v2/checkpoint-best.pth
+```
+
+关闭 Shot Adaptation 时：
+
+```text
+前 5 帧基本正确。
+第 6 帧以后因为相机切换，整体位置出现偏移。
+但后 5 帧的重建本身仍然是对的，说明 base reconstruction 没有明显坏掉。
+```
+
+启用 Shot Adaptation 时：
+
+```text
+只有第 1 帧基本正确。
+后续帧位置明显不对。
+相机位姿表现得像都被压到第一帧附近。
+尺度也不对。
+背景 / pointmap 出现错误。
+人物本身相对没那么坏，说明 HumanLoRA 当前只修 smpl_transl 的策略没有明显破坏人体形状。
+```
+
+### 3. 当前判断
+
+这次训练集内连续时间 A5B5 测试失败，说明 V2 的问题不是简单的 out-of-distribution 泛化问题。
+
+更可能的问题是：
+
+```text
+ShotToken V2 的训练 loss 虽然下降，但 Shot Adaptation 路径仍然没有学成可用的相机切换修正。
+```
+
+更具体地说，当前 Shot Adaptation 的作用范围太大：
+
+```text
+1. q_t 被 append 到 decoder token 序列，会通过 attention 影响 pose token、image tokens、SMPL tokens。
+2. image tokens 被影响后，下游 pointmap / background reconstruction 也会被影响。
+3. WorldLoRA 又显式修改 pts3d_in_self_view 和 pts3d_in_other_view。
+4. 最终效果不只是修相机位姿，而是把几何重建和尺度一起扰动了。
+```
+
+所以当前 V2 的失败现象更符合下面这个解释：
+
+```text
+ShotToken + WorldLoRA 过度干预了 decoder 几何表达。
+模型没有学到“只在 shot change 时修正相机/人体位置”的局部行为。
+相反，启用 Shot Adaptation 后破坏了原 Human3R 稳定的重建 token。
+```
+
+### 4. 对 LoRA 的进一步判断
+
+当前不能把问题简单归因到所有 LoRA。
+
+HumanLoRA 已经改成只修：
+
+```text
+smpl_transl
+```
+
+不再修：
+
+```text
+smpl_shape
+smpl_rotmat
+smpl_expression
+```
+
+这和观察到的“人物本身没那么坏”基本一致。
+
+更危险的是：
+
+```text
+decoder q_t 注入
+WorldLoRA 对 pointmap 的显式修改
+PoseLoRA residual 幅度没有足够强的输出限制
+```
+
+### 5. V3 前的排查方向
+
+下一步不要直接重训 30 epoch，而是先做推理级细粒度消融。
+
+建议添加 demo 开关：
+
+```text
+--disable_shot_decoder_token
+--disable_world_lora
+--disable_human_lora
+--disable_pose_lora
+```
+
+第一组重点实验：
+
+```text
+关闭 decoder q_t 注入。
+关闭 WorldLoRA。
+只保留 PoseLoRA 和 HumanLoRA。
+q_t 不进入 decoder attention，只作为 PoseLoRA / HumanLoRA 的 condition 使用。
+```
+
+这组实验要验证：
+
+```text
+如果 pointmap / background reconstruction 恢复正常，说明主要问题来自 decoder q_t 和 WorldLoRA。
+如果仍然崩，说明 PoseLoRA / HumanLoRA residual 本身也需要限幅或重新设计。
+```
+
+进一步建议的 V3 方向：
+
+```text
+1. 不再把 q_t append 到 decoder。
+2. 关闭 WorldLoRA，先不修改 pointmap。
+3. 优先只做 PoseLoRA，必要时保留只修 smpl_transl 的 HumanLoRA。
+4. 对 pose translation residual 加 tanh 限幅。
+5. 对 rotation residual 改成小角度修正，或用很小的 quaternion delta。
+6. 连续帧使用 hard no-op gate，保证 shot-off 和 shot-on 在非跳变帧几乎一致。
+```
+
+### 6. 本阶段结论
+
+ShotToken V2 不能作为最终方案。
+
+当前最重要的结论是：
+
+```text
+训练 loss 下降和 shot_acc 上升不代表 Shot Adaptation 路径可用。
+即使在训练集内构造的连续时间相机切换视频上，V2 仍然会破坏 camera pose、scale 和 background reconstruction。
+V3 应该先缩小作用范围，只修相机/人体位置，不再直接改 decoder image tokens 和 pointmap。
+```
