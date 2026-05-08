@@ -18,6 +18,9 @@ MASTER_PORT=${MASTER_PORT:-29501}
 # **========== 原始代码备份：V2 formal output dir ==========**
 # OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v2}
 # **========== 结束 ==========**
+# **========== V3 当前代码备份：formal output dir ==========**
+# OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v3}
+# **========== 结束 ==========**
 OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v3}
 
 # 如果调度系统已经设置了 CUDA_VISIBLE_DEVICES，则尊重调度系统设置。

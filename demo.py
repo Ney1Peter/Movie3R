@@ -163,6 +163,13 @@ def parse_args():
         action="store_true",
         help="Disable V3 translation-only camera adapter for ablation.",
     )
+    # **========== V3 当前代码备份：推理只支持关闭 translation-only adapter ==========**
+    # parser.add_argument(
+    #     "--disable_pose_translation_adapter",
+    #     action="store_true",
+    #     help="Disable V3 translation-only camera adapter for ablation.",
+    # )
+    # **========== 结束 ==========**
     parser.add_argument(
         "--disable_human_lora",
         action="store_true",
@@ -646,6 +653,11 @@ def run_inference(args):
     if args.disable_pose_translation_adapter and hasattr(model, "enable_pose_translation_adapter"):
         model.enable_pose_translation_adapter = False
         print("PoseTranslationAdapter disabled for ablation.")
+    # **========== V3 当前代码备份：关闭 translation-only adapter ==========**
+    # if args.disable_pose_translation_adapter and hasattr(model, "enable_pose_translation_adapter"):
+    #     model.enable_pose_translation_adapter = False
+    #     print("PoseTranslationAdapter disabled for ablation.")
+    # **========== 结束 ==========**
     if args.disable_human_lora and hasattr(model, "enable_human_lora"):
         model.enable_human_lora = False
         print("HumanLoRA disabled for ablation.")

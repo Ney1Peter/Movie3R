@@ -54,6 +54,9 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== 原始代码备份：V2 使用 PoseLoRA/HumanLoRA/WorldLoRA ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer
 # **========== 结束 ==========**
+# **========== V3 当前代码备份：导入 translation-only adapter ==========**
+# from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
+# **========== 结束 ==========**
 from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
@@ -159,6 +162,14 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         # mhmr_img_res=None,
         # **========== 结束 ==========**
         mhmr_img_res=None,
+        # **========== V3 当前代码备份：ShotToken/translation-only 配置 ==========**
+        # lora_rank=64,
+        # shot_loss_weight=0.1,
+        # shot_q0_loss_weight=0.1,
+        # shot_scale_init=0.05,
+        # shot_noop_loss_weight=1.0,
+        # pose_delta_t_max=0.5,
+        # **========== 结束 ==========**
         lora_rank=64,
         shot_loss_weight=0.1,
         shot_q0_loss_weight=0.1,
@@ -430,6 +441,16 @@ class ARCroco3DStereo(CroCoNet):
         # self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         # self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=128)
         # **========== 结束 ==========**
+        # **========== V3 当前代码备份：初始化 LoRA 与 translation-only adapter ==========**
+        # self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.pose_translation_adapter = PoseTranslationAdapter(
+        #     dec_dim=self.dec_embed_dim,
+        #     rank=config.lora_rank,
+        #     max_delta=config.pose_delta_t_max,
+        # )
+        # **========== 结束 ==========**
         self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
         self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
         self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
@@ -446,6 +467,13 @@ class ARCroco3DStereo(CroCoNet):
         # self.enable_pose_lora = True
         # self.enable_human_lora = True
         # self.enable_world_lora = True
+        # **========== 结束 ==========**
+        # **========== V3 当前代码备份：默认只启用 translation-only camera adapter ==========**
+        # self.enable_shot_decoder_token = False
+        # self.enable_pose_translation_adapter = True
+        # self.enable_pose_lora = False
+        # self.enable_human_lora = False
+        # self.enable_world_lora = False
         # **========== 结束 ==========**
         # V3: q_t 不进入 decoder，只给 camera translation adapter 做条件输入。
         self.enable_shot_decoder_token = False
@@ -727,6 +755,15 @@ class ARCroco3DStereo(CroCoNet):
             #     self.human_lora,
             #     self.world_lora,
             # ]:
+            # **========== 结束 ==========**
+            # **========== V3 当前代码备份：只训练 ShotTokenGenerator 与 PoseTranslationAdapter ==========**
+            # freeze_all_params([self.pose_lora, self.human_lora, self.world_lora])
+            # for module in [
+            #     self.shot_token_generator,
+            #     self.pose_translation_adapter,
+            # ]:
+            #     for p in module.parameters():
+            #         p.requires_grad = True
             # **========== 结束 ==========**
             freeze_all_params([self.pose_lora, self.human_lora, self.world_lora])
             for module in [
@@ -1607,6 +1644,10 @@ class ARCroco3DStereo(CroCoNet):
                 #         img_tokens, z_out, q_out, res['pts3d_in_self_view'])
                 # **========== 结束 ==========**
 
+                # **========== V3 当前代码备份：训练 forward 中使用 translation-only adapter ==========**
+                # if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
+                #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
+                # **========== 结束 ==========**
                 # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
                 if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
@@ -2066,6 +2107,10 @@ class ARCroco3DStereo(CroCoNet):
                 #         img_tokens, z_out, q_out, res['pts3d_in_other_view'])
                 # **========== 结束 ==========**
 
+                # **========== V3 当前代码备份：推理 forward 中使用 translation-only adapter ==========**
+                # if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
+                #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
+                # **========== 结束 ==========**
                 # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
                 if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])

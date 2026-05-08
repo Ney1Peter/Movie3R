@@ -275,6 +275,13 @@ def loss_of_one_batch(
             # output = model(batch)
             # preds, batch = output.ress, output.views
             # **========== 结束 ==========**
+            # **========== V3 当前代码备份：shot-on/off 双路 forward 用于 continuous no-op ==========**
+            # smpl_model.update_smpl_gt(batch)
+            # output = model(batch)
+            # preds, batch = output.ress, output.views
+            # preds_off = _compute_shot_off_preds(batch, model)
+            # noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
+            # **========== 结束 ==========**
             smpl_model.update_smpl_gt(batch)
             output = model(batch)
             preds, batch = output.ress, output.views
@@ -294,6 +301,12 @@ def loss_of_one_batch(
                 loss = _add_aux_loss(loss, q0_loss, q0_details)
                 # **========== Layer 3 原始代码备份：无 pred_off 连续帧 no-op 输出约束 ==========**
                 # 当前只使用主任务 loss、shot BCE 和 q_t 能量正则。
+                # **========== 结束 ==========**
+                # **========== V3 当前代码备份：只追加 shot BCE、q0 与 continuous no-op loss ==========**
+                # loss = _add_aux_loss(loss, shot_loss, shot_details)
+                # q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
+                # loss = _add_aux_loss(loss, q0_loss, q0_details)
+                # loss = _add_aux_loss(loss, noop_loss, noop_details)
                 # **========== 结束 ==========**
                 loss = _add_aux_loss(loss, noop_loss, noop_details)
 
