@@ -10,6 +10,7 @@ Shot-Aware Adaptation Modules
 2. LoRA / Adapter Layers: 对 base model 输出做轻量修正
    - PoseLoRALayer: 对相机位姿做微调修正
    - PoseTranslationAdapter: V3 只对相机平移做限幅修正
+   - PoseAlignmentAdapter: V4 只让 pose token 读取 shot token，修正 camera pose
    - HumanLoRALayer: 对 SMPL 人体平移做微调修正
    - WorldLoRALayer: 对场景点云做全局平移修正
 
@@ -343,6 +344,83 @@ class PoseTranslationAdapter(nn.Module):
         t_final = pose_base[:, :3] + delta_t
         q_final = pose_base[:, 3:7]
         return torch.cat([t_final, q_final], dim=-1)
+
+
+class PoseAlignmentAdapter(nn.Module):
+    """
+    V4 Pose Alignment Adapter - 受限 pose-only ShotToken 交互。
+
+    ShotToken 不进入原始 decoder token 序列；这里只在 decoder 之后让 pose token
+    attend [pose token, shot token]，再把结果用于 camera_pose residual。这样 image
+    token / human token / pointmap 完全不经过 alignment token。
+    """
+
+    def __init__(self, dec_dim=768, rank=64, num_heads=8, max_delta_t=0.25, max_delta_q=0.05):
+        super().__init__()
+        self.rank = rank
+        self.max_delta_t = float(max_delta_t)
+        self.max_delta_q = float(max_delta_q)
+
+        self.pose_norm = nn.LayerNorm(dec_dim)
+        self.context_norm = nn.LayerNorm(dec_dim)
+        self.cross_attn = nn.MultiheadAttention(
+            embed_dim=dec_dim,
+            num_heads=num_heads,
+            batch_first=True,
+        )
+        self.ffn = nn.Sequential(
+            nn.LayerNorm(dec_dim),
+            nn.Linear(dec_dim, rank),
+            nn.GELU(),
+            nn.Linear(rank, dec_dim),
+        )
+        self.delta_head = nn.Sequential(
+            nn.LayerNorm(dec_dim * 2),
+            nn.Linear(dec_dim * 2, rank),
+            nn.GELU(),
+            nn.Linear(rank, 7),
+        )
+
+        # 初始严格等于 base pose，避免训练刚开始破坏 Human3R camera。
+        nn.init.zeros_(self.delta_head[-1].weight)
+        nn.init.zeros_(self.delta_head[-1].bias)
+
+    def forward(self, z_token, q_t, pose_base, apply_rotation=True):
+        """
+        Args:
+            z_token: [B, 1, dec_dim] base decoder 输出的 pose token
+            q_t: [B, 1, dec_dim] ShotTokenGenerator 输出，未进入普通 decoder
+            pose_base: [B, 7] base camera pose, translation(3) + quaternion(4)
+            apply_rotation: False 时只输出 translation residual，rotation 保持 base
+        Returns:
+            pose_final: [B, 7]
+            info: residual tensors for logging/regularization
+        """
+        # KV 只包含 pose token 和 q_t；没有 image/human token，因此不会污染重建分支。
+        pose_query = self.pose_norm(z_token)
+        context = self.context_norm(torch.cat([z_token, q_t], dim=1))
+        attn_out, _ = self.cross_attn(pose_query, context, context, need_weights=False)
+        aligned_pose = z_token + self.ffn(attn_out)
+
+        delta_input = torch.cat([z_token, aligned_pose], dim=-1)
+        raw_delta = self.delta_head(delta_input).squeeze(1)
+        delta_t = self.max_delta_t * torch.tanh(raw_delta[:, :3])
+        delta_q = self.max_delta_q * torch.tanh(raw_delta[:, 3:7])
+
+        t_final = pose_base[:, :3] + delta_t
+        if apply_rotation:
+            q_final = F.normalize(pose_base[:, 3:7] + delta_q, dim=-1)
+        else:
+            delta_q = torch.zeros_like(delta_q)
+            q_final = pose_base[:, 3:7]
+
+        info = {
+            "shot_pose_delta_t": delta_t,
+            "shot_pose_delta_q": delta_q,
+            "shot_pose_delta_t_norm": delta_t.detach().norm(dim=-1),
+            "shot_pose_delta_q_norm": delta_q.detach().norm(dim=-1),
+        }
+        return torch.cat([t_final, q_final], dim=-1), info
 
 
 # **========== 原始代码备份：HumanLoRALayer（shape + transl 修正） ==========**

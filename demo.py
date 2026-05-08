@@ -171,6 +171,16 @@ def parse_args():
     # )
     # **========== 结束 ==========**
     parser.add_argument(
+        "--disable_pose_alignment_adapter",
+        action="store_true",
+        help="Disable V4 pose-only ShotToken alignment adapter for ablation.",
+    )
+    parser.add_argument(
+        "--disable_pose_alignment_rotation",
+        action="store_true",
+        help="Keep camera rotation fixed in V4 pose alignment adapter.",
+    )
+    parser.add_argument(
         "--disable_human_lora",
         action="store_true",
         help="Disable HumanLoRA SMPL translation correction for ablation.",
@@ -658,6 +668,12 @@ def run_inference(args):
     #     model.enable_pose_translation_adapter = False
     #     print("PoseTranslationAdapter disabled for ablation.")
     # **========== 结束 ==========**
+    if args.disable_pose_alignment_adapter and hasattr(model, "enable_pose_alignment_adapter"):
+        model.enable_pose_alignment_adapter = False
+        print("PoseAlignmentAdapter disabled for ablation.")
+    if args.disable_pose_alignment_rotation and hasattr(model, "enable_pose_alignment_rotation"):
+        model.enable_pose_alignment_rotation = False
+        print("PoseAlignmentAdapter rotation disabled for ablation.")
     if args.disable_human_lora and hasattr(model, "enable_human_lora"):
         model.enable_human_lora = False
         print("HumanLoRA disabled for ablation.")

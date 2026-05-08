@@ -57,7 +57,7 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== V3 当前代码备份：导入 translation-only adapter ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
 # **========== 结束 ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
+from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
@@ -176,6 +176,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         shot_scale_init=0.05,
         shot_noop_loss_weight=1.0,
         pose_delta_t_max=0.5,
+        pose_align_delta_t_max=0.25,
+        pose_align_delta_q_max=0.05,
+        shot_pointmap_keep_loss_weight=1.0,
+        shot_pose_residual_loss_weight=0.05,
         **croco_kwargs,
     ):
         super().__init__()
@@ -205,6 +209,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.shot_scale_init = shot_scale_init
         self.shot_noop_loss_weight = shot_noop_loss_weight
         self.pose_delta_t_max = pose_delta_t_max
+        self.pose_align_delta_t_max = pose_align_delta_t_max
+        self.pose_align_delta_q_max = pose_align_delta_q_max
+        self.shot_pointmap_keep_loss_weight = shot_pointmap_keep_loss_weight
+        self.shot_pose_residual_loss_weight = shot_pose_residual_loss_weight
         self.croco_kwargs = croco_kwargs
 
 
@@ -459,6 +467,12 @@ class ARCroco3DStereo(CroCoNet):
             rank=config.lora_rank,
             max_delta=config.pose_delta_t_max,
         )
+        self.pose_alignment_adapter = PoseAlignmentAdapter(
+            dec_dim=self.dec_embed_dim,
+            rank=config.lora_rank,
+            max_delta_t=config.pose_align_delta_t_max,
+            max_delta_q=config.pose_align_delta_q_max,
+        )
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
@@ -475,16 +489,22 @@ class ARCroco3DStereo(CroCoNet):
         # self.enable_human_lora = False
         # self.enable_world_lora = False
         # **========== 结束 ==========**
-        # V3: q_t 不进入 decoder，只给 camera translation adapter 做条件输入。
+        # V4: q_t 不进入普通 decoder，只通过 pose-only alignment adapter 修 camera pose。
         self.enable_shot_decoder_token = False
-        self.enable_pose_translation_adapter = True
+        self.enable_pose_alignment_adapter = True
+        self.enable_pose_alignment_rotation = True
+        self.enable_pose_translation_adapter = False
         self.enable_pose_lora = False
         self.enable_human_lora = False
         self.enable_world_lora = False
         self.pose_delta_t_max = config.pose_delta_t_max
+        self.pose_align_delta_t_max = config.pose_align_delta_t_max
+        self.pose_align_delta_q_max = config.pose_align_delta_q_max
         self.shot_loss_weight = config.shot_loss_weight
         self.shot_q0_loss_weight = config.shot_q0_loss_weight
         self.shot_noop_loss_weight = config.shot_noop_loss_weight
+        self.shot_pointmap_keep_loss_weight = config.shot_pointmap_keep_loss_weight
+        self.shot_pose_residual_loss_weight = config.shot_pose_residual_loss_weight
 
         self.set_freeze(config.freeze)
 
@@ -765,10 +785,15 @@ class ARCroco3DStereo(CroCoNet):
             #     for p in module.parameters():
             #         p.requires_grad = True
             # **========== 结束 ==========**
-            freeze_all_params([self.pose_lora, self.human_lora, self.world_lora])
+            freeze_all_params([
+                self.pose_lora,
+                self.human_lora,
+                self.world_lora,
+                self.pose_translation_adapter,
+            ])
             for module in [
                 self.shot_token_generator,
-                self.pose_translation_adapter,
+                self.pose_alignment_adapter,
             ]:
             # **========== 结束 ==========**
                 for p in module.parameters():
@@ -1648,6 +1673,16 @@ class ARCroco3DStereo(CroCoNet):
                 # if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                 #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
                 # **========== 结束 ==========**
+                # V4 PoseAlignmentAdapter: q_t 只和 pose token 做受限 attention，再修 camera pose。
+                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                    res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
+                        z_out,
+                        q_out,
+                        res['camera_pose'],
+                        apply_rotation=getattr(self, "enable_pose_alignment_rotation", True),
+                    )
+                    res.update(pose_align_info)
+
                 # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
                 if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
@@ -2111,6 +2146,16 @@ class ARCroco3DStereo(CroCoNet):
                 # if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                 #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
                 # **========== 结束 ==========**
+                # V4 PoseAlignmentAdapter: q_t 只和 pose token 做受限 attention，再修 camera pose。
+                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                    res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
+                        z_out,
+                        q_out,
+                        res['camera_pose'],
+                        apply_rotation=getattr(self, "enable_pose_alignment_rotation", True),
+                    )
+                    res.update(pose_align_info)
+
                 # V3 PoseTranslationAdapter: 只修 camera translation，不改 rotation。
                 if q_out is not None and getattr(self, "enable_pose_translation_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])

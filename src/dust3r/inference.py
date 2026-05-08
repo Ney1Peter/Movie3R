@@ -235,6 +235,79 @@ def _compute_shot_noop_loss(batch, preds_on, preds_off, model):
     return noop_loss * weight, details
 
 
+def _compute_shot_pointmap_keep_loss(preds_on, preds_off, model):
+    base_model = _unwrap_model(model)
+    weight = float(getattr(base_model, "shot_pointmap_keep_loss_weight", 0.0))
+    if weight <= 0 or preds_off is None:
+        return None, {}
+
+    component_losses = []
+    component_details = {}
+    for pred_on, pred_off in zip(preds_on, preds_off):
+        for key in ["pts3d_in_self_view", "pts3d_in_other_view"]:
+            if key not in pred_on or key not in pred_off:
+                continue
+            diff = (pred_on[key].float() - pred_off[key].float().detach()).abs()
+            comp_loss = diff.reshape(diff.shape[0], -1).mean(dim=1).mean()
+            component_losses.append(comp_loss)
+            component_details.setdefault(key, []).append(comp_loss.detach())
+
+    if not component_losses:
+        return None, {}
+
+    keep_loss = torch.stack(component_losses).mean()
+    details = {
+        "shot_pointmap_keep_loss": float(keep_loss.detach()),
+        "shot_pointmap_keep_loss_weighted": float((keep_loss * weight).detach()),
+    }
+    for key, values in component_details.items():
+        details[f"shot_pointmap_keep_{key}"] = float(torch.stack(values).mean())
+
+    return keep_loss * weight, details
+
+
+def _compute_shot_pose_residual_loss(preds, model):
+    base_model = _unwrap_model(model)
+    weight = float(getattr(base_model, "shot_pose_residual_loss_weight", 0.0))
+    if weight <= 0:
+        return None, {}
+
+    t_losses, q_losses = [], []
+    t_norms, q_norms = [], []
+    for pred in preds:
+        delta_t = pred.get("shot_pose_delta_t", None)
+        if delta_t is not None:
+            delta_t = delta_t.float()
+            t_losses.append(delta_t.pow(2).mean())
+            t_norms.append(delta_t.detach().norm(dim=-1).mean())
+
+        delta_q = pred.get("shot_pose_delta_q", None)
+        if delta_q is not None:
+            delta_q = delta_q.float()
+            q_losses.append(delta_q.pow(2).mean())
+            q_norms.append(delta_q.detach().norm(dim=-1).mean())
+
+    component_losses = []
+    if t_losses:
+        component_losses.append(torch.stack(t_losses).mean())
+    if q_losses:
+        component_losses.append(torch.stack(q_losses).mean())
+    if not component_losses:
+        return None, {}
+
+    residual_loss = torch.stack(component_losses).mean()
+    details = {
+        "shot_pose_residual_loss": float(residual_loss.detach()),
+        "shot_pose_residual_loss_weighted": float((residual_loss * weight).detach()),
+    }
+    if t_norms:
+        details["shot_pose_delta_t_norm"] = float(torch.stack(t_norms).mean())
+    if q_norms:
+        details["shot_pose_delta_q_norm"] = float(torch.stack(q_norms).mean())
+
+    return residual_loss * weight, details
+
+
 def _add_aux_loss(loss, aux_loss, aux_details):
     if loss is None or aux_loss is None:
         return loss
@@ -287,6 +360,8 @@ def loss_of_one_batch(
             preds, batch = output.ress, output.views
             preds_off = _compute_shot_off_preds(batch, model)
             noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
+            pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(preds, preds_off, model)
+            pose_residual_loss, pose_residual_details = _compute_shot_pose_residual_loss(preds, model)
 
         # **========== Layer 1 原始代码备份：训练 loss 仅来自主 criterion ==========**
         # with torch.cuda.amp.autocast(enabled=False):
@@ -309,6 +384,8 @@ def loss_of_one_batch(
                 # loss = _add_aux_loss(loss, noop_loss, noop_details)
                 # **========== 结束 ==========**
                 loss = _add_aux_loss(loss, noop_loss, noop_details)
+                loss = _add_aux_loss(loss, pointmap_keep_loss, pointmap_keep_details)
+                loss = _add_aux_loss(loss, pose_residual_loss, pose_residual_details)
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result

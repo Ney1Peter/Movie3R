@@ -21,7 +21,7 @@ MASTER_PORT=${MASTER_PORT:-29501}
 # **========== V3 当前代码备份：formal output dir ==========**
 # OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v3}
 # **========== 结束 ==========**
-OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v3}
+OUTPUT_DIR=${OUTPUT_DIR:-/workspace/code/Movie3R/experiments/formal_training-4gpu-bz24-shot-v4}
 
 # 如果调度系统已经设置了 CUDA_VISIBLE_DEVICES，则尊重调度系统设置。
 if [ -z "${CUDA_VISIBLE_DEVICES:-}" ]; then
