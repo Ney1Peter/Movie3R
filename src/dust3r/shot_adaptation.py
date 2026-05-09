@@ -346,6 +346,16 @@ class PoseTranslationAdapter(nn.Module):
         return torch.cat([t_final, q_final], dim=-1)
 
 
+# **========== V4 原始代码备份：decoder 后 pose-only camera alignment adapter ==========**
+# class PoseAlignmentAdapter(nn.Module):
+#     """
+#     V4 Pose Alignment Adapter - 受限 pose-only ShotToken 交互。
+#
+#     ShotToken 不进入原始 decoder token 序列；这里只在 decoder 之后让 pose token
+#     attend [pose token, shot token]，再把结果用于 camera_pose residual。这样 image
+#     token / human token / pointmap 完全不经过 alignment token。
+#     """
+# **========== 结束 ==========**
 class PoseAlignmentAdapter(nn.Module):
     """
     V4 Pose Alignment Adapter - 受限 pose-only ShotToken 交互。

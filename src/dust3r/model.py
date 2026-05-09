@@ -467,6 +467,14 @@ class ARCroco3DStereo(CroCoNet):
             rank=config.lora_rank,
             max_delta=config.pose_delta_t_max,
         )
+        # **========== V4 原始代码备份：初始化 decoder 后 pose alignment adapter ==========**
+        # self.pose_alignment_adapter = PoseAlignmentAdapter(
+        #     dec_dim=self.dec_embed_dim,
+        #     rank=config.lora_rank,
+        #     max_delta_t=config.pose_align_delta_t_max,
+        #     max_delta_q=config.pose_align_delta_q_max,
+        # )
+        # **========== 结束 ==========**
         self.pose_alignment_adapter = PoseAlignmentAdapter(
             dec_dim=self.dec_embed_dim,
             rank=config.lora_rank,
@@ -490,6 +498,15 @@ class ARCroco3DStereo(CroCoNet):
         # self.enable_world_lora = False
         # **========== 结束 ==========**
         # V4: q_t 不进入普通 decoder，只通过 pose-only alignment adapter 修 camera pose。
+        # **========== V4 原始代码备份：默认关闭 decoder q_t，开启最终 pose alignment ==========**
+        # self.enable_shot_decoder_token = False
+        # self.enable_pose_alignment_adapter = True
+        # self.enable_pose_alignment_rotation = True
+        # self.enable_pose_translation_adapter = False
+        # self.enable_pose_lora = False
+        # self.enable_human_lora = False
+        # self.enable_world_lora = False
+        # **========== 结束 ==========**
         self.enable_shot_decoder_token = False
         self.enable_pose_alignment_adapter = True
         self.enable_pose_alignment_rotation = True
@@ -791,6 +808,14 @@ class ARCroco3DStereo(CroCoNet):
                 self.world_lora,
                 self.pose_translation_adapter,
             ])
+            # **========== V4 原始代码备份：只训练 ShotTokenGenerator 与 PoseAlignmentAdapter ==========**
+            # for module in [
+            #     self.shot_token_generator,
+            #     self.pose_alignment_adapter,
+            # ]:
+            #     for p in module.parameters():
+            #         p.requires_grad = True
+            # **========== 结束 ==========**
             for module in [
                 self.shot_token_generator,
                 self.pose_alignment_adapter,
@@ -1674,6 +1699,16 @@ class ARCroco3DStereo(CroCoNet):
                 #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
                 # **========== 结束 ==========**
                 # V4 PoseAlignmentAdapter: q_t 只和 pose token 做受限 attention，再修 camera pose。
+                # **========== V4 原始代码备份：训练 forward 中 decoder 后修 camera pose ==========**
+                # if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                #     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
+                #         z_out,
+                #         q_out,
+                #         res['camera_pose'],
+                #         apply_rotation=getattr(self, "enable_pose_alignment_rotation", True),
+                #     )
+                #     res.update(pose_align_info)
+                # **========== 结束 ==========**
                 if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
                         z_out,
@@ -2147,6 +2182,16 @@ class ARCroco3DStereo(CroCoNet):
                 #     res['camera_pose'] = self.pose_translation_adapter(z_out, q_out, res['camera_pose'])
                 # **========== 结束 ==========**
                 # V4 PoseAlignmentAdapter: q_t 只和 pose token 做受限 attention，再修 camera pose。
+                # **========== V4 原始代码备份：inference_step 中 decoder 后修 camera pose ==========**
+                # if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                #     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
+                #         z_out,
+                #         q_out,
+                #         res['camera_pose'],
+                #         apply_rotation=getattr(self, "enable_pose_alignment_rotation", True),
+                #     )
+                #     res.update(pose_align_info)
+                # **========== 结束 ==========**
                 if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
                     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
                         z_out,
