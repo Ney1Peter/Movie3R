@@ -1,5 +1,36 @@
 # Movie3R TODO List
 
+## ShotToken V5
+
+### 1. V5.1 Layerwise Pose-Only Shot Attention
+
+目标：在每层 decoder 后只让 pose token 和 `q_t` 做 attention，让 ShotToken 更早影响 camera pose 生成过程，但不作为普通 token 直接暴露给 image/human/pointmap 分支。
+
+待实现：
+- 新增 layerwise pose-shot adapter。
+- 支持配置插入层数：每层、每 2 层、后半层、最后几层。
+- 默认关闭 V4 最终 `PoseAlignmentAdapter`，避免和 V5.1 效果混淆。
+
+### 2. V5.1 Camera Loss 与 Metrics
+
+目标：强化 AABB 跳变边界和整段 world coordinate 接回监督。
+
+待实现：
+- `L_boundary_abs`：监督 A2 和 B1 各自 absolute camera pose。
+- `L_jump_rel`：监督 `relative(A2, B1)` 等于 GT 的真实跳变相对位姿。
+- `L_anchor`：监督 B1/B2 相对于 A2 接回同一 world coordinate。
+- 新增 `shot_jump_t_err`、`shot_jump_q_err`、`shot_anchor_t_err`、`shot_anchor_q_err` 等日志指标。
+
+### 3. V5.2 Masked Decoder 后备方案
+
+如果 V5.1 无法修复 AABB 跳变，则考虑改 decoder attention mask。
+
+待实现前置检查：
+- `Attention.forward` 支持 `attn_mask`。
+- `CrossAttention.forward` 支持 `attn_mask`。
+- `DecoderBlock.forward` 和 `_decoder()` 传递 mask。
+- 构造权限：pose token 可以 attend shot token，image/human token 不能 attend shot token。
+
 ## 训练代码方面
 
 ### 1. NativeScalerWithGradNormCount 与 Gradient Accumulation

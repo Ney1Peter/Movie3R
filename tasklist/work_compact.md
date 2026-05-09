@@ -8,7 +8,7 @@
 
 **方案**: Shot-Aware Adaptation - 在冻结的 CUT3R 基础上增加轻量可学习模块，让模型学会处理镜头跳变。
 
-**2026/05/07 最新状态**：LoRA64 正式训练已完成，但 `checkpoint-best.pth` 推理失败。消融显示 base Human3R 权重正常，错误集中在 `enable_shot_adaptation=True` 后启用的 shot adaptation 分支，尤其是 trained shot token 进入 decoder 后会破坏输出尺度。下一步优先验证数据集 `shot_label` 和 shot token 质量。
+**2026/05/09 最新状态**：V4 验证了 pose-only ShotToken 比 V2 安全，但 decoder 后单次修正仍偏后处理，且 translation y/z 容易引入额外错位。下一步规划 V5.1：在每层 decoder 后只让 pose token 和 shot token 做 attention，并同步增加 `L_boundary_abs`、`L_jump_rel`、`L_anchor`；若 V5.1 失败，再进入 V5.2 masked decoder 方案。
 
 ---
 
@@ -222,7 +222,10 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 | freeze='shot_adaptation' 配置 | ✅ 完成 |
 | 数据集 shot_label 添加 | ✅ 完成 |
 | Shot Adaptation 训练 | ⚠️ LoRA64 已完成但推理失败 |
-| Shot token 质量验证 | ⏳ 下一步优先 |
+| Shot token 质量验证 | ✅ 已验证输入特征可区分跳变，问题主要在注入方式 |
+| V4 pose-only alignment | ✅ 已验证安全但偏后处理，B 段 y/z 仍有错位 |
+| V5.1 layerwise pose-only attention | ⏳ 下一步实现 |
+| V5.2 masked decoder | ⏸️ V5.1 失败后再考虑 |
 
 ---
 
@@ -235,3 +238,4 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 | `src/dust3r/datasets/avatarrex.py` | AvatarReX 数据集类 |
 | `src/dust3r/losses.py` | 损失函数 |
 | `config/train.yaml` | 训练配置 |
+| `docs/movie3r/shot_token_v5_plan.md` | V5.1/V5.2 规划文档 |

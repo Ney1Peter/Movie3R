@@ -36,6 +36,7 @@ python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 .
 | [环境配置](../env_setup.md) | Python 环境、依赖安装、RoPE 编译 |
 | [训练配置](training.md) | 硬件配置、Batch Size、分布式训练、梯度累积 |
 | [模型架构](model.md) | Shot-Aware Adaptation 模块设计 |
+| [ShotToken V5 规划](shot_token_v5_plan.md) | V5.1 layerwise pose-only attention 与 V5.2 masked decoder 方案 |
 | [代码详解](../train_code_explanation.md) | 训练代码流程解析 |
 | [TODO](../TODO.md) | 待实现功能清单 |
 

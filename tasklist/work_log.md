@@ -1808,3 +1808,83 @@ L = L_task
 ```
 
 其中 Layer 1/2 先解决“知道哪里是跳变”和“连续帧不要强扰动 decoder”；Layer 3 再直接约束连续帧输出接近 shot-off/base 输出。
+
+---
+
+## 2026/05/09
+
+### 1. ShotToken V5 规划
+
+新增设计文档：`docs/movie3r/shot_token_v5_plan.md`。
+
+V5 目标聚焦两个问题：
+
+```text
+1. 跳变帧本身的 camera pose 要算对，尤其是 AABB 的 B1/view2。
+2. 整个 AABB 序列的 A1/A2/B1/B2 都要落在同一个 GT world coordinate 下。
+```
+
+### 2. V5.1 首选方案
+
+V5.1 采用 interleaved pose-only shot attention：
+
+```text
+每层 decoder 正常更新 [pose, image, human]
+每层后只让 pose token 和 q_t 做一次 attention
+更新后的 pose token 进入下一层 decoder
+```
+
+该方案不是最终输出后的单次后处理，而是在 decoder 内部逐层修正 pose token。它比 V4 更早介入 pose 生成过程，同时比 V2 安全，因为 `q_t` 不作为普通 token 直接暴露给 image/human/pointmap 分支。
+
+插入层数可调：
+
+| 配置 | 用途 |
+|------|------|
+| 每层插入 | V5.1 首版默认，最大化 pose 修正能力 |
+| 每 2 层插入 | 如果扰动过强，降低注入频率 |
+| 后半层插入 | 如果早期 decoder 被污染，只在语义更稳定阶段注入 |
+| 最后几层插入 | 最保守版本，介于 V4 和 V5.1 全层之间 |
+
+### 3. V5.1 loss 同步调整
+
+当前已有 `pose_loss`、`pose_loss_view2_AABB`、`shot_bce`、`shot_q0_loss`、`shot_noop_loss`、`shot_pointmap_keep_loss`。V5.1 需要补充针对跳变边界的显式 camera 监督。
+
+新增核心 loss：
+
+| Loss | 监督目标 |
+|------|----------|
+| `L_boundary_abs` | 明确监督 A2 和 B1 各自 absolute pose 算对 |
+| `L_jump_rel` | 监督 `relative(A2, B1)` 等于 GT 的真实跳变相对位姿 |
+| `L_anchor` | 监督 B1/B2 相对于 A2 接回同一个 world coordinate |
+
+重要澄清：`A2 -> B1` 是跳变边界，不是要求 A2 和 B1 位姿相同。正确监督是：
+
+```text
+relative(T_pred_A2, T_pred_B1) ≈ relative(T_gt_A2, T_gt_B1)
+```
+
+V5.1 首版暂不优先加入全相邻帧 `L_rel_all` 和 supervised residual loss，避免和 `L_jump_rel/L_anchor` 重复或增加调参复杂度。
+
+### 4. No-Harm 约束注意事项
+
+`shot_noop_loss` 和 `shot_pointmap_keep_loss` 需要避免阻止 AABB 的 B 段 correction。建议首版：
+
+```text
+noop 主要作用在 AAAA/Video 样本，或至少优先限制 is_video=True 的连续视频。
+pointmap keep 保留监控，如果 B 段 pose 修不动，再降低 keep/noop 权重。
+```
+
+### 5. V5.2 后备方案
+
+如果 V5.1 仍不能修复 AABB 跳变和 B 段 anchor，则进入 V5.2：改 decoder attention mask，让 ShotToken 真正作为受控 token 进入 decoder。
+
+V5.2 目标权限：
+
+```text
+pose token 可以 attend shot token
+image tokens 不能 attend shot token
+human tokens 默认不能 attend shot token
+shot token 不能自由污染 image/human tokens
+```
+
+当前工程难点是 `src/dust3r/blocks.py` 的 `Attention`、`CrossAttention`、`DecoderBlock` 没有暴露 `attn_mask` 参数，需要改底层 decoder block 和 `_decoder()` 调用链。该方案更接近理论正确做法，但工程量和回归风险更高，因此作为 V5.1 失败后的后备路线。
