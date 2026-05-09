@@ -433,6 +433,50 @@ class PoseAlignmentAdapter(nn.Module):
         return torch.cat([t_final, q_final], dim=-1), info
 
 
+class LayerwisePoseShotAdapter(nn.Module):
+    """
+    V5.1 Layerwise Pose-Shot Adapter - decoder 每层后只更新 pose token。
+
+    q_t 不作为普通 decoder token 拼入 image/human 序列，而是只作为 pose token
+    的受限条件；这样 ShotToken 可以更早影响 camera pose 形成过程，同时避免
+    image/human token 直接读取 q_t。
+    """
+
+    def __init__(self, dec_dim=768, rank=64, num_heads=8, scale_init=0.01):
+        super().__init__()
+        self.rank = rank
+        self.pose_norm = nn.LayerNorm(dec_dim)
+        self.context_norm = nn.LayerNorm(dec_dim)
+        self.cross_attn = nn.MultiheadAttention(
+            embed_dim=dec_dim,
+            num_heads=num_heads,
+            batch_first=True,
+        )
+        self.ffn = nn.Sequential(
+            nn.LayerNorm(dec_dim),
+            nn.Linear(dec_dim, rank),
+            nn.GELU(),
+            nn.Linear(rank, dec_dim),
+        )
+        self.pose_update_scale = nn.Parameter(torch.tensor(float(scale_init)))
+        nn.init.zeros_(self.ffn[-1].weight)
+        nn.init.zeros_(self.ffn[-1].bias)
+
+    def forward(self, pose_token, q_t):
+        """
+        Args:
+            pose_token: [B, 1, dec_dim] 当前 decoder layer 后的 pose token
+            q_t: [B, 1, dec_dim] ShotTokenGenerator 输出的 gated shot token
+        Returns:
+            pose_token_final: [B, 1, dec_dim]
+        """
+        pose_query = self.pose_norm(pose_token)
+        context = self.context_norm(torch.cat([pose_token, q_t], dim=1))
+        attn_out, _ = self.cross_attn(pose_query, context, context, need_weights=False)
+        delta_pose = self.ffn(attn_out)
+        return pose_token + self.pose_update_scale * delta_pose
+
+
 # **========== 原始代码备份：HumanLoRALayer（shape + transl 修正） ==========**
 # class HumanLoRALayer(nn.Module):
 #     """

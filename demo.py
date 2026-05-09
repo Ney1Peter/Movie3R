@@ -176,6 +176,11 @@ def parse_args():
         help="Disable V4 pose-only ShotToken alignment adapter for ablation.",
     )
     parser.add_argument(
+        "--disable_layerwise_pose_shot_adapter",
+        action="store_true",
+        help="Disable V5.1 layerwise pose-only ShotToken adapter for ablation.",
+    )
+    parser.add_argument(
         "--disable_pose_alignment_rotation",
         action="store_true",
         help="Keep camera rotation fixed in V4 pose alignment adapter.",
@@ -671,6 +676,9 @@ def run_inference(args):
     if args.disable_pose_alignment_adapter and hasattr(model, "enable_pose_alignment_adapter"):
         model.enable_pose_alignment_adapter = False
         print("PoseAlignmentAdapter disabled for ablation.")
+    if args.disable_layerwise_pose_shot_adapter and hasattr(model, "enable_layerwise_pose_shot_adapter"):
+        model.enable_layerwise_pose_shot_adapter = False
+        print("LayerwisePoseShotAdapter disabled for ablation.")
     if args.disable_pose_alignment_rotation and hasattr(model, "enable_pose_alignment_rotation"):
         model.enable_pose_alignment_rotation = False
         print("PoseAlignmentAdapter rotation disabled for ablation.")

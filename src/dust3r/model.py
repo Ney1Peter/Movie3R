@@ -57,7 +57,10 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== V3 当前代码备份：导入 translation-only adapter ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter
 # **========== 结束 ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter
+# **========== V4 原始代码备份：只导入 decoder 后 PoseAlignmentAdapter ==========**
+# from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter
+# **========== 结束 ==========**
+from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter, LayerwisePoseShotAdapter
 # **========== 结束 ==========**
 printer = get_logger(__name__, log_level="DEBUG")
 
@@ -180,6 +183,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         pose_align_delta_q_max=0.05,
         shot_pointmap_keep_loss_weight=1.0,
         shot_pose_residual_loss_weight=0.05,
+        shot_pose_layers="all",
+        layerwise_pose_shot_scale_init=0.01,
         **croco_kwargs,
     ):
         super().__init__()
@@ -213,6 +218,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.pose_align_delta_q_max = pose_align_delta_q_max
         self.shot_pointmap_keep_loss_weight = shot_pointmap_keep_loss_weight
         self.shot_pose_residual_loss_weight = shot_pose_residual_loss_weight
+        self.shot_pose_layers = shot_pose_layers
+        self.layerwise_pose_shot_scale_init = layerwise_pose_shot_scale_init
         self.croco_kwargs = croco_kwargs
 
 
@@ -481,6 +488,11 @@ class ARCroco3DStereo(CroCoNet):
             max_delta_t=config.pose_align_delta_t_max,
             max_delta_q=config.pose_align_delta_q_max,
         )
+        self.layerwise_pose_shot_adapter = LayerwisePoseShotAdapter(
+            dec_dim=self.dec_embed_dim,
+            rank=config.lora_rank,
+            scale_init=getattr(config, "layerwise_pose_shot_scale_init", 0.01),
+        )
         # **========== 结束 ==========**
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
@@ -508,12 +520,19 @@ class ARCroco3DStereo(CroCoNet):
         # self.enable_world_lora = False
         # **========== 结束 ==========**
         self.enable_shot_decoder_token = False
-        self.enable_pose_alignment_adapter = True
+        # **========== V4 原始代码备份：默认启用最终 pose alignment adapter ==========**
+        # self.enable_pose_alignment_adapter = True
+        # **========== 结束 ==========**
+        self.enable_layerwise_pose_shot_adapter = True
+        self.enable_pose_alignment_adapter = False
         self.enable_pose_alignment_rotation = True
         self.enable_pose_translation_adapter = False
         self.enable_pose_lora = False
         self.enable_human_lora = False
         self.enable_world_lora = False
+        self.shot_pose_layers = self._parse_shot_pose_layers(
+            getattr(config, "shot_pose_layers", "all")
+        )
         self.pose_delta_t_max = config.pose_delta_t_max
         self.pose_align_delta_t_max = config.pose_align_delta_t_max
         self.pose_align_delta_q_max = config.pose_align_delta_q_max
@@ -807,6 +826,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.human_lora,
                 self.world_lora,
                 self.pose_translation_adapter,
+                self.pose_alignment_adapter,
             ])
             # **========== V4 原始代码备份：只训练 ShotTokenGenerator 与 PoseAlignmentAdapter ==========**
             # for module in [
@@ -818,7 +838,7 @@ class ARCroco3DStereo(CroCoNet):
             # **========== 结束 ==========**
             for module in [
                 self.shot_token_generator,
-                self.pose_alignment_adapter,
+                self.layerwise_pose_shot_adapter,
             ]:
             # **========== 结束 ==========**
                 for p in module.parameters():
@@ -1044,7 +1064,42 @@ class ARCroco3DStereo(CroCoNet):
             [mhmr_out.chunk(len(views), dim=0) for mhmr_out in mhmr_full_out],
         )
 
-    def _decoder(self, f_state, pos_state, f_img, pos_img, f_pose, pos_pose, f_smpl, pos_smpl, f_shot=None, use_ttt3r=False):
+    def _parse_shot_pose_layers(self, spec):
+        if spec is None:
+            return set(range(self.dec_depth))
+        if isinstance(spec, str):
+            value = spec.strip().lower()
+            if value in {"", "none", "off", "false"}:
+                return set()
+            if value in {"all", "*"}:
+                return set(range(self.dec_depth))
+            if value in {"every2", "odd"}:
+                return set(range(1, self.dec_depth, 2))
+            if value == "even":
+                return set(range(0, self.dec_depth, 2))
+            if value in {"second_half", "last_half"}:
+                return set(range(self.dec_depth // 2, self.dec_depth))
+            if value.startswith("last"):
+                try:
+                    count = int(value[4:])
+                    return set(range(max(0, self.dec_depth - count), self.dec_depth))
+                except ValueError:
+                    return set(range(self.dec_depth))
+            return {int(v.strip()) for v in value.split(",") if v.strip()}
+        return {int(v) for v in spec}
+
+    def _apply_layerwise_pose_shot(self, f_img, q_t, layer_idx):
+        if q_t is None:
+            return f_img
+        if not getattr(self, "enable_layerwise_pose_shot_adapter", False):
+            return f_img
+        if layer_idx not in getattr(self, "shot_pose_layers", set()):
+            return f_img
+        pose_token = f_img[:, 0:1]
+        pose_token = self.layerwise_pose_shot_adapter(pose_token, q_t)
+        return torch.cat([pose_token, f_img[:, 1:]], dim=1)
+
+    def _decoder(self, f_state, pos_state, f_img, pos_img, f_pose, pos_pose, f_smpl, pos_smpl, f_shot=None, f_pose_shot=None, use_ttt3r=False):
         final_output = [(f_state, f_img)]  # before projection
         assert f_state.shape[-1] == self.dec_embed_dim
         f_img = self.decoder_embed(f_img)
@@ -1070,7 +1125,7 @@ class ARCroco3DStereo(CroCoNet):
             pos_img = torch.cat([pos_img, pos_shot], dim=1)
         final_output.append((f_state, f_img))
         cross_attn_states = []
-        for blk_state, blk_img in zip(self.dec_blocks_state, self.dec_blocks):
+        for layer_idx, (blk_state, blk_img) in enumerate(zip(self.dec_blocks_state, self.dec_blocks)):
             if (
                 self.gradient_checkpointing
                 and self.training
@@ -1096,6 +1151,7 @@ class ARCroco3DStereo(CroCoNet):
                 f_state, _, cross_attn_state = blk_state(*final_output[-1][::+1], pos_state, pos_img, use_ttt3r=use_ttt3r)
                 f_img, _, _ = blk_img(*final_output[-1][::-1], pos_img, pos_state, use_ttt3r=False)
 
+            f_img = self._apply_layerwise_pose_shot(f_img, f_pose_shot, layer_idx)
             final_output.append((f_state, f_img))
             cross_attn_states.append(cross_attn_state)
 
@@ -1135,10 +1191,12 @@ class ARCroco3DStereo(CroCoNet):
         reset_mask=None,
         update=None,
         f_shot=None,
+        f_pose_shot=None,
         use_ttt3r=False,
     ):
         (new_state_feat, dec), cross_attn_states = self._decoder(
-            state_feat, state_pos, current_feat, current_pos, pose_feat, pose_pos, smpl_feat, smpl_pos, f_shot, use_ttt3r
+            state_feat, state_pos, current_feat, current_pos, pose_feat, pose_pos, smpl_feat, smpl_pos,
+            f_shot=f_shot, f_pose_shot=f_pose_shot, use_ttt3r=use_ttt3r
         )
         new_state_feat = new_state_feat[-1]
         return new_state_feat, dec, cross_attn_states
@@ -1584,6 +1642,10 @@ class ARCroco3DStereo(CroCoNet):
             # 消融用：q_t 可以只作为 LoRA condition，不进入 decoder attention。
             q_cond = q_tokens[i] if self.enable_shot_adaptation else None
             f_shot = q_cond if use_shot_decoder_token else None
+            f_pose_shot = q_cond if (
+                self.enable_shot_adaptation
+                and getattr(self, "enable_layerwise_pose_shot_adapter", False)
+            ) else None
 
             new_state_feat, dec, _ = self._recurrent_rollout(
                 state_for_recurrent,
@@ -1599,6 +1661,7 @@ class ARCroco3DStereo(CroCoNet):
                 reset_mask=views[i]["reset"],
                 update=views[i].get("update", None),
                 f_shot=f_shot,
+                f_pose_shot=f_pose_shot,
             )
             out_pose_feat_i = dec[-1][:, 0:1]   # After Cross-Attention, refined pose feat: [b, 1, 768]
             new_mem = self.pose_retriever.update_mem(
@@ -1709,7 +1772,7 @@ class ARCroco3DStereo(CroCoNet):
                 #     )
                 #     res.update(pose_align_info)
                 # **========== 结束 ==========**
-                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", False) and 'camera_pose' in res:
                     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
                         z_out,
                         q_out,
@@ -1936,6 +1999,7 @@ class ARCroco3DStereo(CroCoNet):
             pos_i = img_pos
             f_shot = None
             q_cond = None
+            f_pose_shot = None
             shot_info = None
             if self.enable_shot_adaptation:
                 # **========== Layer 1 原始代码备份：inference generator 只返回 q_t ==========**
@@ -1957,6 +2021,8 @@ class ARCroco3DStereo(CroCoNet):
                 q_cond = f_shot
                 if not use_shot_decoder_token:
                     f_shot = None
+                if getattr(self, "enable_layerwise_pose_shot_adapter", False):
+                    f_pose_shot = q_cond
             
             # MHMR vit
             imgs_mhmr = view["img_mhmr"].unsqueeze(0)  # Shape: (1, batch_size, C, H, W)
@@ -2087,6 +2153,7 @@ class ARCroco3DStereo(CroCoNet):
                 reset_mask=view["reset"],
                 update=view.get("update", None),
                 f_shot=f_shot,
+                f_pose_shot=f_pose_shot,
                 use_ttt3r=use_ttt3r,
             )
             out_pose_feat_i = dec[-1][:, 0:1]
@@ -2192,7 +2259,7 @@ class ARCroco3DStereo(CroCoNet):
                 #     )
                 #     res.update(pose_align_info)
                 # **========== 结束 ==========**
-                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", True) and 'camera_pose' in res:
+                if q_out is not None and getattr(self, "enable_pose_alignment_adapter", False) and 'camera_pose' in res:
                     res['camera_pose'], pose_align_info = self.pose_alignment_adapter(
                         z_out,
                         q_out,
