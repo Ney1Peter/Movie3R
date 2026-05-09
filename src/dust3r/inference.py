@@ -205,6 +205,12 @@ def _compute_shot_noop_loss(batch, preds_on, preds_off, model):
         if ref_tensor is None:
             continue
 
+        # **========== V4 原始代码备份：no-op 只按 shot_label=0 筛连续帧，不区分 Video/AABB ==========**
+        # shot_label = _as_shot_label(view, ref_tensor)
+        # if shot_label is None:
+        #     continue
+        # cont_mask = (shot_label < 0.5).float()
+        # **========== 结束 ==========**
         shot_label = _as_shot_label(view, ref_tensor)
         if shot_label is None:
             continue
@@ -241,6 +247,18 @@ def _compute_shot_pointmap_keep_loss(preds_on, preds_off, model):
     if weight <= 0 or preds_off is None:
         return None, {}
 
+    # **========== V4 原始代码备份：pointmap keep 对所有样本和所有帧生效 ==========**
+    # component_losses = []
+    # component_details = {}
+    # for pred_on, pred_off in zip(preds_on, preds_off):
+    #     for key in ["pts3d_in_self_view", "pts3d_in_other_view"]:
+    #         if key not in pred_on or key not in pred_off:
+    #             continue
+    #         diff = (pred_on[key].float() - pred_off[key].float().detach()).abs()
+    #         comp_loss = diff.reshape(diff.shape[0], -1).mean(dim=1).mean()
+    #         component_losses.append(comp_loss)
+    #         component_details.setdefault(key, []).append(comp_loss.detach())
+    # **========== 结束 ==========**
     component_losses = []
     component_details = {}
     for pred_on, pred_off in zip(preds_on, preds_off):
@@ -272,6 +290,22 @@ def _compute_shot_pose_residual_loss(preds, model):
     if weight <= 0:
         return None, {}
 
+    # **========== V4 原始代码备份：只正则 delta_t/delta_q 大小，不做 supervised residual ==========**
+    # t_losses, q_losses = [], []
+    # t_norms, q_norms = [], []
+    # for pred in preds:
+    #     delta_t = pred.get("shot_pose_delta_t", None)
+    #     if delta_t is not None:
+    #         delta_t = delta_t.float()
+    #         t_losses.append(delta_t.pow(2).mean())
+    #         t_norms.append(delta_t.detach().norm(dim=-1).mean())
+    #
+    #     delta_q = pred.get("shot_pose_delta_q", None)
+    #     if delta_q is not None:
+    #         delta_q = delta_q.float()
+    #         q_losses.append(delta_q.pow(2).mean())
+    #         q_norms.append(delta_q.detach().norm(dim=-1).mean())
+    # **========== 结束 ==========**
     t_losses, q_losses = [], []
     t_norms, q_norms = [], []
     for pred in preds:
