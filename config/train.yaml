@@ -49,7 +49,8 @@ model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='shot_adaptation',
   backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.1,
   shot_q0_loss_weight=0.1, shot_scale_init=0.05, shot_noop_loss_weight=1.0,
   pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
-  shot_pointmap_keep_loss_weight=1.0, shot_pose_residual_loss_weight=0.05))
+  shot_pointmap_keep_loss_weight=1.0, shot_pose_residual_loss_weight=0.05,
+  shot_pose_layers='all', layerwise_pose_shot_scale_init=0.01))
 pretrained: /workspace/code/Movie3R/src/human3r_896L.pth
 pretrained_mhmr: null
 load_only_encoder: False
