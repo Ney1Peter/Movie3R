@@ -73,6 +73,21 @@ def _as_shot_label(view, ref_tensor):
     return shot_label
 
 
+def _as_is_video(view, ref_tensor):
+    is_video = view.get("is_video", None)
+    if is_video is None:
+        return None
+    if torch.is_tensor(is_video):
+        is_video = is_video.to(device=ref_tensor.device)
+    else:
+        is_video = torch.as_tensor(is_video, device=ref_tensor.device)
+    is_video = is_video.reshape(-1).bool()
+    target_numel = ref_tensor.shape[0] if ref_tensor.ndim > 0 else ref_tensor.numel()
+    if is_video.numel() == 1 and target_numel > 1:
+        is_video = is_video.expand(target_numel)
+    return is_video
+
+
 def _compute_shot_bce_loss(batch, preds, model):
     base_model = _unwrap_model(model)
     weight = float(getattr(base_model, "shot_loss_weight", 0.0))
@@ -215,6 +230,9 @@ def _compute_shot_noop_loss(batch, preds_on, preds_off, model):
         if shot_label is None:
             continue
         cont_mask = (shot_label < 0.5).float()
+        is_video = _as_is_video(view, ref_tensor)
+        if is_video is not None:
+            cont_mask = cont_mask * is_video.float()
         if cont_mask.sum() <= 0:
             continue
 
@@ -241,7 +259,7 @@ def _compute_shot_noop_loss(batch, preds_on, preds_off, model):
     return noop_loss * weight, details
 
 
-def _compute_shot_pointmap_keep_loss(preds_on, preds_off, model):
+def _compute_shot_pointmap_keep_loss(batch, preds_on, preds_off, model):
     base_model = _unwrap_model(model)
     weight = float(getattr(base_model, "shot_pointmap_keep_loss_weight", 0.0))
     if weight <= 0 or preds_off is None:
@@ -261,12 +279,20 @@ def _compute_shot_pointmap_keep_loss(preds_on, preds_off, model):
     # **========== 结束 ==========**
     component_losses = []
     component_details = {}
-    for pred_on, pred_off in zip(preds_on, preds_off):
+    for view, pred_on, pred_off in zip(batch, preds_on, preds_off):
         for key in ["pts3d_in_self_view", "pts3d_in_other_view"]:
             if key not in pred_on or key not in pred_off:
                 continue
             diff = (pred_on[key].float() - pred_off[key].float().detach()).abs()
-            comp_loss = diff.reshape(diff.shape[0], -1).mean(dim=1).mean()
+            per_sample = diff.reshape(diff.shape[0], -1).mean(dim=1)
+            is_video = _as_is_video(view, per_sample)
+            if is_video is not None:
+                video_mask = is_video.float()
+                if video_mask.sum() <= 0:
+                    continue
+                comp_loss = (per_sample * video_mask).sum() / video_mask.sum().clamp_min(1.0)
+            else:
+                comp_loss = per_sample.mean()
             component_losses.append(comp_loss)
             component_details.setdefault(key, []).append(comp_loss.detach())
 
@@ -394,7 +420,7 @@ def loss_of_one_batch(
             preds, batch = output.ress, output.views
             preds_off = _compute_shot_off_preds(batch, model)
             noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
-            pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(preds, preds_off, model)
+            pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(batch, preds, preds_off, model)
             pose_residual_loss, pose_residual_details = _compute_shot_pose_residual_loss(preds, model)
 
         # **========== Layer 1 原始代码备份：训练 loss 仅来自主 criterion ==========**

@@ -1353,12 +1353,95 @@ class Regr3DPoseBatchList(Regr3DPose):
         gt_scale=False,
         sky_loss_value=2,
         max_metric_scale=False,
+        shot_boundary_abs_weight=0.0,
+        shot_jump_rel_weight=0.0,
+        shot_anchor_weight=0.0,
     ):
         super().__init__(
             criterion, norm_mode, gt_scale, sky_loss_value, max_metric_scale
         )
         self.depth_only_criterion = DepthScaleShiftInvLoss()
         self.single_view_criterion = ScaleInvLoss()
+        self.shot_boundary_abs_weight = float(shot_boundary_abs_weight)
+        self.shot_jump_rel_weight = float(shot_jump_rel_weight)
+        self.shot_anchor_weight = float(shot_anchor_weight)
+
+    def _pose_abs_components(self, gt_poses, pr_poses, view_idx, mask):
+        gt_trans = gt_poses[view_idx][0][mask]
+        gt_quat = gt_poses[view_idx][1][mask]
+        pr_trans = pr_poses[view_idx][0][mask]
+        pr_quat = pr_poses[view_idx][1][mask]
+        t_err = torch.norm(pr_trans - gt_trans, dim=-1)
+        q_err = torch.norm(pr_quat - gt_quat, dim=-1)
+        return t_err.mean(), q_err.mean()
+
+    def _pose_rel_components(self, gt_poses, pr_poses, src_idx, dst_idx, mask):
+        gt_rel_trans, gt_rel_quat = relative_pose_absT_quatR(
+            gt_poses[src_idx][0][mask],
+            gt_poses[src_idx][1][mask],
+            gt_poses[dst_idx][0][mask],
+            gt_poses[dst_idx][1][mask],
+        )
+        pr_rel_trans, pr_rel_quat = relative_pose_absT_quatR(
+            pr_poses[src_idx][0][mask],
+            pr_poses[src_idx][1][mask],
+            pr_poses[dst_idx][0][mask],
+            pr_poses[dst_idx][1][mask],
+        )
+        t_err = torch.norm(pr_rel_trans - gt_rel_trans, dim=-1)
+        q_err = torch.norm(pr_rel_quat - gt_rel_quat, dim=-1)
+        return t_err.mean(), q_err.mean()
+
+    def _add_v5_shot_pose_losses(self, details, gt_poses, pr_poses, pose_masks, is_video):
+        if len(gt_poses) < 4 or len(pr_poses) < 4:
+            return details
+        is_aabb_mask = (~is_video) & pose_masks.bool()
+        if not is_aabb_mask.any():
+            return details
+
+        zero = gt_poses[0][0].new_tensor(0.0)
+        extra_pose_loss = zero
+
+        a2_t_err, a2_q_err = self._pose_abs_components(gt_poses, pr_poses, 1, is_aabb_mask)
+        b1_t_err, b1_q_err = self._pose_abs_components(gt_poses, pr_poses, 2, is_aabb_mask)
+        boundary_abs_loss = a2_t_err + a2_q_err + b1_t_err + b1_q_err
+        view2_pose_loss = b1_t_err + b1_q_err
+        details.update({
+            "pose_loss_view2_AABB": float(view2_pose_loss.detach()),
+            "shot_boundary_abs_loss": float(boundary_abs_loss.detach()),
+            "shot_boundary_abs_loss_weighted": float((boundary_abs_loss * self.shot_boundary_abs_weight).detach()),
+            "shot_boundary_abs_t_err": float(((a2_t_err + b1_t_err) * 0.5).detach()),
+            "shot_boundary_abs_q_err": float(((a2_q_err + b1_q_err) * 0.5).detach()),
+        })
+        extra_pose_loss = extra_pose_loss + self.shot_boundary_abs_weight * boundary_abs_loss
+
+        jump_t_err, jump_q_err = self._pose_rel_components(gt_poses, pr_poses, 1, 2, is_aabb_mask)
+        jump_rel_loss = jump_t_err + jump_q_err
+        details.update({
+            "shot_jump_rel_loss": float(jump_rel_loss.detach()),
+            "shot_jump_rel_loss_weighted": float((jump_rel_loss * self.shot_jump_rel_weight).detach()),
+            "shot_jump_t_err": float(jump_t_err.detach()),
+            "shot_jump_q_err": float(jump_q_err.detach()),
+        })
+        extra_pose_loss = extra_pose_loss + self.shot_jump_rel_weight * jump_rel_loss
+
+        anchor2_t_err, anchor2_q_err = self._pose_rel_components(gt_poses, pr_poses, 1, 2, is_aabb_mask)
+        anchor3_t_err, anchor3_q_err = self._pose_rel_components(gt_poses, pr_poses, 1, 3, is_aabb_mask)
+        anchor_view2_loss = anchor2_t_err + anchor2_q_err
+        anchor_view3_loss = anchor3_t_err + anchor3_q_err
+        anchor_loss = 0.5 * (anchor_view2_loss + anchor_view3_loss)
+        details.update({
+            "shot_anchor_loss": float(anchor_loss.detach()),
+            "shot_anchor_loss_weighted": float((anchor_loss * self.shot_anchor_weight).detach()),
+            "shot_anchor_t_err": float((0.5 * (anchor2_t_err + anchor3_t_err)).detach()),
+            "shot_anchor_q_err": float((0.5 * (anchor2_q_err + anchor3_q_err)).detach()),
+            "shot_anchor_view2_t_err": float(anchor2_t_err.detach()),
+            "shot_anchor_view3_t_err": float(anchor3_t_err.detach()),
+        })
+        extra_pose_loss = extra_pose_loss + self.shot_anchor_weight * anchor_loss
+
+        details["pose_loss"] = details["pose_loss"] + extra_pose_loss
+        return details
 
     def reorg(self, ls_b, masks_b):
         ids_split = [mask.sum(dim=(1, 2)) for mask in masks_b]
@@ -1535,25 +1618,29 @@ class Regr3DPoseBatchList(Regr3DPose):
         #     details["pose_loss_view2_AABB"] = float(view2_pose_loss)
         #     details["pose_loss"] = details["pose_loss"] + view2_pose_loss
         # **========== 结束 ==========**
-        # ===== AABB view2 pose loss =====
-        # AABB: view0,view1 from camA, view2,view3 from camB
-        # 对 AABB 数据的 view2（第一个 B 帧）单独计算 pose L2 loss
-        # gts[0]["is_video"] = True for Video, False for AABB
+        # **========== V4 原始代码备份：实际运行的 view2/B1 absolute pose 加权 ==========**
+        # # ===== AABB view2 pose loss =====
+        # # AABB: view0,view1 from camA, view2,view3 from camB
+        # # 对 AABB 数据的 view2（第一个 B 帧）单独计算 pose L2 loss
+        # # gts[0]["is_video"] = True for Video, False for AABB
+        # is_video = gts[0]["is_video"]
+        # if not is_video.all():
+        #     is_aabb_mask = ~is_video
+        #     gt_trans_view2 = gt_poses[2][0][is_aabb_mask]
+        #     gt_quat_view2 = gt_poses[2][1][is_aabb_mask]
+        #     pr_trans_view2 = pr_poses[2][0][is_aabb_mask]
+        #     pr_quat_view2 = pr_poses[2][1][is_aabb_mask]
+        #     view2_pose_loss = (
+        #         torch.norm(pr_trans_view2 - gt_trans_view2, dim=-1).mean()
+        #         + torch.norm(pr_quat_view2 - gt_quat_view2, dim=-1).mean()
+        #     )
+        #     details["pose_loss_view2_AABB"] = float(view2_pose_loss)
+        #     details["pose_loss"] = details["pose_loss"] + view2_pose_loss
+        # **========== 结束 ==========**
         is_video = gts[0]["is_video"]
-        if not is_video.all():
-            is_aabb_mask = ~is_video
-            # gt_poses[2] 和 pr_poses[2] 是 tuple (trans: Bx3, quat: Bx4)
-            gt_trans_view2 = gt_poses[2][0][is_aabb_mask]
-            gt_quat_view2 = gt_poses[2][1][is_aabb_mask]
-            pr_trans_view2 = pr_poses[2][0][is_aabb_mask]
-            pr_quat_view2 = pr_poses[2][1][is_aabb_mask]
-            view2_pose_loss = (
-                torch.norm(pr_trans_view2 - gt_trans_view2, dim=-1).mean()
-                + torch.norm(pr_quat_view2 - gt_quat_view2, dim=-1).mean()
-            )
-            details["pose_loss_view2_AABB"] = float(view2_pose_loss)
-            # 添加到总 pose_loss（一起监督）
-            details["pose_loss"] = details["pose_loss"] + view2_pose_loss
+        details = self._add_v5_shot_pose_losses(
+            details, gt_poses, pr_poses, pose_masks, is_video
+        )
 
         return Sum(*list(zip(ls, masks))), (details | monitoring)
 

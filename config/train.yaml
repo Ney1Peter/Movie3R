@@ -58,7 +58,7 @@ n_corres_test: 0
 # **========== V4 原始配置备份：主 criterion 只含基础 Regr3DPoseBatchList，无 jump/anchor loss 权重 ==========**
 # train_criterion: ConfLoss(Regr3DPoseBatchList(L21, norm_mode='?avg_dis'), alpha=0.2) + RGBLoss(MSE) + SMPLLoss(L1)
 # **========== 结束 ==========**
-train_criterion: ConfLoss(Regr3DPoseBatchList(L21, norm_mode='?avg_dis'), alpha=0.2) + RGBLoss(MSE) + SMPLLoss(L1)
+train_criterion: ConfLoss(Regr3DPoseBatchList(L21, norm_mode='?avg_dis', shot_boundary_abs_weight=2.0, shot_jump_rel_weight=3.0, shot_anchor_weight=1.0), alpha=0.2) + RGBLoss(MSE) + SMPLLoss(L1)
 test_criterion: Regr3DPose(L21, norm_mode='?avg_dis', gt_scale=True, sky_loss_value=0) + Regr3DPose_ScaleInv(L21, norm_mode='?avg_dis', gt_scale=True, sky_loss_value=0) + RGBLoss(L21) + SMPLLoss(L1)
 
 resolution:
@@ -282,6 +282,9 @@ console_log_keys:
 - rgb_loss_avg
 - pose_loss
 - smpl_transl_avg
+- shot_boundary_abs_loss
+- shot_jump_rel_loss
+- shot_anchor_loss
 - shot_bce
 - shot_acc
 - shot_prob_gap
@@ -301,6 +304,17 @@ step_log_keys:
 - rgb_loss_avg
 - pose_loss
 - pose_loss_view2_AABB
+- shot_boundary_abs_loss
+- shot_boundary_abs_t_err
+- shot_boundary_abs_q_err
+- shot_jump_rel_loss
+- shot_jump_t_err
+- shot_jump_q_err
+- shot_anchor_loss
+- shot_anchor_t_err
+- shot_anchor_q_err
+- shot_anchor_view2_t_err
+- shot_anchor_view3_t_err
 - smpl_scores_avg
 - smpl_rotmat_avg
 - smpl_transl_avg
