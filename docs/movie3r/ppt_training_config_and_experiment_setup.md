@@ -103,3 +103,56 @@
 **总述：当前梯度更新没有使用梯度累积。**
 
 分开来说，`accum_iter=1`，所以每个训练 step 都会完成一次 `backward + optimizer step + zero_grad`；V4 30 epoch 对应约 `1500` 次实际参数更新，V5.1 5 epoch 对应约 `1000` 次实际参数更新。
+
+## 2. 后续两种主流改进思路及可能问题
+
+### 2.1 思路一：修改 ShotToken，让它变成 local background anchor
+
+**总述：这条路线的核心是把 ShotToken 从“全局命令”改成“局部场景证据”。**
+
+分开来说，不再让一个 token 负责所有镜头跳变信息，而是从静态背景里提取多个 anchor，例如墙角、门框、地面纹理，让 camera 根据多个局部证据共同推理对齐关系。
+
+- 问题一：最难的是如何稳定找到可信的 static background anchor，因为电影画面里人、遮挡和动态物体很多。
+- 问题二：anchor 不能选到人体上，否则模型会把动态人体误当作静态世界点来对齐 camera。
+- 问题三：低纹理区域很难作为 anchor，例如白墙、天空、模糊地面通常没有足够可靠的匹配信息。
+- 问题四：跨镜头不一定有足够 overlap，如果 A 镜头和 B 镜头几乎没有共同背景，强行 re-anchor 可能会拉错 camera。
+- 问题五：逐 patch 提取比逐帧提取更精细，但会带来更多 token、更高计算量和更复杂的筛选逻辑。
+- 问题六：anchor 的置信度需要额外估计，否则模型不知道哪些局部匹配可信、哪些匹配应该忽略。
+- 问题七：如果像 Human3R 提取人头一样提取背景 anchor，需要一个可靠的“背景关键点/静态区域”检测器，但这个模块目前还没有现成答案。
+- 问题八：可以引入冻结的 DINOv2、SAM、LightGlue 或 MASt3R 辅助提取 anchor，但会增加工程复杂度和推理成本。
+- 问题九：anchor token 如果仍然能被 image/human token 随意读取，依然可能污染 pointmap 和人体分支。
+- 问题十：local anchor 只提供局部匹配证据，不应该直接预测完整 camera correction，否则又会变成另一个全局控制器。
+
+### 2.2 思路二：增加 attention mask，限制 token 之间的交互权限
+
+**总述：这条路线的核心是控制“谁能看谁”，防止 ShotToken 或 anchor token 干扰不该改动的分支。**
+
+分开来说，可以在 decoder 内增加 attention mask，让 anchor token 只和 pose token 交互，不让 image token 和 human token 直接读取它。
+
+```text
+anchor token <-> pose token: yes
+anchor token <-> image token: no
+anchor token <-> human token: no
+```
+
+- 问题一：当前 decoder attention 原生不支持 mask，需要修改 `Attention`、`CrossAttention`、`DecoderBlock` 和 `_decoder()` 调用链。
+- 问题二：如果只是在 attention 里加 mask、不改变参数形状，理论上不会破坏预训练权重的加载。
+- 问题三：虽然预训练权重还能加载，但 attention 路由变了，模型行为仍然可能和原始预训练分布不完全一致。
+- 问题四：mask 如果设计太严格，pose token 可能拿不到足够上下文，camera correction 的能力会受限。
+- 问题五：mask 如果设计太宽松，anchor token 仍然可能泄露到 image/human 分支，继续造成背景或人体污染。
+- 问题六：加入新 token 后，即使 mask 做对了，也要确认原本 image token 之间的 attention 没有被意外改变。
+- 问题七：attention mask 会增加代码路径复杂度，需要额外测试 shot on/off、连续帧、跳变帧三类情况。
+- 问题八：mask 本身不能提供更好的几何证据，它只能减少污染，不能解决 global token 信息太粗的问题。
+- 问题九：如果 anchor token 的内容本身是错的，mask 只能限制错误影响范围，不能保证 pose correction 正确。
+- 问题十：masked decoder 工程量比 pose-only adapter 更大，因此更适合作为 V6 后半阶段，而不是第一步就全量改。
+
+### 2.3 两种方法结合
+
+**总述：最理想的长期方案是两种方法一起用：local anchor 解决“token 表达什么”，attention mask 解决“token 能影响谁”。**
+
+分开来说，local anchor 提供更可靠的局部背景匹配证据，attention mask 保证这些证据只服务 camera / pose，不直接污染 image、human 和 pointmap。
+
+- 问题一：两种方法一起做效果可能最好，但工程风险也最大，因为同时改 token 来源和 decoder attention。
+- 问题二：建议先做安全版 local anchor + pose-only adapter，验证 anchor evidence 是否有效。
+- 问题三：如果 anchor evidence 有效，再加入 attention mask，让 anchor token 更安全地进入 decoder。
+- 问题四：最终目标不是让一个 token 直接“命令相机怎么动”，而是让多个局部背景证据帮助 camera 自己推理对齐。
