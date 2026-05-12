@@ -45,8 +45,8 @@ V2 在训练指标上看起来是能学的，比如 shot classification 相关 l
 我们专门构造了训练集内连续时间相机切换视频：
 
 ```text
-A 段：/workspace/data/avatarrex_zzr_output/Training/22010708/rgb/00000300.png - 00000304.png
-B 段：/workspace/data/avatarrex_zzr_output/Training/22010710/rgb/00000305.png - 00000309.png
+A 段：/workspace/data/Avatarrex/avatarrex_zzr_output/Training/22010708/rgb/00000300.png - 00000304.png
+B 段：/workspace/data/Avatarrex/avatarrex_zzr_output/Training/22010710/rgb/00000305.png - 00000309.png
 ```
 
 这个视频不是训练集外泛化测试，而是训练分布内的 A5B5 相机切换测试。V2 在这个视频上仍然失败，说明问题主要不在数据分布，而在结构设计。
@@ -119,6 +119,39 @@ V4 30 epoch 权重目录是：
 | B 段平均 translation error | 2.7805 | 2.4469 | 改善约 12% |
 | 全段平均 translation error | 1.4174 | 1.2512 | 改善约 12% |
 | 跳变边界 4->5 translation error | 2.1122 | 1.8516 | 改善约 12% |
+
+这里的 `translation error` 是三维平移向量误差的 L2 norm，不是单独某一个方向的误差。因为 `T_rel[i] = inv(T[0]) @ T[i]`，所以平移向量都表达在第 0 帧相机坐标系下。
+
+坐标方向按 Human3R / AvatarReX 当前 camera convention 理解为：
+
+```text
+x: 第 0 帧相机图像向右
+y: 第 0 帧相机图像向下
+z: 第 0 帧相机光轴向前
+```
+
+V4 per-axis 误差补充如下。表中 `mean |dx|/|dy|/|dz|` 是逐帧绝对误差均值，单位与 camera translation 一致。
+
+| 区间 | 模式 | mean abs dx | mean abs dy | mean abs dz | mean L2 |
+|---|---|---:|---:|---:|---:|
+| A 段 0-4 | Shot Off | 0.0045 | 0.0013 | 0.0539 | 0.0542 |
+| A 段 0-4 | Shot On | 0.0047 | 0.0030 | 0.0549 | 0.0555 |
+| B 段 5-9 | Shot Off | 1.9021 | 1.7787 | 0.8844 | 2.7805 |
+| B 段 5-9 | Shot On | 1.6530 | 1.5290 | 0.8704 | 2.4469 |
+| 全段 0-9 | Shot Off | 0.9533 | 0.8900 | 0.4692 | 1.4174 |
+| 全段 0-9 | Shot On | 0.8288 | 0.7660 | 0.4627 | 1.2512 |
+
+跳变边界 `4 -> 5` 的 translation vector 对比如下：
+
+| 项 | x | y | z | L2 |
+|---|---:|---:|---:|---:|
+| GT jump | 0.2666 | -1.8634 | -0.2356 | - |
+| Shot Off jump | -0.7003 | -0.0188 | 0.1266 | - |
+| Shot On jump | -0.4604 | -0.2726 | 0.3751 | - |
+| Shot Off jump error | 0.9669 | 1.8445 | 0.3621 | 2.1138 |
+| Shot On jump error | 0.7269 | 1.5908 | 0.6107 | 1.8526 |
+
+从 per-axis 看，V4 的主要改善来自 `x` 和 `y` 方向，尤其 `y` 方向的 jump 从 `-0.02` 被拉到 `-0.27`，更接近 GT 的 `-1.86`。但 `z` 方向反而变差一些，因此 V4 只是把 camera jump 往正确方向拉了一点，并没有真正学会完整的跨镜头对齐。
 
 也就是说，V4 确实把 B 段 camera pose 往正确方向拉了一点，但改善幅度不大，肉眼上不一定明显。
 

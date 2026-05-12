@@ -101,7 +101,30 @@ optimizer, model, data_loader = accelerator.prepare(
 
 当前正式训练使用 `lora_rank=64`。旧 LoRA checkpoint 与当前 V1 HumanLoRA 结构不完全兼容，不建议继续使用。
 
-### 3.0.1 LoRA64 正式训练复盘（2026/05/07）
+### 3.0.1 RICH / DA3 深度使用边界（2026/05/12）
+
+RICH 当前 `depth/*.npy` 来自 Depth Anything 生成，不是官方 metric GT depth。它可以作为单图或同视角的弱几何先验，但不能作为跨相机 camera/world 对齐的 GT。
+
+推荐使用方式：
+
+```text
+1. 可用于 scale/shift-invariant depth 形状监督。
+2. 可用于局部 depth ranking、edge/normal consistency、单图几何 regularization。
+3. 可用于辅助 mask / foreground-background 结构判断，但需要低权重和鲁棒 loss。
+```
+
+不推荐使用方式：
+
+```text
+1. 不要把 DA3 depth 直接反投影成跨相机 GT 3D 点。
+2. 不要用 DA3 depth 监督 shot-change 后的 absolute camera translation。
+3. 不要用 DA3 depth 判断 XFeat cross-camera match 是否是真实 3D inlier。
+4. 不要把同相机连续帧 depth projection sanity 当作跨相机几何正确性的证据。
+```
+
+如果训练目标是 RICH 跨镜头静态背景 re-anchor，应优先使用官方 scan mesh 渲染的背景深度 / 可见点，或使用 mesh geometry 过滤后的 sparse anchors。DA3 depth 只有经过 mesh/SfM 对齐、尺度校准和可见性验证后，才适合作为更强的几何监督。
+
+### 3.0.2 LoRA64 正式训练复盘（2026/05/07）
 
 **实验目录**：`experiments/formal_training-4gpu-lora-64`
 
@@ -132,7 +155,7 @@ optimizer, model, data_loader = accelerator.prepare(
 - 训练后 `q_t` 有一定跳变响应，但 `q_norm` 连续/跳变都约 `62`，约为 decoder image token norm 的 `2.75x`
 - 主要问题是 `q_t` 过强且连续帧不是 no-op，而不是数据或输入特征不可分
 
-### 3.0.2 下一版训练约束建议
+### 3.0.3 下一版训练约束建议
 
 下一版应把 shot token 从“无约束 prompt”改为“带显式 shot 监督和强度 gate 的 prompt”。
 
