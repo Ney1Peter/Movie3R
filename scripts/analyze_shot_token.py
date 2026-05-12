@@ -21,9 +21,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model_path", default=None, help="Model/checkpoint path. Omit for label-only checks.")
     parser.add_argument("--roots", nargs="+", default=[
-        "/workspace/data/avatarrex_zzr_output",
-        "/workspace/data/avatarrex_lbn1_output",
-        "/workspace/data/avatarrex_zxc_output",
+        "/workspace/data/Avatarrex/avatarrex_zzr_output",
+        "/workspace/data/Avatarrex/avatarrex_lbn1_output",
+        "/workspace/data/Avatarrex/avatarrex_zxc_output",
     ])
     parser.add_argument("--num_samples", type=int, default=20, help="Samples per dataset/root.")
     parser.add_argument("--seed", type=int, default=0)

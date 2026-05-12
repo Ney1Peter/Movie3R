@@ -34,7 +34,7 @@ DEFAULT_MODEL = (
     REPO_ROOT
     / "experiments/training-4gpu-bz24-30ep-shot-v5_1-last2-20260510-095305/checkpoint-final.pth"
 )
-DEFAULT_ROOT = Path("/workspace/data/avatarrex_zzr_output")
+DEFAULT_ROOT = Path("/workspace/data/Avatarrex/avatarrex_zzr_output")
 DEFAULT_OUTPUT = REPO_ROOT / "output/anchor_mvp_internal/a5b5_0304_0305"
 
 
