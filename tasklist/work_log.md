@@ -1888,3 +1888,171 @@ shot token 不能自由污染 image/human tokens
 ```
 
 当前工程难点是 `src/dust3r/blocks.py` 的 `Attention`、`CrossAttention`、`DecoderBlock` 没有暴露 `attn_mask` 参数，需要改底层 decoder block 和 `_decoder()` 调用链。该方案更接近理论正确做法，但工程量和回归风险更高，因此作为 V5.1 失败后的后备路线。
+
+---
+
+## 2026/05/13
+
+### 1. RICH AABB Step1：外部 anchor 能映射回 Human3R encoder patch token
+
+验证目标：不修改 encoder / decoder，只确认 XFeat semi-dense + RICH official mesh 得到的真实静态背景 anchors，是否能在原版 Human3R encoder output patch token 中被重新找到。
+
+核心流程：
+
+```text
+RICH_4Human3R/Training AABB
+-> XFeat semi-dense matches
+-> RICH scan mesh + XML calibration 验证 static background anchors
+-> 2D anchor 映射到 Human3R crop / patch grid
+-> 比较 positive anchor patch token cosine 与 random negative
+```
+
+新增脚本：
+
+```text
+scripts/verify_rich_anchor_encoder_similarity.py
+scripts/verify_rich_aabb_anchor_step1.py
+```
+
+AABB boundary 结果：
+
+| 样本 | mesh anchors | unique patch anchors | positive cosine | random cosine | rank median | pos > random |
+|------|--------------|----------------------|-----------------|---------------|-------------|--------------|
+| `guitar cam06->cam07 f244` | 77 | 41 | 0.594 | 0.249 | 4 | 92.7% |
+| `juggle cam02->cam01 f197` | 490 | 179 | 0.750 | 0.282 | 3 | 97.8% |
+| `guitar cam01->cam03 f5` | 9 | 7 | 0.486 | 0.315 | 38 | 85.7% |
+
+结论：
+
+```text
+1. 外部 XFeat/mesh anchors 不是噪声。
+2. Human3R encoder patch token 中已经保留了可用的跨视角静态背景对应信息。
+3. 当前阶段不需要修改 encoder，也不需要让 anchor 进入完整 decoder sequence。
+4. anchor 多时稳定；anchor 少时仍有信号但 rank 不稳定，需要 quality gate / fallback。
+```
+
+### 2. Correction proxy：anchors 能提供 re-anchor 修正信息
+
+新增脚本：
+
+```text
+scripts/analyze_rich_aabb_anchor_correction.py
+scripts/build_rich_anchor_evidence.py
+```
+
+验证目标：测试 boundary anchors 是否能提供比 no-correction 更好的 reference patch lookup prior。
+
+结果：
+
+| 样本 | anchors | no correction | translation | affine | quality gate |
+|------|---------|---------------|-------------|--------|--------------|
+| `guitar cam06->cam07` | 41 | 3.16 | 4.47 | 1.00 | 0.74 |
+| `juggle cam02->cam01` | 179 | 3.16 | 1.00 | 1.00 | 0.81 |
+| `guitar cam01->cam03` | 7 | 10.05 | 2.24 | 1.00 | 0.22 |
+
+单位是 patch error，越低越好。
+
+结论：
+
+```text
+1. anchors 不只是能找到对应 patch，也能提供 correction evidence。
+2. 简单 mean(delta_uv) / translation 不总可靠，可能比 no-correction 更差。
+3. affine 作为 coarse re-anchor prior 明显更稳。
+4. weak sample 即使 affine 拟合好，也要因为 anchor 数少而降低 gate。
+```
+
+### 3. AnchorTokenGenerator 原型：global affine + local residual tokens
+
+当前目标已从“做 correction head”澄清为：把外部 anchors 转成更准确、更有几何含义的 local ShotToken / AnchorToken。
+
+新增脚本：
+
+```text
+scripts/prototype_rich_anchor_tokens.py
+```
+
+AnchorToken 结构：
+
+```text
+AnchorToken_k = {
+    key_cur_feature: F_cur[j],
+    value_ref_feature: F_ref[i],
+    ref_pos_norm: pos_ref[i],
+    cur_pos_norm: pos_cur[j],
+    delta_uv_norm: pos_cur[j] - pos_ref[i],
+    confidence,
+    mesh_error_px,
+    encoder_cosine
+}
+```
+
+验证方式：leave-one-out。每次拿掉一个真实 anchor，用剩余 AnchorTokens 预测被拿掉的 current patch 应该对应 reference 的哪个 patch。
+
+结果：
+
+| 样本 | tokens | same-position | affine | token-soft | token-affine-residual |
+|------|--------|---------------|--------|------------|-----------------------|
+| `guitar cam06->cam07` | 41 | 3.16 | 1.15 | 1.41 | 0.82 |
+| `juggle cam02->cam01` | 179 | 3.16 | 0.82 | 1.58 | 0.66 |
+| `guitar cam01->cam03` | 7 | 10.03 | 1.05 | 1.46 | 1.14 |
+
+结论：
+
+```text
+1. AnchorToken 不应只是 nearest-neighbor memory；token-soft 单独使用不稳定。
+2. 最有效形式是：global affine 粗对齐 + local AnchorToken residual 修正。
+3. anchor 数充足时，AnchorToken residual 优于纯 affine。
+4. anchor 太少时 residual 不稳定，必须由 quality_gate 降权或 fallback。
+```
+
+相关输出：
+
+```text
+output/rich_aabb_anchor_step1/
+output/rich_aabb_anchor_correction_proxy/
+output/rich_anchor_evidence/
+output/rich_anchor_token_prototype/
+```
+
+### 4. Top-K / quality-gate AnchorToken 选择验证
+
+新增脚本：
+
+```text
+scripts/validate_rich_anchor_token_selection.py
+```
+
+目的：验证实际推理时是否需要保留所有 anchors，还是只保留少量 top-K AnchorTokens 即可。
+
+比较策略：
+
+| 策略 | 说明 |
+|------|------|
+| `confidence_topk` | 选择 confidence 最高的 K 个 tokens |
+| `diverse_topk` | confidence 优先，同时保持空间分散 |
+| `random_k` | 随机选择 K 个，作为稳定性 baseline |
+
+结果：
+
+| 样本 | 总 tokens | gate | 最佳策略 | affine error | token residual error | improvement |
+|------|-----------|------|----------|--------------|----------------------|-------------|
+| `guitar cam06->cam07` | 41 | strong | diverse top-8 | 1.10 | 0.77 | +0.32 |
+| `juggle cam02->cam01` | 179 | strong | random top-64 baseline | 0.81 | 0.65 | +0.16 |
+| `guitar cam01->cam03` | 7 | fallback | random top-4 | 1.25 | 1.24 | +0.02 |
+
+补充：`juggle cam02->cam01` 中 deterministic 策略也有效，`confidence_topk K=4` 已达到 `affine 0.89 -> token residual 0.66`，说明并非必须大量 tokens。
+
+结论：
+
+```text
+1. 推理时不需要保留所有 anchors。
+2. anchor 数充足时，8-16 个高质量 / 空间分散 AnchorTokens 已经能提供有效 residual correction。
+3. confidence + spatial diversity 更适合作为实际 deterministic selection。
+4. anchor 数 < 8 时，residual gain 不可靠，应 fallback 或只弱使用 affine evidence。
+```
+
+输出：
+
+```text
+output/rich_anchor_token_selection/
+```

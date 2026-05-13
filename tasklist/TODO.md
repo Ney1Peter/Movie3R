@@ -1,5 +1,26 @@
 # Movie3R TODO List
 
+## ShotToken V6
+
+### 1. Local Scene AnchorToken
+
+目标：把外部 XFeat/mesh 得到的静态背景 anchors 转成更准确、更有几何含义的 local ShotToken / AnchorToken，而不是继续使用单个 global ShotToken。
+
+当前已完成：
+- `scripts/verify_rich_anchor_encoder_similarity.py`：验证外部 anchors 能映射回 Human3R encoder patch token。
+- `scripts/verify_rich_aabb_anchor_step1.py`：按 AABB `[A@t, A@t+1, B@t+2, B@t+3]` 对比连续 pair 与 boundary pair。
+- `scripts/analyze_rich_aabb_anchor_correction.py`：验证 translation / affine correction proxy。
+- `scripts/build_rich_anchor_evidence.py`：生成 24 维 anchor evidence vector 与 reference lookup 可视化。
+- `scripts/prototype_rich_anchor_tokens.py`：验证 `global affine + local AnchorToken residual`。
+
+待验证：
+- 已完成 top-K AnchorToken 选择策略初测：confidence、spatial-diverse、random baseline。结论是 8-16 个高质量 / 空间分散 tokens 通常足够，`<8` 应 fallback。
+- quality gate 阈值：`unique_anchor_patch_pairs >= 16` 强启用，`8-15` 弱启用，`<8` fallback。
+- AnchorToken 是否只影响 pose/camera path，不进入 encoder，不进入完整 decoder token sequence。
+- 后续模型集成时的输入形式：`affine evidence + local residual AnchorTokens + quality_gate`。
+
+---
+
 ## ShotToken V5
 
 ### 1. V5.1 Layerwise Pose-Only Shot Attention

@@ -10,6 +10,8 @@
 
 **2026/05/09 最新状态**：V4 验证了 pose-only ShotToken 比 V2 安全，但 decoder 后单次修正仍偏后处理，且 translation y/z 容易引入额外错位。下一步规划 V5.1：在每层 decoder 后只让 pose token 和 shot token 做 attention，并同步增加 `L_boundary_abs`、`L_jump_rel`、`L_anchor`；若 V5.1 失败，再进入 V5.2 masked decoder 方案。
 
+**2026/05/13 最新状态**：V6 方向调整为 local scene AnchorToken。RICH AABB 实验证明 XFeat semi-dense + official mesh anchors 能映射回 Human3R encoder patch token；affine coarse re-anchor 明显优于简单 mean translation；AnchorToken leave-one-out 验证显示 `global affine + local AnchorToken residual` 在 anchor 数充足时优于纯 affine。Top-K 验证进一步显示推理时不需要保留所有 anchors，8-16 个高质量 / 空间分散 AnchorTokens 通常已能提供有效 residual correction。当前建议不改 encoder、不让 anchor 进入完整 decoder sequence，先把 AnchorToken 作为 pose/camera path 的受控 re-anchor evidence。
+
 ---
 
 ## 2. 数据集处理

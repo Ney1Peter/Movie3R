@@ -178,6 +178,642 @@ Mesh inliers inside fundamental: 94 / 108
 /workspace/code/accelerated_features/scripts/test_rich_aabb_xfeat_mesh_geometry.py
 ```
 
+## 2.4 最新设计：XFeat/mesh 作为 patch correspondence teacher
+
+最新判断是：V6 不应只把 XFeat 当成 inference-time matcher，也可以把它作为监督信号，教 CUT3R/Human3R encoder patch token 学会可匹配的 scene-anchor descriptor。
+
+这和 Human3R 的思路更一致：
+
+```text
+Human3R:
+    CUT3R encoder token
+  + Multi-HMR pretrained human prior
+  + lightweight human prompt fusion
+
+Movie3R V6:
+    CUT3R encoder patch token
+  + XFeat + mesh-verified static scene correspondence teacher
+  + lightweight scene-anchor descriptor / prompt fusion
+```
+
+这里要区分两件事：
+
+```text
+1. XFeat 不能直接对 encoder patch token 做特征提取。
+   XFeat 的输入是 RGB image，输出是 2D keypoint / descriptor matches。
+
+2. XFeat + RICH mesh 可以生成高可信 patch correspondence pseudo labels。
+   这些 labels 用来监督 encoder patch token 上的小 descriptor head。
+```
+
+建议流程：
+
+```text
+1. RGB pair -> XFeat raw matches。
+2. RICH scan mesh + XML calibration -> 验证哪些 XFeat matches 是真实 static background matches。
+3. 把通过验证的 2D match 映射到 encoder patch grid。
+4. 得到 patch-level positive pairs: (patch_A_i, patch_B_j)。
+5. 用这些 positive pairs 监督 encoder token descriptor head。
+6. 推理时可以逐步从 XFeat inference-time 过渡到 teacher-only / internal descriptor matching。
+```
+
+descriptor head 的最小形式：
+
+```text
+d_i = normalize(MLP_desc(F_i))
+S_ij = d_i @ d_j
+```
+
+监督目标：
+
+```text
+1. mesh-verified patch pairs 的 similarity 高。
+2. random / wrong / human / low-overlap pairs 的 similarity 低。
+3. mutual nearest neighbor 后的 match 能复现 XFeat+mesh teacher 的高可信 anchor。
+```
+
+因此，XFeat + mesh 的角色是：
+
+```text
+teacher / pseudo-label generator / validation source
+```
+
+encoder patch token 的角色是：
+
+```text
+student descriptor source / eventual inference-time anchor source
+```
+
+### 2.4.1 Anchor 不是 offset，offset 来自 matched positions
+
+需要明确：patch anchor 本身不是 camera/world 偏移。anchor 只说明：
+
+```text
+frame A 的 patch_i 和 frame B 的 patch_j 是同一个静态背景点 / 区域。
+```
+
+变化应该由 matched patch 的位置差和几何差表示。
+
+最小 2D 表示：
+
+```text
+delta_uv_k = pos_B[j] - pos_A[i]
+```
+
+这个量可以看作 sparse patch flow。它能告诉模型同一个静态背景 anchor 在图像平面上移动了多少，但它不是唯一的真实 camera offset，因为 2D 位移同时受 rotation、translation、depth、parallax 和 intrinsics 影响。
+
+建议第一版 anchor token 包含：
+
+```text
+R_k = MLP_anchor(
+    F_A[i],
+    F_B[j],
+    F_B[j] - F_A[i],
+    pos_A[i],
+    pos_B[j],
+    delta_uv_k,
+    match_confidence_k,
+    optional overlap / visibility / background score
+)
+```
+
+其中 `delta_uv_k` 是最直接的“变化”信号，`F_B[j] - F_A[i]` 只是辅助特征差，不应被解释成物理 offset。
+
+### 2.4.2 3D / pose-level offset 的后续版本
+
+如果 decoder 已经有 pointmap / depth / 3D prediction，可以把 2D patch anchor 升级成 3D anchor：
+
+```text
+X_A[i] <-> X_B[j]
+```
+
+然后用多个 3D anchors 拟合一个刚体变换：
+
+```text
+T_A_to_B = argmin_T Σ_k || T * X_A[i_k] - X_B[j_k] ||
+delta_pose_token = MLP(log_SE3(T_A_to_B))
+```
+
+这个 `delta_SE3` / `delta_pose_token` 才更接近 camera/world offset。它可以作为更强的 pose prior 输入到：
+
+```text
+PoseResidualAdapter
+WorldResidualAdapter
+StateGate / Global transition gate
+```
+
+推荐分阶段：
+
+```text
+Stage A: 只用 XFeat+mesh teacher 验证真实 patch correspondence 数量。
+Stage B: 用 teacher 监督 encoder patch descriptor head。
+Stage C: 用 internal descriptor matching 生成 patch anchor tokens，先只携带 delta_uv。
+Stage D: 如果 C 有效，再基于 predicted pointmap / depth 拟合 delta_SE3。
+Stage E: 把 anchor evidence 以 pose-only adapter 方式注入 camera / pose token。
+```
+
+关键实验：
+
+```text
+mesh-verified XFeat anchors 对应的 encoder patch token similarity
+是否显著高于 random negatives / wrong matches。
+```
+
+如果正负分不开，说明 raw encoder token 不适合作为 descriptor，需要训练 `MLP_desc`；如果能分开，则可以直接做 internal patch matching ablation。
+
+### 2.4.3 Step1 结论：外部 anchor 可以映射回 encoder patch token
+
+截至 2026/05/12，已完成第一阶段 AABB 验证。验证目标不是修改 encoder 或 decoder，而是确认：
+
+```text
+XFeat semi-dense + RICH mesh verified anchors
+是否能在 Human3R encoder output patch token 中被重新找到。
+```
+
+实验流程：
+
+```text
+1. 使用 /workspace/data/RICH/RICH_4Human3R/Training 读取 AABB 样本。
+2. 对 [A@t, A@t+1, B@t+2, B@t+3] 分别评估：
+   A@t   -> A@t+1     contiguous reference pair
+   A@t+1 -> B@t+2     shot boundary pair
+   B@t+2 -> B@t+3     contiguous current pair
+3. 对每个 pair 使用 XFeat semi-dense 产生 2D matches。
+4. 使用 RICH official static scan mesh + XML calibration 过滤真实 static background anchors。
+5. 把通过 mesh 验证的 2D anchors 映射到 Human3R encoder patch grid。
+6. 比较 positive anchor patch token cosine 与 random / shuffled negative patch token cosine。
+```
+
+关键结果：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244 boundary:
+    mesh anchors: 77
+    unique patch anchors: 41
+    positive encoder cosine mean: 0.594
+    random negative cosine mean: 0.249
+    true match rank median: 4
+    positive > random: 92.7%
+
+BBQ_001_juggle cam02/cam01 start=197 boundary:
+    mesh anchors: 490
+    unique patch anchors: 179
+    positive encoder cosine mean: 0.750
+    random negative cosine mean: 0.282
+    true match rank median: 3
+    positive > random: 97.8%
+
+BBQ_001_guitar cam01/cam03 start=5 boundary:
+    mesh anchors: 9
+    unique patch anchors: 7
+    positive encoder cosine mean: 0.486
+    random negative cosine mean: 0.315
+    true match rank median: 38
+    positive > random: 85.7%
+```
+
+结论：
+
+```text
+1. 外部 XFeat/mesh anchors 不是噪声。
+2. Human3R encoder patch token 中已经保留了可用的跨视角静态背景对应信息。
+3. 当前阶段不需要修改 encoder，也不需要让 anchor 进入 decoder 主体。
+4. anchor 数多时，encoder token 对应关系非常稳定；anchor 数少时仍有信号，但 rank 和 correction 稳定性下降。
+5. 因此 anchor 不是 data type classifier，而是 shot boundary 上的 geometric evidence。
+```
+
+当前推荐 gate：
+
+```text
+unique_anchor_patch_pairs >= 16: 启用 anchor evidence
+8 <= unique_anchor_patch_pairs < 16: 降权启用 / 弱启用
+unique_anchor_patch_pairs < 8: fallback，不强行 re-anchor
+```
+
+相关脚本：
+
+```text
+/workspace/code/Movie3R/scripts/verify_rich_anchor_encoder_similarity.py
+/workspace/code/Movie3R/scripts/verify_rich_aabb_anchor_step1.py
+```
+
+相关输出：
+
+```text
+/workspace/code/Movie3R/output/rich_anchor_encoder_step1/
+/workspace/code/Movie3R/output/rich_aabb_anchor_step1/
+```
+
+### 2.4.4 下一步：anchor correction proxy
+
+Step1 只证明了“anchor 能找到”。下一步要证明的是：
+
+```text
+这些 anchors 是否能提供可用的 correction 信息。
+```
+
+最小验证不直接训练模型，而是做 post-encoder proxy：
+
+```text
+1. 从 boundary anchors 得到 patch-level correspondences: pos_A[i] -> pos_B[j]。
+2. 用少量 anchors 拟合简单 2D correction：translation / affine。
+3. 把 correction 应用到 held-out anchors 的 ref patch positions。
+4. 比较 no-correction error 与 corrected error。
+5. 用 4 / 8 / 16 / 32 个 anchors 重复抽样，观察 correction 是否稳定。
+```
+
+这个实验回答的是用户关心的问题：
+
+```text
+一帧内是否只需要少量 anchor，就能给其他 patch 提供大致修正方向。
+```
+
+注意，2D translation / affine 仍只是 proxy。它不是最终 camera correction，也不是 SE(3)。如果 proxy 有效，才进入下一阶段：把 anchor evidence 变成 pose-only adapter 的输入。
+
+### 2.4.5 Correction proxy 初步结果
+
+已新增脚本：
+
+```text
+/workspace/code/Movie3R/scripts/analyze_rich_aabb_anchor_correction.py
+```
+
+输入是 `verify_rich_aabb_anchor_step1.py` 的输出目录。该脚本不重复跑 XFeat / mesh / Human3R，只读取已保存的 boundary anchors，并测试：
+
+```text
+1. no correction: 直接把 ref patch 位置当作 cur patch 位置。
+2. translation correction: 用 anchors 拟合一个全局平均 2D 位移。
+3. affine correction: 用 anchors 拟合一个 2D affine patch transform。
+4. 4 / 8 / 16 / 32 anchors 抽样，评估 held-out anchors 的 patch error。
+```
+
+初步结果：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244 boundary, 41 patch anchors:
+    no correction median error: 3.16 patches
+    translation median error: 4.32 patches
+    affine median error: 1.04 patches
+    8-anchor affine held-out median: 1.32 patches
+    16-anchor affine held-out median: 1.23 patches
+
+BBQ_001_juggle cam02/cam01 start=197 boundary, 179 patch anchors:
+    no correction median error: 3.16 patches
+    translation median error: 1.04 patches
+    affine median error: 0.76 patches
+    8-anchor affine held-out median: 0.81 patches
+    16-anchor affine held-out median: 0.77 patches
+
+BBQ_001_guitar cam01/cam03 start=5 boundary, 7 patch anchors:
+    no correction median error: 10.03 patches
+    translation median error: 2.47 patches
+    affine median error: 0.48 patches
+    4-anchor affine held-out median: 0.89 patches
+```
+
+解释：
+
+```text
+1. anchors 确实携带 correction 信息：no correction error 可以被明显降低。
+2. 简单平均 translation 不总可靠。guitar cam06->cam07 中 translation 反而更差，说明不同区域存在视角变化 / parallax / crop geometry，不能假设所有 patch 用同一个平移。
+3. affine correction 在 3 个样本中都明显优于 no correction，说明 anchors 更适合先聚合成轻量 2D geometric evidence，而不是直接平均 offset。
+4. 8-16 个可靠 anchors 通常已经能给出稳定 correction proxy；少于 8 个 anchors 可以工作，但应强 gate / 降权。
+```
+
+当前设计更新：
+
+```text
+不要把 anchor 简化成 mean(delta_uv)。
+更合理的是把 anchors 聚合成：
+    anchor_count
+    confidence statistics
+    weighted delta statistics
+    affine / local transform parameters
+    residual error statistics
+再由 pose-only adapter 或 correction head 使用这些 evidence。
+```
+
+相关输出：
+
+```text
+/workspace/code/Movie3R/output/rich_aabb_anchor_correction_proxy/
+```
+
+### 2.4.6 Anchor evidence vector 与 reference lookup 验证
+
+下一步已把 correction proxy 转成更接近模型输入的固定维度 evidence。
+
+新增脚本：
+
+```text
+/workspace/code/Movie3R/scripts/build_rich_anchor_evidence.py
+```
+
+该脚本读取 AABB Step1 输出中的 boundary anchors，然后重新跑原版 Human3R encoder，仅用于验证：
+
+```text
+当前帧某个 patch，能否通过 anchor affine evidence 找回参考帧中应该读取的 patch。
+```
+
+比较对象：
+
+```text
+same_position:
+    不做 correction，current patch 直接找 reference 中相同归一化位置。
+
+translation:
+    用 anchors 的平均位移反推 reference patch。
+
+affine:
+    用 anchors 拟合 affine，再反推 reference patch。
+
+oracle_anchor:
+    mesh-verified anchor 的真实 reference patch，作为上限参考。
+```
+
+初步结果：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244, 41 patch anchors:
+    same_position reference lookup error: 3.16 patches
+    translation reference lookup error: 4.47 patches
+    affine reference lookup error: 1.00 patch
+    oracle anchor cosine median: 0.642
+    affine lookup cosine median: 0.514
+    quality_gate: 0.74
+
+BBQ_001_juggle cam02/cam01 start=197, 179 patch anchors:
+    same_position reference lookup error: 3.16 patches
+    translation reference lookup error: 1.00 patch
+    affine reference lookup error: 1.00 patch
+    oracle anchor cosine median: 0.782
+    affine lookup cosine median: 0.823
+    quality_gate: 0.81
+
+BBQ_001_guitar cam01/cam03 start=5, 7 patch anchors:
+    same_position reference lookup error: 10.05 patches
+    translation reference lookup error: 2.24 patches
+    affine reference lookup error: 1.00 patch
+    oracle anchor cosine median: 0.508
+    affine lookup cosine median: 0.517
+    quality_gate: 0.22
+```
+
+这说明：
+
+```text
+1. anchor evidence 不只是能解释已有 anchors，还能给 current patch 提供 reference lookup prior。
+2. affine evidence 明显优于 same-position，也比纯 translation 更稳。
+3. 弱样本虽然 affine 几何 lookup 看起来很好，但 anchors 太少，因此 quality_gate 应该低，不能强行信任。
+4. 这个 evidence 可以作为后续 pose-only adapter / correction head 的输入，而不是直接进入 encoder 或 decoder 主序列。
+```
+
+当前 evidence vector 维度为 24，包含：
+
+```text
+count / log_count / quality_gate
+anchor cosine statistics
+mesh reprojection error statistics
+visible overlap statistics
+translation dx, dy
+affine residual parameters: a-1, b, tx, c, d-1, ty
+no-correction / translation / affine residual error statistics
+```
+
+输出：
+
+```text
+/workspace/code/Movie3R/output/rich_anchor_evidence/
+```
+
+重点文件：
+
+```text
+anchor_evidence_summary.jpg
+*/anchor_lookup_comparison.jpg
+*/lookup_error_chart.jpg
+*/affine_correction_field.jpg
+*/anchor_evidence_vector.npy
+*/anchor_evidence_summary.json
+```
+
+### 2.4.7 AnchorTokenGenerator 原型验证
+
+当前目标已从“做 correction head”澄清为：
+
+```text
+把外部 anchors 转成更准确、更有几何含义的 local ShotToken / AnchorToken。
+```
+
+新增独立原型脚本：
+
+```text
+/workspace/code/Movie3R/scripts/prototype_rich_anchor_tokens.py
+```
+
+该脚本仍不修改 encoder / decoder / 模型主路径。它从 AABB boundary anchors 和 Human3R encoder tokens 构造结构化 AnchorTokens：
+
+```text
+AnchorToken_k = {
+    key_cur_feature: F_cur[j],
+    value_ref_feature: F_ref[i],
+    ref_pos_norm: pos_ref[i],
+    cur_pos_norm: pos_cur[j],
+    delta_uv_norm: pos_cur[j] - pos_ref[i],
+    confidence: mesh/token confidence,
+    mesh_error_px,
+    encoder_cosine
+}
+```
+
+验证方式是 leave-one-out：
+
+```text
+1. 每次拿掉一个真实 anchor，当作 held-out target。
+2. 用剩余 anchors 构造 AnchorTokens。
+3. 让 held-out current patch 通过 AnchorTokens 预测 reference patch。
+4. 和真实 mesh-verified reference patch 比较 patch error。
+```
+
+比较方法：
+
+```text
+same_position:
+    不使用 AnchorToken，current patch 找 reference 同位置 patch。
+
+translation:
+    使用平均平移。
+
+affine:
+    使用全局 affine。
+
+anchor_token_soft:
+    current patch 根据 feature + spatial score attend 到 AnchorTokens，直接读 ref_pos。
+
+anchor_token_affine_residual:
+    先用 affine 给出粗位置，再从 AnchorTokens 读取局部 residual 修正。
+
+oracle_anchor:
+    真实 mesh anchor，对应上限。
+```
+
+结果：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244, 41 AnchorTokens:
+    same_position error: 3.16 patches
+    affine error: 1.15 patches
+    anchor_token_soft error: 1.41 patches
+    anchor_token_affine_residual error: 0.82 patches
+    oracle error: 0.00 patches
+    token_residual cosine median: 0.592
+
+BBQ_001_juggle cam02/cam01 start=197, 179 AnchorTokens:
+    same_position error: 3.16 patches
+    affine error: 0.82 patches
+    anchor_token_soft error: 1.58 patches
+    anchor_token_affine_residual error: 0.66 patches
+    oracle error: 0.00 patches
+    token_residual cosine median: 0.823
+
+BBQ_001_guitar cam01/cam03 start=5, 7 AnchorTokens:
+    same_position error: 10.03 patches
+    affine error: 1.05 patches
+    anchor_token_soft error: 1.46 patches
+    anchor_token_affine_residual error: 1.14 patches
+    oracle error: 0.00 patches
+    token_residual cosine median: 0.520
+```
+
+解释：
+
+```text
+1. AnchorToken 不是一个普通 correction head，而是局部 scene re-anchor memory。
+2. 只用 feature/spatial 直接读 ref_pos 的 anchor_token_soft 不一定优于 affine，说明 AnchorToken 不能只当 nearest-neighbor memory。
+3. 更有效的是 anchor_token_affine_residual：先用 affine 捕捉全局 shot transition，再用 AnchorTokens 提供局部 residual correction。
+4. 在 anchor 数充足的两个样本中，AnchorToken residual 明显优于纯 affine。
+5. anchor 太少时，AnchorToken residual 不稳定，应由 quality gate 降权或 fallback。
+```
+
+当前设计结论：
+
+```text
+V6 AnchorToken 不应表达“整张图平均偏移”。
+它应表达：
+    这个 current patch / local region
+    应该参考哪个 ref patch / local region
+    在 global affine re-anchor 基础上还需要什么 local residual。
+
+因此，推荐的第一版模型集成是：
+    global affine evidence 作为 coarse re-anchor prior
+    local AnchorTokens 作为 residual re-anchor tokens
+    quality_gate 控制启用强度
+    只进入 pose/camera path，不进入 encoder，不进入完整 decoder token sequence
+```
+
+输出：
+
+```text
+/workspace/code/Movie3R/output/rich_anchor_token_prototype/
+```
+
+重点文件：
+
+```text
+anchor_token_prototype_summary.jpg
+*/anchor_token_leave_one_out_chart.jpg
+*/anchor_token_lookup_overlay.jpg
+*/anchor_tokens_structured.npz
+*/anchor_token_summary.json
+```
+
+### 2.4.8 Top-K / quality-gate AnchorToken 选择验证
+
+下一步验证实际推理时是否可以只保留少量 AnchorTokens，而不是把所有 anchors 都传给后续 pose/camera path。
+
+新增脚本：
+
+```text
+/workspace/code/Movie3R/scripts/validate_rich_anchor_token_selection.py
+```
+
+比较策略：
+
+```text
+confidence_topk:
+    选择 confidence 最高的 K 个 AnchorTokens。
+
+diverse_topk:
+    先按 confidence 排序，再做空间分散选择，避免 token 全堆在一个局部区域。
+
+random_k:
+    随机选择 K 个，作为稳定性 baseline。
+```
+
+验证方式：
+
+```text
+1. 选出 K 个 AnchorTokens 作为 token bank。
+2. 用这 K 个 token 估计 affine + local residual。
+3. 在未被选择的 held-out anchors 上测试 reference lookup error。
+4. 对比纯 affine 与 anchor_token_affine_residual。
+```
+
+结果：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244, total 41 tokens:
+    gate: strong
+    best deterministic strategy: diverse_topk, K=8
+    affine error: 1.10 patches
+    token residual error: 0.77 patches
+    improvement: 0.32 patches
+
+BBQ_001_juggle cam02/cam01 start=197, total 179 tokens:
+    gate: strong
+    confidence_topk K=4:
+        affine error: 0.89 patches
+        token residual error: 0.66 patches
+    diverse_topk K=8:
+        affine error: 0.86 patches
+        token residual error: 0.71 patches
+    random_k K=64:
+        affine error: 0.81 patches
+        token residual error: 0.65 patches
+
+BBQ_001_guitar cam01/cam03 start=5, total 7 tokens:
+    gate: fallback
+    K=4 random token residual error: 1.24 patches
+    K=4 affine error: 1.25 patches
+    improvement: 0.02 patches, not reliable
+```
+
+结论：
+
+```text
+1. 不需要保留所有 anchors。8-16 个高质量 / 空间分散 AnchorTokens 已经可以提供有效 residual correction。
+2. anchor 很多时，top-K deterministic selection 和 random-K 都可工作；实际推理应优先 confidence + spatial diversity，而不是随机。
+3. anchor 很少时，即便局部结果看起来不差，也不能强启用 AnchorToken residual；应 fallback 到 affine 或 base path。
+4. 推荐第一版 gate：
+   unique_anchor_patch_pairs >= 16: strong enable
+   8 <= unique_anchor_patch_pairs < 16: weak enable / lower weight
+   unique_anchor_patch_pairs < 8: fallback
+```
+
+输出：
+
+```text
+/workspace/code/Movie3R/output/rich_anchor_token_selection/
+```
+
+重点文件：
+
+```text
+anchor_token_selection_summary.jpg
+*/anchor_token_selection_chart.jpg
+*/anchor_token_selection_summary.json
+```
+
 ## 3. Token 形式
 
 V6 不再使用单个：
