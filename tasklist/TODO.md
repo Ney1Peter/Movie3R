@@ -12,10 +12,13 @@
 - `scripts/analyze_rich_aabb_anchor_correction.py`：验证 translation / affine correction proxy。
 - `scripts/build_rich_anchor_evidence.py`：生成 24 维 anchor evidence vector 与 reference lookup 可视化。
 - `scripts/prototype_rich_anchor_tokens.py`：验证 `global affine + local AnchorToken residual`。
+- `scripts/validate_rich_anchor_token_selection.py`：验证 top-K / quality-gate，8-16 个高质量 / 空间分散 tokens 通常足够。
+- `scripts/validate_anchor_token_specificity.py`：验证 correct AnchorToken 优于 affine-only，shuffled / wrong-boundary 负例退化。
+- `scripts/batch_generate_rich_guitar_anchor_cache.py`：生成 guitar high-overlap offline cache，185/185 samples 成功。
 
 待验证：
-- 已完成 top-K AnchorToken 选择策略初测：confidence、spatial-diverse、random baseline。结论是 8-16 个高质量 / 空间分散 tokens 通常足够，`<8` 应 fallback。
-- quality gate 阈值：`unique_anchor_patch_pairs >= 16` 强启用，`8-15` 弱启用，`<8` fallback。
+- 更大范围 cache：加入 medium-overlap pairs，提高数据多样性；low-overlap pairs 主要作为 hard validation / fallback 测试。
+- quality gate 阈值扩大统计：当前建议 `unique_anchor_patch_pairs >= 16` 强启用，`8-15` 弱启用，`<8` fallback。
 - AnchorToken 是否只影响 pose/camera path，不进入 encoder，不进入完整 decoder token sequence。
 - 后续模型集成时的输入形式：`affine evidence + local residual AnchorTokens + quality_gate`。
 

@@ -12,6 +12,8 @@
 
 **2026/05/13 最新状态**：V6 方向调整为 local scene AnchorToken。RICH AABB 实验证明 XFeat semi-dense + official mesh anchors 能映射回 Human3R encoder patch token；affine coarse re-anchor 明显优于简单 mean translation；AnchorToken leave-one-out 验证显示 `global affine + local AnchorToken residual` 在 anchor 数充足时优于纯 affine。Top-K 验证进一步显示推理时不需要保留所有 anchors，8-16 个高质量 / 空间分散 AnchorTokens 通常已能提供有效 residual correction。当前建议不改 encoder、不让 anchor 进入完整 decoder sequence，先把 AnchorToken 作为 pose/camera path 的受控 re-anchor evidence。
 
+**2026/05/13 补充**：新增 AnchorToken specificity / negative-control 验证。strong samples 中 correct AnchorToken 优于 affine-only；shuffled value 和 wrong-boundary token 会退化，说明 token 携带的是具体 local residual correction evidence，而不是泛泛 shot label。已生成 `BBQ_001_guitar` high-overlap offline cache：185/185 samples 成功，保存在 `/workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1/`。
+
 ---
 
 ## 2. 数据集处理
@@ -228,6 +230,8 @@ F_dec[i], F_dec[i-1] → ShotTokenGenerator → q_t
 | V4 pose-only alignment | ✅ 已验证安全但偏后处理，B 段 y/z 仍有错位 |
 | V5.1 layerwise pose-only attention | ⏳ 下一步实现 |
 | V5.2 masked decoder | ⏸️ V5.1 失败后再考虑 |
+| V6 AnchorToken specificity 验证 | ✅ correct token 优于 affine，负例退化 |
+| Guitar offline AnchorToken cache | ✅ high-overlap 185 samples 已生成 |
 
 ---
 

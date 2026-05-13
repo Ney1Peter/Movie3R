@@ -1931,6 +1931,8 @@ AABB boundary 结果：
 4. anchor 多时稳定；anchor 少时仍有信号但 rank 不稳定，需要 quality gate / fallback。
 ```
 
+通俗解释：这里不是证明“只靠 encoder token 自动找出所有 anchors”，而是证明“XFeat/mesh 已经找到的真实对应位置，在 Human3R 图像切 patch、变 token、经过 encoder self-attention 后，仍然能在对应 patch token 中看到相似特征”。因此当前分工是：XFeat/mesh 负责找位置关系，Human3R encoder token 提供模型内部可用的 patch 表示，AnchorTokenGenerator 再把两者合成 local AnchorToken。
+
 ### 2. Correction proxy：anchors 能提供 re-anchor 修正信息
 
 新增脚本：
@@ -1960,6 +1962,8 @@ scripts/build_rich_anchor_evidence.py
 3. affine 作为 coarse re-anchor prior 明显更稳。
 4. weak sample 即使 affine 拟合好，也要因为 anchor 数少而降低 gate。
 ```
+
+通俗解释：translation 假设整张图所有 patch 都移动同一个平均 `dx,dy`，但跨镜头 / 跨相机时不同区域会因为视角、深度、parallax、crop 几何差异产生不同位移。Affine 拟合的是 `x_B=a*x_A+b*y_A+tx, y_B=c*x_A+d*y_A+ty`，能表达平移、缩放、旋转、倾斜等二维整体变化，因此更适合作为 coarse re-anchor prior。Affine 仍不是最终 camera pose，只是验证 anchors 是否携带 correction 信息的 2D proxy。
 
 ### 3. AnchorTokenGenerator 原型：global affine + local residual tokens
 
@@ -2056,3 +2060,93 @@ scripts/validate_rich_anchor_token_selection.py
 ```text
 output/rich_anchor_token_selection/
 ```
+
+### 5. AnchorToken specificity / negative-control 验证
+
+用户提出的关键判断标准：AnchorToken 进入 decoder / pose path 前，必须像 human token 一样携带明确、有用的信息，而不是泛泛的 shot label 或“有 anchor”这个二值提示。
+
+新增脚本：
+
+```text
+scripts/validate_anchor_token_specificity.py
+```
+
+验证方式：leave-one-out。拿掉一个真实 boundary anchor，用剩余 anchors 构造 token bank，预测 held-out current patch 应该对应 reference 的哪个 patch。
+
+对照组：
+
+| 方法 | 说明 |
+|------|------|
+| `same_position` | 不做 correction |
+| `affine_only` | 只用 global affine coarse re-anchor |
+| `correct_anchor_token` | 正确 boundary AnchorToken + local residual |
+| `spatial_only_token` | 忽略 feature，只靠空间位置 attention |
+| `shuffled_value_token` | key/position 正确，但 residual value 打乱 |
+| `wrong_boundary_token` | 使用另一个 AABB boundary 的 token residual |
+| `oracle_anchor` | mesh-verified anchor 上限 |
+
+结果，单位是 median patch error，越低越好：
+
+| 样本 | tokens | same | affine | correct token | spatial-only | shuffled | wrong-boundary |
+|------|--------|------|--------|---------------|--------------|----------|----------------|
+| `guitar cam06->cam07 f244` | 41 | 3.16 | 1.15 | 0.77 | 0.84 | 1.18 | 1.33 |
+| `juggle cam02->cam01 f197` | 179 | 3.16 | 0.82 | 0.65 | 0.68 | 0.82 | 0.78 |
+| `guitar cam01->cam03 f5` | 7 | 10.03 | 1.05 | 1.11 | 1.13 | 1.16 | 1.13 |
+
+结论：
+
+```text
+1. strong samples 中 correct AnchorToken 明显优于 affine-only。
+2. shuffled value / wrong boundary 明显退化，说明 token key-value 绑定和 boundary specificity 有意义。
+3. spatial-only 也有效，说明几何位置本身很强；feature + spatial 的正确 token 进一步提升。
+4. weak sample 只有 7 个 anchors，correct token 不优于 affine，符合 fallback/gate 预期。
+5. 因此 AnchorToken 在 decoder 前已经携带具体 local residual correction evidence，而不是泛泛 anchor 信息。
+```
+
+输出：
+
+```text
+output/rich_anchor_token_specificity/
+```
+
+### 6. Guitar offline AnchorToken cache 生成
+
+新增脚本：
+
+```text
+scripts/batch_generate_rich_guitar_anchor_cache.py
+```
+
+当前先只做 `BBQ_001_guitar`，保存到 RICH 数据目录：
+
+```text
+/workspace/data/RICH/RICH_4Human3R/
+```
+
+当前不是相机全排列，而是 high-overlap 相邻相机 pair：
+
+```text
+camera_pairs = 6-7, 5-6, 4-5, 3-4, 1-2
+```
+
+原因：全有向排列是 `8 * 7 = 56` 个 camera pairs，乘以时间后数量很大；低 overlap pair anchor 少且不稳定，不适合作为第一批主训练数据。第一阶段先用 high-overlap 生成干净 signal，后续再加入 medium-overlap 增加多样性，low-overlap 主要作为 hard validation / fallback 测试。
+
+已生成：
+
+| cache | candidates | cached | skipped | stride | top-K | mean gate | mean unique anchors | size |
+|-------|------------|--------|---------|--------|-------|-----------|---------------------|------|
+| `anchor_cache_guitar_v1` | 20 | 20 | 0 | 30 | 16 | 0.793 | 111.5 | 145K |
+| `anchor_cache_guitar_high_overlap_v1` | 185 | 185 | 0 | 10 | 16 | 0.793 | 120.49 | 923K |
+
+缓存字段：
+
+```text
+ref_patch_idx / cur_patch_idx
+ref_patch_xy / cur_patch_xy
+ref_pos_norm / cur_pos_norm / delta_uv_norm
+confidence / mesh_error_px / fundamental_inlier
+affine_forward / affine_inverse
+ref_grid_hw / cur_grid_hw / quality_gate
+```
+
+当前刻意不缓存整帧 encoder tokens，只缓存 top-K AnchorToken metadata 和 affine evidence；训练时可根据 patch idx 从当前 encoder output 中 gather 对应 feature，避免 cache 体积膨胀。

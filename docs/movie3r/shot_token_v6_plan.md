@@ -404,6 +404,75 @@ unique_anchor_patch_pairs < 8: fallback，不强行 re-anchor
 /workspace/code/Movie3R/output/rich_aabb_anchor_step1/
 ```
 
+### 2.4.3.1 Step1 通俗解释：为什么说 anchor 能映射回 encoder patch token
+
+这一阶段验证的不是“只靠 encoder token 自动找出所有 anchors”。验证的是：
+
+```text
+如果外部 XFeat/mesh 已经告诉我们真实对应位置，
+这些对应位置在 Human3R encoder 输出的 patch token 中是否仍然保留对应关系信号。
+```
+
+更具体地说，Human3R 输入图像后会先被切成 patch，然后经过 encoder 多层 self-attention：
+
+```text
+image -> patch embedding -> encoder attention -> contextual patch tokens
+```
+
+所以 encoder 输出的每个 token 已经不再是原始小图块，而是带有上下文信息的 patch 表示。我们关心的是：
+
+```text
+原图里由 XFeat/mesh 找到的同一个真实静态背景点，
+经过 resize / crop / patch mapping 后落到 patch_i 和 patch_j，
+那么 encoder output 里的 F_A[i] 和 F_B[j] 是否仍然相似？
+```
+
+实验步骤可以理解为：
+
+```text
+1. XFeat/mesh 在原图上说：
+   图 A 的这个位置 = 图 B 的那个位置。
+
+2. 我们把这两个位置换算到 Human3R encoder patch grid：
+   图 A 的位置 -> patch_i
+   图 B 的位置 -> patch_j
+
+3. 再看 encoder 输出：
+   F_A[i] 和 F_B[j] 是否比随机 patch 更相似。
+```
+
+结果显示：
+
+```text
+F_A[i] 和 F_B[j] 明显比 random negative 更相似。
+```
+
+因此可以说：
+
+```text
+图片即使经过 patch 切分、token 化、encoder 全局交互，
+外部 anchor 对应的 patch token 仍然携带可用的对应特征。
+```
+
+但需要明确边界：
+
+```text
+已经证明：
+    外部 anchor 可以落到 encoder patch token 上，
+    且这些 token 中仍保留对应关系信号。
+
+尚未证明：
+    不用 XFeat，只靠 Human3R encoder token 自己就能稳定找出所有 anchors。
+```
+
+所以当前分工仍然是：
+
+```text
+XFeat/mesh: 负责找真实位置关系。
+Human3R encoder token: 负责提供模型内部可用的 patch 表示。
+AnchorTokenGenerator: 负责把“外部位置关系 + 内部 patch token”合成 local AnchorToken。
+```
+
 ### 2.4.4 下一步：anchor correction proxy
 
 Step1 只证明了“anchor 能找到”。下一步要证明的是：
@@ -497,6 +566,88 @@ BBQ_001_guitar cam01/cam03 start=5 boundary, 7 patch anchors:
 
 ```text
 /workspace/code/Movie3R/output/rich_aabb_anchor_correction_proxy/
+```
+
+### 2.4.5.1 Affine correction 通俗解释
+
+这一阶段的目的不是单纯找匹配点，而是验证：
+
+```text
+已经找到的 anchors 能不能提供“怎么纠正 shot boundary 偏移”的信息。
+```
+
+最简单的想法是平均平移 translation：
+
+```text
+delta_mean = mean(pos_B[j] - pos_A[i])
+```
+
+也就是假设：
+
+```text
+整张图所有 patch 都移动同一个 dx, dy。
+```
+
+这个假设在跨镜头 / 跨相机时经常不成立。原因是不同位置的背景点会因为视角变化、深度差、parallax、crop 几何差异而产生不同方向和大小的位移。例如：
+
+```text
+左边墙角可能向右移动 1 个 patch；
+右边门框可能向右移动 5 个 patch；
+上方背景和下方地面还可能有不同的竖直变化。
+```
+
+如果强行取平均，就会变成：
+
+```text
+所有 patch 都向右移动 3 个 patch。
+```
+
+这对很多区域反而是错的。因此在 `guitar cam06->cam07` 样本中，translation 比 no-correction 还差。
+
+Affine 的作用是用 anchors 拟合一个更灵活的 2D 变换：
+
+```text
+x_B = a * x_A + b * y_A + tx
+y_B = c * x_A + d * y_A + ty
+```
+
+它比 translation 多表达了：
+
+```text
+平移 translation
+缩放 scale
+旋转 rotation
+倾斜 / 剪切 shear
+```
+
+通俗理解：
+
+```text
+translation 问的是：整张图平均移动了多少？
+affine 问的是：整张图大概发生了什么二维几何变化？
+```
+
+在实验里，我们用 mesh-verified anchors 作为已知对应点，拟合一个 affine，使得：
+
+```text
+Affine(pos_A[i]) 尽量接近 pos_B[j]
+```
+
+也就是找一个最合适的二维整体变换，让参考帧 A 的 anchor 位置尽可能对齐到当前帧 B 的 anchor 位置。
+
+然后我们用 held-out anchors 检查它是否真的能预测未参与拟合的对应位置。如果 affine 后误差显著下降，说明：
+
+```text
+anchors 不只是匹配点，确实携带可用的 correction 信息。
+```
+
+重要结论：
+
+```text
+1. 不应该把 anchors 简化成 mean(delta_uv)。
+2. affine 可以作为 coarse re-anchor prior。
+3. affine 仍然不是最终 camera pose / SE(3)，只是 2D proxy。
+4. 后续 AnchorToken residual 是在 affine 粗对齐基础上继续补局部误差。
 ```
 
 ### 2.4.6 Anchor evidence vector 与 reference lookup 验证
@@ -812,6 +963,196 @@ BBQ_001_guitar cam01/cam03 start=5, total 7 tokens:
 anchor_token_selection_summary.jpg
 */anchor_token_selection_chart.jpg
 */anchor_token_selection_summary.json
+```
+
+### 2.4.9 AnchorToken specificity / negative-control 验证
+
+用户提出的关键问题是：
+
+```text
+AnchorToken 进入 decoder / pose path 之前，是否真的像 human token 一样携带明确、有用的信息？
+还是只是一个泛泛的 anchor / shot label？
+```
+
+为此新增 decoder-before proxy 脚本：
+
+```text
+/workspace/code/Movie3R/scripts/validate_anchor_token_specificity.py
+```
+
+该脚本仍不修改模型主路径，只使用 frozen Human3R encoder patch tokens 和已验证的 AABB boundary anchors。验证方式是 leave-one-out：拿掉一个真实 anchor，用剩余 anchors 构造 token bank，预测 held-out current patch 应该回看 reference 的哪个 patch。
+
+对照组：
+
+```text
+same_position:
+    不做 correction，current patch 找 reference 同位置。
+
+affine_only:
+    只用 global affine coarse re-anchor，不使用 local token residual。
+
+correct_anchor_token:
+    使用正确 boundary 的 AnchorTokens，feature + spatial attention 后读取 local residual。
+
+spatial_only_token:
+    使用正确 residual，但 attention 忽略 feature，只靠空间位置。
+
+shuffled_value_token:
+    保留正确 key / position，但打乱 residual value，验证 key-value 对应是否重要。
+
+wrong_boundary_token:
+    使用另一个 AABB boundary 的 token residual，验证 token 是否只是泛泛先验。
+
+oracle_anchor:
+    held-out mesh anchor 本身，作为上限。
+```
+
+结果如下，单位是 median patch error，越低越好：
+
+```text
+BBQ_001_guitar cam06/cam07 start=244, 41 tokens:
+    same_position: 3.16
+    affine_only: 1.15
+    correct_anchor_token: 0.77
+    spatial_only_token: 0.84
+    shuffled_value_token: 1.18
+    wrong_boundary_token: 1.33
+    oracle_anchor: 0.00
+
+BBQ_001_juggle cam02/cam01 start=197, 179 tokens:
+    same_position: 3.16
+    affine_only: 0.82
+    correct_anchor_token: 0.65
+    spatial_only_token: 0.68
+    shuffled_value_token: 0.82
+    wrong_boundary_token: 0.78
+    oracle_anchor: 0.00
+
+BBQ_001_guitar cam01/cam03 start=5, 7 tokens:
+    same_position: 10.03
+    affine_only: 1.05
+    correct_anchor_token: 1.11
+    spatial_only_token: 1.13
+    shuffled_value_token: 1.16
+    wrong_boundary_token: 1.13
+    oracle_anchor: 0.00
+```
+
+解释：
+
+```text
+1. 在两个 strong samples 中，correct_anchor_token 明显优于 affine_only。
+2. shuffled_value_token 和 wrong_boundary_token 都变差，说明 token 的 key-value 绑定和 boundary specificity 是有意义的。
+3. spatial_only_token 也有效，说明几何位置本身携带强信号；但 correct_anchor_token 仍更好，说明 encoder feature 可以补充局部选择。
+4. weak sample 只有 7 个 anchors，correct token 不优于 affine，符合 quality_gate/fallback 预期。
+5. 因此 AnchorToken 不是泛泛 shot label，也不是只有“有 anchor”这个二值信息；它携带可测试的 local residual correction evidence。
+```
+
+当前更精确的结论：
+
+```text
+已经证明：
+    AnchorToken 在 decoder 前具备明确、可验证的局部 re-anchor 信息；
+    正确 token 优于 affine-only；
+    打乱 value 或换错 boundary 会退化。
+
+尚未证明：
+    AnchorToken 接入 Movie3R pose/camera path 后一定改善最终 3D / camera / SMPL 输出。
+
+下一步：
+    用离线 cache 接入 dataset / loader，先做 pose/camera path 的受控小模型实验。
+```
+
+输出：
+
+```text
+/workspace/code/Movie3R/output/rich_anchor_token_specificity/
+```
+
+重点文件：
+
+```text
+anchor_token_specificity_summary.jpg
+summary.json
+*/specificity_summary.json
+```
+
+### 2.4.10 Guitar offline AnchorToken cache 小规模生成
+
+为避免训练时在线跑 XFeat + RICH mesh verification，已开始离线生成 AnchorToken cache。当前先只做 `BBQ_001_guitar`，保存到 RICH 数据目录内。
+
+新增脚本：
+
+```text
+/workspace/code/Movie3R/scripts/batch_generate_rich_guitar_anchor_cache.py
+```
+
+当前不是相机全排列，而是 high-overlap 相邻相机 pair：
+
+```text
+camera_pairs = 6-7, 5-6, 4-5, 3-4, 1-2
+```
+
+原因：
+
+```text
+1. 8 个相机全有向排列是 8 * 7 = 56 个 pair，乘以时间后样本会快速膨胀。
+2. low-overlap pair 往往 anchors 少、质量不稳定，不适合作为第一批主训练数据。
+3. high-overlap pair 先保证训练信号干净，再逐步加入 medium-overlap pair 增加多样性。
+```
+
+已生成两批：
+
+```text
+小批 smoke cache:
+    path: /workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_v1/
+    candidates: 20
+    cached: 20
+    skipped: 0
+    frame_stride: 30
+    top_k_tokens: 16
+    quality_gate_mean: 0.793
+    unique_anchor_patch_pairs_mean: 111.5
+    size: 145K
+
+high-overlap cache:
+    path: /workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1/
+    candidates: 185
+    cached: 185
+    skipped: 0
+    frame_stride: 10
+    top_k_tokens: 16
+    quality_gate_mean: 0.793
+    unique_anchor_patch_pairs_mean: 120.49
+    size: 923K
+```
+
+每个 `.npz` 只保存 top-K AnchorToken metadata 和 affine evidence，不保存整帧 encoder tokens：
+
+```text
+ref_patch_idx
+cur_patch_idx
+ref_patch_xy
+cur_patch_xy
+ref_pos_norm
+cur_pos_norm
+delta_uv_norm
+confidence
+mesh_error_px
+fundamental_inlier
+affine_forward
+affine_inverse
+ref_grid_hw
+cur_grid_hw
+quality_gate
+```
+
+采样策略建议：
+
+```text
+第一阶段：high-overlap pairs + frame_stride 10，作为 clean training signal。
+第二阶段：加入 medium-overlap pairs，降低采样权重，增加 shot diversity。
+第三阶段：low-overlap pairs 只作为 hard validation / fallback 测试，不大量训练。
 ```
 
 ## 3. Token 形式
