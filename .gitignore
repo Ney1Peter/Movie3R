@@ -64,6 +64,15 @@ command
 *.npy
 *.npz
 
-output/
+# **========== 原始代码 ==========
+# output/
+# **========== 新代码 ==========
+output/*
+!output/anchor_token_report_v1/
+output/anchor_token_report_v1/*
+!output/anchor_token_report_v1/README.md
+!output/anchor_token_report_v1/01_aabb_step1/
+!output/anchor_token_report_v1/01_aabb_step1/**
+# **========== 结束 ==========
 outputs/
 src/croco/models/curope/cuda_12.4.0_550.54.14_linux.run
