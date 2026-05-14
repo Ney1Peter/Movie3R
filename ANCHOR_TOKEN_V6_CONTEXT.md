@@ -267,8 +267,10 @@ Docs/work logs:
 
 - `/workspace/code/Movie3R/docs/movie3r/shot_token_v6_plan.md`
 - `/workspace/code/Movie3R/tasklist/work_log.md`
-- `/workspace/code/Movie3R/tasklist/work_compact.md`
-- `/workspace/code/Movie3R/tasklist/TODO.md`
+- `/workspace/code/Movie3R/tasklist/TODO.md`: current concise TODO list.
+- `/workspace/code/Movie3R/tasklist/archive/work_compact.md`: archived compact historical summary.
+- `/workspace/code/Movie3R/tasklist/archive/TODO_legacy_20260514.md`: archived old long TODO.
+- `/workspace/code/Movie3R/docs/env_setup_h800_cuda124.md`: H800 / CUDA 12.4 environment setup notes.
 - `/workspace/code/Movie3R/output/anchor_token_report_v1/README.md`
 
 ## Important Technical Notes
@@ -293,6 +295,7 @@ Completed:
 - Built AnchorToken residual prototype and negative controls.
 - Built top-K/quality-gate validation.
 - Generated guitar offline anchor caches.
+- Committed clean Step1 report outputs, clean overlay scripts, migration notes, and tasklist/archive cleanup.
 
 Not completed:
 
@@ -300,12 +303,7 @@ Not completed:
 - No dataset/loader integration yet for anchor cache files.
 - No training run using AnchorTokens yet.
 - No inference-time anchor generator yet without RICH mesh.
-- No commit has been requested for the latest scripts/outputs.
-
-Likely uncommitted/new scripts from this work:
-
-- `/workspace/code/Movie3R/scripts/redraw_rich_step1_clean.py`
-- `/workspace/code/Movie3R/scripts/make_anchor_report_clean_overlays.py`
+- Latest local tasklist cleanup commit is `f89a708`; push status may still need checking before deleting the old server copy.
 
 ## Recommended Next Steps
 
