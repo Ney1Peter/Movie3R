@@ -62,6 +62,7 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== 结束 ==========**
 from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter, LayerwisePoseShotAdapter
 # **========== 结束 ==========**
+from dust3r.anchor_pose_adapter import AnchorPoseAdapter
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -185,6 +186,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         shot_pose_residual_loss_weight=0.05,
         shot_pose_layers="all",
         layerwise_pose_shot_scale_init=0.01,
+        anchor_pose_max_delta_t=0.25,
+        anchor_pose_max_delta_q=0.05,
+        anchor_pose_num_heads=8,
+        anchor_pose_use_ref_feature=True,
+        anchor_pose_apply_rotation=False,
         **croco_kwargs,
     ):
         super().__init__()
@@ -220,6 +226,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.shot_pose_residual_loss_weight = shot_pose_residual_loss_weight
         self.shot_pose_layers = shot_pose_layers
         self.layerwise_pose_shot_scale_init = layerwise_pose_shot_scale_init
+        self.anchor_pose_max_delta_t = anchor_pose_max_delta_t
+        self.anchor_pose_max_delta_q = anchor_pose_max_delta_q
+        self.anchor_pose_num_heads = anchor_pose_num_heads
+        self.anchor_pose_use_ref_feature = anchor_pose_use_ref_feature
+        self.anchor_pose_apply_rotation = anchor_pose_apply_rotation
         self.croco_kwargs = croco_kwargs
 
 
@@ -494,8 +505,17 @@ class ARCroco3DStereo(CroCoNet):
             scale_init=getattr(config, "layerwise_pose_shot_scale_init", 0.01),
         )
         # **========== 结束 ==========**
+        self.anchor_pose_adapter = AnchorPoseAdapter(
+            enc_dim=self.enc_embed_dim,
+            dec_dim=self.dec_embed_dim,
+            num_heads=getattr(config, "anchor_pose_num_heads", 8),
+            use_ref_feature=getattr(config, "anchor_pose_use_ref_feature", True),
+            max_delta_t=getattr(config, "anchor_pose_max_delta_t", 0.25),
+            max_delta_q=getattr(config, "anchor_pose_max_delta_q", 0.05),
+        )
         # enable_shot_adaptation flag: False = 原 Human3R 路径, True = Shot Adaptation 路径
         self.enable_shot_adaptation = False
+        self.enable_anchor_pose_adapter = False
         # **========== 原始代码备份：V2 默认启用 decoder q_t 和全部 LoRA ==========**
         # self.enable_shot_decoder_token = True
         # self.enable_pose_lora = True
@@ -541,6 +561,7 @@ class ARCroco3DStereo(CroCoNet):
         self.shot_noop_loss_weight = config.shot_noop_loss_weight
         self.shot_pointmap_keep_loss_weight = config.shot_pointmap_keep_loss_weight
         self.shot_pose_residual_loss_weight = config.shot_pose_residual_loss_weight
+        self.enable_anchor_pose_rotation = getattr(config, "anchor_pose_apply_rotation", False)
 
         self.set_freeze(config.freeze)
 
@@ -784,6 +805,25 @@ class ARCroco3DStereo(CroCoNet):
             fix_all_params(to_be_frozen["encoder_and_decoder_and_head"]) # will not be updated
             freeze_all_params(to_be_frozen["encoder"]) # requires_grad = False
             freeze_all_params(to_be_frozen["mhmr"])
+        elif freeze == "anchor_pose_adaptation":
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                self.pose_lora,
+                self.human_lora,
+                self.world_lora,
+                self.pose_translation_adapter,
+                self.pose_alignment_adapter,
+                self.layerwise_pose_shot_adapter,
+            ])
+            for p in self.anchor_pose_adapter.parameters():
+                p.requires_grad = True
+            self.enable_shot_adaptation = False
+            self.enable_anchor_pose_adapter = True
         elif freeze == "shot_adaptation":
             # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
             freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
@@ -1213,6 +1253,66 @@ class ARCroco3DStereo(CroCoNet):
         res["shot_q_raw_norm"] = shot_info["shot_q_raw_norm"]
         res["shot_q_energy"] = shot_info["shot_q_energy"]
         res["shot_scale"] = shot_info["shot_scale"]
+        return res
+
+    def _gather_anchor_features(self, feat, patch_idx):
+        patch_idx = patch_idx.long()
+        num_tokens = feat.shape[1]
+        valid = (patch_idx >= 0) & (patch_idx < num_tokens)
+        safe_idx = patch_idx.clamp(0, max(num_tokens - 1, 0))
+        gathered = feat.gather(1, safe_idx.unsqueeze(-1).expand(-1, -1, feat.shape[-1]))
+        return gathered, valid
+
+    def _apply_anchor_pose_adapter(self, res, z_out, feat, views, view_idx):
+        if not getattr(self, "enable_anchor_pose_adapter", False):
+            return res
+        if "camera_pose" not in res:
+            return res
+
+        view = views[view_idx]
+        anchor_mask = view.get("anchor_mask", None)
+        if anchor_mask is None:
+            return res
+
+        device = res["camera_pose"].device
+        anchor_mask = anchor_mask.to(device=device).bool()
+        ref_patch_idx = view["anchor_ref_patch_idx"].to(device=device).long()
+        cur_patch_idx = view["anchor_cur_patch_idx"].to(device=device).long()
+        ref_pos_norm = view["anchor_ref_pos_norm"].to(device=device, dtype=feat[view_idx].dtype)
+        cur_pos_norm = view["anchor_cur_pos_norm"].to(device=device, dtype=feat[view_idx].dtype)
+        local_residual = view["anchor_local_residual_norm"].to(device=device, dtype=feat[view_idx].dtype)
+        confidence = view["anchor_confidence"].to(device=device, dtype=feat[view_idx].dtype)
+        quality_gate = view["anchor_quality_gate"].to(device=device, dtype=res["camera_pose"].dtype)
+
+        anchor_valid = view.get("anchor_valid", None)
+        if anchor_valid is not None:
+            anchor_mask = anchor_mask & anchor_valid.to(device=device).bool().view(-1, 1)
+        shot_label = view.get("shot_label", None)
+        if shot_label is not None:
+            anchor_mask = anchor_mask & shot_label.to(device=device).bool().view(-1, 1)
+            quality_gate = quality_gate * shot_label.to(device=device, dtype=quality_gate.dtype).view(-1, 1)
+
+        ref_view_idx = int(view["anchor_ref_view_idx"].flatten()[0].item())
+        ref_view_idx = max(0, min(ref_view_idx, len(feat) - 1))
+        ref_feat, valid_ref = self._gather_anchor_features(feat[ref_view_idx], ref_patch_idx)
+        cur_feat, valid_cur = self._gather_anchor_features(feat[view_idx], cur_patch_idx)
+        anchor_mask = anchor_mask & valid_ref & valid_cur
+
+        camera_pose, anchor_info = self.anchor_pose_adapter(
+            pose_token=z_out,
+            pose_base=res["camera_pose"],
+            ref_feat=ref_feat,
+            cur_feat=cur_feat,
+            ref_pos_norm=ref_pos_norm,
+            cur_pos_norm=cur_pos_norm,
+            local_residual_norm=local_residual,
+            confidence=confidence,
+            quality_gate=quality_gate,
+            anchor_mask=anchor_mask,
+            apply_rotation=getattr(self, "enable_anchor_pose_rotation", False),
+        )
+        res["camera_pose"] = camera_pose
+        res.update(anchor_info)
         return res
 
     def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation):
@@ -1721,6 +1821,10 @@ class ARCroco3DStereo(CroCoNet):
                 head_input, shape[i], pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token)
             if self.msk_head_flag:
                 res['msk'] = msks[i]
+
+            if getattr(self, "enable_anchor_pose_adapter", False):
+                z_anchor_out = dec[self.dec_depth][:, 0:1].float()
+                res = self._apply_anchor_pose_adapter(res, z_anchor_out, feat, views, i)
 
             # Shot-Aware Adaptation: apply residual corrections
             if self.enable_shot_adaptation:

@@ -377,6 +377,27 @@ def _add_aux_loss(loss, aux_loss, aux_details):
     return main_loss, loss_details
 
 
+def _collect_anchor_pose_details(preds):
+    details = {}
+    keys = [
+        "anchor_pose_gate",
+        "anchor_pose_delta_t_norm",
+        "anchor_pose_delta_q_norm",
+        "anchor_pose_valid",
+        "anchor_pose_attn_max",
+    ]
+    for key in keys:
+        values = []
+        for pred in preds:
+            value = pred.get(key, None)
+            if value is None or not torch.is_tensor(value):
+                continue
+            values.append(value.float().reshape(-1).mean().detach())
+        if values:
+            details[key] = float(torch.stack(values).mean())
+    return details
+
+
 def loss_of_one_batch(
     batch,
     model,
@@ -446,6 +467,7 @@ def loss_of_one_batch(
                 loss = _add_aux_loss(loss, noop_loss, noop_details)
                 loss = _add_aux_loss(loss, pointmap_keep_loss, pointmap_keep_details)
                 loss = _add_aux_loss(loss, pose_residual_loss, pose_residual_details)
+                loss[1].update(_collect_anchor_pose_details(preds))
 
     result = dict(views=batch, pred=preds, loss=loss)
     return result[ret] if ret else result
