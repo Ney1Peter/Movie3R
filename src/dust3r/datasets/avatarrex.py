@@ -22,6 +22,7 @@ AvatarReX Dataset for Human3R
 
 import os
 import os.path as osp
+import json
 import numpy as np
 import pickle
 from tqdm import tqdm
@@ -45,6 +46,44 @@ def _load_depthmap_meters(depth_path, image_shape):
     depthmap[~np.isfinite(depthmap)] = 0.0
     depthmap[depthmap > 200.0] = 0.0
     return depthmap
+
+
+def _empty_anchor_info(top_k=16):
+    return dict(
+        anchor_valid=np.array(False, dtype=np.bool_),
+        anchor_ref_view_idx=np.array(1, dtype=np.int64),
+        anchor_cur_view_idx=np.array(2, dtype=np.int64),
+        anchor_ref_patch_idx=np.zeros((top_k,), dtype=np.int64),
+        anchor_cur_patch_idx=np.zeros((top_k,), dtype=np.int64),
+        anchor_ref_pos_norm=np.zeros((top_k, 2), dtype=np.float32),
+        anchor_cur_pos_norm=np.zeros((top_k, 2), dtype=np.float32),
+        anchor_local_residual_norm=np.zeros((top_k, 2), dtype=np.float32),
+        anchor_confidence=np.zeros((top_k,), dtype=np.float32),
+        anchor_quality_gate=np.zeros((1,), dtype=np.float32),
+        anchor_mask=np.zeros((top_k,), dtype=np.bool_),
+    )
+
+
+def _pad_anchor_array(array, shape, dtype):
+    out = np.zeros(shape, dtype=dtype)
+    if array is None:
+        return out
+    arr = np.asarray(array, dtype=dtype)
+    n = min(shape[0], arr.shape[0])
+    if n > 0:
+        out[:n] = arr[:n]
+    return out
+
+
+def _compute_anchor_local_residual(ref_pos_norm, cur_pos_norm, affine_inverse):
+    if affine_inverse is None:
+        return ref_pos_norm - cur_pos_norm
+    cur_h = np.concatenate(
+        [cur_pos_norm, np.ones((cur_pos_norm.shape[0], 1), dtype=np.float32)],
+        axis=1,
+    )
+    base_ref = cur_h @ affine_inverse.astype(np.float32).T
+    return ref_pos_norm - base_ref.astype(np.float32)
 
 
 class AvatarReX_AABB(BaseMultiViewDataset):
@@ -76,6 +115,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         aug_crop=16,
         allow_repeat=False,
         seed=None,
+        anchor_cache_root=None,
+        anchor_cache_only=False,
+        anchor_top_k=16,
+        anchor_quality_threshold=0.0,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -84,6 +127,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.is_metric = True
         self.max_interval = 1           # AABB 固定间隔1
         self.max_humans = 10
+        self.anchor_cache_root = anchor_cache_root
+        self.anchor_cache_only = anchor_cache_only
+        self.anchor_top_k = anchor_top_k
+        self.anchor_quality_threshold = anchor_quality_threshold
+        self.anchor_cache_index = {}
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
             "smplx_body_pose": (21, 3),
@@ -183,6 +231,69 @@ class AvatarReX_AABB(BaseMultiViewDataset):
               f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps, "
               f"frames {self.frame_ids[0]}-{self.frame_ids[-1]})")
 
+        if self.anchor_cache_root:
+            self._load_anchor_cache_index()
+            if self.anchor_cache_only:
+                before = len(self.samples)
+                self.samples = [s for s in self.samples if s in self.anchor_cache_index]
+                print(f"  AvatarReX_AABB anchor cache-only: {len(self.samples):,}/{before:,} samples")
+
+    def _load_anchor_cache_index(self):
+        manifest_path = osp.join(self.anchor_cache_root, "manifest.jsonl")
+        if not osp.isfile(manifest_path):
+            raise FileNotFoundError(f"Anchor cache manifest not found: {manifest_path}")
+
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                if record.get("status") != "ok":
+                    continue
+                if float(record.get("quality_gate", 0.0)) < self.anchor_quality_threshold:
+                    continue
+                boundary = record["boundary"]
+                key = (boundary["ref_seq"], boundary["cur_seq"], int(record["start_frame"]))
+                cache_path = record["cache_path"]
+                if not osp.isabs(cache_path):
+                    cache_path = osp.join(self.anchor_cache_root, cache_path)
+                self.anchor_cache_index[key] = cache_path
+
+        print(f"  Loaded anchor cache entries: {len(self.anchor_cache_index):,} from {manifest_path}")
+
+    def _load_anchor_info(self, seqA_name, seqB_name, start_frame):
+        key = (seqA_name, seqB_name, int(start_frame))
+        cache_path = self.anchor_cache_index.get(key)
+        if not cache_path:
+            return _empty_anchor_info(self.anchor_top_k)
+
+        data = np.load(cache_path)
+        top_k = self.anchor_top_k
+        n = min(top_k, int(data["ref_patch_idx"].shape[0]))
+        ref_pos = _pad_anchor_array(data["ref_pos_norm"], (top_k, 2), np.float32)
+        cur_pos = _pad_anchor_array(data["cur_pos_norm"], (top_k, 2), np.float32)
+        residual = np.zeros((top_k, 2), dtype=np.float32)
+        if n > 0:
+            residual[:n] = _compute_anchor_local_residual(
+                data["ref_pos_norm"][:n].astype(np.float32),
+                data["cur_pos_norm"][:n].astype(np.float32),
+                data["affine_inverse"],
+            )
+
+        info = _empty_anchor_info(top_k)
+        info.update(
+            anchor_valid=np.array(n > 0, dtype=np.bool_),
+            anchor_ref_patch_idx=_pad_anchor_array(data["ref_patch_idx"], (top_k,), np.int64),
+            anchor_cur_patch_idx=_pad_anchor_array(data["cur_patch_idx"], (top_k,), np.int64),
+            anchor_ref_pos_norm=ref_pos,
+            anchor_cur_pos_norm=cur_pos,
+            anchor_local_residual_norm=residual,
+            anchor_confidence=_pad_anchor_array(data["confidence"], (top_k,), np.float32),
+            anchor_quality_gate=np.asarray(data["quality_gate"], dtype=np.float32).reshape(1),
+            anchor_mask=np.arange(top_k) < n,
+        )
+        return info
+
     def __len__(self):
         return len(self.samples)
 
@@ -230,11 +341,14 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             (seqB_name, cam, t3, annots_t3, shot_labels[3]),  # view 3: 相机B @ t+3
         ]
 
+        boundary_anchor_info = self._load_anchor_info(seqA_name, seqB_name, t)
         for v, (seq_name, cam_id, frame_idx, annots, shot_label) in enumerate(view_specs):
-            views.append(self._load_view(
+            view = self._load_view(
                 split_path, seq_name, cam_id, frame_idx, annots,
                 resolution, rng, v, shot_label,
-            ))
+            )
+            view.update(boundary_anchor_info if v == 2 else _empty_anchor_info(self.anchor_top_k))
+            views.append(view)
 
         assert len(views) == num_views
         return views
@@ -408,6 +522,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         aug_crop=16,
         allow_repeat=False,
         seed=None,
+        anchor_top_k=16,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_Video requires ROOT"
@@ -416,6 +531,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.is_metric = True
         self.max_interval = 4
         self.max_humans = 10
+        self.anchor_top_k = anchor_top_k
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
             "smplx_body_pose": (21, 3),
@@ -518,10 +634,12 @@ class AvatarReX_Video(BaseMultiViewDataset):
         start_pos = self.frame_to_pos[t]
         for v in range(num_views):
             frame_idx = self.frame_ids[start_pos + v]
-            views.append(self._load_view(
+            view = self._load_view(
                 split_path, seq_name, cam, frame_idx, resolution, rng, v,
                 shot_labels[v],
-            ))
+            )
+            view.update(_empty_anchor_info(self.anchor_top_k))
+            views.append(view)
         # **========== 结束 ==========**
 
         return views
