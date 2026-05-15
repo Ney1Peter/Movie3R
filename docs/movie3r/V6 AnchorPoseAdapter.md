@@ -24,6 +24,8 @@
 | V5 layerwise shot adapter | 不再继续扩展 |
 | 新 token | AnchorToken，来自局部静态背景匹配 |
 | 新 adapter | decoder 后 pose-only attention + pose residual |
+| V6-A 当前实现目标 | decoder-after 后处理验证，只修 `camera_pose` |
+| V6-B 下一步目标 | decoder 内 pose-only cross attention，但不进入 full decoder sequence |
 | 影响范围 | 只影响 `camera_pose` |
 | 不影响范围 | image tokens、human tokens、pointmap、SMPL body |
 
@@ -74,6 +76,21 @@ AnchorTokens 只由 pose token 在 decoder 结束后读取。
 | no-op 安全性 | 依赖 q gate，历史上不稳定 | anchor 缺失或 gate 低时严格 no-op |
 
 当前结论：AnchorToken 方向是合理的，但第一版 token payload 必须收窄。不要把所有 cache 字段都作为模型输入。cache 可以存很多调试字段，但模型读入的内容必须是 typed、局部、可解释、可消融的 re-anchor evidence。
+
+实现阶段上，V6 分两步推进：
+
+```text
+V6-A: decoder 后处理版
+  base decoder 和 downstream heads 完全照 Human3R 运行
+  AnchorTokenizer 根据 cache 中的 ref/current patch 位置去 encoder feature map gather token
+  pose token 在 decoder 后单独读取 AnchorTokens
+  只输出 camera_pose residual
+
+V6-B: decoder 内 pose-only 版
+  AnchorTokens 仍然不作为普通 token 拼进 [pose, image, human]
+  每层或后几层只允许 pose token cross-attend AnchorTokens
+  image tokens / human tokens / pointmap / SMPL 仍不直接读取 AnchorTokens
+```
 
 ## 2. 为什么不继续旧 ShotToken
 
@@ -226,6 +243,63 @@ Human token: local human evidence -> SMPL branch
 AnchorToken: local scene re-anchor evidence -> pose/camera branch
 ```
 
+### 4.1 AnchorToken 也应该“先定位，再取 token”
+
+human token 的关键不是“有一个额外 token”，而是它先通过人体中心位置确定去哪里取特征，再把取到的局部 token 融合成 prompt。AnchorToken 应该采用同样的原则：不是直接把 cache 数值投影成一个抽象 token，而是由 cache 给出明确的 ref/current patch pair，再去 frozen encoder feature map 中取对应 token。
+
+推荐结构：
+
+```text
+anchor pair k:
+  ref_view = boundary 前一帧，例如 view1 = A@t+1
+  cur_view = boundary 当前帧，例如 view2 = B@t+2
+  ref_patch_idx / ref_patch_xy
+  cur_patch_idx / cur_patch_xy
+
+AnchorTokenizer:
+  ref_feat_k = gather(F_ref, ref_patch_idx_k)
+  cur_feat_k = gather(F_cur, cur_patch_idx_k)
+  geometry_k = [ref_pos_norm, cur_pos_norm, local_residual_norm, confidence]
+  anchor_token_k = Projector([cur_feat_k, optional ref_feat_k, geometry_k])
+```
+
+这个设计回答了“找的东西可以是上一帧的特征点吗”：可以，而且应该是上一帧和当前帧的一对特征点。对 AABB boundary 来说，上一帧不是任意历史帧，而是跳变前的 `view1`，当前帧是跳变后的 `view2`。
+
+```text
+views = [A@t, A@t+1, B@t+2, B@t+3]
+anchor source = (view1, view2)
+ref = A@t+1
+cur = B@t+2
+```
+
+这样 AnchorToken 的语义就和 human token 一样具体：
+
+```text
+Human token: 这个人所在 patch 的人体局部证据。
+AnchorToken: 这个 current patch 和上一帧 ref patch 对应的静态背景重定位证据。
+```
+
+### 4.2 当前先做后处理，下一步再进 decoder 内
+
+当前实现优先级：
+
+| 阶段 | 位置 | 目标 | 风险控制 |
+|---|---|---|---|
+| V6-A | decoder 后 / head 后 | 验证 AnchorTokenizer + AnchorPoseAdapter 是否能改善 boundary camera pose | 不改 decoder token 交互，不影响 pointmap/SMPL |
+| V6-B | decoder 内 pose-only | 让 pose token 在推理过程中更早利用 anchor evidence | 只更新 pose token，不让 image/human tokens attend anchors |
+
+V6-A 的意义是先单独测试 anchor evidence 是否有效。只要 decoder-after 已经能在 high-overlap boundary 上稳定降低 pose error，就说明 AnchorTokenizer 方向成立。之后再把同一个 AnchorTokenizer 保留，把 consumer 从 decoder-after adapter 升级为 decoder 内 pose-only attention。
+
+V6-B 不是把 AnchorTokens 直接拼进主 sequence，而是：
+
+```text
+for decoder layer l:
+    [pose, image, human] = normal_decoder_layer([pose, image, human])
+    pose = pose + PoseOnlyAnchorCrossAttention(pose, anchor_tokens)
+```
+
+这里 AnchorTokens 只作为 pose token 的 key/value。image tokens、human tokens、state tokens 不读 AnchorTokens。
+
 ## 5. 当前 AnchorToken 设计是否合理
 
 ### 5.1 当前 cache / prototype 携带的信息
@@ -355,6 +429,8 @@ AvatarReX_AABB sample
   -> PoseDeltaHead outputs bounded delta camera pose
   -> only res['camera_pose'] is updated
 ```
+
+这里的 gather 是 V6 和 human token 对齐的关键。cache 不直接告诉模型 camera residual，而是告诉 AnchorTokenizer 去上一帧和当前帧的哪些 patch 取 token。模型看到的是 frozen encoder 中的局部证据，以及这个 pair 的 geometry/confidence。
 
 如果没有 cache、anchor 数量不足、quality gate 低、或当前不是 boundary frame：
 
@@ -523,6 +599,33 @@ camera_pose[3:7] 保持 base
 
 如果 translation-only 稳定，再启用小幅 quaternion residual。
 
+### 7.4 下一阶段：decoder 内 pose-only attention
+
+V6-B 可以把 AnchorPoseAdapter 从 decoder-after 后处理提前到 decoder 内，但仍然不能把 AnchorTokens 作为普通 sequence token。
+
+不做：
+
+```text
+[pose, image, human, anchor] 进入同一个 self/cross attention 空间
+```
+
+推荐做：
+
+```text
+decoder layer l output:
+  pose_l, image_l, human_l
+
+pose-only anchor read:
+  anchor_ctx_l = CrossAttention(q=pose_l, k=anchor_tokens, v=anchor_tokens)
+  pose_l = pose_l + gated_adapter(anchor_ctx_l)
+
+unchanged:
+  image_l = image_l
+  human_l = human_l
+```
+
+这样做的目的不是让 AnchorToken 成为新的全局控制 token，而是让 pose token 在每层或后几层获得更早、更逐步的 re-anchor evidence。V6-A 和 V6-B 应该共用同一个 AnchorTokenizer，区别只在 consumer 的位置。
+
 ## 8. Dataset 和 cache-aware loading
 
 ### 8.1 第一版 sample 选择
@@ -546,6 +649,24 @@ camera_pose[3:7] 保持 base
 | camera pairs | `1-2,3-4,4-5,5-6,6-7` |
 
 第一版训练不要直接覆盖完整 `AvatarReX_AABB 20,720` samples。建议只采样 cache-covered high-overlap samples，先验证 forward/backward 和 pose-only correction。
+
+当前 smoke train set 建议：
+
+```text
+train = high-overlap cache-only AvatarReX_AABB + AvatarReX_Video
+```
+
+其中 AABB 只在 boundary `view2` 启用 AnchorTokens，Video 全部作为连续 no-op negative：
+
+| 样本 / view | AnchorTokens | 训练含义 |
+|---|---|---|
+| AABB view0 | 不给 | 起始帧 no-op |
+| AABB view1 | 不给 | 同镜头连续 no-op |
+| AABB view2 | 给 high-overlap cache anchors | 跳变边界，学习 camera_pose correction |
+| AABB view3 | 不给 | 跳变后同镜头连续 no-op |
+| Video all views | 不给或 `quality_gate=0` | 连续序列，保持 base 行为 |
+
+这个划分让 AnchorToken 不承担 shot classification。是否启用 AnchorPoseAdapter 由 `shot_label == 1`、cache 命中、`quality_gate` 和 `anchor_mask` 决定。
 
 ### 8.2 Dataset 返回字段
 
@@ -660,7 +781,7 @@ config/train_v6_anchor_pose_guitar.yaml
 |---|---|
 | `pretrained` | `/data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth` |
 | dataset root | `/data/wangzheng/iJCV-CODE/data/RICH_4Human3R` |
-| dataset | cache-covered `AvatarReX_AABB` first |
+| dataset | high-overlap cache-only `AvatarReX_AABB` + `AvatarReX_Video` |
 | batch size | 1 |
 | num workers | 0 |
 | resolution | fixed 512-compatible |
@@ -763,6 +884,9 @@ human/world/pose LoRA
 | trainable params | 只包含 anchor pose modules |
 | no-anchor sample | camera_pose 完全等于 base 或 delta=0 |
 | gate low sample | delta 接近 0 |
+| Video sample | 不给 AnchorTokens 或 gate=0，adapter no-op |
+| AABB non-boundary view | 不给 AnchorTokens，adapter no-op |
+| AABB boundary view2 | 使用 high-overlap AnchorTokens 修 `camera_pose` |
 | pointmap | 不被 adapter 直接修改 |
 | smpl outputs | 不被 adapter 直接修改 |
 | anchor delta norm | 有日志，且受 `max_delta` 限制 |
