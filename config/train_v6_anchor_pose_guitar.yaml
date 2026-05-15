@@ -1,4 +1,10 @@
 # V6-A AnchorPoseAdapter guitar-only smoke config.
+# Loss policy:
+# - Keep the original Human3R task losses and AABB boundary pose supervision.
+# - Do not add new AnchorToken-specific losses in V6-A.
+# - Legacy V5 ShotToken auxiliary losses are explicitly disabled below.
+# - The `shot_*` names inside Regr3DPoseBatchList are retained for now, but they are
+#   boundary pose supervision terms, not ShotToken BCE/q-token losses.
 defaults:
   - train
   - _self_

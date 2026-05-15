@@ -58,6 +58,13 @@ def _unwrap_model(model):
     return getattr(model, "module", model)
 
 
+def _use_legacy_shot_aux(model):
+    base_model = _unwrap_model(model)
+    return bool(getattr(base_model, "enable_shot_adaptation", False)) and not bool(
+        getattr(base_model, "enable_anchor_pose_adapter", False)
+    )
+
+
 def _as_shot_label(view, ref_tensor):
     shot_label = view.get("shot_label", None)
     if shot_label is None:
@@ -439,10 +446,22 @@ def loss_of_one_batch(
             smpl_model.update_smpl_gt(batch)
             output = model(batch)
             preds, batch = output.ress, output.views
-            preds_off = _compute_shot_off_preds(batch, model)
-            noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
-            pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(batch, preds, preds_off, model)
-            pose_residual_loss, pose_residual_details = _compute_shot_pose_residual_loss(preds, model)
+            # **========== V5 原始代码：训练 ShotToken 时计算 legacy shot auxiliary losses ==========**
+            # preds_off = _compute_shot_off_preds(batch, model)
+            # noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
+            # pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(batch, preds, preds_off, model)
+            # pose_residual_loss, pose_residual_details = _compute_shot_pose_residual_loss(preds, model)
+            # **========== 新代码：V6-A AnchorPoseAdapter 不训练 ShotToken auxiliary losses ==========**
+            if _use_legacy_shot_aux(model):
+                preds_off = _compute_shot_off_preds(batch, model)
+                noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
+                pointmap_keep_loss, pointmap_keep_details = _compute_shot_pointmap_keep_loss(batch, preds, preds_off, model)
+                pose_residual_loss, pose_residual_details = _compute_shot_pose_residual_loss(preds, model)
+            else:
+                noop_loss, noop_details = None, {}
+                pointmap_keep_loss, pointmap_keep_details = None, {}
+                pose_residual_loss, pose_residual_details = None, {}
+            # **========== 结束 ==========**
 
         # **========== Layer 1 原始代码备份：训练 loss 仅来自主 criterion ==========**
         # with torch.cuda.amp.autocast(enabled=False):
@@ -451,10 +470,18 @@ def loss_of_one_batch(
         with torch.cuda.amp.autocast(enabled=False):
             loss = criterion(batch, preds) if criterion is not None else None
             if loss is not None:
-                shot_loss, shot_details = _compute_shot_bce_loss(batch, preds, model)
-                loss = _add_aux_loss(loss, shot_loss, shot_details)
-                q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
-                loss = _add_aux_loss(loss, q0_loss, q0_details)
+                # **========== V5 原始代码：ShotToken BCE 和 q-token no-op energy ==========**
+                # shot_loss, shot_details = _compute_shot_bce_loss(batch, preds, model)
+                # loss = _add_aux_loss(loss, shot_loss, shot_details)
+                # q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
+                # loss = _add_aux_loss(loss, q0_loss, q0_details)
+                # **========== 新代码：仅 legacy ShotToken 训练启用，V6-A 显式跳过 ==========**
+                if _use_legacy_shot_aux(model):
+                    shot_loss, shot_details = _compute_shot_bce_loss(batch, preds, model)
+                    loss = _add_aux_loss(loss, shot_loss, shot_details)
+                    q0_loss, q0_details = _compute_shot_q0_loss(batch, preds, model)
+                    loss = _add_aux_loss(loss, q0_loss, q0_details)
+                # **========== 结束 ==========**
                 # **========== Layer 3 原始代码备份：无 pred_off 连续帧 no-op 输出约束 ==========**
                 # 当前只使用主任务 loss、shot BCE 和 q_t 能量正则。
                 # **========== 结束 ==========**
@@ -464,9 +491,15 @@ def loss_of_one_batch(
                 # loss = _add_aux_loss(loss, q0_loss, q0_details)
                 # loss = _add_aux_loss(loss, noop_loss, noop_details)
                 # **========== 结束 ==========**
+                # **========== V5 原始代码：追加 ShotToken no-op / pointmap keep / residual 正则 ==========**
+                # loss = _add_aux_loss(loss, noop_loss, noop_details)
+                # loss = _add_aux_loss(loss, pointmap_keep_loss, pointmap_keep_details)
+                # loss = _add_aux_loss(loss, pose_residual_loss, pose_residual_details)
+                # **========== 新代码：变量在 V6-A 为 None，因此保持主 loss 不变 ==========**
                 loss = _add_aux_loss(loss, noop_loss, noop_details)
                 loss = _add_aux_loss(loss, pointmap_keep_loss, pointmap_keep_details)
                 loss = _add_aux_loss(loss, pose_residual_loss, pose_residual_details)
+                # **========== 结束 ==========**
                 loss[1].update(_collect_anchor_pose_details(preds))
 
     result = dict(views=batch, pred=preds, loss=loss)

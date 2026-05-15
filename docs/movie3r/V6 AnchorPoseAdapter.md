@@ -730,13 +730,27 @@ V6 主线中应关闭：
 | `WorldLoRALayer` | 关闭 |
 | `shot_loss_weight` | 设 0 或不计算 |
 | `shot_q0_loss_weight` | 设 0 或不计算 |
-| `shot_noop_loss_weight` | 设 0 或替换为 anchor no-op |
+| `shot_noop_loss_weight` | V6-A 设 0，不替换；no-op 由 anchor gate 保证 |
 | `shot_pointmap_keep_loss_weight` | 第一版不需要，因为 pointmap 不被改 |
-| `shot_pose_residual_loss_weight` | 可替换为 anchor pose residual regularization |
+| `shot_pose_residual_loss_weight` | V6-A 设 0；后续如需要再单独设计 anchor pose 正则 |
+
+实现上，`freeze='anchor_pose_adaptation'` 会显式跳过 legacy ShotToken auxiliary losses。包括 ShotToken BCE、q-token energy、shot-on/off no-op、pointmap keep 和 V5 pose residual regularization。这样即使默认训练流程里还保留这些函数，V6-A 也不会误用它们。
+
+注意：`Regr3DPoseBatchList` 里当前仍有一些历史命名为 `shot_*` 的 AABB pose supervision，例如 `shot_boundary_abs_loss`、`shot_jump_rel_loss`、`shot_anchor_loss`。这些不是 ShotToken auxiliary loss，而是直接监督 AABB boundary camera pose 的原有项。V6-A 暂时保留它们，避免在尚未进入 decoder 的阶段改动主训练目标。
 
 ### 9.2 推荐训练目标
 
-第一版仍以已有主任务 loss 为主：
+当前 V6-A 先不新增 AnchorToken 专用 loss，仍以已有主任务 loss 为主：
+
+```text
+L = L_task
+```
+
+其中 `L_task` 继续使用已有 camera/pointmap/SMPL 监督，尤其是 AABB boundary camera pose 相关 loss。
+
+历史上为 V5 ShotToken 加的 auxiliary loss 不启用。由于 V6 不改 pointmap/human branch，第一版不需要额外 pointmap preservation loss。若后续发现 camera pose 修正和 pointmap 坐标系不一致，再单独加 camera/world consistency loss。
+
+未来如果需要更强约束，再考虑显式 anchor pose regularization：
 
 ```text
 L = L_task
@@ -744,9 +758,7 @@ L = L_task
   + lambda_no_anchor * (1 - anchor_valid) * ||delta_pose||
 ```
 
-其中 `L_task` 继续使用已有 camera/pointmap/SMPL 监督，尤其是 AABB boundary camera pose 相关 loss。
-
-由于 V6 不改 pointmap/human branch，第一版不需要额外 pointmap preservation loss。若后续发现 camera pose 修正和 pointmap 坐标系不一致，再单独加 camera/world consistency loss。
+这不是当前 V6-A 默认训练目标。
 
 ### 9.3 no-op 约束
 
