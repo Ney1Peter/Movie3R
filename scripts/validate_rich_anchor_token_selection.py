@@ -29,6 +29,10 @@ for path in [REPO_ROOT, SRC_ROOT, SCRIPT_DIR]:
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from report_image_style import patch_cv2_text  # noqa: E402
+
+patch_cv2_text(cv2)
+
 from prototype_rich_anchor_tokens import (  # noqa: E402
     aggregate_method_rows,
     build_data,

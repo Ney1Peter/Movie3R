@@ -20,7 +20,11 @@ import torch
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[0]
 SRC_ROOT = REPO_ROOT / "src"
-ACCEL_ROOT = Path("/workspace/code/accelerated_features")
+# **========== 原始代码：旧服务器 XFeat 路径 ==========**
+# ACCEL_ROOT = Path("/workspace/code/accelerated_features")
+# **========== 新代码：当前服务器 XFeat 路径 ==========**
+ACCEL_ROOT = REPO_ROOT.parent / "xfeat-for-Movie3R"
+# **========== 结束 ==========**
 ACCEL_SCRIPTS = ACCEL_ROOT / "scripts"
 for path in [REPO_ROOT, SRC_ROOT, ACCEL_ROOT, ACCEL_SCRIPTS, SCRIPT_DIR]:
     if str(path) not in sys.path:
@@ -45,9 +49,15 @@ from verify_rich_anchor_encoder_similarity import (  # noqa: E402
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rich_root", default="/workspace/data/RICH")
-    parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
-    parser.add_argument("--out_root", default="/workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_v1")
+    # **========== 原始代码：旧服务器 RICH/cache 路径 ==========**
+    # parser.add_argument("--rich_root", default="/workspace/data/RICH")
+    # parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # parser.add_argument("--out_root", default="/workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_v1")
+    # **========== 新代码：当前服务器 RICH/cache 路径 ==========**
+    parser.add_argument("--rich_root", default=str(REPO_ROOT.parent / "data"))
+    parser.add_argument("--data_root", default=str(REPO_ROOT.parent / "data" / "RICH_4Human3R" / "Training"))
+    parser.add_argument("--out_root", default=str(REPO_ROOT.parent / "data" / "RICH_4Human3R" / "anchor_cache_guitar_v1"))
+    # **========== 结束 ==========**
     parser.add_argument("--source_sequence", default="BBQ_001_guitar")
     parser.add_argument("--camera_pairs", default="6-7,5-6,4-5,3-4,1-2")
     parser.add_argument("--start_frame", type=int, default=5)

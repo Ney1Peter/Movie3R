@@ -17,12 +17,20 @@ import torch.nn.functional as F
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
-ACCEL_ROOT = Path("/workspace/code/accelerated_features")
+# **========== 原始代码：旧服务器 XFeat 路径 ==========**
+# ACCEL_ROOT = Path("/workspace/code/accelerated_features")
+# **========== 新代码：当前服务器 XFeat 路径 ==========**
+ACCEL_ROOT = REPO_ROOT.parent / "xfeat-for-Movie3R"
+# **========== 结束 ==========**
 ACCEL_SCRIPTS = ACCEL_ROOT / "scripts"
 
 for path in [REPO_ROOT, SRC_ROOT, ACCEL_ROOT, ACCEL_SCRIPTS, Path(__file__).resolve().parent]:
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
+
+from report_image_style import patch_cv2_text  # noqa: E402
+
+patch_cv2_text(cv2)
 
 import verify_rich_anchor_encoder_similarity as base  # noqa: E402
 from dust3r.model_human3r import load_model  # noqa: E402
@@ -41,8 +49,13 @@ from visualize_rich_mesh_projection import load_ply_vertices  # noqa: E402
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rich_root", default="/workspace/data/RICH")
-    parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 原始代码：旧服务器 RICH 路径 ==========**
+    # parser.add_argument("--rich_root", default="/workspace/data/RICH")
+    # parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 新代码：当前服务器 RICH 路径 ==========**
+    parser.add_argument("--rich_root", default=str(REPO_ROOT.parent / "data"))
+    parser.add_argument("--data_root", default=str(REPO_ROOT.parent / "data" / "RICH_4Human3R" / "Training"))
+    # **========== 结束 ==========**
     parser.add_argument("--source_sequence", default="BBQ_001_guitar")
     parser.add_argument("--cam_a", type=int, default=6)
     parser.add_argument("--cam_b", type=int, default=7)

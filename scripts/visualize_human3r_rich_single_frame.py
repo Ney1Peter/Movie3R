@@ -32,7 +32,11 @@ from dust3r.utils.image import load_images, pad_image, unpad_uv  # noqa: E402
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 原始代码：旧服务器 RICH 路径 ==========**
+    # parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 新代码：当前服务器 RICH 路径 ==========**
+    parser.add_argument("--data_root", default=str(REPO_ROOT.parent / "data" / "RICH_4Human3R" / "Training"))
+    # **========== 结束 ==========**
     parser.add_argument("--source_sequence", default="BBQ_001_guitar")
     parser.add_argument("--cam", type=int, default=6)
     parser.add_argument("--frame", type=int, default=6)

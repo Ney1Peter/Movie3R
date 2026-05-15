@@ -26,6 +26,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from report_image_style import patch_cv2_text
+
+patch_cv2_text(cv2)
+
 from verify_rich_anchor_encoder_similarity import (  # noqa: E402
     REPO_ROOT,
     XFeat,
@@ -64,8 +68,13 @@ PAIR_SPECS = [
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rich_root", default="/workspace/data/RICH")
-    parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 原始代码：旧服务器 RICH 路径 ==========**
+    # parser.add_argument("--rich_root", default="/workspace/data/RICH")
+    # parser.add_argument("--data_root", default="/workspace/data/RICH/RICH_4Human3R/Training")
+    # **========== 新代码：当前服务器 RICH 路径 ==========**
+    parser.add_argument("--rich_root", default=str(REPO_ROOT.parent / "data"))
+    parser.add_argument("--data_root", default=str(REPO_ROOT.parent / "data" / "RICH_4Human3R" / "Training"))
+    # **========== 结束 ==========**
     parser.add_argument("--source_sequence", default="BBQ_001_guitar")
     parser.add_argument("--cam_a", type=int, default=6)
     parser.add_argument("--cam_b", type=int, default=7)

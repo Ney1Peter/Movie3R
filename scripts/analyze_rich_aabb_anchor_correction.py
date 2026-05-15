@@ -20,6 +20,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from report_image_style import patch_cv2_text
+
+patch_cv2_text(cv2)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -257,6 +261,85 @@ def draw_prediction_overlay(path, boundary_dir, arrays, ev, max_draw):
     cv2.imwrite(str(path), out)
 
 
+def draw_single_method_overlay(path, boundary_dir, arrays, ev, method, max_draw):
+    specs = {
+        "no_correction": {
+            "title": "No correction: reference patch keeps the same normalized position",
+            "pred_key": "pred_zero",
+            "err_key": "errors_zero",
+            "color": (230, 80, 80),
+        },
+        "translation": {
+            "title": "Translation correction: one global average dx,dy from all anchors",
+            "pred_key": "pred_translation",
+            "err_key": "errors_translation",
+            "color": (80, 180, 80),
+        },
+        "affine": {
+            "title": "Affine correction: 2D coarse re-anchor fitted from anchors",
+            "pred_key": "pred_affine",
+            "err_key": "errors_affine",
+            "color": (40, 170, 255),
+        },
+    }
+    spec = specs[method]
+    pred_norm = ev[spec["pred_key"]]
+    errors = ev[spec["err_key"]]
+    cur_grid_path = boundary_dir / "03_cur_human3r_crop_grid.jpg"
+    img = cv2.imread(str(cur_grid_path), cv2.IMREAD_COLOR)
+    if img is None:
+        cur_w, cur_h = arrays["cur_wh"]
+        img = np.full((int(cur_h), int(cur_w), 3), 245, dtype=np.uint8)
+
+    canvas = img.copy()
+    n = len(arrays["cur_norm"])
+    ids = np.arange(n)
+    if n > max_draw:
+        ids = np.linspace(0, n - 1, max_draw).round().astype(np.int64)
+
+    cur_wh = arrays["cur_wh"]
+    true_px = arrays["cur_norm"] * cur_wh[None]
+    if pred_norm is None:
+        pred_px = None
+    else:
+        pred_px = pred_norm * cur_wh[None]
+
+    method_color = spec["color"]
+    true_color = (255, 0, 255)
+    if pred_px is not None:
+        for idx in ids:
+            pred = tuple(np.round(pred_px[idx]).astype(int).tolist())
+            true = tuple(np.round(true_px[idx]).astype(int).tolist())
+            # **========== 原始代码：较粗箭头和较大点 ==========**
+            # cv2.arrowedLine(canvas, pred, true, method_color, 2, cv2.LINE_AA, tipLength=0.20)
+            # cv2.circle(canvas, pred, 4, method_color, -1, cv2.LINE_AA)
+            # cv2.circle(canvas, true, 5, true_color, -1, cv2.LINE_AA)
+            # cv2.circle(canvas, true, 8, (255, 255, 255), 1, cv2.LINE_AA)
+            # **========== 新代码：更细的误差线和更小的点 ==========**
+            cv2.line(canvas, pred, true, method_color, 1, cv2.LINE_AA)
+            cv2.circle(canvas, pred, 2, method_color, -1, cv2.LINE_AA)
+            cv2.circle(canvas, true, 2, true_color, -1, cv2.LINE_AA)
+            cv2.circle(canvas, true, 4, (255, 255, 255), 1, cv2.LINE_AA)
+            # **========== 结束 ==========**
+
+    if errors is None:
+        err_text = "patch error: unavailable"
+    else:
+        patch_err = np.asarray(errors["patch"], dtype=np.float32)
+        err_text = f"anchors={n} | median patch error={np.median(patch_err):.2f} | mean={patch_err.mean():.2f}"
+
+    legend = np.zeros((92, canvas.shape[1], 3), dtype=np.uint8)
+    cv2.putText(legend, spec["title"], (12, 34), cv2.FONT_HERSHEY_SIMPLEX, 0.66, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(legend, err_text, (12, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (220, 220, 220), 1, cv2.LINE_AA)
+    # **========== 原始代码：箭头说明 ==========**
+    # cv2.putText(legend, "arrow: predicted current position -> true mesh-verified current anchor; shorter is better", (12, 86), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (190, 190, 190), 1, cv2.LINE_AA)
+    # **========== 新代码：明确 GT、预测和误差线含义 ==========**
+    cv2.putText(legend, "magenta=GT mesh anchor, colored=method prediction, thin line=prediction error; shorter is better", (12, 86), cv2.FONT_HERSHEY_SIMPLEX, 0.46, (190, 190, 190), 1, cv2.LINE_AA)
+    # **========== 结束 ==========**
+    out = np.concatenate([legend, canvas], axis=0)
+    cv2.imwrite(str(path), out)
+
+
 def draw_error_chart(path, correction_summary):
     width, height = 980, 460
     canvas = np.full((height, width, 3), 245, dtype=np.uint8)
@@ -313,6 +396,9 @@ def analyze_one(aabb_dir, out_dir, sample_counts, trials, rng, max_draw):
     pair_out = out_dir / aabb_dir.name
     pair_out.mkdir(parents=True, exist_ok=True)
     draw_prediction_overlay(pair_out / "correction_prediction_overlay.jpg", boundary_dir, arrays, ev, max_draw)
+    draw_single_method_overlay(pair_out / "correction_overlay_no_correction.jpg", boundary_dir, arrays, ev, "no_correction", max_draw)
+    draw_single_method_overlay(pair_out / "correction_overlay_translation.jpg", boundary_dir, arrays, ev, "translation", max_draw)
+    draw_single_method_overlay(pair_out / "correction_overlay_affine.jpg", boundary_dir, arrays, ev, "affine", max_draw)
     correction_summary = {
         "aabb_dir": str(aabb_dir),
         "boundary_dir": str(boundary_dir),
@@ -333,6 +419,9 @@ def analyze_one(aabb_dir, out_dir, sample_counts, trials, rng, max_draw):
         "sampling": sampling,
         "visualizations": {
             "prediction_overlay": str(pair_out / "correction_prediction_overlay.jpg"),
+            "no_correction_overlay": str(pair_out / "correction_overlay_no_correction.jpg"),
+            "translation_overlay": str(pair_out / "correction_overlay_translation.jpg"),
+            "affine_overlay": str(pair_out / "correction_overlay_affine.jpg"),
             "error_chart": str(pair_out / "correction_sampling_error_chart.jpg"),
         },
     }
@@ -381,7 +470,11 @@ def main():
     rng = np.random.default_rng(args.seed)
     sample_counts = parse_sample_counts(args.sample_counts)
     if args.out_dir is None:
-        args.out_dir = "/workspace/code/Movie3R/output/rich_aabb_anchor_correction_proxy"
+        # **========== 原始代码：旧服务器输出路径 ==========**
+        # args.out_dir = "/workspace/code/Movie3R/output/rich_aabb_anchor_correction_proxy"
+        # **========== 新代码：当前仓库输出路径 ==========**
+        args.out_dir = str(Path(__file__).resolve().parents[1] / "output" / "rich_aabb_anchor_correction_proxy")
+        # **========== 结束 ==========**
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 

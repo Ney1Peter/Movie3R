@@ -22,6 +22,7 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image, ImageDraw, ImageFont
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -30,6 +31,10 @@ SRC_ROOT = REPO_ROOT / "src"
 for path in [REPO_ROOT, SRC_ROOT, SCRIPT_DIR]:
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
+
+from report_image_style import patch_cv2_text  # noqa: E402
+
+patch_cv2_text(cv2)
 
 from analyze_rich_aabb_anchor_correction import (  # noqa: E402
     fit_affine,
@@ -391,8 +396,14 @@ def draw_anchor_token_overlay(path, ref_rgb, cur_rgb, anchors, data, pred_residu
     cv2.putText(canvas, "AnchorToken residual lookup: true ref=magenta, predicted ref=orange, current=white", (12, 34), cv2.FONT_HERSHEY_SIMPLEX, 0.64, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(canvas, "shown with leave-one-out style token prediction", (12, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (220, 220, 220), 1, cv2.LINE_AA)
     ids = np.arange(len(anchors))
-    if len(ids) > max_draw:
-        ids = np.linspace(0, len(ids) - 1, max_draw).round().astype(np.int64)
+    # **========== 原始代码：最多按 max_draw 画所有跨图连线 ==========**
+    # if len(ids) > max_draw:
+    #     ids = np.linspace(0, len(ids) - 1, max_draw).round().astype(np.int64)
+    # **========== 新代码：总览图只画少量稀疏样本，避免线段过密 ==========**
+    sparse_limit = min(max_draw, 24)
+    if len(ids) > sparse_limit:
+        ids = np.linspace(0, len(ids) - 1, sparse_limit).round().astype(np.int64)
+    # **========== 结束 ==========**
     pred_idx = nearest_patch_indices(pred_residual, ref_grid)
     for idx in ids:
         true_ref = patch_idx_to_center_px(data["ref_idx"][idx], ref_grid, patch_size)
@@ -401,11 +412,154 @@ def draw_anchor_token_overlay(path, ref_rgb, cur_rgb, anchors, data, pred_residu
         true_pt = (int(round(true_ref[0])), int(round(82 + true_ref[1])))
         pred_pt = (int(round(pred_ref[0])), int(round(82 + pred_ref[1])))
         cur_pt = (int(round(ref_rgb.shape[1] + cur[0])), int(round(82 + cur[1])))
-        cv2.circle(canvas, cur_pt, 3, (255, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(canvas, true_pt, 5, (255, 0, 255), -1, cv2.LINE_AA)
-        cv2.circle(canvas, pred_pt, 4, (40, 170, 255), -1, cv2.LINE_AA)
+        # **========== 原始代码：较大的点 ==========**
+        # cv2.circle(canvas, cur_pt, 3, (255, 255, 255), -1, cv2.LINE_AA)
+        # cv2.circle(canvas, true_pt, 5, (255, 0, 255), -1, cv2.LINE_AA)
+        # cv2.circle(canvas, pred_pt, 4, (40, 170, 255), -1, cv2.LINE_AA)
+        # **========== 新代码：更小的点 ==========**
+        cv2.circle(canvas, cur_pt, 2, (255, 255, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, true_pt, 3, (255, 0, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, pred_pt, 3, (255, 150, 0), -1, cv2.LINE_AA)
+        # **========== 结束 ==========**
         cv2.line(canvas, cur_pt, true_pt, (255, 0, 255), 1, cv2.LINE_AA)
-        cv2.line(canvas, cur_pt, pred_pt, (40, 170, 255), 1, cv2.LINE_AA)
+        cv2.line(canvas, cur_pt, pred_pt, (255, 150, 0), 1, cv2.LINE_AA)
+    save_rgb(path, canvas)
+
+
+def token_prediction_errors(data, pred_residual):
+    return patch_error(pred_residual, data["ref_norm"], data["ref_grid_hw"])
+
+
+def error_color_rgb(err):
+    if err <= 1.0:
+        return (70, 220, 90)
+    if err <= 2.0:
+        return (255, 200, 40)
+    return (255, 70, 70)
+
+
+def draw_anchor_token_ref_error_overlay(path, ref_rgb, data, pred_residual, max_draw):
+    patch_size = data["patch_size"]
+    ref_grid = data["ref_grid_hw"]
+    ref = draw_patch_grid(ref_rgb, patch_size)
+    header_h = 96
+    canvas = np.zeros((header_h + ref.shape[0], ref.shape[1], 3), dtype=np.uint8)
+    canvas[:header_h] = 20
+    canvas[header_h : header_h + ref.shape[0], : ref.shape[1]] = ref
+    errors = token_prediction_errors(data, pred_residual)
+    ids = np.arange(len(errors))
+    if len(ids) > max_draw:
+        ids = np.linspace(0, len(ids) - 1, max_draw).round().astype(np.int64)
+
+    ref_wh = np.array([ref_grid[1] * patch_size, ref_grid[0] * patch_size], dtype=np.float32)
+    pred_px_all = np.clip(pred_residual * ref_wh[None], [0.0, 0.0], ref_wh[None] - 1.0)
+    for idx in ids:
+        gt_ref = patch_idx_to_center_px(data["ref_idx"][idx], ref_grid, patch_size)
+        pred_ref = pred_px_all[idx]
+        gt_pt = (int(round(gt_ref[0])), int(round(header_h + gt_ref[1])))
+        pred_pt = (int(round(pred_ref[0])), int(round(header_h + pred_ref[1])))
+        color = error_color_rgb(float(errors[idx]))
+        cv2.line(canvas, pred_pt, gt_pt, color, 1, cv2.LINE_AA)
+        cv2.circle(canvas, pred_pt, 2, (255, 150, 0), -1, cv2.LINE_AA)
+        cv2.circle(canvas, gt_pt, 2, (255, 0, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, gt_pt, 4, (255, 255, 255), 1, cv2.LINE_AA)
+
+    cv2.putText(canvas, "AnchorToken prediction on reference image", (12, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.70, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(canvas, f"magenta=GT ref patch, orange=predicted ref position, line=prediction error | median={np.median(errors):.2f} patches", (12, 62), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (220, 220, 220), 1, cv2.LINE_AA)
+    cv2.putText(canvas, "line color: green<=1 patch, yellow<=2, red>2", (12, 86), cv2.FONT_HERSHEY_SIMPLEX, 0.46, (190, 190, 190), 1, cv2.LINE_AA)
+    save_rgb(path, canvas)
+
+
+def draw_anchor_token_cur_query_error_overlay(path, cur_rgb, data, pred_residual, max_draw):
+    patch_size = data["patch_size"]
+    cur_grid = data["cur_grid_hw"]
+    cur = draw_patch_grid(cur_rgb, patch_size)
+    header_h = 96
+    canvas = np.zeros((header_h + cur.shape[0], cur.shape[1], 3), dtype=np.uint8)
+    canvas[:header_h] = 20
+    canvas[header_h : header_h + cur.shape[0], : cur.shape[1]] = cur
+    errors = token_prediction_errors(data, pred_residual)
+    ids = np.arange(len(errors))
+    if len(ids) > max_draw:
+        ids = np.linspace(0, len(ids) - 1, max_draw).round().astype(np.int64)
+    good = int((errors <= 1.0).sum())
+    mid = int(((errors > 1.0) & (errors <= 2.0)).sum())
+    bad = int((errors > 2.0).sum())
+    for idx in ids:
+        cur_pt_px = patch_idx_to_center_px(data["cur_idx"][idx], cur_grid, patch_size)
+        cur_pt = (int(round(cur_pt_px[0])), int(round(header_h + cur_pt_px[1])))
+        color = error_color_rgb(float(errors[idx]))
+        cv2.circle(canvas, cur_pt, 3, color, -1, cv2.LINE_AA)
+        cv2.circle(canvas, cur_pt, 5, (255, 255, 255), 1, cv2.LINE_AA)
+
+    cv2.putText(canvas, "Current-frame AnchorToken queries", (12, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.70, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(canvas, f"each dot is a held-out cur patch query; color is ref prediction error | green={good}, yellow={mid}, red={bad}", (12, 62), cv2.FONT_HERSHEY_SIMPLEX, 0.49, (220, 220, 220), 1, cv2.LINE_AA)
+    cv2.putText(canvas, "this separates where the query came from from where it predicts in the ref image", (12, 86), cv2.FONT_HERSHEY_SIMPLEX, 0.46, (190, 190, 190), 1, cv2.LINE_AA)
+    save_rgb(path, canvas)
+
+
+def select_example_indices(errors, max_examples=8):
+    n = len(errors)
+    if n <= max_examples:
+        return np.arange(n, dtype=np.int64)
+    order = np.argsort(errors)
+    chosen = []
+    for idx in order[:2]:
+        chosen.append(int(idx))
+    median_center = n // 2
+    for idx in order[max(0, median_center - 1) : min(n, median_center + 2)]:
+        chosen.append(int(idx))
+    for idx in order[-3:]:
+        chosen.append(int(idx))
+    out = []
+    for idx in chosen:
+        if idx not in out:
+            out.append(idx)
+    return np.array(out[:max_examples], dtype=np.int64)
+
+
+def draw_anchor_token_lookup_examples(path, ref_rgb, cur_rgb, data, pred_residual, max_examples=8):
+    patch_size = data["patch_size"]
+    ref_grid = data["ref_grid_hw"]
+    cur_grid = data["cur_grid_hw"]
+    errors = token_prediction_errors(data, pred_residual)
+    ids = select_example_indices(errors, max_examples=max_examples)
+    ref_grid_img = draw_patch_grid(ref_rgb, patch_size)
+    cur_grid_img = draw_patch_grid(cur_rgb, patch_size)
+    scale = min(1.0, 720.0 / float(ref_grid_img.shape[1] + cur_grid_img.shape[1]))
+    ref_small = cv2.resize(ref_grid_img, (int(round(ref_grid_img.shape[1] * scale)), int(round(ref_grid_img.shape[0] * scale))), interpolation=cv2.INTER_AREA)
+    cur_small = cv2.resize(cur_grid_img, (int(round(cur_grid_img.shape[1] * scale)), int(round(cur_grid_img.shape[0] * scale))), interpolation=cv2.INTER_AREA)
+    row_h = max(ref_small.shape[0], cur_small.shape[0]) + 56
+    width = ref_small.shape[1] + cur_small.shape[1] + 24
+    header_h = 88
+    canvas = np.zeros((header_h + row_h * len(ids), width, 3), dtype=np.uint8)
+    canvas[:header_h] = 20
+    cv2.putText(canvas, "Representative leave-one-out AnchorToken lookups", (12, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(canvas, "left=ref GT/pred, right=cur query; one row per anchor, avoiding dense cross-image lines", (12, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (220, 220, 220), 1, cv2.LINE_AA)
+
+    ref_wh = np.array([ref_grid[1] * patch_size, ref_grid[0] * patch_size], dtype=np.float32)
+    pred_px_all = np.clip(pred_residual * ref_wh[None], [0.0, 0.0], ref_wh[None] - 1.0)
+    for row, idx in enumerate(ids):
+        y0 = header_h + row * row_h
+        canvas[y0 : y0 + row_h] = 245
+        canvas[y0 + 44 : y0 + 44 + ref_small.shape[0], : ref_small.shape[1]] = ref_small
+        x_cur = ref_small.shape[1] + 24
+        canvas[y0 + 44 : y0 + 44 + cur_small.shape[0], x_cur : x_cur + cur_small.shape[1]] = cur_small
+
+        gt_ref = patch_idx_to_center_px(data["ref_idx"][idx], ref_grid, patch_size) * scale
+        pred_ref = pred_px_all[idx] * scale
+        cur_pt_px = patch_idx_to_center_px(data["cur_idx"][idx], cur_grid, patch_size) * scale
+        gt_pt = (int(round(gt_ref[0])), int(round(y0 + 44 + gt_ref[1])))
+        pred_pt = (int(round(pred_ref[0])), int(round(y0 + 44 + pred_ref[1])))
+        cur_pt = (int(round(x_cur + cur_pt_px[0])), int(round(y0 + 44 + cur_pt_px[1])))
+        color = error_color_rgb(float(errors[idx]))
+        cv2.line(canvas, pred_pt, gt_pt, color, 1, cv2.LINE_AA)
+        cv2.circle(canvas, gt_pt, 3, (255, 0, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, pred_pt, 3, (255, 150, 0), -1, cv2.LINE_AA)
+        cv2.circle(canvas, cur_pt, 3, color, -1, cv2.LINE_AA)
+        cv2.putText(canvas, f"#{int(idx)} err={errors[idx]:.2f} patch", (12, y0 + 28), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (20, 20, 20), 1, cv2.LINE_AA)
+        cv2.putText(canvas, "ref: magenta GT, orange pred", (180, y0 + 28), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (40, 40, 40), 1, cv2.LINE_AA)
+        cv2.putText(canvas, "cur query", (x_cur + 8, y0 + 28), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (40, 40, 40), 1, cv2.LINE_AA)
     save_rgb(path, canvas)
 
 
@@ -424,6 +578,216 @@ def make_leave_one_out_predictions(data, args):
     return pred
 
 
+def make_leave_one_out_comparison_predictions(data, args):
+    n = len(data["ref_norm"])
+    pred_affine = data["ref_norm"].copy()
+    pred_residual = data["ref_norm"].copy()
+    valid = np.zeros(n, dtype=bool)
+    for i in range(n):
+        train = np.array([j for j in range(n) if j != i], dtype=np.int64)
+        test = np.array([i], dtype=np.int64)
+        if len(train) < 3:
+            continue
+        translation, _, inv_affine = fit_models(train, data["ref_norm"], data["cur_norm"], data["weights"])
+        cur_test = data["cur_norm"][test]
+        if inv_affine is None:
+            affine_pred = cur_test - translation[None]
+        else:
+            affine_pred = apply_affine(cur_test, inv_affine)
+        _, _, residual_pred = predict_with_anchor_tokens(test, train, data, translation, inv_affine, args)
+        pred_affine[i] = affine_pred[0]
+        pred_residual[i] = residual_pred[0]
+        valid[i] = True
+    return pred_affine, pred_residual, valid
+
+
+def affine_residual_metrics(data, pred_affine, pred_residual, valid):
+    gt = data["ref_norm"]
+    valid = np.asarray(valid, dtype=bool)
+    affine_err = patch_error(pred_affine[valid], gt[valid], data["ref_grid_hw"]) if valid.any() else np.asarray([], dtype=np.float32)
+    residual_err = patch_error(pred_residual[valid], gt[valid], data["ref_grid_hw"]) if valid.any() else np.asarray([], dtype=np.float32)
+    improvement = affine_err - residual_err
+    return {
+        "valid_count": int(valid.sum()),
+        "affine_patch_error": stats(affine_err),
+        "affine_residual_patch_error": stats(residual_err),
+        "improvement_patch_error": stats(improvement),
+        "improved_count": int((improvement > 0.0).sum()) if len(improvement) else 0,
+        "improved_rate": float((improvement > 0.0).mean()) if len(improvement) else None,
+        "within_1_patch_affine": float((affine_err <= 1.0).mean()) if len(affine_err) else None,
+        "within_1_patch_residual": float((residual_err <= 1.0).mean()) if len(residual_err) else None,
+        "within_2_patch_affine": float((affine_err <= 2.0).mean()) if len(affine_err) else None,
+        "within_2_patch_residual": float((residual_err <= 2.0).mean()) if len(residual_err) else None,
+    }
+
+
+def draw_affine_vs_residual_overlay(path, ref_rgb, data, pred_affine, pred_residual, valid, max_draw):
+    patch_size = data["patch_size"]
+    ref_grid = data["ref_grid_hw"]
+    ref = draw_patch_grid(ref_rgb, patch_size)
+    header_h = 112
+    canvas = np.zeros((header_h + ref.shape[0], ref.shape[1], 3), dtype=np.uint8)
+    canvas[:header_h] = 20
+    canvas[header_h : header_h + ref.shape[0], : ref.shape[1]] = ref
+
+    ids = np.flatnonzero(valid)
+    if len(ids) > max_draw:
+        ids = np.linspace(0, len(ids) - 1, max_draw).round().astype(np.int64)
+        ids = np.flatnonzero(valid)[ids]
+
+    ref_wh = np.array([ref_grid[1] * patch_size, ref_grid[0] * patch_size], dtype=np.float32)
+    affine_px = np.clip(pred_affine * ref_wh[None], [0.0, 0.0], ref_wh[None] - 1.0)
+    residual_px = np.clip(pred_residual * ref_wh[None], [0.0, 0.0], ref_wh[None] - 1.0)
+    affine_err = patch_error(pred_affine[valid], data["ref_norm"][valid], ref_grid) if valid.any() else np.asarray([], dtype=np.float32)
+    residual_err = patch_error(pred_residual[valid], data["ref_norm"][valid], ref_grid) if valid.any() else np.asarray([], dtype=np.float32)
+
+    for idx in ids:
+        gt_ref = patch_idx_to_center_px(data["ref_idx"][idx], ref_grid, patch_size)
+        gt_pt = (int(round(gt_ref[0])), int(round(header_h + gt_ref[1])))
+        aff_pt = (int(round(affine_px[idx, 0])), int(round(header_h + affine_px[idx, 1])))
+        res_pt = (int(round(residual_px[idx, 0])), int(round(header_h + residual_px[idx, 1])))
+        cv2.line(canvas, aff_pt, gt_pt, (70, 150, 255), 1, cv2.LINE_AA)
+        cv2.line(canvas, res_pt, gt_pt, (255, 150, 0), 1, cv2.LINE_AA)
+        cv2.circle(canvas, gt_pt, 2, (255, 0, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, gt_pt, 4, (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.circle(canvas, aff_pt, 2, (70, 150, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, res_pt, 2, (255, 150, 0), -1, cv2.LINE_AA)
+
+    aff_med = float(np.median(affine_err)) if len(affine_err) else float("nan")
+    res_med = float(np.median(residual_err)) if len(residual_err) else float("nan")
+    gain = aff_med - res_med if np.isfinite(aff_med) and np.isfinite(res_med) else float("nan")
+    cv2.putText(canvas, "Affine-only vs affine + local AnchorToken residual", (12, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.66, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(canvas, "magenta=GT ref, blue=affine-only pred, orange=affine+residual pred", (12, 62), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (220, 220, 220), 1, cv2.LINE_AA)
+    cv2.putText(canvas, f"median patch error: affine={aff_med:.2f}, affine+residual={res_med:.2f}, gain={gain:.2f}", (12, 88), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (220, 220, 220), 1, cv2.LINE_AA)
+    cv2.putText(canvas, "shorter error line means better held-out anchor correction", (12, 108), cv2.FONT_HERSHEY_SIMPLEX, 0.44, (190, 190, 190), 1, cv2.LINE_AA)
+    save_rgb(path, canvas)
+
+
+def draw_affine_residual_table(path, metrics):
+    # **========== 原始代码：OpenCV Hershey 字体表格 ==========**
+    # width, height = 1120, 440
+    # canvas = np.full((height, width, 3), 245, dtype=np.uint8)
+    # cv2.putText(canvas, "Step3 held-out correction: affine-only vs affine + local residual", (18, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.78, (20, 20, 20), 2, cv2.LINE_AA)
+    # rows = [
+    #     ("valid held-out anchors", str(metrics["valid_count"]), "-", "-"),
+    #     ("median patch error", fmt_metric(metrics["affine_patch_error"], "median"), fmt_metric(metrics["affine_residual_patch_error"], "median"), fmt_metric(metrics["improvement_patch_error"], "median")),
+    #     ("mean patch error", fmt_metric(metrics["affine_patch_error"], "mean"), fmt_metric(metrics["affine_residual_patch_error"], "mean"), fmt_metric(metrics["improvement_patch_error"], "mean")),
+    #     ("p75 patch error", fmt_metric(metrics["affine_patch_error"], "p75"), fmt_metric(metrics["affine_residual_patch_error"], "p75"), fmt_metric(metrics["improvement_patch_error"], "p75")),
+    #     ("within 1 patch", fmt_rate(metrics["within_1_patch_affine"]), fmt_rate(metrics["within_1_patch_residual"]), fmt_delta_rate(metrics["within_1_patch_residual"], metrics["within_1_patch_affine"])),
+    #     ("within 2 patches", fmt_rate(metrics["within_2_patch_affine"]), fmt_rate(metrics["within_2_patch_residual"]), fmt_delta_rate(metrics["within_2_patch_residual"], metrics["within_2_patch_affine"])),
+    #     ("anchors improved", "-", "-", f"{metrics['improved_count']} ({fmt_rate(metrics['improved_rate'])})"),
+    # ]
+    # xs = [34, 420, 650, 850]
+    # headers = ["metric", "affine-only", "affine + residual", "residual gain"]
+    # y = 92
+    # for x, text in zip(xs, headers):
+    #     cv2.putText(canvas, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (50, 50, 50), 2, cv2.LINE_AA)
+    # cv2.line(canvas, (24, y + 18), (width - 24, y + 18), (180, 180, 180), 1, cv2.LINE_AA)
+    # for i, row in enumerate(rows):
+    #     y = 136 + i * 42
+    #     bg = (235, 235, 235) if i % 2 else (248, 248, 248)
+    #     cv2.rectangle(canvas, (24, y - 26), (width - 24, y + 12), bg, -1)
+    #     for x, text in zip(xs, row):
+    #         color = (30, 120, 40) if x == xs[-1] and text not in {"-", "None"} and not text.startswith("-") else (20, 20, 20)
+    #         cv2.putText(canvas, str(text), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.56, color, 1, cv2.LINE_AA)
+    # cv2.putText(canvas, "positive gain means local residual improved over affine-only", (34, height - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (70, 70, 70), 1, cv2.LINE_AA)
+    # cv2.imwrite(str(path), canvas)
+    # **========== 新代码：PIL/DejaVu 字体的汇报版表格 ==========**
+    rows = [
+        ("valid held-out anchors", str(metrics["valid_count"]), "-", "-"),
+        ("median patch error", fmt_metric(metrics["affine_patch_error"], "median"), fmt_metric(metrics["affine_residual_patch_error"], "median"), fmt_metric(metrics["improvement_patch_error"], "median")),
+        ("mean patch error", fmt_metric(metrics["affine_patch_error"], "mean"), fmt_metric(metrics["affine_residual_patch_error"], "mean"), fmt_metric(metrics["improvement_patch_error"], "mean")),
+        ("p75 patch error", fmt_metric(metrics["affine_patch_error"], "p75"), fmt_metric(metrics["affine_residual_patch_error"], "p75"), fmt_metric(metrics["improvement_patch_error"], "p75")),
+        ("within 1 patch", fmt_rate(metrics["within_1_patch_affine"]), fmt_rate(metrics["within_1_patch_residual"]), fmt_delta_rate(metrics["within_1_patch_residual"], metrics["within_1_patch_affine"])),
+        ("within 2 patches", fmt_rate(metrics["within_2_patch_affine"]), fmt_rate(metrics["within_2_patch_residual"]), fmt_delta_rate(metrics["within_2_patch_residual"], metrics["within_2_patch_affine"])),
+        ("anchors improved", "-", "-", f"{metrics['improved_count']} ({fmt_rate(metrics['improved_rate'])})"),
+    ]
+
+    width, height = 1280, 540
+    margin = 48
+    title_y = 38
+    table_x = margin
+    table_y = 132
+    row_h = 46
+    header_h = 52
+    col_w = [410, 230, 270, 240]
+    headers = ["Metric", "Affine-only", "Affine + residual", "Residual gain"]
+    font_dir = Path("/usr/share/fonts/truetype/dejavu")
+    title_font = ImageFont.truetype(str(font_dir / "DejaVuSans-Bold.ttf"), 31)
+    subtitle_font = ImageFont.truetype(str(font_dir / "DejaVuSans.ttf"), 16)
+    header_font = ImageFont.truetype(str(font_dir / "DejaVuSans-Bold.ttf"), 17)
+    body_font = ImageFont.truetype(str(font_dir / "DejaVuSans.ttf"), 17)
+    bold_font = ImageFont.truetype(str(font_dir / "DejaVuSans-Bold.ttf"), 17)
+
+    img = Image.new("RGB", (width, height), (247, 249, 252))
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle((24, 24, width - 24, height - 24), radius=24, fill=(255, 255, 255), outline=(224, 229, 236), width=1)
+    draw.text((margin, title_y), "Step3: Affine-Only vs Affine + Local Residual", font=title_font, fill=(20, 28, 38))
+    draw.text((margin, title_y + 42), "Held-out anchors: lower patch error is better; positive gain means local residual improved over affine-only.", font=subtitle_font, fill=(91, 102, 118))
+
+    table_w = sum(col_w)
+    draw.rounded_rectangle((table_x, table_y, table_x + table_w, table_y + header_h + row_h * len(rows)), radius=16, fill=(255, 255, 255), outline=(220, 226, 235), width=1)
+    draw.rounded_rectangle((table_x, table_y, table_x + table_w, table_y + header_h), radius=16, fill=(238, 243, 250))
+    draw.rectangle((table_x, table_y + header_h - 16, table_x + table_w, table_y + header_h), fill=(238, 243, 250))
+
+    x = table_x
+    for text, w in zip(headers, col_w):
+        draw.text((x + 18, table_y + 16), text, font=header_font, fill=(38, 48, 62))
+        x += w
+    for i in range(1, len(col_w)):
+        x_sep = table_x + sum(col_w[:i])
+        draw.line((x_sep, table_y + 10, x_sep, table_y + header_h + row_h * len(rows) - 10), fill=(230, 234, 240), width=1)
+
+    for i, row in enumerate(rows):
+        y0 = table_y + header_h + i * row_h
+        bg = (250, 252, 255) if i % 2 == 0 else (255, 255, 255)
+        draw.rectangle((table_x + 1, y0, table_x + table_w - 1, y0 + row_h), fill=bg)
+        draw.line((table_x + 12, y0, table_x + table_w - 12, y0), fill=(235, 239, 245), width=1)
+        x = table_x
+        for j, (text, w) in enumerate(zip(row, col_w)):
+            text = str(text)
+            if j == 0:
+                font = bold_font if i in {1, 4, 5} else body_font
+                color = (35, 45, 58)
+            elif j == 3 and text not in {"-", "None"}:
+                font = bold_font
+                color = (30, 132, 73) if not text.startswith("-") else (190, 75, 65)
+            else:
+                font = body_font
+                color = (35, 45, 58)
+            draw.text((x + 18, y0 + 13), text, font=font, fill=color)
+            x += w
+
+    legend_y = table_y + header_h + row_h * len(rows) + 34
+    draw.rounded_rectangle((margin, legend_y - 12, margin + 440, legend_y + 36), radius=12, fill=(246, 249, 255), outline=(225, 232, 242), width=1)
+    draw.ellipse((margin + 18, legend_y + 2, margin + 30, legend_y + 14), fill=(70, 150, 255))
+    draw.text((margin + 40, legend_y - 1), "blue = affine-only", font=subtitle_font, fill=(70, 82, 98))
+    draw.ellipse((margin + 202, legend_y + 2, margin + 214, legend_y + 14), fill=(255, 150, 0))
+    draw.text((margin + 224, legend_y - 1), "orange = affine + local residual", font=subtitle_font, fill=(70, 82, 98))
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    # **========== 结束 ==========**
+
+
+def fmt_metric(metric, key):
+    if not metric or metric.get(key) is None:
+        return "None"
+    return f"{float(metric[key]):.2f}"
+
+
+def fmt_rate(value):
+    if value is None:
+        return "None"
+    return f"{100.0 * float(value):.1f}%"
+
+
+def fmt_delta_rate(new, old):
+    if new is None or old is None:
+        return "None"
+    return f"{100.0 * (float(new) - float(old)):+.1f} pp"
+
+
 def analyze_one(aabb_dir, out_dir, model, args, rng, sample_counts):
     aabb_dir, boundary_dir, summary = load_boundary_summary(aabb_dir)
     anchors = summary.get("anchors", [])
@@ -438,12 +802,19 @@ def analyze_one(aabb_dir, out_dir, model, args, rng, sample_counts):
     full_train = np.arange(len(anchors), dtype=np.int64)
     full_eval = evaluate_split(full_train, full_train, data, args)
     loo_pred = make_leave_one_out_predictions(data, args)
+    affine_pred, residual_pred, comparison_valid = make_leave_one_out_comparison_predictions(data, args)
+    comparison_metrics = affine_residual_metrics(data, affine_pred, residual_pred, comparison_valid)
 
     sample_out = out_dir / aabb_dir.name
     sample_out.mkdir(parents=True, exist_ok=True)
     build_anchor_tokens_npz(sample_out / "anchor_tokens_structured.npz", data, summary)
     draw_method_chart(sample_out / "anchor_token_leave_one_out_chart.jpg", loo)
+    draw_affine_vs_residual_overlay(sample_out / "anchor_token_affine_vs_residual_overlay.jpg", ref_info["crop_rgb"], data, affine_pred, residual_pred, comparison_valid, args.max_draw)
+    draw_affine_residual_table(sample_out / "anchor_token_affine_residual_table.jpg", comparison_metrics)
     draw_anchor_token_overlay(sample_out / "anchor_token_lookup_overlay.jpg", ref_info["crop_rgb"], cur_info["crop_rgb"], anchors, data, loo_pred, args.max_draw)
+    draw_anchor_token_ref_error_overlay(sample_out / "anchor_token_ref_error_overlay.jpg", ref_info["crop_rgb"], data, loo_pred, args.max_draw)
+    draw_anchor_token_cur_query_error_overlay(sample_out / "anchor_token_cur_query_error_overlay.jpg", cur_info["crop_rgb"], data, loo_pred, args.max_draw)
+    draw_anchor_token_lookup_examples(sample_out / "anchor_token_lookup_examples.jpg", ref_info["crop_rgb"], cur_info["crop_rgb"], data, loo_pred)
 
     result = {
         "aabb_dir": str(aabb_dir),
@@ -468,9 +839,15 @@ def analyze_one(aabb_dir, out_dir, model, args, rng, sample_counts):
         "leave_one_out": loo,
         "sampled_trials": sampled,
         "full_self_lookup": full_eval,
+        "affine_vs_residual": comparison_metrics,
         "visualizations": {
             "leave_one_out_chart": str(sample_out / "anchor_token_leave_one_out_chart.jpg"),
+            "affine_vs_residual_overlay": str(sample_out / "anchor_token_affine_vs_residual_overlay.jpg"),
+            "affine_residual_table": str(sample_out / "anchor_token_affine_residual_table.jpg"),
             "lookup_overlay": str(sample_out / "anchor_token_lookup_overlay.jpg"),
+            "ref_error_overlay": str(sample_out / "anchor_token_ref_error_overlay.jpg"),
+            "cur_query_error_overlay": str(sample_out / "anchor_token_cur_query_error_overlay.jpg"),
+            "lookup_examples": str(sample_out / "anchor_token_lookup_examples.jpg"),
             "structured_tokens_npz": str(sample_out / "anchor_tokens_structured.npz"),
         },
     }
