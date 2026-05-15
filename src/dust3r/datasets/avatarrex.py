@@ -126,13 +126,23 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # 每个序列只有 1 个相机（cam_id=0000）
         self.seq_cams = {s: [0] for s in self.scenes}
 
-        # 获取帧数（所有序列帧数相同）
-        # 预处理脚本输出为扁平结构：rgb/{frame:08d}.png（无 camera 子目录）
+        # **========== 原始代码：假设帧号从 0 连续开始 ==========**
+        # # 获取帧数（所有序列帧数相同）
+        # # 预处理脚本输出为扁平结构：rgb/{frame:08d}.png（无 camera 子目录）
+        # sample_seq = self.scenes[0]
+        # rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
+        # frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
+        # self.num_frames = len(frames)
+        # self.seq_frames = {s: self.num_frames for s in self.scenes}
+        # **========== 新代码：使用真实文件名帧号，例如 00000005 起始 ==========**
         sample_seq = self.scenes[0]
         rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
         frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
-        self.num_frames = len(frames)
+        self.frame_ids = [int(osp.splitext(f)[0]) for f in frames]
+        self.frame_to_pos = {frame_id: pos for pos, frame_id in enumerate(self.frame_ids)}
+        self.num_frames = len(self.frame_ids)
         self.seq_frames = {s: self.num_frames for s in self.scenes}
+        # **========== 结束 ==========**
 
         print(f"  {len(self.scenes)} sequences, {self.num_frames} frames each")
         print(f"  Building AABB index...")
@@ -145,11 +155,17 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             for j, seqB in enumerate(self.scenes):
                 if i == j:
                     continue  # 跳过同一相机
-                for t in range(self.num_frames - 3):
-                    self.samples.append((seqA, seqB, t))
+                # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
+                # for t in range(self.num_frames - 3):
+                #     self.samples.append((seqA, seqB, t))
+                # **========== 新代码：样本保存真实起始帧号，便于和 cache/start_frame 对齐 ==========**
+                for start_pos in range(self.num_frames - 3):
+                    self.samples.append((seqA, seqB, self.frame_ids[start_pos]))
+                # **========== 结束 ==========**
 
         print(f"  AvatarReX_AABB: {len(self.samples):,} samples "
-              f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps)")
+              f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps, "
+              f"frames {self.frame_ids[0]}-{self.frame_ids[-1]})")
 
     def __len__(self):
         return len(self.samples)
@@ -161,9 +177,17 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         assert num_views == 4, "AABB dataset only supports num_views=4"
 
         seqA_name, seqB_name, t = self.samples[idx]
-        t1 = t + 1
-        t2 = t + 2
-        t3 = t + 3
+        # **========== 原始代码：假设真实帧号连续等于 t/t+1/t+2/t+3 ==========**
+        # t1 = t + 1
+        # t2 = t + 2
+        # t3 = t + 3
+        # **========== 新代码：从真实帧号列表中取连续四个可用文件帧 ==========**
+        start_pos = self.frame_to_pos[t]
+        t = self.frame_ids[start_pos]
+        t1 = self.frame_ids[start_pos + 1]
+        t2 = self.frame_ids[start_pos + 2]
+        t3 = self.frame_ids[start_pos + 3]
+        # **========== 结束 ==========**
         cam = 0  # 每个序列只有 1 个相机，ID=0
 
         split_path = osp.join(self.ROOT, self.split)
@@ -414,22 +438,37 @@ class AvatarReX_Video(BaseMultiViewDataset):
         # 每个序列只有 1 个相机（cam_id=0000）
         self.seq_cams = {s: [0] for s in self.scenes}
 
-        # 获取帧数
+        # **========== 原始代码：假设帧号从 0 连续开始 ==========**
+        # # 获取帧数
+        # sample_seq = self.scenes[0]
+        # rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
+        # frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
+        # self.num_frames = len(frames)
+        # self.seq_frames = {s: self.num_frames for s in self.scenes}
+        # **========== 新代码：使用真实文件名帧号，例如 00000005 起始 ==========**
         sample_seq = self.scenes[0]
         rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
         frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
-        self.num_frames = len(frames)
+        self.frame_ids = [int(osp.splitext(f)[0]) for f in frames]
+        self.frame_to_pos = {frame_id: pos for pos, frame_id in enumerate(self.frame_ids)}
+        self.num_frames = len(self.frame_ids)
         self.seq_frames = {s: self.num_frames for s in self.scenes}
+        # **========== 结束 ==========**
 
         print(f"  AvatarReX_Video: {len(self.scenes)} sequences, "
-              f"{self.num_frames} frames each")
+              f"{self.num_frames} frames each, frames {self.frame_ids[0]}-{self.frame_ids[-1]}")
 
         # 构建索引：每个 scene 的每个有效起始位置
         self.samples = []
         for seq_idx, seq_name in enumerate(self.scenes):
             # 可起始位置：[0, num_frames - num_views]
-            for t in range(self.num_frames - self.num_views + 1):
-                self.samples.append((seq_name, t))
+            # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
+            # for t in range(self.num_frames - self.num_views + 1):
+            #     self.samples.append((seq_name, t))
+            # **========== 新代码：样本保存真实起始帧号 ==========**
+            for start_pos in range(self.num_frames - self.num_views + 1):
+                self.samples.append((seq_name, self.frame_ids[start_pos]))
+            # **========== 结束 ==========**
 
         print(f"  AvatarReX_Video: {len(self.samples):,} samples")
 
@@ -449,12 +488,22 @@ class AvatarReX_Video(BaseMultiViewDataset):
         shot_labels = [0] * num_views
 
         views = []
+        # **========== 原始代码：frame_idx = t + v ==========**
+        # for v in range(num_views):
+        #     frame_idx = t + v
+        #     views.append(self._load_view(
+        #         split_path, seq_name, cam, frame_idx, resolution, rng, v,
+        #         shot_labels[v],
+        #     ))
+        # **========== 新代码：从真实帧号列表中取连续 num_views 个可用文件帧 ==========**
+        start_pos = self.frame_to_pos[t]
         for v in range(num_views):
-            frame_idx = t + v
+            frame_idx = self.frame_ids[start_pos + v]
             views.append(self._load_view(
                 split_path, seq_name, cam, frame_idx, resolution, rng, v,
                 shot_labels[v],
             ))
+        # **========== 结束 ==========**
 
         return views
 
