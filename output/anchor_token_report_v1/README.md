@@ -1,375 +1,270 @@
-# AnchorToken V6 汇报版实验记录
+# AnchorToken V6 筛选版汇报图
 
-生成时间：2026/05/13
+整理时间：2026/05/15
 
-根目录：`/workspace/code/Movie3R/output/anchor_token_report_v1/`
+根目录：`/data/wangzheng/iJCV-CODE/Movie3R/output/anchor_token_report_v1/`
 
-## 0. 总目标
+## 0. 目录定位
 
-我们近期做的核心事情不是继续把旧的 global ShotToken 塞进 decoder，而是重新设计一个更局部、更几何的 `AnchorToken`。
+这是一个筛选版展示目录，只保留适合快速汇报的关键可视化图片。
 
-目标是验证：
-
-```text
-在 AABB shot boundary 上，AnchorToken 是否真的携带可用于纠正 pose/camera re-anchor 的信息。
-```
-
-当前所有实验都属于 decoder-before proxy：
+完整的 guitar-only Step1-5 计算结果保存在：
 
 ```text
-先不改 Movie3R 主模型，不训练新模块。
-先验证 AnchorToken 在进入 decoder / pose path 前是否是正确的、具体的、可用的。
+/data/wangzheng/iJCV-CODE/Movie3R/output/anchor_token_report_v1_guitar_only_step2_5/
 ```
 
-核心逻辑：
+该完整目录包含：
 
 ```text
-XFeat semi-dense + RICH mesh verification
--> 找到真实 static background anchors
--> 映射到 Human3R encoder patch token
--> 验证 patch token 对应关系是否存在
--> 验证 anchors 是否能提供 correction
--> 验证 AnchorToken 是否能提供 local residual correction
--> 验证 shuffled / wrong-boundary 负例是否退化
+01_aabb_step1/
+02_correction_proxy/
+03_anchor_token_prototype/
+04_specificity_controls/
+05_topk_quality_gate/
+README.md
 ```
 
-## 1. 样本设置
-
-AABB 格式：
+本筛选版目录当前只保留：
 
 ```text
-[A@t, A@t+1, B@t+2, B@t+3]
+01_aabb_step1/
+02_correction_proxy/
+03_anchor_token_prototype/
+README.md
 ```
 
-核心 shot boundary：
+## 1. 样本
 
-```text
-A@t+1 -> B@t+2
-```
-
-本次汇报版重跑 3 个样本：
+当前筛选版只使用两组 `BBQ_001_guitar`：
 
 | 样本 | 类型 | 作用 |
 |------|------|------|
-| `BBQ_001_guitar cam06->cam07 f244` | strong | 高质量 anchor，展示方法有效 |
-| `BBQ_001_juggle cam02->cam01 f197` | strong | 大量 anchor，展示稳定性 |
-| `BBQ_001_guitar cam01->cam03 f5` | weak | 少量 anchor，展示 fallback/gate 必要性 |
+| `BBQ_001_guitar_cam06_cam07_f00000244` | strong | 高质量 anchors，展示 affine correction 明显有效 |
+| `BBQ_001_guitar_cam01_cam03_f00000005` | weak | 少量 anchors，展示低 anchor 数时需要 fallback / gate |
 
-## 2. Step1：AABB boundary 上能否找到 anchor，并映射到 encoder patch token
+## 2. Step1：encoder token 中是否还能看到 anchor correspondence
 
-脚本：
-
-```text
-scripts/verify_rich_aabb_anchor_step1.py
-```
-
-输出目录：
+目录：
 
 ```text
 01_aabb_step1/
 ```
 
-验证问题：
+Step1 的问题是：
 
 ```text
-外部 XFeat/mesh 找到的真实对应点，在 Human3R 图像切 patch、变 token、经过 encoder 后，是否仍然能在对应 patch token 里看到相似特征？
+XFeat + RICH mesh 找到真实几何 anchor 后，
+这些 anchor 映射到 Human3R patch，并经过 encoder 后，
+对应 patch token 是否仍然比 random token 更相似？
 ```
 
-结果：
+每个样本只保留 5 张筛选图：
 
-| 样本 | mesh anchors | unique patch anchors | positive cosine | random cosine | rank median | pos > random |
-|------|--------------|----------------------|-----------------|---------------|-------------|--------------|
-| `guitar cam06->cam07` | 77 | 41 | 0.594 | 0.249 | 4 | 92.7% |
-| `juggle cam02->cam01` | 490 | 179 | 0.750 | 0.282 | 3 | 97.8% |
-| `guitar cam01->cam03` | 9 | 7 | 0.486 | 0.315 | 38 | 85.7% |
+```text
+00_semidense_xfeat_mesh_inliers.jpg
+01_ref_human3r_crop.jpg
+02_cur_human3r_crop.jpg
+03_human3r_patch_anchor_correspondences.jpg
+04_similarity_map_anchor_00.jpg
+```
 
 含义：
 
 ```text
-1. AABB shot boundary 上确实能找到真实 static background anchors。
-2. 这些 anchors 映射到 Human3R encoder patch token 后，对应 token 明显比 random token 更相似。
-3. strong samples 中 rank 很靠前，说明 encoder token 中保留了可用跨视角对应关系。
-4. weak sample anchor 少，rank 明显变差，说明需要 quality gate。
+00_semidense_xfeat_mesh_inliers.jpg
+XFeat semi-dense matches 经过 RICH static mesh 验证后的几何 inliers。
+
+01_ref_human3r_crop.jpg
+shot boundary 前一帧 / reference frame 的 Human3R crop。
+
+02_cur_human3r_crop.jpg
+shot boundary 后一帧 / current frame 的 Human3R crop。
+
+03_human3r_patch_anchor_correspondences.jpg
+mesh-verified anchors 映射到 Human3R patch grid 后的对应关系。
+
+04_similarity_map_anchor_00.jpg
+选一个 reference anchor patch token，和 current 图所有 encoder patch token 做 cosine similarity，
+再 reshape 成 current patch grid 的 heatmap。
 ```
 
-推荐展示图：
+注意：encoder 后的 patch token 不是 RGB patch，不能直接还原成原图。这里可视化的是 token similarity map，而不是图像重建。
+
+关键结论：
 
 ```text
-01_aabb_step1/BBQ_001_guitar_cam06_cam07_f00000244/aabb_comparison.jpg
-01_aabb_step1/BBQ_001_guitar_cam06_cam07_f00000244/pair_01_A_t1_to_B_t2_BOUNDARY/00_semidense_mesh_inliers_raw_space.jpg
-01_aabb_step1/BBQ_001_guitar_cam06_cam07_f00000244/pair_01_A_t1_to_B_t2_BOUNDARY/01_anchor_patches_on_human3r_crop.jpg
-01_aabb_step1/BBQ_001_guitar_cam06_cam07_f00000244/pair_01_A_t1_to_B_t2_BOUNDARY/10_encoder_cosine_pos_vs_neg.jpg
-01_aabb_step1/BBQ_001_guitar_cam06_cam07_f00000244/pair_01_A_t1_to_B_t2_BOUNDARY/12_encoder_true_match_rank.jpg
+Step1 证明几何 anchors 经过 Human3R encoder 后，仍然能在 patch token 空间里看到对应关系。
+strong sample 中真实对应 token 的 cosine 更高、rank 更靠前。
+weak sample 虽然仍有信号，但 anchor 数少且 rank 不稳定。
 ```
 
-## 3. Step2：anchor 是否能提供 correction 信息
+## 3. Step2：anchors 是否能提供 correction evidence
 
-脚本：
-
-```text
-scripts/analyze_rich_aabb_anchor_correction.py
-scripts/build_rich_anchor_evidence.py
-```
-
-输出目录：
+目录：
 
 ```text
 02_correction_proxy/
 ```
 
-验证问题：
+Step2 的问题是：
 
 ```text
-我们的目标不是单纯找匹配点，而是看这些匹配点能不能提供纠正 shot boundary 偏移的信息。
+给定 Step1 已经验证过的 anchor pairs，
+能不能从 reference anchor 位置预测 current anchor 位置？
 ```
 
-比较方法：
+每个样本保留 3 张筛选优化后的 overlay：
 
 ```text
-no correction: current patch 直接找 reference 同位置
-translation: 所有 patch 使用同一个平均 dx,dy
-affine: 用 anchors 拟合二维整体变换
+correction_overlay_no_correction.jpg
+correction_overlay_translation.jpg
+correction_overlay_affine.jpg
 ```
 
-结果：
+图中元素：
+
+```text
+magenta / 粉色点：GT mesh-verified current anchor 位置
+彩色点：对应方法预测出来的 current 位置
+细线：预测位置到 GT anchor 位置的误差线
+线越短：预测越准，correction 越好
+```
+
+三种方法：
+
+```text
+no correction
+不做任何 re-anchor，直接假设 ref patch 的 normalized 坐标在 cur 中不变。
+
+translation
+对所有 anchor 的 x_cur - x_ref 偏移做加权平均，全图使用同一个 dx,dy。
+
+affine
+用 anchors 拟合二维仿射变换：x_cur = A x_ref + b。
+它可以表达平移、旋转、缩放、非均匀缩放和 shear，比单一 translation 更适合视角变化。
+```
+
+当前两组 Step2 指标：
 
 | 样本 | anchors | no correction | translation | affine |
 |------|---------|---------------|-------------|--------|
-| `guitar cam06->cam07` | 41 | 3.16 | 4.32 | 1.04 |
-| `juggle cam02->cam01` | 179 | 3.16 | 1.04 | 0.76 |
-| `guitar cam01->cam03` | 7 | 10.03 | 2.47 | 0.48 |
+| `guitar cam06->cam07 f244` | 40 | 3.16 | 4.39 | 1.03 |
+| `guitar cam01->cam03 f5` | 7 | 10.03 | 2.47 | 0.48 |
 
-含义：
+解释：
 
 ```text
-1. anchors 不只是匹配点，确实能提供 correction evidence。
-2. 简单 translation 不可靠，因为不同区域不是同一个偏移。
-3. affine 更适合作为 coarse re-anchor prior。
-4. weak sample 即使 affine 拟合误差低，也要因为 anchor 数少而低 gate。
+1. strong sample 中 affine 明显优于 no correction，说明 anchors 能提供 coarse re-anchor evidence。
+2. translation 只允许全图同一个偏移，在 cam06->cam07 中反而变差，说明不同区域偏移不是常量。
+3. weak sample 虽然 affine 拟合误差低，但 anchors 只有 7 个，后续接入时仍应走 fallback / quality gate。
 ```
 
-推荐展示图：
+## 4. Step3：AnchorToken local residual 是否优于 affine-only
+
+目录：
 
 ```text
-02_correction_proxy/BBQ_001_guitar_cam06_cam07_f00000244/correction_prediction_overlay_clean.jpg
-02_correction_proxy/correction_proxy_summary.jpg
-02_correction_proxy/BBQ_001_guitar_cam06_cam07_f00000244/correction_prediction_overlay.jpg
-02_correction_proxy/BBQ_001_guitar_cam06_cam07_f00000244/correction_sampling_error_chart.jpg
-02_correction_proxy/evidence/anchor_evidence_summary.jpg
-02_correction_proxy/evidence/BBQ_001_guitar_cam06_cam07_f00000244/lookup_error_chart.jpg
-02_correction_proxy/evidence/BBQ_001_guitar_cam06_cam07_f00000244/affine_correction_field.jpg
+03_anchor_token_prototype/BBQ_001_guitar_cam06_cam07_f00000244/
+03_anchor_token_prototype/BBQ_001_guitar_cam01_cam03_f00000005/
 ```
 
-## 4. Step3：AnchorToken 是否能在 affine 基础上提供 local residual correction
-
-脚本：
+Step3 的问题是：
 
 ```text
-scripts/prototype_rich_anchor_tokens.py
+在 Step2 已经证明 affine coarse re-anchor 有效之后，
+AnchorToken 能不能进一步学习局部 residual，
+让 held-out anchors 的预测比 affine-only 更准？
 ```
 
-输出目录：
+当前筛选版每个样本保留两张 Step3 主图：
 
 ```text
-03_anchor_token_prototype/
+anchor_token_affine_residual_table.jpg
+anchor_token_affine_vs_residual_overlay.jpg
 ```
 
-AnchorToken 结构：
+`anchor_token_affine_residual_table.jpg` 是核心指标表。
+
+两组样本的关键数值：
+
+| 样本 | anchors | affine median | affine + residual median | affine mean | affine + residual mean | within 1 patch | anchors improved |
+|------|---------|---------------|--------------------------|-------------|------------------------|----------------|------------------|
+| `guitar cam06->cam07 f244` | 40 | 1.13 | 0.83 | 1.13 | 0.87 | 42.5% -> 57.5% | 29 / 40, 72.5% |
+| `guitar cam01->cam03 f5` | 7 | 1.05 | 1.14 | 1.91 | 1.84 | 28.6% -> 42.9% | 5 / 7, 71.4% |
+
+strong sample 详细数值：
+
+| 指标 | affine-only | affine + residual | gain |
+|------|-------------|-------------------|------|
+| valid held-out anchors | 40 | - | - |
+| median patch error | 1.13 | 0.83 | 0.26 |
+| mean patch error | 1.13 | 0.87 | 0.25 |
+| p75 patch error | 1.48 | 1.15 | 0.48 |
+| within 1 patch | 42.5% | 57.5% | +15.0 pp |
+| within 2 patches | 95.0% | 100.0% | +5.0 pp |
+| anchors improved | - | - | 29 / 40, 72.5% |
+
+`anchor_token_affine_vs_residual_overlay.jpg` 是读图主图。
+
+图中元素：
 
 ```text
-AnchorToken_k = {
-    key_cur_feature: F_cur[j],
-    value_ref_feature: F_ref[i],
-    ref_pos_norm: pos_ref[i],
-    cur_pos_norm: pos_cur[j],
-    delta_uv_norm: pos_cur[j] - pos_ref[i],
-    confidence,
-    mesh_error_px,
-    encoder_cosine
-}
+magenta / 粉色点：held-out GT reference anchor 位置
+blue / 蓝色点：affine-only prediction
+orange / 橙色点：affine + local AnchorToken residual prediction
+误差线越短：预测越准
 ```
 
-验证方式：
+解释：
 
 ```text
-leave-one-out：拿掉一个真实 anchor，用剩余 AnchorTokens 预测它应该对应的 reference patch。
+1. affine-only 提供全局 coarse re-anchor，能处理主要的视角变化。
+2. local residual 使用剩余 anchors 的局部偏差，修正 affine 无法表达的局部误差。
+3. strong sample 中 affine + residual 的 median error 从 1.13 降到 0.83，且 72.5% held-out anchors 得到改善。
+4. weak sample 只有 7 个 anchors，mean error 和 within-1-patch 有改善，但 median 不稳定，因此更适合作为 fallback / quality gate 示例。
+5. 这说明 AnchorToken 不只是重复 affine，而是在 affine 基础上提供有用的局部 correction signal；但低 anchor 数时仍需要 gate。
 ```
 
-结果：
+## 5. 使用建议
 
-| 样本 | tokens | same | affine | token-soft | token-affine-residual |
-|------|--------|------|--------|------------|-----------------------|
-| `guitar cam06->cam07` | 41 | 3.16 | 1.15 | 1.41 | 0.82 |
-| `juggle cam02->cam01` | 179 | 3.16 | 0.82 | 1.58 | 0.66 |
-| `guitar cam01->cam03` | 7 | 10.03 | 1.05 | 1.46 | 1.14 |
-
-含义：
+汇报时建议按这个顺序看图：
 
 ```text
-1. 只把 AnchorToken 当 nearest-neighbor memory 不够，token-soft 不稳定。
-2. 最有效形式是 global affine coarse re-anchor + local AnchorToken residual。
-3. strong samples 中 token residual 优于纯 affine。
-4. weak sample 中 token residual 不优于 affine，需要 fallback。
+1. Step1 的 03_human3r_patch_anchor_correspondences.jpg
+   说明真实几何 anchors 可以映射到 Human3R patch。
+
+2. Step1 的 04_similarity_map_anchor_00.jpg
+   说明经过 encoder 后，对应 patch token 仍然能在 current 图里形成相似性热区。
+
+3. Step2 的 correction_overlay_no_correction.jpg
+   说明不做 re-anchor 时预测位置和 GT anchor 有明显误差。
+
+4. Step2 的 correction_overlay_translation.jpg
+   说明平均平移不一定可靠。
+
+5. Step2 的 correction_overlay_affine.jpg
+   说明 affine coarse re-anchor 能明显缩短误差线。
+
+6. Step3 的 anchor_token_affine_residual_table.jpg
+   说明 affine + local residual 在 held-out anchors 上整体优于 affine-only。
+
+7. Step3 的 anchor_token_affine_vs_residual_overlay.jpg
+   说明 local residual 如何在图像 patch grid 上缩短局部误差线。
 ```
 
-推荐展示图：
+## 6. 当前结论
+
+这个筛选版目录用于展示三件事：
 
 ```text
-03_anchor_token_prototype/BBQ_001_guitar_cam06_cam07_f00000244/anchor_token_lookup_overlay_clean.jpg
-03_anchor_token_prototype/anchor_token_prototype_summary.jpg
-03_anchor_token_prototype/BBQ_001_guitar_cam06_cam07_f00000244/anchor_token_leave_one_out_chart.jpg
-03_anchor_token_prototype/BBQ_001_guitar_cam06_cam07_f00000244/anchor_token_lookup_overlay.jpg
+1. Step1：Human3R encoder token 中仍然保留可用的 anchor correspondence。
+2. Step2：这些 anchors 不只是匹配点，还能提供 shot-boundary correction evidence。
+3. Step3：AnchorToken local residual 能在 affine-only 基础上进一步降低 held-out anchor patch error。
 ```
 
-## 5. Step4：AnchorToken 是否是具体信息，而不是泛泛 shot label
-
-脚本：
+更完整的 Step3-5 证据，包括 specificity controls 和 top-K quality gate，请看：
 
 ```text
-scripts/validate_anchor_token_specificity.py
-```
-
-输出目录：
-
-```text
-04_specificity_controls/
-```
-
-验证问题：
-
-```text
-AnchorToken 进入 decoder / pose path 前，是否真的像 human token 一样携带明确、有用的信息？
-```
-
-对照组：
-
-```text
-correct_anchor_token: 正确 boundary 的 token
-spatial_only_token: 忽略 feature，只靠空间位置
-shuffled_value_token: key/位置正确，但 residual value 打乱
-wrong_boundary_token: 使用另一个 boundary 的 token residual
-```
-
-结果：
-
-| 样本 | tokens | affine | correct token | spatial-only | shuffled | wrong-boundary |
-|------|--------|--------|---------------|--------------|----------|----------------|
-| `guitar cam06->cam07` | 41 | 1.15 | 0.77 | 0.84 | 1.18 | 1.33 |
-| `juggle cam02->cam01` | 179 | 0.82 | 0.65 | 0.68 | 0.82 | 0.78 |
-| `guitar cam01->cam03` | 7 | 1.05 | 1.11 | 1.13 | 1.16 | 1.13 |
-
-含义：
-
-```text
-1. strong samples 中 correct token 优于 affine-only。
-2. shuffled value 和 wrong-boundary token 会退化。
-3. 这说明 token key-value 绑定和 boundary specificity 有意义。
-4. AnchorToken 不是泛泛的“有 anchor”提示，而是具体 local residual correction evidence。
-5. weak sample 再次证明低 anchor 数需要 fallback。
-```
-
-推荐展示图：
-
-```text
-04_specificity_controls/anchor_token_specificity_summary.jpg
-```
-
-## 6. Step5：推理/训练时是否需要保留所有 anchors
-
-脚本：
-
-```text
-scripts/validate_rich_anchor_token_selection.py
-```
-
-输出目录：
-
-```text
-05_topk_quality_gate/
-```
-
-验证问题：
-
-```text
-实际模型接入时是否需要把所有 anchors 都传入，还是少量 top-K tokens 就够？
-```
-
-结果：
-
-| 样本 | tokens | gate | best strategy | affine | token residual | improvement |
-|------|--------|------|---------------|--------|----------------|-------------|
-| `guitar cam06->cam07` | 41 | strong | diverse top-8 | 1.10 | 0.77 | +0.32 |
-| `juggle cam02->cam01` | 179 | strong | random K=64 baseline | 0.81 | 0.65 | +0.16 |
-| `guitar cam01->cam03` | 7 | fallback | random K=4 | 1.25 | 1.24 | +0.02 |
-
-含义：
-
-```text
-1. 不需要保留所有 anchors。
-2. strong samples 中 8-16 个高质量 / 空间分散 tokens 通常足够。
-3. anchor < 8 时 gain 不可靠，应 fallback 或弱启用。
-```
-
-推荐展示图：
-
-```text
-05_topk_quality_gate/anchor_token_selection_summary.jpg
-05_topk_quality_gate/BBQ_001_guitar_cam06_cam07_f00000244/anchor_token_selection_chart.jpg
-```
-
-## 7. 离线 cache 状态
-
-已生成 guitar high-overlap cache：
-
-```text
-/workspace/data/RICH/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1/
-```
-
-统计：
-
-```text
-candidates: 185
-cached: 185
-skipped: 0
-frame_stride: 10
-camera_pairs: 6-7,5-6,4-5,3-4,1-2
-top_k_tokens: 16
-mean quality_gate: 0.793
-mean unique_anchor_patch_pairs: 120.49
-size: 923K
-```
-
-当前不是相机全排列，而是 high-overlap pairs。后续建议：
-
-```text
-第一阶段：high-overlap pairs 作为 clean training signal。
-第二阶段：加入 medium-overlap pairs 提高多样性。
-第三阶段：low-overlap pairs 作为 hard validation / fallback 测试。
-```
-
-## 8. 当前最终结论
-
-已经证明：
-
-```text
-1. AABB shot boundary 上能找到 mesh-verified static background anchors。
-2. 这些 anchors 可以映射回 Human3R encoder patch token，并且对应 token 明显更相似。
-3. anchors 不只是匹配点，能提供 correction evidence。
-4. affine 比 mean translation 更适合作为 coarse re-anchor prior。
-5. AnchorToken residual 在 strong samples 中能进一步优于 affine-only。
-6. shuffled value / wrong-boundary 负例退化，说明 AnchorToken 携带具体 local correction 信息。
-7. 低 anchor 数样本不稳定，必须使用 quality_gate/fallback。
-```
-
-尚未证明：
-
-```text
-AnchorToken 接入 Movie3R pose/camera path 后一定改善最终 3D / camera / SMPL 输出。
-```
-
-下一步：
-
-```text
-把 offline cache 接入 dataset / loader，先做 pose/camera path 的受控小模型实验。
-仍然不改 encoder，不让 anchor 进入完整 decoder token sequence。
+/data/wangzheng/iJCV-CODE/Movie3R/output/anchor_token_report_v1_guitar_only_step2_5/
 ```
