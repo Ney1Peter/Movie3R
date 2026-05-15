@@ -31,6 +31,22 @@ from dust3r.datasets.utils.transforms import ImgNorm
 from dust3r.utils.image import imread_cv2
 
 
+def _load_depthmap_meters(depth_path, image_shape):
+    """Load DA3 depth as float32 meters, supporting legacy uint16 millimeters."""
+    if not osp.exists(depth_path):
+        h, w = image_shape[:2]
+        return np.zeros((h, w), dtype=np.float32)
+
+    depth_raw = np.load(depth_path)
+    depthmap = depth_raw.astype(np.float32)
+    # Legacy Movie3R-dataset outputs saved DA3 depths as uint16 millimeters.
+    if np.issubdtype(depth_raw.dtype, np.integer):
+        depthmap = depthmap / 1000.0
+    depthmap[~np.isfinite(depthmap)] = 0.0
+    depthmap[depthmap > 200.0] = 0.0
+    return depthmap
+
+
 class AvatarReX_AABB(BaseMultiViewDataset):
     """
     AvatarReX AABB 镜头跳变数据集。
@@ -253,14 +269,17 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
 
-        # Depth（可能不存在，用全零占位）
-        if osp.exists(depth_path):
-            depthmap = np.load(depth_path).astype(np.float32)
-            depthmap[~np.isfinite(depthmap)] = 0
-            depthmap[depthmap > 200.0] = 0.0
-        else:
-            h, w = rgb_image.shape[:2]
-            depthmap = np.zeros((h, w), dtype=np.float32)
+        # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
+        # if osp.exists(depth_path):
+        #     depthmap = np.load(depth_path).astype(np.float32)
+        #     depthmap[~np.isfinite(depthmap)] = 0
+        #     depthmap[depthmap > 200.0] = 0.0
+        # else:
+        #     h, w = rgb_image.shape[:2]
+        #     depthmap = np.zeros((h, w), dtype=np.float32)
+        # **========== 新代码：兼容旧 uint16 毫米和新 float32 米单位 ==========**
+        depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        # **========== 结束 ==========**
 
         # Mask（可能不存在）
         mask_path = osp.join(split_path, seq_name, "mask", f"{frame_str}.png")
@@ -523,14 +542,17 @@ class AvatarReX_Video(BaseMultiViewDataset):
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
 
-        # Depth
-        if osp.exists(depth_path):
-            depthmap = np.load(depth_path).astype(np.float32)
-            depthmap[~np.isfinite(depthmap)] = 0
-            depthmap[depthmap > 200.0] = 0.0
-        else:
-            h, w = rgb_image.shape[:2]
-            depthmap = np.zeros((h, w), dtype=np.float32)
+        # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
+        # if osp.exists(depth_path):
+        #     depthmap = np.load(depth_path).astype(np.float32)
+        #     depthmap[~np.isfinite(depthmap)] = 0
+        #     depthmap[depthmap > 200.0] = 0.0
+        # else:
+        #     h, w = rgb_image.shape[:2]
+        #     depthmap = np.zeros((h, w), dtype=np.float32)
+        # **========== 新代码：兼容旧 uint16 毫米和新 float32 米单位 ==========**
+        depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        # **========== 结束 ==========**
 
         # Mask
         mask_path = osp.join(split_path, seq_name, "mask", f"{frame_str}.png")
