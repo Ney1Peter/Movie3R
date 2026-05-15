@@ -54,10 +54,12 @@ docs/_build/
 data
 src/checkpoints
 experiments
+checkpoints/
 
 # examples
 tmp
 command
+examples/
 
 *.pt
 *.pkl
