@@ -262,6 +262,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
                 self.samples = [s for s in self.samples if s in self.anchor_cache_index]
                 print(f"  AvatarReX_AABB anchor cache-only: {len(self.samples):,}/{before:,} samples")
 
+        # **========== V6.1 overfit 原始代码备份：不支持指定单个 AABB sample ==========**
+        # Overfit 只能依赖 `N @ AvatarReX_AABB(...)` 从已有 samples 中取前 N 个样本，
+        # 不能显式指定 seqA/seqB/start_frame，因此训练样本和后续可视化视频不够可控。
+        # **========== 结束 ==========**
+
     def _sample_has_required_files(self, split_path, seqA_name, seqB_name, start_frame):
         start_pos = self.frame_to_pos.get(int(start_frame))
         if start_pos is None or start_pos + 3 >= len(self.frame_ids):
