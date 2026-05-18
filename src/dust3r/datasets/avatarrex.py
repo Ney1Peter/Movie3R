@@ -48,6 +48,17 @@ def _load_depthmap_meters(depth_path, image_shape):
     return depthmap
 
 
+def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx):
+    frame_str = f"{int(frame_idx):08d}"
+    required_paths = [
+        osp.join(split_path, seq_name, "rgb", f"{frame_str}.png"),
+        osp.join(split_path, seq_name, "cam", f"{frame_str}.npz"),
+        osp.join(split_path, seq_name, "depth", f"{frame_str}.npy"),
+        osp.join(split_path, seq_name, "smpl", f"{frame_str}.pkl"),
+    ]
+    return all(osp.isfile(path) for path in required_paths)
+
+
 def _empty_anchor_info(top_k=16):
     return dict(
         anchor_valid=np.array(False, dtype=np.bool_),
@@ -231,12 +242,41 @@ class AvatarReX_AABB(BaseMultiViewDataset):
               f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps, "
               f"frames {self.frame_ids[0]}-{self.frame_ids[-1]})")
 
+        # **========== 原始代码：索引阶段不检查文件完整性，缺帧会在 DataLoader 读图时报错 ==========**
+        # self.samples 保持上方构建结果，不做文件存在性过滤。
+        # **========== 新代码：跳过 rgb/cam/depth/smpl 不完整的 AABB sample ==========**
+        before_file_filter = len(self.samples)
+        self.samples = [
+            sample for sample in self.samples
+            if self._sample_has_required_files(seq_dir, *sample)
+        ]
+        skipped = before_file_filter - len(self.samples)
+        if skipped > 0:
+            print(f"  AvatarReX_AABB skipped incomplete samples: {skipped:,}/{before_file_filter:,}")
+        # **========== 结束 ==========**
+
         if self.anchor_cache_root:
             self._load_anchor_cache_index()
             if self.anchor_cache_only:
                 before = len(self.samples)
                 self.samples = [s for s in self.samples if s in self.anchor_cache_index]
                 print(f"  AvatarReX_AABB anchor cache-only: {len(self.samples):,}/{before:,} samples")
+
+    def _sample_has_required_files(self, split_path, seqA_name, seqB_name, start_frame):
+        start_pos = self.frame_to_pos.get(int(start_frame))
+        if start_pos is None or start_pos + 3 >= len(self.frame_ids):
+            return False
+
+        t = self.frame_ids[start_pos]
+        t1 = self.frame_ids[start_pos + 1]
+        t2 = self.frame_ids[start_pos + 2]
+        t3 = self.frame_ids[start_pos + 3]
+        return (
+            _avatarrex_has_required_frame_files(split_path, seqA_name, t)
+            and _avatarrex_has_required_frame_files(split_path, seqA_name, t1)
+            and _avatarrex_has_required_frame_files(split_path, seqB_name, t2)
+            and _avatarrex_has_required_frame_files(split_path, seqB_name, t3)
+        )
 
     def _load_anchor_cache_index(self):
         manifest_path = osp.join(self.anchor_cache_root, "manifest.jsonl")
@@ -605,7 +645,31 @@ class AvatarReX_Video(BaseMultiViewDataset):
                 self.samples.append((seq_name, self.frame_ids[start_pos]))
             # **========== 结束 ==========**
 
+        # **========== 原始代码：索引阶段不检查文件完整性，缺帧会在 DataLoader 读图时报错 ==========**
+        # self.samples 保持上方构建结果，不做文件存在性过滤。
+        # **========== 新代码：跳过 rgb/cam/depth/smpl 不完整的 Video sample ==========**
+        before_file_filter = len(self.samples)
+        self.samples = [
+            sample for sample in self.samples
+            if self._sample_has_required_files(seq_dir, *sample)
+        ]
+        skipped = before_file_filter - len(self.samples)
+        if skipped > 0:
+            print(f"  AvatarReX_Video skipped incomplete samples: {skipped:,}/{before_file_filter:,}")
+        # **========== 结束 ==========**
+
         print(f"  AvatarReX_Video: {len(self.samples):,} samples")
+
+    def _sample_has_required_files(self, split_path, seq_name, start_frame):
+        start_pos = self.frame_to_pos.get(int(start_frame))
+        if start_pos is None or start_pos + self.num_views > len(self.frame_ids):
+            return False
+
+        for v in range(self.num_views):
+            frame_idx = self.frame_ids[start_pos + v]
+            if not _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx):
+                return False
+        return True
 
     def __len__(self):
         return len(self.samples)
