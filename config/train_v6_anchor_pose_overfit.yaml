@@ -36,7 +36,11 @@ min_lr: 1.0e-05
 warmup_epochs: 0
 weight_decay: 0.0
 
-eval_freq: 1
+# **========== V6.1 overfit 原始配置：启动时先跑 eval，会触发单样本空可视化列表 ==========**
+# eval_freq: 1
+# **========== 新配置：overfit gate 只看训练日志和最终 checkpoint，跳过启动前 eval ==========**
+eval_freq: 0
+# **========== 结束 ==========**
 save_freq: 1
 keep_freq: 1
 print_freq: 10
