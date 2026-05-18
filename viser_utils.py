@@ -998,14 +998,25 @@ class SceneHumanViewer:
             downsample_factor=self.downsample_slider.value
         )
 
-        self.pc_handles.append(
-            self.server.add_point_cloud(
-                name=f"/frames/{step}/pred_pts",
-                points=pred_pts,
-                colors=color,
-                point_size=0.005,
+        # **========== 原始代码备份：即使空点云也提交给 viewer ==========**
+        # self.pc_handles.append(
+        #     self.server.add_point_cloud(
+        #         name=f"/frames/{step}/pred_pts",
+        #         points=pred_pts,
+        #         colors=color,
+        #         point_size=0.005,
+        #     )
+        # )
+        # **========== 结束 ==========**
+        if len(pred_pts) > 0:
+            self.pc_handles.append(
+                self.server.add_point_cloud(
+                    name=f"/frames/{step}/pred_pts",
+                    points=pred_pts,
+                    colors=color,
+                    point_size=0.005,
+                )
             )
-        )
 
     def _compute_opacity_for_index(self, step_index):
         """Compute opacity so that earlier frames are more transparent, later frames more opaque.
@@ -1132,14 +1143,25 @@ class SceneHumanViewer:
         )
 
         self.vis_pts_list.append(pred_pts)
-        self.pc_handles.append(
-            self.server.add_point_cloud(
-                name=f"/frames/{step}/pred_pts",
-                points=pred_pts,
-                colors=color,
-                point_size=0.005,
+        # **========== 原始代码备份：即使空点云也提交给 viewer ==========**
+        # self.pc_handles.append(
+        #     self.server.add_point_cloud(
+        #         name=f"/frames/{step}/pred_pts",
+        #         points=pred_pts,
+        #         colors=color,
+        #         point_size=0.005,
+        #     )
+        # )
+        # **========== 结束 ==========**
+        if len(pred_pts) > 0:
+            self.pc_handles.append(
+                self.server.add_point_cloud(
+                    name=f"/frames/{step}/pred_pts",
+                    points=pred_pts,
+                    colors=color,
+                    point_size=0.005,
+                )
             )
-        )
         if len(verts) > 0:
             for tid, vert in enumerate(verts):
                 step_idx = self.step_to_index.get(step, 0)
