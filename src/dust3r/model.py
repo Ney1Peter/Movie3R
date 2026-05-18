@@ -2067,6 +2067,9 @@ class ARCroco3DStereo(CroCoNet):
         max_smpl_id = -1
         reset_mask = False
         prev_f_dec = None
+        # V6-A: lightweight inference encodes one frame at a time, so keep the
+        # CUT3R encoder features needed by external anchor patch indices.
+        anchor_feats = []
         use_shot_decoder_token = (
             self.enable_shot_adaptation
             and getattr(self, "enable_shot_decoder_token", True)
@@ -2100,6 +2103,7 @@ class ARCroco3DStereo(CroCoNet):
 
             shape = shapes
             feat_i = img_out[-1]
+            anchor_feats.append(feat_i)
             pos_i = img_pos
             f_shot = None
             q_cond = None
@@ -2328,6 +2332,10 @@ class ARCroco3DStereo(CroCoNet):
                     smpl_token_cat = None
             res = self._downstream_head(
                 head_input, shape, pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token_cat)
+
+            if getattr(self, "enable_anchor_pose_adapter", False):
+                z_anchor_out = dec[self.dec_depth][:, 0:1].float()
+                res = self._apply_anchor_pose_adapter(res, z_anchor_out, anchor_feats, views, i)
 
             if self.enable_shot_adaptation:
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
