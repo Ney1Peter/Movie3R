@@ -392,6 +392,9 @@ def _collect_anchor_pose_details(preds):
         "anchor_pose_delta_q_norm",
         "anchor_pose_valid",
         "anchor_pose_attn_max",
+        "anchor_decoder_gate",
+        "anchor_decoder_valid",
+        "anchor_decoder_token_norm",
     ]
     for key in keys:
         values = []
