@@ -1159,6 +1159,11 @@ class ARCroco3DStereo(CroCoNet):
         #     pos_img = torch.cat([pos_img, pos_shot], dim=1)
         # **========== 结束 ==========**
         if f_shot is not None:
+            # **========== V6-B 原始代码备份：旧 ShotToken 作为最后一个 decoder token ==========**
+            # f_img = torch.cat([f_img, f_shot], dim=1)
+            # pos_shot = torch.zeros_like(f_shot)[:, :, :2].long()
+            # pos_img = torch.cat([pos_img, pos_shot], dim=1)
+            # **========== 结束 ==========**
             f_img = torch.cat([f_img, f_shot], dim=1)
             # pos_shot: dummy position for shot token (must be Long type for RoPE)
             pos_shot = torch.zeros_like(f_shot)[:, :, :2].long()  # [B, 1, 2]
@@ -1777,6 +1782,10 @@ class ARCroco3DStereo(CroCoNet):
             # if self.enable_shot_adaptation:
             # **========== 结束 ==========**
             if use_shot_decoder_token:
+                # **========== V6-B 原始代码备份：head slicing 只处理 [pose, image, human, shot] ==========**
+                # 旧路径没有 AnchorToken，默认 human tokens 位于末尾，shot token 再追加到最后。
+                # V6-B 将改为 [pose, image, anchor, human]，head 输入需要显式丢弃 anchor tokens。
+                # **========== 结束 ==========**
                 q_out = dec[-1][:, -1:]  # [B, 1, dec_dim]
                 # Token indices when f_shot is inserted: [z', F', H', q']
                 # pose = dec[-1][:, 0:1], img = dec[-1][:, 1:-n_humans-1], smpl = dec[-1][:, -n_humans-1:-1], q' = dec[-1][:, -1:]
@@ -2297,6 +2306,10 @@ class ARCroco3DStereo(CroCoNet):
             # if self.enable_shot_adaptation:
             # **========== 结束 ==========**
             if use_shot_decoder_token:
+                # **========== V6-B 原始代码备份：lightweight head slicing 只处理 [pose, image, human, shot] ==========**
+                # 旧路径没有 AnchorToken，V6-B 会在 image 和 human 之间插入 anchor tokens，
+                # 因此不能继续依赖 1:-n_humans / -n_humans-1:-1 这类隐式切片。
+                # **========== 结束 ==========**
                 if n_humans_i > 0:
                     head_input = [
                         dec[0].float(),
