@@ -1008,6 +1008,8 @@ class SceneHumanViewer:
         #     )
         # )
         # **========== 结束 ==========**
+        # V6.1: camera-only diagnostics pass dummy/empty point clouds; skip them
+        # so viser can still show camera frustums without invalid geometry.
         if len(pred_pts) > 0:
             self.pc_handles.append(
                 self.server.add_point_cloud(
@@ -1153,6 +1155,7 @@ class SceneHumanViewer:
         #     )
         # )
         # **========== 结束 ==========**
+        # V6.1: same empty-point-cloud guard for initial viewer population.
         if len(pred_pts) > 0:
             self.pc_handles.append(
                 self.server.add_point_cloud(

@@ -2067,6 +2067,8 @@ class ARCroco3DStereo(CroCoNet):
         max_smpl_id = -1
         reset_mask = False
         prev_f_dec = None
+        # V6.1: demo.py uses the lightweight recurrent inference path, not the
+        # full multi-view _forward_impl() path used during V6-A training.
         # V6-A: lightweight inference encodes one frame at a time, so keep the
         # CUT3R encoder features needed by external anchor patch indices.
         anchor_feats = []
@@ -2103,6 +2105,8 @@ class ARCroco3DStereo(CroCoNet):
 
             shape = shapes
             feat_i = img_out[-1]
+            # V6.1: keep per-frame encoder tokens so an anchor on frame i can
+            # gather both ref_patch_idx and cur_patch_idx in this streaming path.
             anchor_feats.append(feat_i)
             pos_i = img_pos
             f_shot = None
@@ -2333,6 +2337,8 @@ class ARCroco3DStereo(CroCoNet):
             res = self._downstream_head(
                 head_input, shape, pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token_cat)
 
+            # V6.1: real-video inference must explicitly run the same
+            # decoder-after AnchorPoseAdapter used by the training path.
             if getattr(self, "enable_anchor_pose_adapter", False):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
                 res = self._apply_anchor_pose_adapter(res, z_anchor_out, anchor_feats, views, i)

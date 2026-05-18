@@ -1155,6 +1155,151 @@ quality_gate
 第三阶段：low-overlap pairs 只作为 hard validation / fallback 测试，不大量训练。
 ```
 
+## 2.5 V6.1 当前实现和诊断结果（2026/05/18）
+
+V6.1 不是新的训练结构，而是对 V6-A decoder-after 路线增加真实视频验证闭环。
+
+当前 V6.1 代码路径：
+
+```text
+video mp4
+  -> scripts/detect_video_shot_changes.py 找 shot boundary 候选
+  -> scripts/build_video_anchor_cache.py 用 XFeat + Fundamental RANSAC 生成 anchor npz
+  -> demo.py --anchor_path 注入 anchor fields
+  -> forward_recurrent_lighter() 缓存每帧 CUT3R encoder feat
+  -> _apply_anchor_pose_adapter() gather ref/current patch feat
+  -> AnchorPoseAdapter decoder-after 修 camera_pose translation residual
+```
+
+V6.1 和 V6-A 的关系：
+
+| 项 | V6-A | V6.1 |
+|---|---|---|
+| 核心结构 | decoder-after AnchorPoseAdapter | 不改变核心结构 |
+| 数据来源 | AvatarReX/RICH anchor cache | 真实视频外部 XFeat anchor npz |
+| 推理路径 | full forward 训练路径 | `forward_recurrent_lighter` demo 路径 |
+| 目的 | 训练 AnchorPoseAdapter | 验证真实视频是否实际触发、是否有效 |
+| 当前修正 | 只修 translation | 仍只修 translation |
+| rotation | 默认不修 | 不修，h36 上 rotation jump 保持不变 |
+
+### 2.5.1 V6.1 代码修正结论
+
+最初 `demo.py` 使用 `inference_recurrent_lighter()`，而 V6-A 的 `_apply_anchor_pose_adapter()` 只接在 full recurrent path 中，因此真实视频 with-anchor 实际没有触发 AnchorPoseAdapter。
+
+已修正：
+
+```text
+src/dust3r/model.py::forward_recurrent_lighter
+  -> 新增 anchor_feats 缓存
+  -> downstream head 后调用 _apply_anchor_pose_adapter()
+```
+
+修正后 h36 `62 -> 63` 上可以看到 adapter 真实触发：
+
+```text
+anchor_pose_gate = 0.4903
+anchor_pose_valid = 1.0
+anchor_pose_delta_t_norm = 0.04927
+anchor_pose_delta_q_norm = 0.0
+```
+
+### 2.5.2 h36 / AIST / guitar 诊断结果
+
+当前真实视频 anchor 质量：
+
+| 视频 | boundary | raw matches | F inliers | top-K anchors | quality_gate | 结论 |
+|---|---:|---:|---:|---:|---:|---|
+| `h36_new.mp4` | `62 -> 63` | 263 | 54 | 16 | 0.4903 | 可触发，但 anchor 有错配 |
+| `aist_ms_000000_9s_13s.mp4` | `70 -> 71` | 193 | 102 | 16 | 0.0 | 检测正确，但 gate 判无效 |
+| guitar cam01->cam05 | `29 -> 30` | 198 | 29 | 16 | 0.6399 | 中等压力样本 |
+| guitar cam01->cam06 | `29 -> 30` | 158 | 17 | 15 | 0.4599 | 压力样本，anchor 少 |
+
+h36 decoder-after 数值效果：
+
+```text
+no-anchor boundary translation jump   = 6.5091
+with-anchor boundary translation jump = 6.4650
+with-anchor camera translation diff   = 0.04927
+rotation jump                         = 112.62 deg，不变
+```
+
+结论：
+
+```text
+1. V6.1 确认 adapter 已经触发。
+2. 当前 checkpoint 输出 residual 太小，视觉上基本不可见。
+3. translation-only 不能处理 h36 这种大 rotation jump。
+```
+
+### 2.5.3 手动 correction 和可视化结论
+
+为了区分“camera_pose 后处理无效”和“adapter 学得太弱”，做了手动 translation 测试：
+
+```text
+manual encoded delta_t = [0.5, 0, 0]
+camera_translation_shift_norm = 0.5
+point_shift_mean_norm = 0.5
+```
+
+结论：`camera_pose` 后处理链路是通的。如果输出足够大的正确 residual，viewer/点云会移动。
+
+随后用 h36 的 16 个 anchor 做最简单 3D rigid alignment 可视化：
+
+```text
+before anchor 3D residual:
+  mean   = 2.43
+  median = 0.93
+  max    = 11.88
+
+after manual rigid correction:
+  mean   = 1.46
+  median = 1.43
+  max    = 3.36
+```
+
+解释：
+
+```text
+手动刚体修正能拉近部分极端 outlier，因此 mean/max 下降。
+但 anchor 中存在错配，部分原本较好的点被拉坏，median 反而变差。
+```
+
+因此当前 h36 anchor 不是“可直接几何修 pose”的干净约束，只能说明存在部分可用信号。
+
+可视化输出：
+
+```text
+output/anchor_pose_visualization/h36_new/frame_0062_ref_anchor_points.jpg
+output/anchor_pose_visualization/h36_new/frame_0063_cur_anchor_points.jpg
+output/anchor_pose_visualization/h36_new/frame_0062_0063_anchor_matches.jpg
+output/anchor_pose_visualization/h36_new/manual_anchor_correction_before_after_xz.jpg
+```
+
+### 2.5.4 当前判断和下一步 gate
+
+当前不能直接根据 h36 真实视频失败就否定 AnchorToken 思路，因为有两个混杂因素：
+
+```text
+1. h36 anchor 质量不够干净。
+2. V6-A decoder-after 影响力可能太弱。
+```
+
+下一步必须先做 decoder-after overfit gate：
+
+```text
+固定 1 个或少量 high-quality anchor 样本
+只训练 AnchorPoseAdapter
+看 camera_pose 是否能 overfit 到 GT / target pose
+```
+
+go/no-go 标准：
+
+| 结果 | 结论 | 后续动作 |
+|---|---|---|
+| 单样本 overfit 成功 | decoder-after 有容量，问题主要是数据/训练/anchor 质量 | 再决定是否扩大数据或加入 rotation |
+| 单样本 overfit 失败 | decoder-after 结构影响力不足或监督不对 | 舍弃 V6-A，直接做 AnchorToken 进 decoder |
+| 只能 translation overfit，rotation 不行 | translation-only 设计不足 | 新版本必须让 rotation/pose token 更早读 anchor |
+
 ## 3. Token 形式
 
 V6 不再使用单个：
@@ -1671,14 +1816,33 @@ pose adapter
 基于最新评估，当前更推荐的 V6 主路线是：
 
 ```text
-V6-A: XFeat inference-time scene matching prior
-    用 XFeat 直接产生跨镜头背景匹配，验证 scene anchor 是否能修 abrupt transition。
+V6.1 gate: decoder-after overfit test
+    先固定 1 个或少量高质量 anchor 样本，确认当前 AnchorPoseAdapter 是否能 overfit camera pose。
+
+V6-A: XFeat inference-time scene matching prior + decoder-after adapter
+    只在 overfit gate 成功时继续扩大训练或加入 rotation residual。
 
 V6-B: XFeat matches -> scene re-anchor tokens -> camera-token adapter
-    不做 PnP 后处理，不做 BA，只把 verified matches 转成 tokens，受控影响 pose token。
+    如果 V6.1 gate 失败，停止 decoder-after，改为让 AnchorTokens 更早进入 decoder/pose-token 更新。
 
 V6-C: teacher-only XFeat / MLP descriptor ablation
     如果 V6-A/B 有明显收益，再研究是否能把 XFeat 蒸馏成内部轻量 descriptor。
+```
+
+关于 V6-B 的结构选择，当前记录两个候选：
+
+| 候选 | 方式 | 风险 | 当前优先级 |
+|---|---|---|---|
+| V6-B1 | pose-only cross attention，anchor 不进 full sequence | 影响力可能仍偏弱 | 中 |
+| V6-B2 | AnchorTokens append 到 decoder sequence，但 head slicing 丢弃 anchor tokens | 可能影响 image/human/pointmap，需要 mask/no-op 保护 | 高，若 V6.1 overfit 失败则尝试 |
+
+V6-B2 的最小原则：
+
+```text
+1. AnchorTokens 只在有可靠 anchor 的 boundary frame 加入。
+2. no-anchor / gate=0 时必须严格等价 base Human3R。
+3. downstream head 不直接预测 anchor token，head slicing 必须排除 anchor tokens。
+4. 先用单样本 overfit 验证，再扩大训练。
 ```
 
 旧的内部 token matching 路线仍然保留作为必要 ablation：

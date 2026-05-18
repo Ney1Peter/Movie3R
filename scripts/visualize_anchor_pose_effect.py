@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Simple visualization for anchor matches and manual pose correction."""
+"""V6.1 diagnostic: visualize anchor matches and manual pose correction."""
 
 import argparse
 import json

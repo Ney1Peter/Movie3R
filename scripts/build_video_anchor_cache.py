@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build external AnchorToken metadata for a shot boundary in a video.
+"""V6.1 helper: build external AnchorToken metadata for a video boundary.
 
 The output npz can be passed to demo.py with --anchor_path. This script does
 not use GT camera/depth/SMPL. It matches the boundary frames with XFeat, filters

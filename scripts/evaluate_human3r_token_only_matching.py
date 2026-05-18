@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate whether Human3R tokens can discover anchor correspondences.
+"""V6.1 diagnostic: evaluate Human3R token-only anchor matching.
 
 This script does not use XFeat to generate matches. It only uses previously
 saved Step1 mesh-verified anchor pairs as evaluation targets, then performs

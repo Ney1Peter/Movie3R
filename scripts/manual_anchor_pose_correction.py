@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Estimate a hand-crafted shot-boundary pose correction from anchor matches.
+"""V6.1 diagnostic: estimate hand-crafted correction from anchor matches.
 
 The test uses the external anchor patch pairs as geometric constraints:
 reference-frame anchor 3D points define the target world positions, and

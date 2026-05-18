@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose whether V6-A AnchorPoseAdapter changes camera pose at inference.
+"""V6.1 diagnostic: check whether AnchorPoseAdapter changes camera pose.
 
 This script intentionally does not launch the viewer. It runs the same video once
 without injected anchors and once with injected anchors, then reports whether the

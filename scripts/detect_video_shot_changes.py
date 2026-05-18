@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Detect candidate shot-change frame pairs in a video.
+"""V6.1 helper: detect candidate shot-change frame pairs in a video.
 
 The detector is intentionally two-stage:
 1. Scan all adjacent frame pairs with cheap image-difference metrics.
