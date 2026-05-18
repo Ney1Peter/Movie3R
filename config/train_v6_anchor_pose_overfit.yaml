@@ -1,0 +1,72 @@
+# V6.1 decoder-after AnchorPoseAdapter single-sample overfit gate.
+# The fixed AABB sample is mirrored by examples/guitar_AABB_overfit_cam01_cam02_start00000035_60frames_20fps.mp4.
+defaults:
+  - train_v6_anchor_pose_guitar
+  - _self_
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='anchor_pose_adaptation',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  anchor_pose_max_delta_t=1.0, anchor_pose_max_delta_q=0.05,
+  anchor_pose_num_heads=8, anchor_pose_use_ref_feature=True,
+  anchor_pose_apply_rotation=False))
+
+train_dataset: 512 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R", aug_crop=0, resolution=(512, 384), num_views=4, seed=101, n_corres=0, anchor_cache_root="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1", anchor_cache_only=True, anchor_top_k=16, fixed_samples=[('BBQ_001_guitar_cam_01', 'BBQ_001_guitar_cam_02', 35)])
+val_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R", aug_crop=0, resolution=(512, 384), num_views=4, seed=202, n_corres=0, anchor_cache_root="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1", anchor_cache_only=True, anchor_top_k=16, fixed_samples=[('BBQ_001_guitar_cam_01', 'BBQ_001_guitar_cam_02', 35)])
+test_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R", aug_crop=0, resolution=(512, 384), num_views=4, seed=303, n_corres=0, anchor_cache_root="/data/wangzheng/iJCV-CODE/data/RICH_4Human3R/anchor_cache_guitar_high_overlap_v1", anchor_cache_only=True, anchor_top_k=16, fixed_samples=[('BBQ_001_guitar_cam_01', 'BBQ_001_guitar_cam_02', 35)])
+
+epochs: 1
+batch_size: 1
+accum_iter: 1
+num_workers: 0
+gradient_checkpointing: true
+amp: 1
+fixed_length: True
+
+lr: 5.0e-04
+min_lr: 1.0e-05
+warmup_epochs: 0
+weight_decay: 0.0
+
+eval_freq: 1
+save_freq: 1
+keep_freq: 1
+print_freq: 10
+structured_log_freq: 1
+save_code: false
+
+exp_name: v6_anchor_pose_overfit_cam01_cam02_start35
+logdir: ./${save_dir}/${exp_name}/logs
+output_dir: ./${save_dir}/${exp_name}/
+
+console_log_keys:
+  - lr
+  - loss
+  - pose_loss_view2_AABB
+  - shot_anchor_view2_t_err
+  - shot_jump_t_err
+  - anchor_pose_gate
+  - anchor_pose_delta_t_norm
+
+step_log_keys:
+  - loss
+  - lr
+  - pose_loss
+  - pose_loss_view2_AABB
+  - shot_boundary_abs_loss
+  - shot_boundary_abs_t_err
+  - shot_jump_rel_loss
+  - shot_jump_t_err
+  - shot_anchor_loss
+  - shot_anchor_view2_t_err
+  - anchor_pose_gate
+  - anchor_pose_delta_t_norm
+  - anchor_pose_valid

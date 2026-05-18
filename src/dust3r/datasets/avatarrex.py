@@ -130,6 +130,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         anchor_cache_only=False,
         anchor_top_k=16,
         anchor_quality_threshold=0.0,
+        fixed_samples=None,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -142,6 +143,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.anchor_cache_only = anchor_cache_only
         self.anchor_top_k = anchor_top_k
         self.anchor_quality_threshold = anchor_quality_threshold
+        self.fixed_samples = self._normalize_fixed_samples(fixed_samples)
         self.anchor_cache_index = {}
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
@@ -266,6 +268,37 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # Overfit 只能依赖 `N @ AvatarReX_AABB(...)` 从已有 samples 中取前 N 个样本，
         # 不能显式指定 seqA/seqB/start_frame，因此训练样本和后续可视化视频不够可控。
         # **========== 结束 ==========**
+        # **========== V6.1 overfit 新代码：允许显式指定一个或多个 AABB sample ==========**
+        if self.fixed_samples:
+            sample_set = set(self.samples)
+            missing = [sample for sample in self.fixed_samples if sample not in sample_set]
+            if missing:
+                raise ValueError(
+                    "AvatarReX_AABB fixed_samples not found after file/cache filtering: "
+                    f"{missing}"
+                )
+            before = len(self.samples)
+            self.samples = list(self.fixed_samples)
+            print(f"  AvatarReX_AABB fixed_samples: {len(self.samples):,}/{before:,} samples")
+        # **========== 结束 ==========**
+
+    @staticmethod
+    def _normalize_fixed_samples(fixed_samples):
+        if fixed_samples is None:
+            return None
+        if isinstance(fixed_samples, tuple) and len(fixed_samples) == 3:
+            fixed_samples = [fixed_samples]
+
+        normalized = []
+        for sample in fixed_samples:
+            if len(sample) != 3:
+                raise ValueError(
+                    "Each AvatarReX_AABB fixed sample must be "
+                    "(seqA_name, seqB_name, start_frame)"
+                )
+            seq_a, seq_b, start_frame = sample
+            normalized.append((str(seq_a), str(seq_b), int(start_frame)))
+        return tuple(normalized)
 
     def _sample_has_required_files(self, split_path, seqA_name, seqB_name, start_frame):
         start_pos = self.frame_to_pos.get(int(start_frame))
