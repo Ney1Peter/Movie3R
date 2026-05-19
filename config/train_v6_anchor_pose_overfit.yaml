@@ -1,5 +1,5 @@
 # V6.1 decoder-after AnchorPoseAdapter single-sample overfit gate.
-# The fixed AABB sample is mirrored by examples/guitar_AABB_overfit_cam01_cam02_start00000035_60frames_20fps.mp4.
+# The fixed AABB sample is mirrored by examples/guitar/guitar_AABB_overfit_cam01_cam02_start00000035_60frames_20fps.mp4.
 defaults:
   - train_v6_anchor_pose_guitar
   - _self_

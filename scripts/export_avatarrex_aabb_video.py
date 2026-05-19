@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument("--fps", type=float, default=20.0)
     parser.add_argument(
         "--output",
-        default="examples/guitar_AABB_overfit_cam01_cam02_start00000035_60frames_20fps.mp4",
+        default="examples/guitar/guitar_AABB_overfit_cam01_cam02_start00000035_60frames_20fps.mp4",
     )
     return parser.parse_args()
 
