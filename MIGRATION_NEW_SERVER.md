@@ -4,14 +4,14 @@
 
 ## 1. Git 同步范围
 
-本仓库应该通过 git 同步代码、配置、文档、脚本，以及汇报用的 Step1 可视化证据：
+本仓库应该通过 git 同步代码、配置、文档、脚本，以及已经归档到 V2-V6 历史目录的 AnchorToken 可视化证据：
 
 ```text
-output/anchor_token_report_v1/README.md
-output/anchor_token_report_v1/01_aabb_step1/**
+docs/movie3r/archive_v2_v6/anchor_token_report_v1/README.md
+docs/movie3r/archive_v2_v6/anchor_token_report_v1/01_aabb_step1/**
 ```
 
-当前 `.gitignore` 已经保留原始 `output/` 忽略规则作为注释，并改为只放行上面这些报告文件。`02_correction_proxy/` 到 `05_topk_quality_gate/` 仍然保持忽略，不随 git 同步。
+当前 V2-V6 报告文件已经从 `output/` 移入文档归档目录。后续新的 `output/` 产物默认仍按本地实验输出处理，不应自动进入 git。
 
 删除旧服务器项目前，先确认：
 
@@ -114,24 +114,28 @@ print(torch.cuda.is_available())
 PY
 ```
 
-确认 Step1 报告已经随 git 同步：
+确认历史 AnchorToken 报告已经随 git 同步：
 
 ```bash
-git ls-files output/anchor_token_report_v1/01_aabb_step1
+git ls-files docs/movie3r/archive_v2_v6/anchor_token_report_v1/01_aabb_step1
 ```
 
-如果该命令没有输出，说明旧服务器上还没有把 Step1 报告文件 commit/push。
+如果该命令没有输出，说明旧服务器上还没有把历史报告文件 commit/push。
 
-## 6. 当前 AnchorToken 相关上下文
+## 6. 当前 Movie3R 上下文
 
 迁移后优先阅读：
 
 ```text
-ANCHOR_TOKEN_V6_CONTEXT.md
-output/anchor_token_report_v1/README.md
 docs/movie3r/README.md
-docs/movie3r/training.md
-docs/movie3r/model.md
+docs/movie3r/current_research_context.md
+docs/movie3r/v7/README.md
+docs/movie3r/archive_v2_v6/README.md
 ```
 
-当前实验结论是：已经证明 AnchorToken 在接入主模型前具备有效的 boundary correction evidence；下一步应该把 offline anchor cache 接入 dataset/loader，先做 pose/camera path 的受控小模型实验。仍然不要改 encoder，也不要把 anchor token 插入完整 decoder token sequence。
+当前项目已经从 V2-V6 的 ShotToken / background AnchorToken 方向切换到 V7 调研阶段。历史 AnchorToken 上下文保存在：
+
+```text
+docs/movie3r/archive_v2_v6/ANCHOR_TOKEN_V6_CONTEXT.md
+docs/movie3r/archive_v2_v6/anchor_token_report_v1/README.md
+```

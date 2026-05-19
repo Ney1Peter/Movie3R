@@ -2,7 +2,9 @@
 
 整理时间：2026/05/15
 
-根目录：`/data/wangzheng/iJCV-CODE/Movie3R/output/anchor_token_report_v1/`
+当前归档目录：`docs/movie3r/archive_v2_v6/anchor_token_report_v1/`
+
+历史生成目录：`/data/wangzheng/iJCV-CODE/Movie3R/output/anchor_token_report_v1/`
 
 ## 0. 目录定位
 

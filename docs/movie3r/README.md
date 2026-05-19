@@ -1,94 +1,32 @@
-# Movie3R
+# Movie3R 文档入口
 
-Movie3R 是基于 Human3R 的扩展，针对**多镜头电影级人体重建**场景优化，核心解决**镜头跳变（shot change）**带来的时序不连续问题。
+Movie3R 当前处于 **V7 调研阶段**。
 
-## 快速开始
+## 当前判断
 
-### 环境安装
+近期测试显示，Human3R 在 RICH / AvatarReX 等纹理丰富数据上通常表现稳定；明显偏移更多出现在低纹理、弱背景特征、简单场景中的 shot boundary，尤其是镜头变化后的第一帧。
 
-详见 [环境配置文档](../env_setup.md)
+因此，项目当前重点不是继续扩展 V2-V6 的 ShotToken / background AnchorToken 路线，而是重新调研低纹理场景下 Human3R 的失败模式。
 
-### 训练
-
-```bash
-cd src
-
-# 单卡训练
-./train.sh 1 40 8
-
-# 4卡训练
-./train.sh 4 40 8
-
-# 参数说明
-./train.sh [num_gpus] [epochs] [batch_size]
-```
-
-### 模型推理
-
-```bash
-python demo.py --model_path src/human3r_896L.pth --seq_path examples/video.mp4 ...
-```
-
-## 文档目录
+## 当前文档
 
 | 文档 | 内容 |
-|------|------|
-| [环境配置](../env_setup.md) | Python 环境、依赖安装、RoPE 编译 |
-| [训练配置](training.md) | 硬件配置、Batch Size、分布式训练、梯度累积 |
-| [模型架构](model.md) | Shot-Aware Adaptation 模块设计 |
-| [ShotToken V5 规划](shot_token_v5_plan.md) | V5.1 layerwise pose-only attention 与 V5.2 masked decoder 方案 |
-| [代码详解](../train_code_explanation.md) | 训练代码流程解析 |
-| [TODO](../TODO.md) | 待实现功能清单 |
+|---|---|
+| [当前调研情况](current_research_context.md) | 低纹理 shot change 失败场景和方向边界 |
+| [V7 入口](v7/README.md) | V7 调研阶段说明 |
+| [V2-V6 历史归档](archive_v2_v6/README.md) | 旧 ShotToken / AnchorToken / V6 记录 |
+| [训练代码入口](train_code.md) | 训练代码说明入口 |
 
-## 核心特性
+## 历史分水岭
 
-### Shot-Aware Adaptation
+V2-V6 文档和报告已归档到：
 
-> **旧版内容备份**：下面三条是早期 StateGate + Residual Adapter 方案描述，当前实现已更新为 ShotTokenGenerator + LoRA Head V1。新设计说明将在下方新增。
-
-处理镜头跳变的轻量微调模块：
-
-- **ShotTokenGenerator**：基于相邻帧差异生成 shot token
-- **StateGate**：（计划移除）软性门控状态更新
-- **Residual Adapter**：对 base model 输出做微调修正
-
-### 当前实现（LoRA Head V1）
-
-当前训练版本保持原 Human3R recurrent state 行为，不再强制重置到 `S0`，也暂不启用 StateGate。
-
-> **2026/05/07 复盘**：LoRA64 正式训练权重 `checkpoint-best.pth` 推理失败。消融显示 base Human3R 权重正常，问题集中在 `enable_shot_adaptation=True` 后启用的 shot adaptation 分支。下一步优先验证 `shot_label`、`g_curr/g_prev` 和 `q_t` 质量，不建议直接继续使用该 LoRA64 权重。
-
-- **ShotTokenGenerator**：基于相邻帧 decoder image token 差异生成 `q_t`
-- **Shot token prompt**：将 `q_t` 拼接到 `[pose, image, human]` token 后进入 decoder cross-attention
-- **PoseLoRALayer**：修正 `camera_pose` 的 translation + quaternion
-- **HumanLoRALayer**：只修正 `smpl_transl`，不改 shape / rotmat / expression
-- **WorldLoRALayer**：对 `pts3d_in_self_view` 和 `pts3d_in_other_view` 做全局 3D shift
-
-`shot_label` 当前不作为显式监督使用。V1 依赖相邻帧特征差异和最终任务 loss 隐式学习 shot-aware correction；后续如需显式检测镜头跳变，可增加 `shot_label` 辅助 BCE loss。
-
-### 训练策略
-
-- 当前 LoRA64 配置只训练约 ~1.08M 新参数
-- 支持单卡/多卡训练
-- bf16 混合精度
-- Gradient Checkpointing 节省显存
-
-## 项目结构
-
+```text
+docs/movie3r/archive_v2_v6/
 ```
-Movie3R/
-├── src/
-│   ├── train.py              # 训练入口
-│   ├── demo.py               # 推理演示
-│   └── dust3r/
-│       ├── model.py          # 模型定义
-│       ├── shot_adaptation.py # Shot-Aware Adaptation
-│       └── datasets/         # 数据集加载
-├── config/
-│   └── train.yaml            # 训练配置
-├── docs/
-│   ├── movie3r/              # Movie3R 文档
-│   └── train.md              # Human3R 原版训练
-└── scripts/
-    └── train.sh              # 训练启动脚本
-```
+
+归档内容保留用于复盘，不再代表当前主线。
+
+## 当前代码状态
+
+模型、训练、推理代码仍保留历史 V2-V6 实验路径。V7 目前只开启文档和调研阶段，尚未确定新的模型或训练实现。

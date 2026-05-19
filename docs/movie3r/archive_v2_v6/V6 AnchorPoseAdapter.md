@@ -38,7 +38,7 @@
 | `src/dust3r/datasets/avatarrex.py` | 后续加入 anchor cache-aware loading |
 | `scripts/batch_generate_rich_guitar_anchor_cache.py` | 当前 guitar AnchorToken cache 生成脚本 |
 | `scripts/prototype_rich_anchor_tokens.py` | 当前 AnchorToken prototype 和 leave-one-out 验证脚本 |
-| `docs/movie3r/shot_token_v6_plan.md` | 旧 V6 实验记录和历史方案，保留用于追溯 |
+| `docs/movie3r/archive_v2_v6/shot_token_v6_plan.md` | 旧 V6 实验记录和历史方案，保留用于追溯 |
 
 ## 1. 核心结论
 
