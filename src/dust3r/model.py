@@ -60,7 +60,10 @@ from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDeco
 # **========== V4 原始代码备份：只导入 decoder 后 PoseAlignmentAdapter ==========**
 # from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter
 # **========== 结束 ==========**
-from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter, LayerwisePoseShotAdapter
+# **========== V7 注释保留：旧 V2-V5 LoRA / pose residual adapter 导入 ==========**
+# from dust3r.shot_adaptation import ShotTokenGenerator, PoseLoRALayer, HumanLoRALayer, WorldLoRALayer, PoseTranslationAdapter, PoseAlignmentAdapter, LayerwisePoseShotAdapter
+# **========== V7 当前：仅保留旧 ShotToken / layerwise 路径，LoRA 与 pose residual 后续由 V7 adapter 替代 ==========**
+from dust3r.shot_adaptation import ShotTokenGenerator, LayerwisePoseShotAdapter
 # **========== 结束 ==========**
 # **========== V6-C 原始代码备份：V6-A/V6-B 只导入 camera residual adapter 与 AnchorToken projector ==========**
 # from dust3r.anchor_pose_adapter import AnchorPoseAdapter, AnchorTokenProjector
@@ -486,14 +489,16 @@ class ARCroco3DStereo(CroCoNet):
         #     max_delta=config.pose_delta_t_max,
         # )
         # **========== 结束 ==========**
-        self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
-        self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
-        self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
-        self.pose_translation_adapter = PoseTranslationAdapter(
-            dec_dim=self.dec_embed_dim,
-            rank=config.lora_rank,
-            max_delta=config.pose_delta_t_max,
-        )
+        # **========== V7 注释保留：旧 V2/V3 LoRA 与 translation-only pose adapter 初始化 ==========**
+        # self.pose_lora = PoseLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.human_lora = HumanLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.world_lora = WorldLoRALayer(dec_dim=self.dec_embed_dim, rank=config.lora_rank)
+        # self.pose_translation_adapter = PoseTranslationAdapter(
+        #     dec_dim=self.dec_embed_dim,
+        #     rank=config.lora_rank,
+        #     max_delta=config.pose_delta_t_max,
+        # )
+        # **========== 结束 ==========**
         # **========== V4 原始代码备份：初始化 decoder 后 pose alignment adapter ==========**
         # self.pose_alignment_adapter = PoseAlignmentAdapter(
         #     dec_dim=self.dec_embed_dim,
@@ -502,12 +507,14 @@ class ARCroco3DStereo(CroCoNet):
         #     max_delta_q=config.pose_align_delta_q_max,
         # )
         # **========== 结束 ==========**
-        self.pose_alignment_adapter = PoseAlignmentAdapter(
-            dec_dim=self.dec_embed_dim,
-            rank=config.lora_rank,
-            max_delta_t=config.pose_align_delta_t_max,
-            max_delta_q=config.pose_align_delta_q_max,
-        )
+        # **========== V7 注释保留：旧 V4 decoder 后 pose alignment adapter 初始化 ==========**
+        # self.pose_alignment_adapter = PoseAlignmentAdapter(
+        #     dec_dim=self.dec_embed_dim,
+        #     rank=config.lora_rank,
+        #     max_delta_t=config.pose_align_delta_t_max,
+        #     max_delta_q=config.pose_align_delta_q_max,
+        # )
+        # **========== 结束 ==========**
         self.layerwise_pose_shot_adapter = LayerwisePoseShotAdapter(
             dec_dim=self.dec_embed_dim,
             rank=config.lora_rank,
@@ -860,11 +867,13 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             freeze_all_params([
                 self.shot_token_generator,
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
-                self.pose_translation_adapter,
-                self.pose_alignment_adapter,
+                # **========== V7 注释保留：旧 LoRA / pose residual modules 已停用 ==========**
+                # self.pose_lora,
+                # self.human_lora,
+                # self.world_lora,
+                # self.pose_translation_adapter,
+                # self.pose_alignment_adapter,
+                # **========== 结束 ==========**
                 self.layerwise_pose_shot_adapter,
                 self.anchor_decoder_token_projector,
                 self.anchor_decoder_token_scale,
@@ -908,11 +917,13 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             freeze_all_params([
                 self.shot_token_generator,
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
-                self.pose_translation_adapter,
-                self.pose_alignment_adapter,
+                # **========== V7 注释保留：旧 LoRA / pose residual modules 已停用 ==========**
+                # self.pose_lora,
+                # self.human_lora,
+                # self.world_lora,
+                # self.pose_translation_adapter,
+                # self.pose_alignment_adapter,
+                # **========== 结束 ==========**
                 self.layerwise_pose_shot_adapter,
                 self.anchor_pose_adapter,
                 self.anchor_pose_token_attention,
@@ -937,11 +948,13 @@ class ARCroco3DStereo(CroCoNet):
             freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
             freeze_all_params([
                 self.shot_token_generator,
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
-                self.pose_translation_adapter,
-                self.pose_alignment_adapter,
+                # **========== V7 注释保留：旧 LoRA / pose residual modules 已停用 ==========**
+                # self.pose_lora,
+                # self.human_lora,
+                # self.world_lora,
+                # self.pose_translation_adapter,
+                # self.pose_alignment_adapter,
+                # **========== 结束 ==========**
                 self.layerwise_pose_shot_adapter,
                 self.anchor_pose_adapter,
             ])
@@ -996,11 +1009,13 @@ class ARCroco3DStereo(CroCoNet):
             #         p.requires_grad = True
             # **========== 结束 ==========**
             freeze_all_params([
-                self.pose_lora,
-                self.human_lora,
-                self.world_lora,
-                self.pose_translation_adapter,
-                self.pose_alignment_adapter,
+                # **========== V7 注释保留：旧 LoRA / pose residual modules 已停用 ==========**
+                # self.pose_lora,
+                # self.human_lora,
+                # self.world_lora,
+                # self.pose_translation_adapter,
+                # self.pose_alignment_adapter,
+                # **========== 结束 ==========**
                 self.anchor_decoder_token_projector,
                 self.anchor_decoder_token_scale,
                 self.anchor_pose_token_attention,
