@@ -57,6 +57,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cleanup_after_tokens", action="store_true")
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--strict", action="store_true", help="Abort on the first failed case.")
     return parser.parse_args()
 
 
@@ -210,6 +211,8 @@ def main() -> None:
         case, metadata = make_case(row, output_root, args)
         case_dir = output_root / case.name
         case_dir.mkdir(parents=True, exist_ok=True)
+        if args.dry_run:
+            metadata["status"] = "dry_run"
         with open(case_dir / "case_config.json", "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, sort_keys=True, default=str)
             f.write("\n")
@@ -217,20 +220,72 @@ def main() -> None:
         if args.dry_run:
             continue
 
-        if not args.skip_raw:
-            run_raw(case, args, repo_root)
-        if not args.skip_teacher:
-            teacher_args = SimpleNamespace(
-                device=args.teacher_device or args.device,
-                steps_per_frame=int(args.steps_per_frame),
-                overwrite=bool(args.overwrite),
+        # **========== 原始代码 ==========**
+        # if not args.skip_raw:
+        #     run_raw(case, args, repo_root)
+        # if not args.skip_teacher:
+        #     teacher_args = SimpleNamespace(
+        #         device=args.teacher_device or args.device,
+        #         steps_per_frame=int(args.steps_per_frame),
+        #         overwrite=bool(args.overwrite),
+        #     )
+        #     run_teacher(case, case_dir, teacher_args, repo_root)
+        #     metadata["pseudo_summary"] = build_pseudo_labels(case, case_dir)
+        # if not args.skip_tokens:
+        #     run_token_dump(case, case_dir, args, repo_root)
+        # if args.cleanup_after_tokens and (case_dir / "v7_tokens.npz").is_file():
+        #     cleanup_case(case, case_dir)
+
+        # **========== 新代码 ==========**
+        metadata["status"] = "running"
+        metadata["stage"] = "raw"
+        try:
+            if not args.skip_raw:
+                run_raw(case, args, repo_root)
+            metadata["stage"] = "teacher"
+            if not args.skip_teacher:
+                teacher_args = SimpleNamespace(
+                    device=args.teacher_device or args.device,
+                    steps_per_frame=int(args.steps_per_frame),
+                    overwrite=bool(args.overwrite),
+                )
+                run_teacher(case, case_dir, teacher_args, repo_root)
+                metadata["pseudo_summary"] = build_pseudo_labels(case, case_dir)
+            metadata["stage"] = "tokens"
+            if not args.skip_tokens:
+                run_token_dump(case, case_dir, args, repo_root)
+            metadata["stage"] = "cleanup"
+            if args.cleanup_after_tokens and (case_dir / "v7_tokens.npz").is_file():
+                cleanup_case(case, case_dir)
+            metadata["status"] = "ok"
+            metadata.pop("stage", None)
+        except Exception as exc:
+            metadata["status"] = "failed"
+            metadata["failed_stage"] = metadata.pop("stage", "unknown")
+            metadata["error_type"] = type(exc).__name__
+            metadata["error"] = str(exc)
+            if isinstance(exc, subprocess.CalledProcessError):
+                metadata["returncode"] = int(exc.returncode)
+                metadata["cmd"] = [str(part) for part in exc.cmd]
+            print(
+                json.dumps(
+                    {
+                        "case": case.name,
+                        "status": "failed",
+                        "failed_stage": metadata["failed_stage"],
+                        "error_type": metadata["error_type"],
+                        "error": metadata["error"],
+                    },
+                    sort_keys=True,
+                ),
+                flush=True,
             )
-            run_teacher(case, case_dir, teacher_args, repo_root)
-            metadata["pseudo_summary"] = build_pseudo_labels(case, case_dir)
-        if not args.skip_tokens:
-            run_token_dump(case, case_dir, args, repo_root)
-        if args.cleanup_after_tokens and (case_dir / "v7_tokens.npz").is_file():
-            cleanup_case(case, case_dir)
+            if args.strict:
+                raise
+        # **========== 结束 ==========**
+        with open(case_dir / "case_config.json", "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, sort_keys=True, default=str)
+            f.write("\n")
 
     manifest = {
         "source_manifest": str(args.source_manifest),
