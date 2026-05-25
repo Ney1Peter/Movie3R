@@ -65,6 +65,8 @@ docs/movie3r/archive_v2_v6/
 
 2026-05-25 更新：V7 已完成第一版 implicit human-scene token adapter overfit 验证。该验证显示，在两个 H36M shot-change clip 上，只读取 Human3R internal tokens 的轻量 adapter 可以复现 offline human-scene teacher 生成的 camera pose correction。这说明 token 中存在可用 correction 信号，但目前仍只是单 clip overfit，下一步必须做 MS-AIST `shot2` multi-clip held-out validation 来验证泛化性。
 
+2026-05-25 追加更新：MS-AIST `shot2` Stage-A 初轮已跑前 12 个候选，11 个完成 raw / teacher / token pipeline，1 个因 stable window 内 SMPL 漏检导致 teacher 失败。质量门控后只有 2 个 pseudo labels 被接受，accepted clip 的 pooled-token student overfit 仍然通过。手动检查确认 `shot2` 候选中混有无明显跳变和多人样本，现已补充 detection score 过滤和 SMPL 单人检测过滤。这说明当前瓶颈主要是 offline teacher label 质量和筛选命中率，不应在未筛选的 pseudo labels 上直接做 20/5 multi-clip 训练。
+
 本文记录目前观察到的问题变化和方向边界。V7 当前候选思路见：
 
 ```text

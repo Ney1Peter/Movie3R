@@ -208,6 +208,79 @@ Stage C: 80 train + 19 val
   目的：覆盖完整 shot2，评估不同动作和背景。
 ```
 
+### 6.1 MS-AIST Shot2 Stage-A 初轮结果
+
+2026-05-25 已完成前 12 个 `shot2` 候选的 Stage-A pipeline：
+
+```text
+selected candidates: 12
+pipeline ok: 11
+teacher failed: 1
+accepted by quality gate: 2
+accepted cases:
+  aist_ms_000001_shotcut000_t00010100ms
+  aist_ms_000009_shotcut000_t00011400ms
+```
+
+失败样本：
+
+```text
+aist_ms_000003_shotcut000_t00012800ms
+reason: teacher stable window 内 Human3R SMPL 漏检，smpl/000140.npz 无 detected human
+```
+
+新增质量筛选脚本：
+
+```text
+scripts/summarize_v7_stage_a_quality.py
+```
+
+当前质量门控主要拒绝以下情况：
+
+```text
+shot-change detection score 低于阈值，疑似不存在真实跳变；
+raw boundary jump 本来很小，不需要 correction；
+teacher 没有改善 boundary foot jump；
+teacher 放大 settle / post-pair jump；
+teacher delta_t 或 delta_r 过大；
+Human3R SMPL 检测不是全程单人，包括无人帧或多人帧；
+teacher 构建失败或缺 token。
+```
+
+本轮手动检查后确认，MS-AIST `shot2` 中确实混有两类必须剔除的样本：
+
+```text
+无明显跳变 / 低 score:
+  aist_ms_000002_shotcut000_t00015300ms
+  aist_ms_000011_shotcut000_t00019300ms
+
+多人样本:
+  aist_ms_000008_shotcut000_t00011400ms: 全程 2-3 人
+  aist_ms_000010_shotcut000_t00013000ms: 全程 2-3 人
+```
+
+已补充显式过滤：
+
+```text
+scripts/run_v7_ms_aist_shot2_stage_a.py 默认 --min_detection_score 0.2
+scripts/summarize_v7_stage_a_quality.py 默认检查 smpl/*.npz 中每帧必须 exactly one person
+```
+
+两个 accepted clip 的 pooled-token student overfit 均通过：
+
+```text
+aist_ms_000001: best_loss 1.656992e-05, best_step 750
+aist_ms_000009: best_loss 3.760238e-05, best_step 800
+```
+
+阶段性判断：
+
+```text
+问题不在 implicit token student 是否可拟合；
+主要瓶颈是 MS-AIST shot2 上 offline teacher pseudo label 的可用率和稳定性。
+因此不能直接进入 20/5 multi-clip 训练，必须先用 quality gate 筛选或改进 teacher。
+```
+
 评估必须包含：
 
 ```text
@@ -253,6 +326,9 @@ scripts/build_post_shot_local_gauge_teacher.py
 scripts/dump_v7_implicit_tokens.py
 scripts/overfit_v7_implicit_token_student.py
 scripts/export_v7_implicit_student_viewer_output.py
+scripts/run_human3r_save_output.py
+scripts/run_v7_ms_aist_shot2_stage_a.py
+scripts/summarize_v7_stage_a_quality.py
 scripts/view_human3r_saved_output.py
 ```
 

@@ -17,6 +17,8 @@ V7 当前先做四件事：
 
 2026-05-25 更新：V7 已完成第一版 implicit human-scene token adapter 单 clip overfit 验证。结果显示，Human3R internal pose / human / scene / memory tokens 中存在可复现 offline teacher correction 的信号。当前还不能证明泛化，下一步应转向 MS-AIST `shot2` 多 clip train / val 验证。
 
+2026-05-25 追加更新：MS-AIST `shot2` Stage-A 初轮跑了前 12 个候选，11 个完成 pipeline，质量门控接受 2 个。accepted labels 上 student overfit 仍通过，但 teacher pseudo label 可用率偏低；手动检查还确认候选中混有无明显跳变和多人样本，已补充 score filter 和 single-person filter。因此下一步应先扩大筛选或改进 teacher，再进入 20/5 held-out 训练。
+
 ## 当前约束
 
 - 暂不继续把 V2-V6 作为主线扩展。
@@ -41,5 +43,6 @@ tasklist/TODO.md
 
 ```text
 单 clip overfit 已通过，证明 token 中有 correction 信号；
-下一步必须做 multi-clip held-out validation，验证泛化性和 no-op 稳定性。
+MS-AIST Stage-A 初轮显示 teacher label 质量是当前瓶颈；
+下一步必须先得到足够 accepted pseudo labels，再做 multi-clip held-out validation。
 ```

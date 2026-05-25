@@ -988,6 +988,31 @@ Stage C: 80 train + 19 val
   覆盖完整 shot2，评估不同动作和背景。
 ```
 
+2026-05-25 Stage-A 初轮结果：
+
+```text
+MS-AIST shot2 前 12 个候选已完成 raw / teacher / token pipeline。
+pipeline ok: 11 / 12
+teacher failed: 1 / 12，原因是 stable window 内 Human3R SMPL 漏检。
+quality gate accepted: 2 / 12
+accepted cases: aist_ms_000001, aist_ms_000009
+```
+
+该结果说明：
+
+```text
+implicit token student 在 accepted labels 上仍可拟合；
+当前主要风险不是 student capacity，而是 offline teacher label 质量；
+进入 20/5 held-out 训练前，需要先筛选更多 accepted pseudo labels 或改进 teacher。
+```
+
+手动检查发现 `shot2` 中混有无明显跳变和多人样本。当前 pipeline 已补充两类过滤：
+
+```text
+候选选择阶段：默认要求 shot-change score >= 0.2；
+质量门控阶段：默认要求 Human3R SMPL 输出全程 exactly one person。
+```
+
 评估必须包含：
 
 ```text

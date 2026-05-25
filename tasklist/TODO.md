@@ -12,9 +12,12 @@ V7 当前候选主线已经收敛到 offline human-scene geometry teacher -> cau
 
 - [x] 完成 H36M 两个 clip 的 offline teacher pseudo label 和 implicit token student 单 clip overfit。
 - [x] 导出 viewer-ready corrected output，用 corrected 点云/人体叠加 raw camera 检查效果。
-- [ ] 整理 MS-AIST `shot2` 99 个 clip 的 staged pilot manifest。
-- [ ] Stage A：选 5 个 `shot2` clip 跑 Human3R raw output、teacher pseudo label、token dump，检查失败率和标签质量。
-- [ ] Stage B：使用 20 train + 5 val clips 训练 multi-clip token adapter，验证 held-out 泛化。
+- [x] 整理 MS-AIST `shot2` 99 个 clip 的 staged pilot manifest。
+- [x] Stage A：前 12 个 `shot2` 候选已完成 raw / teacher / token pipeline 和质量门控。
+- [x] 新增 Stage-A quality gate，当前接受 2 / 12 个 pseudo labels。
+- [x] 显式过滤疑似无跳变样本和多人样本：候选默认 `score >= 0.2`，quality gate 默认要求全程单人 SMPL。
+- [ ] 扩大候选池或改进 teacher，先获得足够 accepted pseudo labels。
+- [ ] Stage B：使用筛选后的 20 train + 5 val clips 训练 multi-clip token adapter，验证 held-out 泛化。
 - [ ] 继续比较 `human_scene` / `human` / `scene` / `pose` / `all` ablation。
 - [ ] 加入正常帧 no-op 约束，防止 adapter 在非 boundary 帧乱修。
 - [ ] 在 held-out viewer 中人工检查 corrected camera / pointcloud / human mesh 是否比 raw 更自然。

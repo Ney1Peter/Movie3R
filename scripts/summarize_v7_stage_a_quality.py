@@ -7,11 +7,14 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=Path("output/v7_ms_aist_shot2_stage_a/stage_a_manifest.json"))
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument("--min_detection_score", type=float, default=0.2)
     parser.add_argument("--min_raw_boundary_foot", type=float, default=0.15)
     parser.add_argument("--min_boundary_improve", type=float, default=0.05)
     parser.add_argument("--max_boundary_ratio", type=float, default=0.90)
@@ -20,6 +23,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max_delta_t", type=float, default=1.25)
     parser.add_argument("--max_delta_r_deg", type=float, default=45.0)
     parser.add_argument("--no_require_tokens", action="store_true")
+    parser.add_argument("--skip_person_check", action="store_true")
+    parser.add_argument("--allow_multi_person", action="store_true")
     return parser.parse_args()
 
 
@@ -34,6 +39,38 @@ def get_transition(summary: dict, key: str, metric: str) -> float:
     return float(summary[key][metric])
 
 
+def smpl_person_summary(raw_dir: Path) -> dict:
+    smpl_dir = raw_dir / "smpl"
+    files = sorted(smpl_dir.glob("*.npz"))
+    if not files:
+        return {"has_smpl": False, "num_frames": 0}
+    counts = []
+    errors = []
+    for path in files:
+        try:
+            data = np.load(path, allow_pickle=True)
+            counts.append((int(path.stem), int(data["shape"].shape[0])))
+        except Exception as exc:
+            errors.append({"frame": path.stem, "error": str(exc)})
+    frame_counts = [count for _, count in counts]
+    zero_frames = [frame for frame, count in counts if count == 0]
+    multi_frames = [frame for frame, count in counts if count > 1]
+    hist = {str(count): frame_counts.count(count) for count in sorted(set(frame_counts))}
+    return {
+        "has_smpl": True,
+        "num_frames": len(files),
+        "min_count": min(frame_counts) if frame_counts else None,
+        "max_count": max(frame_counts) if frame_counts else None,
+        "count_hist": hist,
+        "num_zero_person_frames": len(zero_frames),
+        "num_multi_person_frames": len(multi_frames),
+        "zero_person_frames": zero_frames[:20],
+        "multi_person_frames": multi_frames[:20],
+        "num_errors": len(errors),
+        "errors": errors[:5],
+    }
+
+
 def evaluate_case(case_entry: dict, output_root: Path, args: argparse.Namespace) -> dict:
     name = case_entry["case"]["name"]
     reasons: list[str] = []
@@ -41,6 +78,29 @@ def evaluate_case(case_entry: dict, output_root: Path, args: argparse.Namespace)
 
     if case_entry.get("status") != "ok":
         reasons.append(f"status_{case_entry.get('status', 'unknown')}")
+    detection_score = case_entry.get("source_detection", {}).get("score")
+    if detection_score is None:
+        reasons.append("missing_detection_score")
+    else:
+        detection_score = float(detection_score)
+        metrics["detection_score"] = detection_score
+        if args.min_detection_score >= 0 and detection_score < args.min_detection_score:
+            reasons.append("detection_score_below_min")
+
+    if not args.skip_person_check:
+        raw_dir = Path(case_entry["case"].get("raw_output_dir", ""))
+        if not raw_dir.is_absolute():
+            raw_dir = output_root / raw_dir
+        person_summary = smpl_person_summary(raw_dir)
+        metrics["person_summary"] = person_summary
+        if not person_summary.get("has_smpl", False):
+            reasons.append("missing_smpl_outputs")
+        elif person_summary.get("num_errors", 0) > 0:
+            reasons.append("smpl_read_error")
+        elif not args.allow_multi_person:
+            if person_summary.get("min_count") != 1 or person_summary.get("max_count") != 1:
+                reasons.append("person_count_not_single")
+
     summary = case_entry.get("pseudo_summary")
     if summary is None:
         reasons.append("missing_pseudo_summary")
@@ -120,6 +180,7 @@ def main() -> None:
         "accepted_cases": [row["name"] for row in accepted],
         "rejected_cases": {row["name"]: row["reasons"] for row in rejected},
         "thresholds": {
+            "min_detection_score": args.min_detection_score,
             "min_raw_boundary_foot": args.min_raw_boundary_foot,
             "min_boundary_improve": args.min_boundary_improve,
             "max_boundary_ratio": args.max_boundary_ratio,
@@ -128,6 +189,8 @@ def main() -> None:
             "max_delta_t": args.max_delta_t,
             "max_delta_r_deg": args.max_delta_r_deg,
             "require_tokens": not args.no_require_tokens,
+            "person_check": not args.skip_person_check,
+            "allow_multi_person": args.allow_multi_person,
         },
         "cases": rows,
     }

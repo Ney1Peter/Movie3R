@@ -40,6 +40,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model_path", type=Path, default=Path("src/human3r_896L.pth"))
     parser.add_argument("--num_clips", type=int, default=5)
     parser.add_argument("--start_index", type=int, default=0)
+    parser.add_argument(
+        "--min_detection_score",
+        type=float,
+        default=0.2,
+        help="Skip extracted clips whose shot-change score is below this value. Use a negative value to disable.",
+    )
     parser.add_argument("--target_count", type=int, default=3)
     parser.add_argument("--stable_offset", type=int, default=3)
     parser.add_argument("--stable_count", type=int, default=27)
@@ -87,6 +93,8 @@ def selected_detections(args: argparse.Namespace) -> list[dict]:
             if output_path.parent.resolve() != args.clip_root.resolve():
                 continue
             if det.get("status") != "written" or not output_path.is_file():
+                continue
+            if args.min_detection_score >= 0 and float(det.get("score", 0.0)) < float(args.min_detection_score):
                 continue
             rows.append({"info": info, "detection": det, "fps": fps, "clip_path": output_path})
     rows = sorted(rows, key=lambda row: row["clip_path"].name)
@@ -292,6 +300,7 @@ def main() -> None:
         "clip_root": str(args.clip_root),
         "output_root": str(output_root),
         "num_cases": len(manifest_cases),
+        "min_detection_score": float(args.min_detection_score),
         "pool_large_tokens": not args.no_pool_large_tokens,
         "cleanup_after_tokens": bool(args.cleanup_after_tokens),
         "cases": manifest_cases,
