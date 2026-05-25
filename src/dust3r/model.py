@@ -25,7 +25,7 @@ from dust3r.utils.misc import (
     transpose_to_landscape,
 )
 from dust3r.heads import head_factory
-from dust3r.utils.camera import PoseEncoder
+from dust3r.utils.camera import PoseEncoder, pose_encoding_to_camera
 from dust3r.patch_embed import get_patch_embed
 import dust3r.utils.path_to_croco  # noqa: F401
 from models.croco import CroCoNet, CrocoConfig  # noqa
@@ -45,7 +45,7 @@ from accelerate.logging import get_logger
 from dust3r.smpl_model import nms, apply_threshold
 from einops import rearrange
 
-from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters
+from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters, geotrf
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
 # **========== 原始代码 (Residual Adapter) ==========**
@@ -69,6 +69,7 @@ from dust3r.shot_adaptation import ShotTokenGenerator, LayerwisePoseShotAdapter
 # from dust3r.anchor_pose_adapter import AnchorPoseAdapter, AnchorTokenProjector
 # **========== 结束 ==========**
 from dust3r.anchor_pose_adapter import AnchorPoseAdapter, AnchorTokenProjector, PoseAnchorAttention
+from dust3r.v7_pose_adapter import HumanSceneTokenPoseAdapter
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -200,6 +201,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         anchor_decoder_use_ref_feature=True,
         anchor_decoder_token_scale_init=0.05,
         anchor_pose_token_delta_scale_init=0.1,
+        v7_pose_adapter_inputs="human_scene",
+        v7_pose_adapter_hidden_dim=512,
+        v7_pose_adapter_max_delta_t=3.0,
+        v7_pose_adapter_max_delta_r=0.75,
+        v7_pose_adapter_dropout=0.0,
         **croco_kwargs,
     ):
         super().__init__()
@@ -243,6 +249,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.anchor_decoder_use_ref_feature = anchor_decoder_use_ref_feature
         self.anchor_decoder_token_scale_init = anchor_decoder_token_scale_init
         self.anchor_pose_token_delta_scale_init = anchor_pose_token_delta_scale_init
+        self.v7_pose_adapter_inputs = v7_pose_adapter_inputs
+        self.v7_pose_adapter_hidden_dim = v7_pose_adapter_hidden_dim
+        self.v7_pose_adapter_max_delta_t = v7_pose_adapter_max_delta_t
+        self.v7_pose_adapter_max_delta_r = v7_pose_adapter_max_delta_r
+        self.v7_pose_adapter_dropout = v7_pose_adapter_dropout
         self.croco_kwargs = croco_kwargs
 
 
@@ -552,6 +563,14 @@ class ARCroco3DStereo(CroCoNet):
         self.anchor_pose_token_delta_scale = nn.Parameter(
             torch.tensor(float(getattr(config, "anchor_pose_token_delta_scale_init", 0.1)))
         )
+        self.v7_pose_adapter = HumanSceneTokenPoseAdapter(
+            dec_dim=self.dec_embed_dim,
+            hidden_dim=getattr(config, "v7_pose_adapter_hidden_dim", 512),
+            input_mode=getattr(config, "v7_pose_adapter_inputs", "human_scene"),
+            max_delta_t=getattr(config, "v7_pose_adapter_max_delta_t", 3.0),
+            max_delta_r=getattr(config, "v7_pose_adapter_max_delta_r", 0.75),
+            dropout=getattr(config, "v7_pose_adapter_dropout", 0.0),
+        )
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(
         #     enc_dim=self.enc_embed_dim,
@@ -567,6 +586,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_anchor_pose_adapter = False
         self.enable_anchor_decoder_tokens = False
         self.enable_anchor_pose_token_adapter = False
+        self.enable_v7_pose_adapter = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
         # **========== 结束 ==========**
@@ -880,12 +900,14 @@ class ARCroco3DStereo(CroCoNet):
                 self.anchor_pose_token_attention,
                 self.anchor_pose_token_delta,
                 self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
             ])
             for p in self.anchor_pose_adapter.parameters():
                 p.requires_grad = True
             self.enable_shot_adaptation = False
             self.enable_anchor_pose_adapter = True
             self.enable_anchor_decoder_tokens = False
+            self.enable_v7_pose_adapter = False
         elif freeze == "anchor_decoder_adaptation":
             # **========== V6-C 原始代码备份：V6-B full-decoder AnchorToken 训练分支 ==========**
             # freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
@@ -929,6 +951,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.anchor_pose_token_attention,
                 self.anchor_pose_token_delta,
                 self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
             ])
             for p in self.anchor_decoder_token_projector.parameters():
                 p.requires_grad = True
@@ -937,6 +960,7 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_pose_adapter = False
             self.enable_anchor_decoder_tokens = True
             self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = False
         elif freeze == "anchor_pose_token_adaptation":
             # V6-C: AnchorTokens are built from patch evidence but do not enter
             # full decoder attention. Only the final pose token reads them before
@@ -957,6 +981,7 @@ class ARCroco3DStereo(CroCoNet):
                 # **========== 结束 ==========**
                 self.layerwise_pose_shot_adapter,
                 self.anchor_pose_adapter,
+                self.v7_pose_adapter,
             ])
             for module in [
                 self.anchor_decoder_token_projector,
@@ -971,6 +996,45 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_pose_adapter = False
             self.enable_anchor_decoder_tokens = False
             self.enable_anchor_pose_token_adapter = True
+            self.enable_v7_pose_adapter = False
+        elif freeze == "v7_pose_adapter":
+            # V7: freeze Human3R and train only the causal implicit token adapter.
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                # **========== V7 注释保留：旧 LoRA / pose residual modules 已停用 ==========**
+                # self.pose_lora,
+                # self.human_lora,
+                # self.world_lora,
+                # self.pose_translation_adapter,
+                # self.pose_alignment_adapter,
+                # **========== 结束 ==========**
+                self.layerwise_pose_shot_adapter,
+                self.anchor_pose_adapter,
+                self.anchor_decoder_token_projector,
+                self.anchor_decoder_token_scale,
+                self.anchor_pose_token_attention,
+                self.anchor_pose_token_delta,
+                self.anchor_pose_token_delta_scale,
+            ])
+            for p in self.v7_pose_adapter.parameters():
+                p.requires_grad = True
+            self.enable_shot_adaptation = False
+            self.enable_shot_decoder_token = False
+            self.enable_layerwise_pose_shot_adapter = False
+            self.enable_pose_alignment_adapter = False
+            self.enable_pose_translation_adapter = False
+            self.enable_pose_lora = False
+            self.enable_human_lora = False
+            self.enable_world_lora = False
+            self.enable_anchor_pose_adapter = False
+            self.enable_anchor_decoder_tokens = False
+            self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = True
         elif freeze == "shot_adaptation":
             # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
             freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
@@ -1021,6 +1085,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.anchor_pose_token_attention,
                 self.anchor_pose_token_delta,
                 self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
             ])
             # **========== V4 原始代码备份：只训练 ShotTokenGenerator 与 PoseAlignmentAdapter ==========**
             # for module in [
@@ -1039,6 +1104,7 @@ class ARCroco3DStereo(CroCoNet):
                     p.requires_grad = True
             # enable_shot_adaptation 开关打开
             self.enable_shot_adaptation = True
+            self.enable_v7_pose_adapter = False
         else:
             freeze_all_params(to_be_frozen[freeze])
 
@@ -1560,6 +1626,40 @@ class ARCroco3DStereo(CroCoNet):
             [pose_token.float(), final_tokens[:, 1:].float()], dim=1
         )
         return head_input
+
+    def _refresh_pose_dependent_outputs(self, res):
+        if "camera_pose" not in res:
+            return res
+        if "pts3d_in_self_view" not in res or "pts3d_in_other_view" not in res:
+            return res
+        res["pts3d_in_other_view"] = geotrf(
+            pose_encoding_to_camera(res["camera_pose"]),
+            res["pts3d_in_self_view"],
+        )
+        return res
+
+    def _apply_v7_pose_adapter(
+        self,
+        res,
+        pose_token,
+        img_tokens,
+        human_tokens,
+        memory_tokens,
+    ):
+        if not getattr(self, "enable_v7_pose_adapter", False):
+            return res
+        if "camera_pose" not in res or pose_token is None:
+            return res
+        camera_pose, v7_info = self.v7_pose_adapter(
+            pose_token=pose_token,
+            scene_tokens=img_tokens,
+            human_tokens=human_tokens,
+            memory_tokens=memory_tokens,
+            camera_pose=res["camera_pose"],
+        )
+        res["camera_pose"] = camera_pose
+        res.update(v7_info)
+        return self._refresh_pose_dependent_outputs(res)
 
     def _apply_anchor_pose_adapter(self, res, z_out, feat, views, view_idx):
         if not getattr(self, "enable_anchor_pose_adapter", False):
@@ -2212,6 +2312,21 @@ class ARCroco3DStereo(CroCoNet):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
                 res = self._apply_anchor_pose_adapter(res, z_anchor_out, feat, views, i)
 
+            if getattr(self, "enable_v7_pose_adapter", False):
+                _, v7_img_tokens, v7_human_tokens, _ = self._slice_decoder_tokens(
+                    dec,
+                    n_humans_i,
+                    enable_shot_adaptation=use_shot_decoder_token,
+                    n_anchor=n_anchor_decoder_i,
+                )
+                res = self._apply_v7_pose_adapter(
+                    res,
+                    pose_token_for_head,
+                    v7_img_tokens,
+                    v7_human_tokens,
+                    state_for_recurrent,
+                )
+
             # Shot-Aware Adaptation: apply residual corrections
             if self.enable_shot_adaptation:
                 # Use helper to safely slice decoder tokens
@@ -2791,6 +2906,21 @@ class ARCroco3DStereo(CroCoNet):
             if getattr(self, "enable_anchor_pose_adapter", False):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
                 res = self._apply_anchor_pose_adapter(res, z_anchor_out, anchor_feats, views, i)
+
+            if getattr(self, "enable_v7_pose_adapter", False):
+                _, v7_img_tokens, v7_human_tokens, _ = self._slice_decoder_tokens(
+                    dec,
+                    n_humans_i,
+                    enable_shot_adaptation=use_shot_decoder_token,
+                    n_anchor=n_anchor_decoder_i,
+                )
+                res = self._apply_v7_pose_adapter(
+                    res,
+                    pose_token_for_head,
+                    v7_img_tokens,
+                    v7_human_tokens,
+                    state_feat,
+                )
 
             if self.enable_shot_adaptation:
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
