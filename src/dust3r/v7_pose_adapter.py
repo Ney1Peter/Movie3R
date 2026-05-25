@@ -128,14 +128,24 @@ class HumanSceneTokenPoseAdapter(nn.Module):
     def _mode_uses_scene(self):
         return self.input_mode in {"human_scene", "all", "scene"}
 
-    def _pool_tokens(self, tokens, norm, batch_size, device, dtype):
+    def _pool_tokens(self, tokens, norm, batch_size, device, dtype, token_mask=None):
         if tokens is None or tokens.shape[1] == 0:
             pooled = torch.zeros(batch_size, self.dec_dim, device=device, dtype=dtype)
             valid = torch.zeros(batch_size, 1, device=device, dtype=dtype)
             return pooled, valid
         tokens = tokens.to(device=device, dtype=dtype)
-        pooled = norm(tokens).mean(dim=1)
-        valid = torch.ones(batch_size, 1, device=device, dtype=dtype)
+        tokens = norm(tokens)
+        if token_mask is None:
+            pooled = tokens.mean(dim=1)
+            valid = torch.ones(batch_size, 1, device=device, dtype=dtype)
+        else:
+            token_mask = token_mask.to(device=device).bool()
+            if token_mask.ndim == 1:
+                token_mask = token_mask[None].expand(batch_size, -1)
+            mask = token_mask.to(dtype=dtype).unsqueeze(-1)
+            denom = mask.sum(dim=1).clamp_min(1.0)
+            pooled = (tokens * mask).sum(dim=1) / denom
+            valid = token_mask.any(dim=1, keepdim=True).to(dtype=dtype)
         return pooled, valid
 
     def forward(
@@ -145,6 +155,9 @@ class HumanSceneTokenPoseAdapter(nn.Module):
         human_tokens,
         memory_tokens,
         camera_pose,
+        scene_token_mask=None,
+        human_token_mask=None,
+        memory_token_mask=None,
     ):
         batch_size = camera_pose.shape[0]
         device = camera_pose.device
@@ -152,13 +165,13 @@ class HumanSceneTokenPoseAdapter(nn.Module):
 
         pose_ctx = self.pose_norm(pose_token.to(device=device, dtype=dtype)).squeeze(1)
         scene_ctx, scene_valid = self._pool_tokens(
-            scene_tokens, self.scene_norm, batch_size, device, dtype
+            scene_tokens, self.scene_norm, batch_size, device, dtype, scene_token_mask
         )
         human_ctx, human_valid = self._pool_tokens(
-            human_tokens, self.human_norm, batch_size, device, dtype
+            human_tokens, self.human_norm, batch_size, device, dtype, human_token_mask
         )
         memory_ctx, memory_valid = self._pool_tokens(
-            memory_tokens, self.memory_norm, batch_size, device, dtype
+            memory_tokens, self.memory_norm, batch_size, device, dtype, memory_token_mask
         )
 
         if not self._mode_uses_scene():

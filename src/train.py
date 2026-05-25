@@ -138,6 +138,10 @@ DEFAULT_CONSOLE_LOG_KEYS = [
     "shot_q_energy_cont",
     "shot_q_energy_jump",
     "shot_noop_loss",
+    "v7_pose_pseudo_loss",
+    "v7_pose_delta_t_err",
+    "v7_pose_delta_r_err_deg",
+    "v7_pose_alpha",
 ]
 
 DEFAULT_STEP_LOG_KEYS = [
@@ -168,6 +172,18 @@ DEFAULT_STEP_LOG_KEYS = [
     "shot_noop_pts3d_in_self_view",
     "shot_noop_pts3d_in_other_view",
     "shot_noop_smpl_transl",
+    "v7_pose_pseudo_loss",
+    "v7_pose_label_count",
+    "v7_pose_delta_t_err",
+    "v7_pose_delta_r_err_deg",
+    "v7_pose_alpha_err",
+    "v7_pose_r_human_err",
+    "v7_pose_r_scene_err",
+    "v7_pose_alpha",
+    "v7_pose_r_human",
+    "v7_pose_r_scene",
+    "v7_pose_delta_t_norm",
+    "v7_pose_delta_r_deg",
 ]
 
 

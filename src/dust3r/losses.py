@@ -1645,6 +1645,177 @@ class Regr3DPoseBatchList(Regr3DPose):
         return Sum(*list(zip(ls, masks))), (details | monitoring)
 
 
+class V7PosePseudoLoss(MultiLoss):
+    """Supervise V7 implicit pose adapter from teacher pseudo labels.
+
+    Expected per-view target keys are intentionally explicit to avoid mixing this
+    with ordinary Human3R GT fields:
+    v7_delta_t, v7_delta_rotvec, v7_alpha, v7_r_human, v7_r_scene, v7_valid.
+    Missing views are skipped so the same criterion can run on mixed batches.
+    """
+
+    def __init__(
+        self,
+        delta_t_weight=1.0,
+        delta_r_weight=4.0,
+        alpha_weight=0.2,
+        reliability_weight=0.1,
+        prior_weight=0.0,
+        loss_type="smooth_l1",
+    ):
+        super().__init__()
+        self.delta_t_weight = float(delta_t_weight)
+        self.delta_r_weight = float(delta_r_weight)
+        self.alpha_weight = float(alpha_weight)
+        self.reliability_weight = float(reliability_weight)
+        self.prior_weight = float(prior_weight)
+        self.loss_type = str(loss_type)
+
+    def get_name(self):
+        return "V7PosePseudoLoss"
+
+    def _first_tensor(self, preds):
+        for pred in preds:
+            for value in pred.values():
+                if torch.is_tensor(value):
+                    return value
+        return None
+
+    def _get_target(self, gt, names, ref, trailing_dim=None):
+        for name in names:
+            if name not in gt:
+                continue
+            value = gt[name]
+            if not torch.is_tensor(value):
+                value = torch.as_tensor(value, device=ref.device)
+            value = value.to(device=ref.device, dtype=ref.dtype)
+            if trailing_dim is not None:
+                if value.ndim == 1 and value.shape[0] == trailing_dim:
+                    value = value.unsqueeze(0)
+                value = value.reshape(ref.shape[0], trailing_dim)
+            else:
+                value = value.reshape(-1)
+                if value.numel() == 1 and ref.shape[0] > 1:
+                    value = value.expand(ref.shape[0])
+            return value
+        return None
+
+    def _component_loss(self, pred, target):
+        if self.loss_type == "l1":
+            return (pred - target).abs().mean(dim=-1)
+        if self.loss_type == "mse":
+            return (pred - target).pow(2).mean(dim=-1)
+        return F.smooth_l1_loss(pred, target, reduction="none").mean(dim=-1)
+
+    def _masked_mean(self, value, mask):
+        denom = mask.sum().clamp_min(1.0)
+        return (value * mask).sum() / denom
+
+    def compute_loss(self, gts, preds, **kw):
+        zero_ref = self._first_tensor(preds)
+        if zero_ref is None:
+            return torch.zeros(())
+        zero = zero_ref.float().new_zeros(())
+
+        total = zero
+        details = {}
+        count = 0.0
+        t_errs, r_errs, alpha_errs = [], [], []
+        r_human_errs, r_scene_errs = [], []
+        prior_terms = []
+
+        for gt, pred in zip(gts, preds):
+            pred_t = pred.get("v7_pose_delta_t", None)
+            pred_r = pred.get("v7_pose_delta_rotvec", None)
+            if pred_t is None or pred_r is None:
+                continue
+            pred_t = pred_t.float()
+            pred_r = pred_r.float()
+            target_t = self._get_target(
+                gt,
+                ["v7_delta_t", "v7_pose_delta_t_target", "v7_pose_target_delta_t", "pseudo_delta_t"],
+                pred_t,
+                trailing_dim=3,
+            )
+            target_r = self._get_target(
+                gt,
+                ["v7_delta_rotvec", "v7_pose_delta_rotvec_target", "v7_pose_target_delta_rotvec", "pseudo_delta_rotvec"],
+                pred_r,
+                trailing_dim=3,
+            )
+            if target_t is None or target_r is None:
+                continue
+            valid = self._get_target(
+                gt,
+                ["v7_valid", "v7_pose_label_mask", "v7_label_mask", "pseudo_valid"],
+                pred_t,
+            )
+            if valid is None:
+                valid = torch.ones(pred_t.shape[0], device=pred_t.device, dtype=pred_t.dtype)
+            valid = valid.float().clamp(0.0, 1.0)
+            if valid.sum() <= 0:
+                continue
+
+            t_loss = self._component_loss(pred_t, target_t)
+            r_loss = self._component_loss(pred_r, target_r)
+            total = total + self.delta_t_weight * self._masked_mean(t_loss, valid)
+            total = total + self.delta_r_weight * self._masked_mean(r_loss, valid)
+            count += float(valid.detach().sum())
+            t_errs.append((torch.linalg.norm(pred_t.detach() - target_t.detach(), dim=-1) * valid).sum() / valid.sum().clamp_min(1.0))
+            r_errs.append((torch.linalg.norm(pred_r.detach() - target_r.detach(), dim=-1) * valid).sum() / valid.sum().clamp_min(1.0))
+
+            pred_alpha = pred.get("v7_pose_alpha", None)
+            if pred_alpha is not None and self.alpha_weight > 0:
+                pred_alpha = pred_alpha.float().reshape(-1).clamp(1e-4, 1.0 - 1e-4)
+                target_alpha = self._get_target(
+                    gt,
+                    ["v7_alpha", "v7_pose_alpha_target", "pseudo_alpha"],
+                    pred_alpha,
+                )
+                if target_alpha is None:
+                    target_alpha = (target_t.norm(dim=-1) + target_r.norm(dim=-1) > 1e-5).to(pred_alpha.dtype)
+                target_alpha = target_alpha.float().clamp(0.0, 1.0)
+                alpha_loss = F.binary_cross_entropy(pred_alpha, target_alpha, reduction="none")
+                total = total + self.alpha_weight * self._masked_mean(alpha_loss, valid)
+                alpha_errs.append(((pred_alpha.detach() - target_alpha.detach()).abs() * valid).sum() / valid.sum().clamp_min(1.0))
+
+            for pred_key, target_names, store in [
+                ("v7_pose_r_human", ["v7_r_human", "v7_pose_r_human_target", "pseudo_r_human"], r_human_errs),
+                ("v7_pose_r_scene", ["v7_r_scene", "v7_pose_r_scene_target", "pseudo_r_scene"], r_scene_errs),
+            ]:
+                pred_rel = pred.get(pred_key, None)
+                if pred_rel is None or self.reliability_weight <= 0:
+                    continue
+                pred_rel = pred_rel.float().reshape(-1)
+                target_rel = self._get_target(gt, target_names, pred_rel)
+                if target_rel is None:
+                    continue
+                rel_loss = (pred_rel - target_rel.float().clamp(0.0, 1.0)).pow(2)
+                total = total + self.reliability_weight * self._masked_mean(rel_loss, valid)
+                store.append(((pred_rel.detach() - target_rel.detach()).abs() * valid).sum() / valid.sum().clamp_min(1.0))
+
+            if self.prior_weight > 0:
+                prior = pred_t.pow(2).mean(dim=-1) + pred_r.pow(2).mean(dim=-1)
+                prior_terms.append(self._masked_mean(prior, valid))
+
+        if prior_terms:
+            total = total + self.prior_weight * torch.stack(prior_terms).mean()
+
+        details["v7_pose_label_count"] = count
+        if t_errs:
+            details["v7_pose_delta_t_err"] = float(torch.stack(t_errs).mean())
+        if r_errs:
+            details["v7_pose_delta_r_err_deg"] = float(torch.rad2deg(torch.stack(r_errs).mean()))
+        if alpha_errs:
+            details["v7_pose_alpha_err"] = float(torch.stack(alpha_errs).mean())
+        if r_human_errs:
+            details["v7_pose_r_human_err"] = float(torch.stack(r_human_errs).mean())
+        if r_scene_errs:
+            details["v7_pose_r_scene_err"] = float(torch.stack(r_scene_errs).mean())
+        details["v7_pose_pseudo_loss"] = float(total.detach())
+        return total, details
+
+
 class ConfLoss(MultiLoss):
     """Weighted regression by learned confidence.
         Assuming the input pixel_loss is a pixel-level regression loss.

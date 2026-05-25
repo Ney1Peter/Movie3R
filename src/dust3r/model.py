@@ -587,6 +587,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_anchor_decoder_tokens = False
         self.enable_anchor_pose_token_adapter = False
         self.enable_v7_pose_adapter = False
+        self.return_v7_pose_adapter_inputs = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
         # **========== 结束 ==========**
@@ -1661,6 +1662,28 @@ class ARCroco3DStereo(CroCoNet):
         res.update(v7_info)
         return self._refresh_pose_dependent_outputs(res)
 
+    def _attach_v7_pose_adapter_inputs(
+        self,
+        res,
+        pose_token,
+        img_tokens,
+        human_tokens,
+        memory_tokens,
+    ):
+        if not getattr(self, "return_v7_pose_adapter_inputs", False):
+            return res
+        if "camera_pose" in res:
+            res["v7_raw_camera_pose_input"] = res["camera_pose"].detach()
+        if pose_token is not None:
+            res["v7_pose_token_input"] = pose_token.detach()
+        if img_tokens is not None:
+            res["v7_scene_tokens_input"] = img_tokens.detach()
+        if human_tokens is not None:
+            res["v7_human_tokens_input"] = human_tokens.detach()
+        if memory_tokens is not None:
+            res["v7_memory_tokens_input"] = memory_tokens.detach()
+        return res
+
     def _apply_anchor_pose_adapter(self, res, z_out, feat, views, view_idx):
         if not getattr(self, "enable_anchor_pose_adapter", False):
             return res
@@ -2312,13 +2335,22 @@ class ARCroco3DStereo(CroCoNet):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
                 res = self._apply_anchor_pose_adapter(res, z_anchor_out, feat, views, i)
 
-            if getattr(self, "enable_v7_pose_adapter", False):
+            if getattr(self, "enable_v7_pose_adapter", False) or getattr(self, "return_v7_pose_adapter_inputs", False):
                 _, v7_img_tokens, v7_human_tokens, _ = self._slice_decoder_tokens(
                     dec,
                     n_humans_i,
                     enable_shot_adaptation=use_shot_decoder_token,
                     n_anchor=n_anchor_decoder_i,
                 )
+                res = self._attach_v7_pose_adapter_inputs(
+                    res,
+                    pose_token_for_head,
+                    v7_img_tokens,
+                    v7_human_tokens,
+                    state_for_recurrent,
+                )
+
+            if getattr(self, "enable_v7_pose_adapter", False):
                 res = self._apply_v7_pose_adapter(
                     res,
                     pose_token_for_head,
@@ -2907,13 +2939,22 @@ class ARCroco3DStereo(CroCoNet):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
                 res = self._apply_anchor_pose_adapter(res, z_anchor_out, anchor_feats, views, i)
 
-            if getattr(self, "enable_v7_pose_adapter", False):
+            if getattr(self, "enable_v7_pose_adapter", False) or getattr(self, "return_v7_pose_adapter_inputs", False):
                 _, v7_img_tokens, v7_human_tokens, _ = self._slice_decoder_tokens(
                     dec,
                     n_humans_i,
                     enable_shot_adaptation=use_shot_decoder_token,
                     n_anchor=n_anchor_decoder_i,
                 )
+                res = self._attach_v7_pose_adapter_inputs(
+                    res,
+                    pose_token_for_head,
+                    v7_img_tokens,
+                    v7_human_tokens,
+                    state_feat,
+                )
+
+            if getattr(self, "enable_v7_pose_adapter", False):
                 res = self._apply_v7_pose_adapter(
                     res,
                     pose_token_for_head,

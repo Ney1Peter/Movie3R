@@ -399,6 +399,14 @@ def _collect_anchor_pose_details(preds):
         "anchor_pose_token_valid",
         "anchor_pose_token_delta_norm",
         "anchor_pose_token_attn_max",
+        "v7_pose_alpha",
+        "v7_pose_r_human",
+        "v7_pose_r_scene",
+        "v7_pose_human_valid",
+        "v7_pose_scene_valid",
+        "v7_pose_memory_valid",
+        "v7_pose_delta_t_norm",
+        "v7_pose_delta_r_deg",
     ]
     for key in keys:
         values = []
