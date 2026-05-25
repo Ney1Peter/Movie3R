@@ -772,3 +772,162 @@ student / inference:
 ```
 
 因此，未来帧只允许作为训练 pseudo label 或 oracle upper bound 的来源，不能进入最终前馈模型输入。
+
+## 12. 隐式 Human-Scene Token Adapter 路线
+
+当前显式 human-scene geometry 方法主要用于生成 teacher / pseudo label，而不是最终部署形式。
+
+当前 teacher 使用的是 Human3R 已经输出后的显式结果：
+
+```text
+decoded SMPL-X / joints -> human anchor
+decoded depth / pointmap / confidence -> background point cloud
+background planes / normals / offsets -> scene geometry guard
+```
+
+这一路线已经验证了两个关键事实：
+
+```text
+human cue 能发现 shot boundary 处的人体瞬移；
+scene geometry guard 能防止 human-only correction 把场景修歪。
+```
+
+但最终模型不应依赖 decoded SMPL-X body 做 post-hoc anchor，也不应在 inference 时做慢速 RANSAC plane fitting。更合理的目标是把显式 teacher 蒸馏进 Human3R forward 内部的隐式 token adapter。
+
+### 12.1 Teacher 和 Student 的分工
+
+Teacher 阶段可以复杂一些，用来生成较可靠的 pseudo target：
+
+```text
+Human3R saved output
+  -> decoded SMPL human anchors
+  -> background point cloud / top-K planes
+  -> post-shot local gauge teacher
+  -> delta_xi_teacher, alpha_teacher, r_human_teacher, r_scene_teacher
+```
+
+Student / final inference 阶段必须保持 causal feed-forward：
+
+```text
+RGB frame I_t
+  -> frozen / mostly frozen Human3R backbone
+  -> pose token z_t
+  -> image / scene tokens F_t
+  -> pre-SMPL human tokens H_t
+  -> previous corrected memory M_{t-1}
+  -> Human-Scene Token Adapter
+  -> alpha_t, delta_xi_t, r_human_t, r_scene_t
+  -> T_corr_t = exp(alpha_t * delta_xi_t) @ T_hat_t
+```
+
+Inference 时不使用：
+
+```text
+decoded SMPL-X bodies as explicit anchors
+future frames
+global BA / pose graph / chunk alignment
+post-shot stable window to correct current frame
+```
+
+### 12.2 为什么背景也可以隐式化
+
+显式 teacher 中的 background plane / normal 来自 decoded depth / pointmap，但 depth / pointmap 本身也是由 Human3R tokens 解码得到的。因此，scene / image tokens 理论上已经包含了背景几何、纹理置信度和相机运动线索。
+
+可行的蒸馏目标不是让 student 显式输出完整平面，而是让它学会：
+
+```text
+当前 scene cue 是否可靠；
+背景是否支持 correction；
+human cue 和 scene cue 冲突时应该信谁；
+应该输出多大的 bounded camera residual。
+```
+
+因此最终 claim 应是：
+
+```text
+We do not use decoded SMPL-X bodies as explicit post-hoc anchors at inference.
+Instead, we distill an offline human-scene geometry teacher into a causal
+pre-SMPL token adapter, which uses implicit human tokens and scene tokens to
+predict bounded camera pose corrections under shot changes and low-texture
+backgrounds.
+```
+
+### 12.3 推荐验证顺序
+
+不要一开始就全量训练隐式模型。更稳的验证顺序是：
+
+```text
+Step 1: 单 clip / 少量 clip 显式 teacher label
+  先跑 Human3R saved output；
+  用当前 SMPL + background geometry teacher 生成 delta_xi_teacher。
+
+Step 2: 单 clip implicit student overfit
+  输入只给 pre-SMPL human tokens / scene tokens / pose token / memory；
+  不给 decoded SMPL 和显式 planes；
+  目标是拟合同一 clip 的 teacher correction。
+
+Step 3: 小规模 train / val
+  train: 20-50 个 shot-change clips；
+  val: 5-10 个 clips；
+  验证 student 是否能泛化到未见 clip。
+
+Step 4: 接入 Human3R forward
+  把 token adapter 放到 downstream head 前后合适位置；
+  frozen / mostly frozen backbone；
+  只训练 correction head / reliability gates。
+```
+
+单 clip overfit 的意义是先回答一个最关键问题：
+
+```text
+Human3R 内部 token 中是否已经包含足够的 human + scene 信息，
+可以在不看 decoded SMPL / planes 的情况下复现 teacher correction？
+```
+
+如果单 clip 都 overfit 不起来，说明 token input / adapter 设计不对，没必要马上做大规模 teacher dataset。若单 clip 能 overfit，再做小规模 train / val，才是在验证泛化。
+
+### 12.4 当前数据入口
+
+当前已有第一批裁剪后的 shot-change clips：
+
+```text
+/data/wangzheng/iJCV-CODE/data/data-V7-shot-change-clips/ms-aist
+```
+
+该目录包含：
+
+```text
+299 source videos
+599 shot-change clips
+manifest.json
+detections.csv
+```
+
+推荐先从其中挑选少量样本：
+
+```text
+1-2 个 clip: 做 implicit student overfit sanity check
+5-10 个 clip: 检查 teacher label 稳定性
+20-50 个 clip: 做第一版 feature/token student 小训练
+```
+
+### 12.5 主要风险
+
+这个方向的主要风险不在于 adapter 结构，而在于监督质量和可靠性判断：
+
+```text
+teacher 可能被错误 SMPL / 错误 plane match 拉偏；
+human tokens 可能受遮挡、多人、动作剧烈变化影响；
+scene tokens 在低纹理背景下可能本身不稳定；
+human cue 和 scene cue 冲突时需要 reliability gate；
+stable frames 必须学会 no-op，不能到处乱修。
+```
+
+因此 student 必须输出并学习：
+
+```text
+alpha_t: 是否修正以及修正强度
+r_human_t: human cue 可信度
+r_scene_t: scene cue 可信度
+bounded delta_xi_t: 有上限的 pose residual
+```
