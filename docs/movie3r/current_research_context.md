@@ -63,10 +63,13 @@ docs/movie3r/archive_v2_v6/
 
 当前项目处于重新调研阶段。这个阶段在文档中记为 V7。
 
+2026-05-25 更新：V7 已完成第一版 implicit human-scene token adapter overfit 验证。该验证显示，在两个 H36M shot-change clip 上，只读取 Human3R internal tokens 的轻量 adapter 可以复现 offline human-scene teacher 生成的 camera pose correction。这说明 token 中存在可用 correction 信号，但目前仍只是单 clip overfit，下一步必须做 MS-AIST `shot2` multi-clip held-out validation 来验证泛化性。
+
 本文记录目前观察到的问题变化和方向边界。V7 当前候选思路见：
 
 ```text
 docs/movie3r/v7/online_human_scene_pose_correction_plan.md
+docs/movie3r/v7/implicit_token_adapter_validation.md
 ```
 
 后续需要继续通过更多低纹理样本、简单背景样本和真实失败案例来确认 Human3R 的具体失效机制，再决定是否实现该方向的最小 correction head。

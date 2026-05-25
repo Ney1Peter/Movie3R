@@ -931,3 +931,77 @@ r_human_t: human cue 可信度
 r_scene_t: scene cue 可信度
 bounded delta_xi_t: 有上限的 pose residual
 ```
+
+### 12.6 当前验证结果
+
+2026-05-25 已完成两段 H36M shot-change clip 的 implicit token adapter overfit sanity check。
+
+详细记录见：
+
+```text
+docs/movie3r/v7/implicit_token_adapter_validation.md
+```
+
+核心结果：
+
+```text
+h36m_test_boundary63:
+  best input mode: human_scene
+  best loss: 0.00000936
+  target_err_t: 0.00027
+  target_err_r: 0.0045 deg
+
+h36m_18s_boundary91:
+  best input mode: human_scene
+  best loss: 0.00001627
+  target_err_t: 0.00332
+  target_err_r: 0.0533 deg
+```
+
+阶段性判断：
+
+```text
+Human3R internal tokens 中有足够信号，
+可以让一个小 adapter 预测 teacher camera correction。
+```
+
+但该结论只说明单 clip 可拟合，不说明泛化。下一步必须进入 multi-clip held-out validation。
+
+### 12.7 下一步计划：MS-AIST Shot2 Multi-Clip
+
+下一步使用：
+
+```text
+/data/wangzheng/iJCV-CODE/data/data-V7-shot-change-clips/ms-aist/videos/shot2
+```
+
+该目录当前有 99 个 shot-change clips，总视频大小约 115 MB。建议按 staged pilot 扩大：
+
+```text
+Stage A: 5 clips smoke test
+  检查 Human3R raw output、teacher label、token dump 是否稳定。
+
+Stage B: 20 train + 5 val
+  第一次验证未见 clip 泛化。
+
+Stage C: 80 train + 19 val
+  覆盖完整 shot2，评估不同动作和背景。
+```
+
+评估必须包含：
+
+```text
+human_scene / human / scene / pose / all ablation
+target correction error
+normal no-op error
+alpha_t 是否只在 boundary / settling frames 打开
+held-out viewer visual audit
+```
+
+存储策略：
+
+```text
+训练主数据只保留 tokens + pseudo labels + metrics。
+完整 Human3R saved-output 只保留少量 debug / viewer 样本。
+corrected viewer 输出必须 hardlink / symlink 大文件，不复制 depth/color/smpl。
+```

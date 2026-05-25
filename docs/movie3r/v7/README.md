@@ -15,6 +15,8 @@ V7 当前先做四件事：
 3. 验证 Human3R 输出中哪些 cue 在失败帧仍然可信，包括 human token、SMPL camera-frame joints、pointmap confidence 和 camera pose prior。
 4. 在充分调研前，不急于实现复杂模型结构。
 
+2026-05-25 更新：V7 已完成第一版 implicit human-scene token adapter 单 clip overfit 验证。结果显示，Human3R internal pose / human / scene / memory tokens 中存在可复现 offline teacher correction 的信号。当前还不能证明泛化，下一步应转向 MS-AIST `shot2` 多 clip train / val 验证。
+
 ## 当前约束
 
 - 暂不继续把 V2-V6 作为主线扩展。
@@ -28,6 +30,16 @@ V7 当前先做四件事：
 docs/movie3r/current_research_context.md
 docs/movie3r/v7/online_human_scene_pose_correction_plan.md
 docs/movie3r/v7/human_scene_pose_correction_experiment_log.md
+docs/movie3r/v7/implicit_token_adapter_validation.md
 docs/movie3r/archive_v2_v6/README.md
 tasklist/TODO.md
+```
+
+## 当前验证状态
+
+当前阶段结论：
+
+```text
+单 clip overfit 已通过，证明 token 中有 correction 信号；
+下一步必须做 multi-clip held-out validation，验证泛化性和 no-op 稳定性。
 ```

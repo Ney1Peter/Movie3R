@@ -631,3 +631,75 @@ pre-boundary no-op delta norm: 0.025 on frame 90
 这支持 offline teacher -> online student 的训练路线。
 下一步应在更多样本上生成 teacher pseudo labels，并训练非记忆化的 correction head / gate head。
 ```
+
+## 7. Implicit Token Adapter Overfit
+
+2026-05-25 进一步验证了更接近最终 V7 形态的 implicit token adapter：student 不再读取显式 SMPL joints / 背景平面 / future stable window，而是只读取 Human3R forward 内部 tokens 和 raw camera pose。
+
+脚本：
+
+```text
+scripts/dump_v7_implicit_tokens.py
+scripts/overfit_v7_implicit_token_student.py
+scripts/export_v7_implicit_student_viewer_output.py
+```
+
+输入：
+
+```text
+pose token
+human token
+scene/image tokens
+recurrent memory tokens
+raw camera pose
+```
+
+输出：
+
+```text
+alpha_t
+delta_t
+delta_rotvec
+r_human
+r_scene
+T_corr = exp(alpha_t * delta_xi_t) @ T_raw
+```
+
+该 adapter 不修改 decoder token，也不重新跑 pose head，而是直接预测 pose residual。
+
+### 7.1 H36M boundary63
+
+```text
+case: h36m_test_boundary63
+target frames: 63 / 64 / 65
+best human_scene loss: 0.00000936
+target_err_t: 0.00027
+target_err_r: 0.0045 deg
+noop_delta_t: 0.00105
+```
+
+### 7.2 H36M boundary91
+
+```text
+case: h36m_18s_boundary91
+target frames: 91 / 92 / 93
+best human_scene loss: 0.00001627
+target_err_t: 0.00332
+target_err_r: 0.0533 deg
+noop_delta_t: 0.00258
+```
+
+### 7.3 当前判断
+
+```text
+1. Human3R 内部 token 中有 correction 信号。
+2. human_scene 在两个 clip 上总 loss 最低，支持人体 token + 场景 token 联合使用。
+3. pose-only 也能单 clip 拟合，说明下一步必须做 held-out validation，排除记忆化。
+4. viewer 中 corrected camera / pointcloud / human mesh 相对 raw camera 有可见修正。
+```
+
+详细表格、viewer 路径和下一步计划见：
+
+```text
+docs/movie3r/v7/implicit_token_adapter_validation.md
+```

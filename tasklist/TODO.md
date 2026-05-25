@@ -1,22 +1,31 @@
 # Movie3R TODO
 
-更新时间：2026-05-19
+更新时间：2026-05-25
 
 ## 当前主线：V7 调研阶段
 
 当前项目已经从 V2-V6 的 ShotToken / background AnchorToken 路线切换到 V7 调研阶段。
 
-V7 目前不急于定义新模型或新训练路线。当前 TODO 只记录调研和整理工作。
+V7 当前候选主线已经收敛到 offline human-scene geometry teacher -> causal implicit token student。单 clip overfit sanity check 已通过，下一步重点是 multi-clip held-out validation。
 
 ## 当前待办
 
-- [ ] 收集低纹理、弱背景特征、简单场景中的 Human3R shot-boundary 失败案例。
-- [ ] 记录每个失败案例的原视频、boundary 位置、原版 Human3R 输出和可视化结论。
-- [ ] 对比 RICH / AvatarReX 稳定样本和低纹理失败样本的差异。
-- [ ] 梳理哪些现象是第一帧偏移，哪些是后续累计漂移，哪些是人体/相机/背景分支不一致。
-- [ ] 验证 camera-frame SMPL joints / human token / pointmap confidence 在失败帧中是否仍有可用信号。
-- [ ] 评估 V7 候选方向：online human-scene pose correction。
-- [ ] 在有足够失败案例和可信 cue 诊断前，不新增复杂 V7 模型实现。
+- [x] 完成 H36M 两个 clip 的 offline teacher pseudo label 和 implicit token student 单 clip overfit。
+- [x] 导出 viewer-ready corrected output，用 corrected 点云/人体叠加 raw camera 检查效果。
+- [ ] 整理 MS-AIST `shot2` 99 个 clip 的 staged pilot manifest。
+- [ ] Stage A：选 5 个 `shot2` clip 跑 Human3R raw output、teacher pseudo label、token dump，检查失败率和标签质量。
+- [ ] Stage B：使用 20 train + 5 val clips 训练 multi-clip token adapter，验证 held-out 泛化。
+- [ ] 继续比较 `human_scene` / `human` / `scene` / `pose` / `all` ablation。
+- [ ] 加入正常帧 no-op 约束，防止 adapter 在非 boundary 帧乱修。
+- [ ] 在 held-out viewer 中人工检查 corrected camera / pointcloud / human mesh 是否比 raw 更自然。
+- [ ] 如果 20/5 正向，再扩展到完整 shot2：80 train + 19 val。
+- [ ] 根据 multi-clip 结果决定是否接入正式 Human3R forward 训练。
+
+## 存储待办
+
+- [ ] 训练主数据只保留 `v7_tokens.npz`、`pseudo_gt_labels.npz`、summary / metrics json。
+- [ ] 完整 Human3R saved-output 只保留少量 debug / viewer 样本。
+- [ ] corrected viewer output 使用 hardlink / symlink 复用 `color/depth/conf/smpl`，只新写 `camera/*.npz`。
 
 ## 历史归档
 
