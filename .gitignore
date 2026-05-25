@@ -53,6 +53,7 @@ docs/_build/
 *.pth
 data
 data-V7/
+data-V7-test/
 src/checkpoints
 experiments
 checkpoints/

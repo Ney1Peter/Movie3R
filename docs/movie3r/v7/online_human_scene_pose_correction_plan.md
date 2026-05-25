@@ -224,7 +224,7 @@ optional previous corrected human anchors memory
 ```text
 delta_xi_t: [..., 6]
 alpha_t: correction gate
-g_t: human-scene reliability gate, optional in first smoke
+g_t: human-scene reliability gate, optional in first version
 ```
 
 第一版约束：
@@ -270,3 +270,505 @@ Pose prior
 ```text
 V7 不再只依赖低纹理场景中不可靠的背景特征，而是在 Human3R 原始 pose 基础上，融合人体动态先验、场景几何、历史 memory 和可靠性 gate，在线预测一个小的相机 pose residual，让人和背景通过 corrected camera pose 一起回到更一致的世界坐标。
 ```
+
+## 9. 新增候选：Boundary-Pair Human Consistency
+
+2026-05-21 新增一个更适合主线化的 human-anchor 思路：不假设人在整段视频中静止，而是假设视频在时间上连续，只有镜头发生切换。因此，shot boundary 前后两帧的人体真实状态应该仍然连续。
+
+核心先验：
+
+```text
+即使人正在运动，t-1 -> t 的一帧间隔内，人体不会发生瞬移。
+人体朝向、大体姿态、躯干结构、骨盆/肩膀/头部位置变化都应该较小。
+```
+
+这比“整段人体基本不动”的假设更弱，也更通用。
+
+### 9.1 关键公式
+
+设 shot boundary 发生在：
+
+```text
+t-1 -> t
+```
+
+Human3R 给出当前帧原始 camera pose 和 camera-frame joints：
+
+```text
+T_hat_t
+J_cam_t
+```
+
+上一帧已有 corrected pose：
+
+```text
+T_corr_{t-1}
+```
+
+则上一帧 corrected world human anchors 为：
+
+```text
+J_world_{t-1} = T_corr_{t-1} @ J_cam_{t-1}
+```
+
+当前帧 correction head 输出：
+
+```text
+T_corr_t = exp(delta_xi_t) @ T_hat_t
+J_world_t = T_corr_t @ J_cam_t
+```
+
+训练/推理希望满足：
+
+```text
+J_world_t ≈ J_world_{t-1}
+```
+
+但这个一致性只应是 robust / soft constraint，不能把真实人体动作抹掉。
+
+### 9.2 推荐监督
+
+无 GT camera / 无人工 label 时，可以使用 boundary-pair self-supervision：
+
+```text
+L = L_boundary_human_pair
+  + L_torso_orientation_pair
+  + L_foot_support_pair
+  + L_noop_inside_shot
+  + L_delta_smooth_inside_shot
+  + L_delta_prior
+```
+
+其中最核心的是：
+
+```text
+L_boundary_human_pair = robust( T_corr_t @ J_cam_t - T_corr_{t-1} @ J_cam_{t-1} )
+```
+
+优先使用的稳定人体 anchors：
+
+```text
+pelvis
+left hip / right hip
+spine joints
+left shoulder / right shoulder
+head as weak cue
+```
+
+脚部作为 support cue：
+
+```text
+ankle / foot / heel / toe
+```
+
+脚不能强行左右一一对应，因为走路、交叉脚、抬脚都会带来真实运动。第一版应使用 set matching / Chamfer / robust loss，并根据脚部运动幅度降低移动脚的权重。
+
+### 9.3 Online Memory 形式
+
+该方法可以保持 online / causal。当前帧只需要读取上一帧 corrected memory：
+
+```text
+M_{t-1} = {
+  T_corr_{t-1},
+  J_world_{t-1},
+  torso_frame_{t-1},
+  optional foot support candidates,
+  optional human token memory
+}
+```
+
+然后当前帧前馈预测：
+
+```text
+delta_xi_t = f(T_hat_t, J_cam_t, H_t, M_{t-1})
+```
+
+并立即输出：
+
+```text
+T_corr_t
+```
+
+之后更新 memory：
+
+```text
+M_t <- corrected current human anchors
+```
+
+这不是 chunk alignment，也不是 offline post-processing，因为没有使用未来帧，也没有全局优化整段轨迹。
+
+### 9.4 与 long-reference 版本的区别
+
+Long-reference baseline 使用的是更强的参考假设：
+
+```text
+前半段人体基本站在原地，因此用前半段人体作为整段 reference。
+```
+
+Boundary-pair 版本使用的是更弱的时间连续假设：
+
+```text
+人可以运动，但 boundary 前后相邻两帧的人体变化应该很小。
+```
+
+因此，Boundary-pair 更适合作为 V7 后续主线。Long-reference 适合诊断“人体是否能当 anchor”，Boundary-pair 更接近真实可部署的 online correction。
+
+### 9.5 设计定位
+
+Boundary-pair 应作为人体连续性约束的基础形式：
+
+```text
+只要求相邻帧人体不能瞬移；
+不要求整段人体保持静止；
+不要求 post-shot segment 长期贴住同一个 reference。
+```
+
+它适合和 transient gate / scene geometry guard 组合，而不是作为独立最终方案。
+
+### 9.6 Boundary-Pair + Causal State Propagation
+
+Boundary-pair 只约束 `t-1 -> t` 的瞬时跳变时，容易出现一个问题：
+
+```text
+boundary 后第一帧被拉回来了，但后续帧如果继续沿用原 Human3R 的错误 state / memory，仍可能慢慢漂。
+```
+
+因此需要把 corrected boundary frame 写回 causal memory，让后续帧参考新的 corrected state，而不是继续参考 shot 前旧 state。
+
+在线流程可以写成：
+
+```text
+for each frame t:
+  read Human3R raw outputs: T_hat_t, J_cam_t, H_t
+  read causal memory M_{t-1}
+  delta_xi_t = f(T_hat_t, J_cam_t, H_t, M_{t-1})
+  T_corr_t = exp(delta_xi_t) @ T_hat_t
+  J_world_corr_t = T_corr_t @ J_cam_t
+  output T_corr_t immediately
+  update M_t from J_world_corr_t
+```
+
+在 shot boundary 处：
+
+```text
+M_{t-1} = corrected anchors from the last frame of previous shot
+```
+
+当前帧被纠正后，后续帧不再一直拉向 shot 前 reference，而是进入第二段自己的 corrected state：
+
+```text
+M_t = update(M_{t-1}, corrected anchors at frame t)
+```
+
+这相当于：
+
+```text
+先用人体连续性修正第二段起点，
+再让第二段后续帧以这个 corrected 起点作为新的 state 缓存继续推理。
+```
+
+这样比纯 boundary-pair 更适合解决后续漂移，也比 long-reference 更少依赖“整段人静止”。
+
+第一版 memory update 可以是 EMA：
+
+```text
+M_t = (1 - beta) * M_{t-1} + beta * J_world_corr_t
+```
+
+其中：
+
+```text
+beta 小：更稳定，更像锁定第二段 corrected state
+beta 大：更能跟随真实人体运动
+```
+
+该版本仍然是 online / causal，因为只读取过去 corrected memory，不读取未来帧。
+
+## 10. 新增候选：Learnable Transient Gate Correction
+
+2026-05-22 新增 transient gate 方向。当前观察显示，Human3R 的错误不一定是第二段整体都存在同一个长期偏移，而更像 shot 后短暂 settling error：
+
+```text
+90: shot 前最后一帧，通常可信
+91: shot 后第一帧，可能偏移最严重
+92: shot 后第二帧，Human3R 可能已经基本恢复
+93+: 第二段内部相对轨迹通常比 91 稳定
+```
+
+因此，直接把同一个 `Delta_T` 应用到整个 post-shot segment 可能会把后续本来较准的相机轨迹带偏；但固定只修第 91 帧又过于死板，不利于泛化到其他样本。
+
+### 10.1 核心建模
+
+将 correction 拆成 persistent 和 transient 两部分：
+
+```text
+delta_xi_t = delta_xi_persistent + alpha_t * delta_xi_transient
+T_corr_t = exp(delta_xi_t) @ T_hat_t
+```
+
+其中：
+
+```text
+delta_xi_persistent: 如果 post-shot 整段确实有轻微 gauge offset，则长期保留
+delta_xi_transient: shot 后短暂坏帧需要的额外修正
+alpha_t: learnable transient gate，范围 [0, 1]
+```
+
+期望模型自己学出类似：
+
+```text
+91: alpha_t 高，强修正
+92: alpha_t 较低，弱修正
+93+: alpha_t 接近 0，基本保持 Human3R 原始第二段轨迹
+```
+
+但这不是手写固定规则，而是由网络根据当前帧特征、raw pose jump、human anchor jump、confidence 和距离 boundary 的时间自动预测。
+
+### 10.2 Gate 输入特征
+
+第一版 gate head 可以使用 causal / online 可得特征：
+
+```text
+raw camera translation step: ||t_hat_t - t_hat_{t-1}||
+raw camera rotation step
+stable human anchors jump
+foot/support-point set jump
+torso orientation jump
+Human3R confidence / visibility, if available
+boundary flag / post-shot flag
+```
+
+这些特征表达的是：当前帧是否仍像 shot transition 中的不稳定帧。如果 raw Human3R 在 92 之后已经恢复，gate 应该学会快速降低，而不是继续强行对齐 long-reference。
+
+### 10.3 推荐损失
+
+该方向的关键不是让后续帧全部贴住 shot 前 reference，而是同时满足：
+
+```text
+1. abnormal boundary pair 的 human anchors 不应瞬移
+2. reliable post-shot pair 的 raw 相对轨迹应尽量保留
+3. transient gate 应稀疏、平滑、尽快衰减
+4. persistent correction 应默认较小，除非确有长期偏移
+```
+
+因此第一版 self-supervision 可以写成：
+
+```text
+L = L_anomaly_pair_human_continuity
+  + L_reliable_pair_relative_preservation
+  + L_camera_relative_preservation
+  + L_gate_sparsity
+  + L_gate_smoothness
+  + L_persistent_prior
+  + L_delta_prior
+```
+
+其中最重要的是 relative preservation：
+
+```text
+T_corr_t^{-1} @ T_corr_{t+1} ≈ T_hat_t^{-1} @ T_hat_{t+1}
+```
+
+它表达：当第二段 Human3R 内部相对运动可信时，不要为了修 boundary 把后续轨迹改坏。
+
+### 10.4 与其他候选方案的关系
+
+前三个版本可以统一理解为不同的 correction freedom：
+
+```text
+long-reference: post-shot 全段都被强 reference 约束，容易压制真实人体运动
+boundary-pair: 主要修 boundary 两帧，后续传播弱
+causal memory: 逐帧可更新 correction，但容易把后续本来正确的轨迹也改坏
+transient gate: 学习哪些 post-shot 帧仍需要 correction，默认尽快回到 Human3R 原始轨迹
+```
+
+Transient gate 不是固定“只修第 91 帧”，而是一个可学习的软选择机制。它保留了 boundary-pair 的局部性，也避免了 long-reference 对整段人体静止的强假设。
+
+### 10.5 设计定位
+
+Transient gate 的作用不是替代 correction loss，而是控制 correction 何时生效：
+
+```text
+boundary / settling frames: alpha_t 高，允许修正；
+稳定帧: alpha_t 接近 0，尽量 no-op；
+不可靠 cue: alpha_t 降低，避免错误修正扩散。
+```
+
+因此，transient gate 应与 human anchor 和 scene geometry guard 合并使用，形成：
+
+```text
+delta_xi_t = alpha_t * f_human_scene(T_hat_t, J_cam_t, scene_t, M_{t-1})
+T_corr_t = exp(delta_xi_t) @ T_hat_t
+```
+
+## 11. 当前主线计划：Human-Guided, Geometry-Guarded Pose Correction
+
+详细实验记录、指标和可视化结论见：
+
+```text
+docs/movie3r/v7/human_scene_pose_correction_experiment_log.md
+```
+
+V7 当前主线从 human-only correction 调整为：
+
+```text
+Human-Guided, Geometry-Guarded Pose Correction
+```
+
+核心思想：
+
+```text
+人体负责发现和监督 shot boundary 处的人体瞬移；
+场景几何负责保护地面、墙面、世界方向和背景结构；
+gate 负责判断当前帧是否需要修正；
+camera prior 负责防止过度修正。
+```
+
+### 11.1 为什么不是 human-only
+
+人体 anchor 是强 cue，但不能单独决定完整 camera pose。
+
+human-only full SE(3) 容易出现：
+
+```text
+人对齐了，但场景倾斜 / 上下漂移。
+```
+
+planar yaw + horizontal 又容易出现：
+
+```text
+场景不倾斜，但人体对齐不足。
+```
+
+因此，人体应作为 correction 的监督信号之一，而不是唯一锚点。
+
+### 11.2 几何 guard 的职责
+
+场景几何 cue 应承担 human anchor 不擅长的部分：
+
+```text
+single dominant normal:
+  约束 pitch / roll / vertical drift，防止地面或墙面转歪。
+
+top-K planes:
+  额外约束 yaw 和平面间相对关系。
+
+background point guard:
+  弱约束平面内左右滑动，避免只沿着地板或墙面滑走。
+```
+
+场景几何必须带 reliability / confidence：
+
+```text
+plane fit 可靠时强使用；
+plane fit 不可靠时降低权重，退回 human + camera prior。
+```
+
+### 11.3 Online / Causal 约束
+
+后续所有版本必须保持：
+
+```text
+只使用当前帧和过去 memory；
+不使用未来帧；
+不做全局 BA / chunk alignment / offline post-processing；
+每帧 forward 末端立即输出 corrected pose。
+```
+
+机制验证阶段的单帧 geometry 版本也应保持：
+
+```text
+reference frame = t - 1
+corrected frame = t
+future frame t + 1 只用于可视化 sanity check，不参与训练或优化
+```
+
+### 11.4 目标模型结构
+
+未来的 correction head 应接在 Human3R forward 末端：
+
+```text
+Human3R raw outputs:
+  T_hat_t
+  pointmap / depth / confidence
+  SMPL-X joints / human token
+  human mask / visibility
+  recurrent memory
+
+online geometry cues:
+  dominant plane normals
+  top-K plane confidence
+  background geometry descriptors
+  previous corrected scene geometry memory
+
+correction head outputs:
+  alpha_t correction gate
+  bounded delta_xi_t
+  human / scene reliability weights
+
+T_corr_t = exp(alpha_t * delta_xi_t) @ T_hat_t
+```
+
+### 11.5 推荐训练路线
+
+第一阶段：继续使用 saved-output 机制验证 cue 和 loss。
+
+```text
+human anchor + multi-plane geometry guard
+single boundary frame
+causal t-1 / t only
+```
+
+第二阶段：加入 learnable transient gate。
+
+```text
+异常 boundary 帧 gate 打开；
+恢复后的正常帧 gate 关闭；
+后续帧尽量保留 Human3R raw relative trajectory。
+```
+
+第三阶段：训练轻量 correction head。
+
+```text
+input: Human3R tokens / joints / pointmap / confidence / geometry cues
+output: alpha_t + delta_xi_t
+loss: human continuity + scene geometry guard + relative trajectory preservation + prior
+```
+
+第四阶段：将 deterministic geometry extraction 替换或蒸馏为 neural scene geometry head。
+
+```text
+pointmap/conf/features -> plane normals / scene geometry confidence
+```
+
+### 11.6 当前下一步
+
+下一步最值得实现的是：
+
+```text
+Offline Teacher -> Online Student
++ Transient Gate
++ Multi-Plane Scene Geometry Guard
++ Post-Shot Local Gauge Memory
+```
+
+目标：
+
+```text
+只在 shot boundary / settling frames 上打开 correction；
+用 human anchor 提供人体连续性监督；
+用 multi-plane / background geometry 防止倾斜和左右滑动；
+92 之后等稳定帧尽量 no-op。
+```
+
+训练和推理必须严格区分：
+
+```text
+teacher / analysis:
+  可以使用 post-shot stable frames 估计 cam2 local gauge，生成 pseudo target。
+
+student / inference:
+  只能使用当前帧和过去 memory，不能读取未来帧。
+```
+
+因此，未来帧只允许作为训练 pseudo label 或 oracle upper bound 的来源，不能进入最终前馈模型输入。

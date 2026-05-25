@@ -27,6 +27,7 @@ V7 当前先做四件事：
 ```text
 docs/movie3r/current_research_context.md
 docs/movie3r/v7/online_human_scene_pose_correction_plan.md
+docs/movie3r/v7/human_scene_pose_correction_experiment_log.md
 docs/movie3r/archive_v2_v6/README.md
 tasklist/TODO.md
 ```
