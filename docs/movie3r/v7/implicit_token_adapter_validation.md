@@ -243,7 +243,7 @@ raw boundary jump 本来很小，不需要 correction；
 teacher 没有改善 boundary foot jump；
 teacher 放大 settle / post-pair jump；
 teacher delta_t 或 delta_r 过大；
-Human3R SMPL 检测不是全程单人，包括无人帧或多人帧；
+Human3R SMPL 检测在 teacher 使用窗口内不是单人，包括无人帧或多人帧；
 teacher 构建失败或缺 token。
 ```
 
@@ -263,7 +263,29 @@ teacher 构建失败或缺 token。
 
 ```text
 scripts/run_v7_ms_aist_shot2_stage_a.py 默认 --min_detection_score 0.2
-scripts/summarize_v7_stage_a_quality.py 默认检查 smpl/*.npz 中每帧必须 exactly one person
+scripts/run_v7_ms_aist_shot2_stage_a.py 默认跳过已标记 failed 的 case，除非 --retry_failed
+scripts/summarize_v7_stage_a_quality.py 默认检查 teacher 使用窗口内 smpl/*.npz 必须 exactly one person
+```
+
+按默认 score filter 重建 12 个候选后，当前质量汇总为：
+
+```text
+selected score-filtered candidates: 12
+accepted: 2
+accepted cases:
+  aist_ms_000001_shotcut000_t00010100ms
+  aist_ms_000009_shotcut000_t00011400ms
+
+failed cases:
+  aist_ms_000003_shotcut000_t00012800ms
+  aist_ms_000012_shotcut000_t00011900ms
+
+multi-person rejected:
+  aist_ms_000008_shotcut000_t00011400ms
+  aist_ms_000010_shotcut000_t00013000ms
+
+single-person but rejected by teacher quality:
+  aist_ms_000014_shotcut000_t00011000ms: delta_t_too_large
 ```
 
 两个 accepted clip 的 pooled-token student overfit 均通过：

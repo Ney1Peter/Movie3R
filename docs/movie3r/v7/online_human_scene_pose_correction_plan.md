@@ -1010,7 +1010,8 @@ implicit token student 在 accepted labels 上仍可拟合；
 
 ```text
 候选选择阶段：默认要求 shot-change score >= 0.2；
-质量门控阶段：默认要求 Human3R SMPL 输出全程 exactly one person。
+质量门控阶段：默认要求 teacher 使用窗口内 Human3R SMPL 输出 exactly one person。
+已失败 case 默认跳过，只有显式 --retry_failed 才重试。
 ```
 
 评估必须包含：

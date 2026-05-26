@@ -36,6 +36,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("/data/wangzheng/iJCV-CODE/data/data-V7-shot-change-clips/ms-aist/manifest.json"),
     )
+    parser.add_argument(
+        "--refined_manifest",
+        type=Path,
+        default=None,
+        help="Optional refined 30-frame manifest. If set, use its accepted clips and local boundary frames.",
+    )
     parser.add_argument("--output_root", type=Path, default=Path("output/v7_ms_aist_shot2_stage_a"))
     parser.add_argument("--model_path", type=Path, default=Path("src/human3r_896L.pth"))
     parser.add_argument("--num_clips", type=int, default=5)
@@ -64,6 +70,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--strict", action="store_true", help="Abort on the first failed case.")
+    parser.add_argument("--retry_failed", action="store_true", help="Retry cases previously marked as failed.")
     return parser.parse_args()
 
 
@@ -82,7 +89,60 @@ def video_frame_count(path: Path) -> int:
     return count
 
 
+# **========== 原始代码 ==========**
+# def selected_detections(args: argparse.Namespace) -> list[dict]:
+#     manifest = json.loads(args.source_manifest.read_text())
+#     rows = []
+#     for item in manifest.get("videos", []):
+#         info = item.get("info", {})
+#         fps = float(info.get("fps", 30.0) or 30.0)
+#         for det in item.get("detections", []):
+#             output_path = Path(det["output_path"])
+#             if output_path.parent.resolve() != args.clip_root.resolve():
+#                 continue
+#             if det.get("status") != "written" or not output_path.is_file():
+#                 continue
+#             if args.min_detection_score >= 0 and float(det.get("score", 0.0)) < float(args.min_detection_score):
+#                 continue
+#             rows.append({"info": info, "detection": det, "fps": fps, "clip_path": output_path})
+#     rows = sorted(rows, key=lambda row: row["clip_path"].name)
+#     start = max(0, int(args.start_index))
+#     end = start + int(args.num_clips)
+#     return rows[start:end]
+
+
+# **========== 新代码 ==========**
+def selected_refined_clips(args: argparse.Namespace) -> list[dict]:
+    manifest = json.loads(args.refined_manifest.read_text())
+    rows = []
+    for record in manifest.get("accepted", []):
+        output_path = Path(record["output_path"])
+        if not output_path.is_file():
+            continue
+        boundary = int(record.get("refined_boundary_local_frame", record.get("pre_count", 10)))
+        info = {
+            "refined_manifest": str(args.refined_manifest),
+            "source_clip": record.get("source_clip"),
+            "preview_path": record.get("preview_path"),
+        }
+        rows.append(
+            {
+                "info": info,
+                "detection": record,
+                "fps": float(record.get("fps", 30.0) or 30.0),
+                "clip_path": output_path,
+                "boundary": boundary,
+            }
+        )
+    rows = sorted(rows, key=lambda row: row["clip_path"].name)
+    start = max(0, int(args.start_index))
+    end = start + int(args.num_clips)
+    return rows[start:end]
+
+
 def selected_detections(args: argparse.Namespace) -> list[dict]:
+    if args.refined_manifest is not None:
+        return selected_refined_clips(args)
     manifest = json.loads(args.source_manifest.read_text())
     rows = []
     for item in manifest.get("videos", []):
@@ -101,14 +161,54 @@ def selected_detections(args: argparse.Namespace) -> list[dict]:
     start = max(0, int(args.start_index))
     end = start + int(args.num_clips)
     return rows[start:end]
+# **========== 结束 ==========**
 
 
+# **========== 原始代码 ==========**
+# def make_case(row: dict, output_root: Path, args: argparse.Namespace) -> tuple[SmokeCase, dict]:
+#     clip_path = row["clip_path"].resolve()
+#     det = row["detection"]
+#     fps = float(row["fps"])
+#     frame_count = video_frame_count(clip_path)
+#     boundary = int(round((float(det["boundary_time"]) - float(det["clip_start"])) * fps))
+#     boundary = max(1, min(frame_count - 1, boundary))
+#     stable_start = min(frame_count - 1, boundary + int(args.stable_offset))
+#     stable_end = min(frame_count - 1, stable_start + int(args.stable_count) - 1)
+#     subset_start = max(0, boundary - int(args.subset_margin))
+#     subset_count = min(int(args.subset_count), frame_count - subset_start)
+#     case_name = clip_path.stem
+#     case_dir = output_root / case_name
+#     case = SmokeCase(
+#         name=case_name,
+#         source_video=clip_path,
+#         raw_output_dir=case_dir / "human3r_raw",
+#         boundary=boundary,
+#         target_count=int(args.target_count),
+#         stable_start=stable_start,
+#         stable_end=stable_end,
+#         subset_start=subset_start,
+#         subset_count=subset_count,
+#     )
+#     metadata = {
+#         "case": asdict(case),
+#         "frame_count": int(frame_count),
+#         "fps": fps,
+#         "source_detection": det,
+#         "source_info": row["info"],
+#     }
+#     return case, metadata
+
+
+# **========== 新代码 ==========**
 def make_case(row: dict, output_root: Path, args: argparse.Namespace) -> tuple[SmokeCase, dict]:
     clip_path = row["clip_path"].resolve()
     det = row["detection"]
     fps = float(row["fps"])
     frame_count = video_frame_count(clip_path)
-    boundary = int(round((float(det["boundary_time"]) - float(det["clip_start"])) * fps))
+    if "boundary" in row:
+        boundary = int(row["boundary"])
+    else:
+        boundary = int(round((float(det["boundary_time"]) - float(det["clip_start"])) * fps))
     boundary = max(1, min(frame_count - 1, boundary))
     stable_start = min(frame_count - 1, boundary + int(args.stable_offset))
     stable_end = min(frame_count - 1, stable_start + int(args.stable_count) - 1)
@@ -133,8 +233,10 @@ def make_case(row: dict, output_root: Path, args: argparse.Namespace) -> tuple[S
         "fps": fps,
         "source_detection": det,
         "source_info": row["info"],
+        "input_mode": "refined_manifest" if "boundary" in row else "source_manifest",
     }
     return case, metadata
+# **========== 结束 ==========**
 
 
 def run_command(cmd: list[str], repo_root: Path) -> None:
@@ -219,9 +321,18 @@ def main() -> None:
         case, metadata = make_case(row, output_root, args)
         case_dir = output_root / case.name
         case_dir.mkdir(parents=True, exist_ok=True)
+        case_config_path = case_dir / "case_config.json"
+        if not args.dry_run and not args.overwrite and not args.retry_failed and case_config_path.is_file():
+            try:
+                previous_metadata = json.loads(case_config_path.read_text())
+            except json.JSONDecodeError:
+                previous_metadata = None
+            if previous_metadata is not None and previous_metadata.get("status") == "failed":
+                manifest_cases.append(previous_metadata)
+                continue
         if args.dry_run:
             metadata["status"] = "dry_run"
-        with open(case_dir / "case_config.json", "w", encoding="utf-8") as f:
+        with open(case_config_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, sort_keys=True, default=str)
             f.write("\n")
         manifest_cases.append(metadata)
@@ -291,12 +402,14 @@ def main() -> None:
             if args.strict:
                 raise
         # **========== 结束 ==========**
-        with open(case_dir / "case_config.json", "w", encoding="utf-8") as f:
+        with open(case_config_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, sort_keys=True, default=str)
             f.write("\n")
 
     manifest = {
         "source_manifest": str(args.source_manifest),
+        "refined_manifest": str(args.refined_manifest) if args.refined_manifest is not None else None,
+        "input_mode": "refined_manifest" if args.refined_manifest is not None else "source_manifest",
         "clip_root": str(args.clip_root),
         "output_root": str(output_root),
         "num_cases": len(manifest_cases),

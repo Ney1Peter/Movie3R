@@ -15,7 +15,8 @@ V7 当前候选主线已经收敛到 offline human-scene geometry teacher -> cau
 - [x] 整理 MS-AIST `shot2` 99 个 clip 的 staged pilot manifest。
 - [x] Stage A：前 12 个 `shot2` 候选已完成 raw / teacher / token pipeline 和质量门控。
 - [x] 新增 Stage-A quality gate，当前接受 2 / 12 个 pseudo labels。
-- [x] 显式过滤疑似无跳变样本和多人样本：候选默认 `score >= 0.2`，quality gate 默认要求全程单人 SMPL。
+- [x] 显式过滤疑似无跳变样本和多人样本：候选默认 `score >= 0.2`，quality gate 默认要求 teacher 使用窗口内单人 SMPL。
+- [x] Stage-A runner 默认跳过已标记 failed 的 case，避免扩大候选池时反复重跑坏样本。
 - [ ] 扩大候选池或改进 teacher，先获得足够 accepted pseudo labels。
 - [ ] Stage B：使用筛选后的 20 train + 5 val clips 训练 multi-clip token adapter，验证 held-out 泛化。
 - [ ] 继续比较 `human_scene` / `human` / `scene` / `pose` / `all` ablation。

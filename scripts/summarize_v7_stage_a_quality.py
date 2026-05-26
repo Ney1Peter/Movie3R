@@ -25,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no_require_tokens", action="store_true")
     parser.add_argument("--skip_person_check", action="store_true")
     parser.add_argument("--allow_multi_person", action="store_true")
+    parser.add_argument("--person_check_scope", choices=["teacher_window", "all"], default="teacher_window")
     return parser.parse_args()
 
 
@@ -39,15 +40,17 @@ def get_transition(summary: dict, key: str, metric: str) -> float:
     return float(summary[key][metric])
 
 
-def smpl_person_summary(raw_dir: Path) -> dict:
+def smpl_person_summary(raw_dir: Path, frame_ids: list[int] | None = None) -> dict:
     smpl_dir = raw_dir / "smpl"
-    files = sorted(smpl_dir.glob("*.npz"))
+    files = sorted(smpl_dir.glob("*.npz")) if frame_ids is None else [smpl_dir / f"{frame_id:06d}.npz" for frame_id in frame_ids]
     if not files:
         return {"has_smpl": False, "num_frames": 0}
     counts = []
     errors = []
     for path in files:
         try:
+            if not path.is_file():
+                raise FileNotFoundError(path)
             data = np.load(path, allow_pickle=True)
             counts.append((int(path.stem), int(data["shape"].shape[0])))
         except Exception as exc:
@@ -59,6 +62,8 @@ def smpl_person_summary(raw_dir: Path) -> dict:
     return {
         "has_smpl": True,
         "num_frames": len(files),
+        "checked_frame_start": int(counts[0][0]) if counts else None,
+        "checked_frame_end": int(counts[-1][0]) if counts else None,
         "min_count": min(frame_counts) if frame_counts else None,
         "max_count": max(frame_counts) if frame_counts else None,
         "count_hist": hist,
@@ -69,6 +74,19 @@ def smpl_person_summary(raw_dir: Path) -> dict:
         "num_errors": len(errors),
         "errors": errors[:5],
     }
+
+
+def teacher_window_person_frames(case_config: dict) -> list[int]:
+    boundary = int(case_config["boundary"])
+    target_count = int(case_config.get("target_count", 3))
+    stable_start = int(case_config["stable_start"])
+    stable_end = int(case_config["stable_end"])
+    subset_start = int(case_config.get("subset_start", max(0, boundary - 1)))
+    subset_count = int(case_config.get("subset_count", 31))
+    frame_ids = set(range(max(0, boundary - 1), boundary + target_count))
+    frame_ids.update(range(stable_start, stable_end + 1))
+    frame_ids.update(range(subset_start, subset_start + subset_count))
+    return sorted(frame for frame in frame_ids if frame >= 0)
 
 
 def evaluate_case(case_entry: dict, output_root: Path, args: argparse.Namespace) -> dict:
@@ -87,11 +105,29 @@ def evaluate_case(case_entry: dict, output_root: Path, args: argparse.Namespace)
         if args.min_detection_score >= 0 and detection_score < args.min_detection_score:
             reasons.append("detection_score_below_min")
 
+    # **========== 原始代码 ==========**
+    # if not args.skip_person_check:
+    #     raw_dir = Path(case_entry["case"].get("raw_output_dir", ""))
+    #     if not raw_dir.is_absolute():
+    #         raw_dir = output_root / raw_dir
+    #     person_summary = smpl_person_summary(raw_dir)
+    #     metrics["person_summary"] = person_summary
+    #     if not person_summary.get("has_smpl", False):
+    #         reasons.append("missing_smpl_outputs")
+    #     elif person_summary.get("num_errors", 0) > 0:
+    #         reasons.append("smpl_read_error")
+    #     elif not args.allow_multi_person:
+    #         if person_summary.get("min_count") != 1 or person_summary.get("max_count") != 1:
+    #             reasons.append("person_count_not_single")
+
+    # **========== 新代码 ==========**
     if not args.skip_person_check:
         raw_dir = Path(case_entry["case"].get("raw_output_dir", ""))
         if not raw_dir.is_absolute():
             raw_dir = output_root / raw_dir
-        person_summary = smpl_person_summary(raw_dir)
+        frame_ids = None if args.person_check_scope == "all" else teacher_window_person_frames(case_entry["case"])
+        person_summary = smpl_person_summary(raw_dir, frame_ids)
+        person_summary["scope"] = args.person_check_scope
         metrics["person_summary"] = person_summary
         if not person_summary.get("has_smpl", False):
             reasons.append("missing_smpl_outputs")
@@ -100,6 +136,7 @@ def evaluate_case(case_entry: dict, output_root: Path, args: argparse.Namespace)
         elif not args.allow_multi_person:
             if person_summary.get("min_count") != 1 or person_summary.get("max_count") != 1:
                 reasons.append("person_count_not_single")
+    # **========== 结束 ==========**
 
     summary = case_entry.get("pseudo_summary")
     if summary is None:
@@ -191,6 +228,7 @@ def main() -> None:
             "require_tokens": not args.no_require_tokens,
             "person_check": not args.skip_person_check,
             "allow_multi_person": args.allow_multi_person,
+            "person_check_scope": args.person_check_scope,
         },
         "cases": rows,
     }
