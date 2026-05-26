@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import cv2
@@ -31,6 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--downsample_factor", type=int, default=1)
     parser.add_argument("--smpl_downsample", type=int, default=1)
     parser.add_argument("--camera_downsample", type=int, default=1)
+    parser.add_argument("--normal_debug_json", type=Path, default=None, help="Optional line/label overlay JSON for plane normal debugging.")
     parser.add_argument("--dry_run", action="store_true", help="Load all viewer payloads and exit without starting the server.")
     return parser.parse_args()
 
@@ -138,6 +140,31 @@ def load_viewer_payload(output_dir: Path, num_frames: int, device: str):
     return pts3ds, colors, confs, all_verts, smpl_faces, smpl_ids, msks
 
 
+def add_normal_debug_overlay(viewer: SceneHumanViewer, path: Path | None) -> None:
+    if path is None:
+        return
+    data = json.loads(path.read_text())
+    segments = data.get("segments", [])
+    if segments:
+        points = np.asarray([[seg["start"], seg["end"]] for seg in segments], dtype=np.float32)
+        colors = np.asarray([[seg.get("color", [255, 255, 0]), seg.get("color", [255, 255, 0])] for seg in segments], dtype=np.uint8)
+        viewer.server.scene.add_line_segments(
+            "/debug_floor_normals",
+            points=points,
+            colors=colors,
+            line_width=float(data.get("line_width", 6.0)),
+        )
+    for label in data.get("labels", []):
+        viewer.server.scene.add_label(
+            label.get("name", "/debug_label"),
+            label.get("text", ""),
+            position=np.asarray(label["position"], dtype=np.float32),
+            font_size_mode="scene",
+            font_scene_height=float(label.get("height", 0.08)),
+            depth_test=False,
+        )
+
+
 def main() -> None:
     args = parse_args()
     num_frames = infer_num_frames(args.output_dir, args.source_video, args.num_frames)
@@ -181,6 +208,7 @@ def main() -> None:
         smpl_downsample_factor=args.smpl_downsample,
         camera_downsample_factor=args.camera_downsample,
     )
+    add_normal_debug_overlay(viewer, args.normal_debug_json)
     viewer.run()
 
 

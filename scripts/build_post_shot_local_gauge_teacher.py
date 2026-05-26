@@ -19,6 +19,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from dust3r.utils.geometry import depthmap_to_absolute_camera_coordinates
 from overfit_human_anchor_pose_correction import (
     FOOT_JOINTS,
     STABLE_JOINTS,
@@ -61,6 +62,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temporal_t_weight", type=float, default=0.08)
     parser.add_argument("--temporal_r_weight", type=float, default=0.08)
     parser.add_argument("--prior_weight", type=float, default=0.04)
+    parser.add_argument(
+        "--human_loss_scope",
+        choices=["boundary", "targets"],
+        default="boundary",
+        help="Use human anchor losses only on the first post-shot frame or on all corrected target frames.",
+    )
+    parser.add_argument(
+        "--scene_mode",
+        choices=["full", "level_only", "floor_normal", "none"],
+        default="full",
+        help="full uses plane offset/chamfer, level_only preserves plane tilt, floor_normal aligns only floor-like normals.",
+    )
+    parser.add_argument("--min_floor_up_dot", type=float, default=0.45)
+    parser.add_argument("--floor_region", choices=["all", "bottom"], default="all")
+    parser.add_argument("--floor_bottom_start", type=float, default=0.55)
     parser.add_argument("--conf_threshold", type=float, default=1.5)
     parser.add_argument("--mask_threshold", type=float, default=0.1)
     parser.add_argument("--plane_max_points", type=int, default=16000)
@@ -80,8 +96,49 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_background_points_region(
+    input_dir: Path,
+    frame_id: int,
+    pose: np.ndarray,
+    intrinsics: np.ndarray,
+    conf_threshold: float,
+    mask_threshold: float,
+    y_start_frac: float,
+) -> np.ndarray:
+    depth = np.load(input_dir / "depth" / f"{frame_id:06d}.npy").astype(np.float32)
+    conf = np.load(input_dir / "conf" / f"{frame_id:06d}.npy").astype(np.float32)
+    points_world, _ = depthmap_to_absolute_camera_coordinates(depth, intrinsics.astype(np.float32), pose.astype(np.float32))
+    valid = np.isfinite(points_world).all(axis=-1) & np.isfinite(depth) & (depth > 0.0) & np.isfinite(conf) & (conf >= float(conf_threshold))
+
+    y0 = int(np.clip(float(y_start_frac), 0.0, 0.95) * depth.shape[0])
+    region = np.zeros_like(valid, dtype=bool)
+    region[y0:, :] = True
+    valid &= region
+
+    smpl = np.load(input_dir / "smpl" / f"{frame_id:06d}.npz", allow_pickle=True)
+    if "msk" in smpl.files:
+        msk = smpl["msk"]
+        if msk is not None and msk.size > 0:
+            human_mask = np.max(msk.astype(np.float32), axis=0) > float(mask_threshold)
+            if human_mask.shape == valid.shape:
+                valid &= ~human_mask
+    points = points_world[valid].astype(np.float32)
+    points = points[np.isfinite(points).all(axis=1)]
+    if points.shape[0] < 100:
+        raise ValueError(f"Too few regional background points for frame {frame_id}: {points.shape[0]}")
+    return points
+
+
 def build_scene(input_dir: Path, frame_id: int, pose: np.ndarray, intrinsics: np.ndarray, args: argparse.Namespace, device: torch.device, seed_base: int) -> dict:
-    points = load_background_points(input_dir, frame_id, pose, intrinsics, args.conf_threshold, args.mask_threshold)
+    # **========== 原始代码 ==========**
+    # points = load_background_points(input_dir, frame_id, pose, intrinsics, args.conf_threshold, args.mask_threshold)
+
+    # **========== 新代码 ==========**
+    if args.scene_mode == "floor_normal" and args.floor_region == "bottom":
+        points = load_background_points_region(input_dir, frame_id, pose, intrinsics, args.conf_threshold, args.mask_threshold, args.floor_bottom_start)
+    else:
+        points = load_background_points(input_dir, frame_id, pose, intrinsics, args.conf_threshold, args.mask_threshold)
+    # **========== 结束 ==========**
     plane_args = SimpleNamespace(
         plane_max_points=args.plane_max_points,
         plane_iterations=args.plane_iterations,
@@ -117,6 +174,62 @@ def make_match_tensors(ref_scene: dict, cur_scene: dict, min_dot: float, device:
     return matches, tensors
 
 
+def select_floor_like_plane(planes: list[dict], ref_up: torch.Tensor, min_up_dot: float) -> tuple[int, dict, float] | None:
+    if not planes:
+        return None
+    up = ref_up.detach().cpu().numpy().astype(np.float32)
+    up = up / max(float(np.linalg.norm(up)), 1e-8)
+    best = None
+    for idx, plane in enumerate(planes):
+        normal = np.asarray(plane["normal"], dtype=np.float32)
+        normal = normal / max(float(np.linalg.norm(normal)), 1e-8)
+        up_dot = abs(float(np.dot(normal, up)))
+        ratio = float(plane.get("global_inlier_ratio", plane.get("inlier_ratio", 0.0)))
+        score = up_dot + 0.1 * ratio
+        if best is None or score > best[0]:
+            best = (score, idx, plane, up_dot)
+    if best is None or best[3] < float(min_up_dot):
+        return None
+    _, idx, plane, up_dot = best
+    return int(idx), plane, float(up_dot)
+
+
+def make_floor_normal_tensors(ref_scene: dict, cur_scene: dict, ref_up: torch.Tensor, min_up_dot: float, device: torch.device) -> tuple[list[dict], list[dict]]:
+    ref_floor = select_floor_like_plane(ref_scene["planes"], ref_up, min_up_dot)
+    cur_floor = select_floor_like_plane(cur_scene["planes"], ref_up, min_up_dot)
+    if ref_floor is None or cur_floor is None:
+        return [], []
+    ref_i, ref, ref_up_dot = ref_floor
+    cur_i, cur, cur_up_dot = cur_floor
+    ref_normal = np.asarray(ref["normal"], dtype=np.float32)
+    cur_copy = dict(cur)
+    cur_normal = np.asarray(cur_copy["normal"], dtype=np.float32)
+    dot = float(np.dot(ref_normal, cur_normal))
+    if dot < 0.0:
+        cur_copy["normal"] = -cur_normal
+        cur_copy["d"] = np.float32(-float(cur_copy["d"]))
+        dot = -dot
+    weight = min(float(ref.get("global_inlier_ratio", ref.get("inlier_ratio", 1.0))), float(cur_copy.get("global_inlier_ratio", cur_copy.get("inlier_ratio", 1.0))))
+    match = {
+        "ref_index": ref_i,
+        "cur_index": cur_i,
+        "dot_abs": dot,
+        "weight": weight,
+        "ref_floor_up_abs": ref_up_dot,
+        "cur_floor_up_abs": cur_up_dot,
+        "ref": ref,
+        "cur": cur_copy,
+    }
+    tensor = {
+        "n_ref": torch.from_numpy(ref_normal.astype(np.float32)).to(device=device),
+        "n_cur": torch.from_numpy(np.asarray(cur_copy["normal"], dtype=np.float32)).to(device=device),
+        "d_ref": torch.tensor(float(ref["d"]), device=device, dtype=torch.float32),
+        "d_cur": torch.tensor(float(cur_copy["d"]), device=device, dtype=torch.float32),
+        "weight": torch.tensor(1.0, device=device, dtype=torch.float32),
+    }
+    return [match], [tensor]
+
+
 def rotation_temporal_loss(R_corr: torch.Tensor, R_prev: torch.Tensor) -> torch.Tensor:
     rel = R_corr @ R_prev.transpose(0, 1)
     trace = torch.diagonal(rel, dim1=-2, dim2=-1).sum()
@@ -134,7 +247,7 @@ def optimize_target_frame(
     device: torch.device,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     matches, match_tensors = make_match_tensors(gauge_scene, cur_scene, args.min_plane_dot, device)
-    if not match_tensors:
+    if not match_tensors and args.scene_mode == "full":
         pose = data.poses[frame_id]
         return pose[:3, :3].copy(), pose[:3, 3].copy(), {"frame": int(frame_id), "skipped": True, "reason": "no_plane_matches"}
 
@@ -150,6 +263,8 @@ def optimize_target_frame(
     prev_t = torch.from_numpy(corrected_poses[frame_id - 1, :3, 3]).to(device=device, dtype=torch.float32)
     ref_joints = joints_world[boundary - 1]
     ref_frame = torso_frame(joints_world[boundary - 1 : boundary])[0]
+    if args.scene_mode == "floor_normal":
+        matches, match_tensors = make_floor_normal_tensors(gauge_scene, cur_scene, ref_frame[1], args.min_floor_up_dot, device)
     history = []
 
     for step in range(int(args.steps_per_frame) + 1):
@@ -163,7 +278,19 @@ def optimize_target_frame(
         R_delta = so3_exp_map(delta_r)[0]
 
         frame_corr = torso_frame(corrected_one.unsqueeze(0))[0]
-        if frame_id == boundary:
+        # **========== 原始代码 ==========**
+        # if frame_id == boundary:
+        #     stable_loss = F.smooth_l1_loss(corrected_one[STABLE_JOINTS], ref_joints[STABLE_JOINTS], beta=0.05)
+        #     foot_loss = chamfer_per_frame(corrected_one[FOOT_JOINTS], ref_joints[FOOT_JOINTS])
+        #     orient_loss = (1.0 - (frame_corr * ref_frame).sum(dim=-1).clamp(-1.0, 1.0)).mean()
+        # else:
+        #     stable_loss = delta_t.new_tensor(0.0)
+        #     foot_loss = delta_t.new_tensor(0.0)
+        #     orient_loss = delta_t.new_tensor(0.0)
+
+        # **========== 新代码 ==========**
+        use_human_loss = frame_id == boundary or args.human_loss_scope == "targets"
+        if use_human_loss:
             stable_loss = F.smooth_l1_loss(corrected_one[STABLE_JOINTS], ref_joints[STABLE_JOINTS], beta=0.05)
             foot_loss = chamfer_per_frame(corrected_one[FOOT_JOINTS], ref_joints[FOOT_JOINTS])
             orient_loss = (1.0 - (frame_corr * ref_frame).sum(dim=-1).clamp(-1.0, 1.0)).mean()
@@ -171,19 +298,52 @@ def optimize_target_frame(
             stable_loss = delta_t.new_tensor(0.0)
             foot_loss = delta_t.new_tensor(0.0)
             orient_loss = delta_t.new_tensor(0.0)
+        # **========== 结束 ==========**
 
+        # **========== 原始代码 ==========**
+        # normal_losses, offset_losses, dots = [], [], []
+        # for m in match_tensors:
+        #     n_corr = R_delta @ m["n_cur"]
+        #     normal_dot = (n_corr * m["n_ref"]).sum().clamp(-1.0, 1.0)
+        #     d_corr = m["d_cur"] - (n_corr * delta_t[0]).sum()
+        #     normal_losses.append(m["weight"] * (1.0 - normal_dot.abs()))
+        #     offset_losses.append(m["weight"] * torch.minimum((d_corr - m["d_ref"]).pow(2), (d_corr + m["d_ref"]).pow(2)))
+        #     dots.append(normal_dot.abs())
+        # normal_loss = torch.stack(normal_losses).sum()
+        # offset_loss = torch.stack(offset_losses).sum()
+        # bg_corr = torch.einsum("ij,kj->ki", R_delta, cur_scene["bg"]) + delta_t[0]
+        # bg_chamfer = robust_bg_chamfer(bg_corr, gauge_scene["bg"], args.bg_chamfer_cap)
+
+        # **========== 新代码 ==========**
         normal_losses, offset_losses, dots = [], [], []
+        ref_up = ref_frame[1]
         for m in match_tensors:
             n_corr = R_delta @ m["n_cur"]
             normal_dot = (n_corr * m["n_ref"]).sum().clamp(-1.0, 1.0)
             d_corr = m["d_cur"] - (n_corr * delta_t[0]).sum()
-            normal_losses.append(m["weight"] * (1.0 - normal_dot.abs()))
-            offset_losses.append(m["weight"] * torch.minimum((d_corr - m["d_ref"]).pow(2), (d_corr + m["d_ref"]).pow(2)))
+            if args.scene_mode == "level_only":
+                cur_level = (n_corr * ref_up).sum().abs()
+                ref_level = (m["n_ref"] * ref_up).sum().abs()
+                normal_losses.append(m["weight"] * (cur_level - ref_level).pow(2))
+                offset_losses.append(m["weight"] * delta_t.new_tensor(0.0))
+            elif args.scene_mode == "floor_normal":
+                normal_losses.append(m["weight"] * (1.0 - normal_dot.abs()))
+                offset_losses.append(m["weight"] * delta_t.new_tensor(0.0))
+            elif args.scene_mode == "none":
+                normal_losses.append(m["weight"] * delta_t.new_tensor(0.0))
+                offset_losses.append(m["weight"] * delta_t.new_tensor(0.0))
+            else:
+                normal_losses.append(m["weight"] * (1.0 - normal_dot.abs()))
+                offset_losses.append(m["weight"] * torch.minimum((d_corr - m["d_ref"]).pow(2), (d_corr + m["d_ref"]).pow(2)))
             dots.append(normal_dot.abs())
-        normal_loss = torch.stack(normal_losses).sum()
-        offset_loss = torch.stack(offset_losses).sum()
-        bg_corr = torch.einsum("ij,kj->ki", R_delta, cur_scene["bg"]) + delta_t[0]
-        bg_chamfer = robust_bg_chamfer(bg_corr, gauge_scene["bg"], args.bg_chamfer_cap)
+        normal_loss = torch.stack(normal_losses).sum() if normal_losses else delta_t.new_tensor(0.0)
+        offset_loss = torch.stack(offset_losses).sum() if offset_losses else delta_t.new_tensor(0.0)
+        if args.scene_mode == "full":
+            bg_corr = torch.einsum("ij,kj->ki", R_delta, cur_scene["bg"]) + delta_t[0]
+            bg_chamfer = robust_bg_chamfer(bg_corr, gauge_scene["bg"], args.bg_chamfer_cap)
+        else:
+            bg_chamfer = delta_t.new_tensor(0.0)
+        # **========== 结束 ==========**
         temporal_t_loss = (t_corr - prev_t).pow(2).mean()
         temporal_r_loss = rotation_temporal_loss(R_corr, prev_R)
         prior_loss = delta_t.pow(2).mean() + delta_r.pow(2).mean()
@@ -216,7 +376,7 @@ def optimize_target_frame(
                     "temporal_t_loss": float(temporal_t_loss.detach().cpu()),
                     "temporal_r_loss": float(temporal_r_loss.detach().cpu()),
                     "prior_loss": float(prior_loss.detach().cpu()),
-                    "mean_normal_dot_abs": float(torch.stack(dots).mean().detach().cpu()),
+                    "mean_normal_dot_abs": float(torch.stack(dots).mean().detach().cpu()) if dots else 0.0,
                     "delta_t_norm": float(delta_t.norm().detach().cpu()),
                     "delta_r_deg": float(torch.rad2deg(delta_r.norm()).detach().cpu()),
                 }
@@ -258,16 +418,34 @@ def main() -> None:
     torch.manual_seed(53)
     np.random.seed(53)
     device = torch.device(args.device)
-    num_frames = infer_num_frames(args.input_dir, args.source_video, args.num_frames)
+    # **========== 原始代码 ==========**
+    # num_frames = infer_num_frames(args.input_dir, args.source_video, args.num_frames)
+    # boundary = int(args.boundary)
+    # target_frames = list(range(boundary, min(num_frames, boundary + int(args.target_count))))
+    # stable_start = int(args.stable_start)
+    # stable_end = min(int(args.stable_end), num_frames - 1)
+
+    # **========== 新代码 ==========**
+    total_num_frames = infer_num_frames(args.input_dir, args.source_video, args.num_frames)
     boundary = int(args.boundary)
-    target_frames = list(range(boundary, min(num_frames, boundary + int(args.target_count))))
+    target_frames = list(range(boundary, min(total_num_frames, boundary + int(args.target_count))))
     stable_start = int(args.stable_start)
-    stable_end = min(int(args.stable_end), num_frames - 1)
+    stable_end = min(int(args.stable_end), total_num_frames - 1)
+    # **========== 结束 ==========**
     gauge_anchor = stable_start if args.gauge_anchor_frame is None else int(args.gauge_anchor_frame)
     if boundary <= 0 or stable_start <= target_frames[-1] or stable_end < stable_start:
         raise ValueError("Expected boundary targets before a valid future stable window")
 
-    data = load_sequence(args.input_dir, num_frames, device)
+    # **========== 原始代码 ==========**
+    # data = load_sequence(args.input_dir, num_frames, device)
+
+    # **========== 新代码 ==========**
+    subset_start_for_load = max(0, boundary - 1) if args.subset_start is None else int(args.subset_start)
+    subset_end_for_load = min(total_num_frames - 1, subset_start_for_load + int(args.subset_count) - 1)
+    load_num_frames = max(target_frames[-1], stable_end, gauge_anchor, subset_end_for_load, boundary) + 1
+    data = load_sequence(args.input_dir, load_num_frames, device)
+    num_frames = load_num_frames
+    # **========== 结束 ==========**
     corrected_poses = data.poses.copy()
     gauge_scene = build_scene(args.input_dir, gauge_anchor, data.poses[gauge_anchor], data.intrinsics[gauge_anchor], args, device, seed_base=7101)
     stable_scenes = []
@@ -312,6 +490,11 @@ def main() -> None:
         "stable_start": int(stable_start),
         "stable_end": int(stable_end),
         "gauge_anchor_frame": int(gauge_anchor),
+        "human_loss_scope": args.human_loss_scope,
+        "scene_mode": args.scene_mode,
+        "min_floor_up_dot": float(args.min_floor_up_dot),
+        "floor_region": args.floor_region,
+        "floor_bottom_start": float(args.floor_bottom_start),
         "gauge_scene": scene_summary(gauge_scene),
         "stable_scenes": [scene_summary(s) for s in stable_scenes],
         "frames": frame_debug,
