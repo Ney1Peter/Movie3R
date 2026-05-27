@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 def video_frame_count(path: Path) -> int:
@@ -274,7 +274,7 @@ def run_token_dump(case: SmokeCase, case_dir: Path, args: argparse.Namespace, re
         return
     cmd = [
         sys.executable,
-        str(repo_root / "scripts" / "dump_v7_implicit_tokens.py"),
+        str(repo_root / "scripts" / "archive_v7" / "dump_v7_implicit_tokens.py"),
         "--model_path",
         str((repo_root / args.model_path).resolve() if not args.model_path.is_absolute() else args.model_path.resolve()),
         "--seq_path",

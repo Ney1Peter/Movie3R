@@ -4,7 +4,7 @@
 
 Movie3R 是基于 Human3R 的扩展，针对**多镜头电影级人体重建**场景优化，主要研究**镜头跳变（shot change）**带来的时序不连续问题。
 
-当前项目已从 V2-V6 的 ShotToken / background AnchorToken 路线切换到 **V7 调研阶段**。近期测试显示，Human3R 的明显偏移主要出现在低纹理、弱背景特征、简单场景中；RICH / AvatarReX 等纹理丰富数据上原版 Human3R 通常较稳定。
+当前项目已从 V2-V7 的 ShotToken / background AnchorToken / 后处理式 correction 路线切换到 **V8 调研准备阶段**。近期测试显示，Human3R 的明显偏移主要出现在低纹理、弱背景特征、简单场景中；RICH / AvatarReX 等纹理丰富数据上原版 Human3R 通常较稳定。
 
 ## 关键文件
 
@@ -41,12 +41,13 @@ cd src
 
 ### 当前阶段
 
-V7 尚未确定新的模型结构。现有代码仍保留 V2-V6 历史实验路径，包括 ShotToken、LoRA、AnchorPoseAdapter、AnchorToken decoder 和 pose-token adapter 等实现，但这些不再代表当前主线。
+V8 尚未确定新的模型结构。现有代码仍保留 V2-V7 历史实验路径，包括 ShotToken、LoRA、AnchorPoseAdapter、AnchorToken decoder、pose-token adapter 和 V7 implicit pose adapter 等实现，但这些不再代表当前主线。
 
-V2-V6 历史文档见：
+V2-V7 历史文档见：
 
 ```text
 docs/movie3r/archive_v2_v6/
+docs/movie3r/archive_v7/
 ```
 
 ## 文档位置
@@ -55,7 +56,8 @@ docs/movie3r/archive_v2_v6/
 |------|------|
 | Movie3R 概览 | `docs/movie3r/README.md` |
 | 当前调研情况 | `docs/movie3r/current_research_context.md` |
-| V7 入口 | `docs/movie3r/v7/README.md` |
+| V8 入口 | `docs/movie3r/v8/README.md` |
+| V7 历史归档 | `docs/movie3r/archive_v7/README.md` |
 | V2-V6 历史归档 | `docs/movie3r/archive_v2_v6/README.md` |
 | 训练代码详解 | `docs/train_code_explanation.md` |
 | 待办事项 | `tasklist/TODO.md` |

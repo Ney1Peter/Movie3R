@@ -6,7 +6,8 @@
 |---|---|
 | [Movie3R 概览](movie3r/README.md) | 当前项目状态和文档入口 |
 | [当前调研情况](movie3r/current_research_context.md) | 低纹理 shot change 失败场景说明 |
-| [V7 入口](movie3r/v7/README.md) | V7 调研阶段说明 |
+| [V8 入口](movie3r/v8/README.md) | V8 调研阶段说明 |
+| [V7 历史归档](movie3r/archive_v7/README.md) | 后处理式 correction / implicit token adapter 历史记录 |
 | [V2-V6 历史归档](movie3r/archive_v2_v6/README.md) | ShotToken / AnchorToken 历史探索记录 |
 
 ## Human3R / 通用文档
@@ -29,5 +30,5 @@
 
 | 文档 | 内容 |
 |---|---|
-| [当前 TODO](../tasklist/TODO.md) | V7 阶段当前待办 |
+| [当前 TODO](../tasklist/TODO.md) | 当前阶段待办 |
 | [历史 TODO](../tasklist/archive/) | V2-V6 和更早工作记录 |

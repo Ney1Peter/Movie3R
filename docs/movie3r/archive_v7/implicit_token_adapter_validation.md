@@ -343,9 +343,9 @@ raw camera overlay: 只用于对比 camera，不显示 raw 点云 / raw 人体
 ## 8. 当前相关脚本
 
 ```text
-scripts/build_v7_h36m_pseudo_gt_smoke.py
+scripts/archive_v7/build_v7_h36m_pseudo_gt_smoke.py
 scripts/build_post_shot_local_gauge_teacher.py
-scripts/dump_v7_implicit_tokens.py
+scripts/archive_v7/dump_v7_implicit_tokens.py
 scripts/overfit_v7_implicit_token_student.py
 scripts/export_v7_implicit_student_viewer_output.py
 scripts/run_human3r_save_output.py

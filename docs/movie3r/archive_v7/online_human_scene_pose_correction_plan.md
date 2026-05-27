@@ -606,7 +606,7 @@ T_corr_t = exp(delta_xi_t) @ T_hat_t
 详细实验记录、指标和可视化结论见：
 
 ```text
-docs/movie3r/v7/human_scene_pose_correction_experiment_log.md
+docs/movie3r/archive_v7/human_scene_pose_correction_experiment_log.md
 ```
 
 V7 当前主线从 human-only correction 调整为：
@@ -939,7 +939,7 @@ bounded delta_xi_t: 有上限的 pose residual
 详细记录见：
 
 ```text
-docs/movie3r/v7/implicit_token_adapter_validation.md
+docs/movie3r/archive_v7/implicit_token_adapter_validation.md
 ```
 
 核心结果：

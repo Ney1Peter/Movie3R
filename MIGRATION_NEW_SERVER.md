@@ -129,11 +129,12 @@ git ls-files docs/movie3r/archive_v2_v6/anchor_token_report_v1/01_aabb_step1
 ```text
 docs/movie3r/README.md
 docs/movie3r/current_research_context.md
-docs/movie3r/v7/README.md
+docs/movie3r/v8/README.md
+docs/movie3r/archive_v7/README.md
 docs/movie3r/archive_v2_v6/README.md
 ```
 
-当前项目已经从 V2-V6 的 ShotToken / background AnchorToken 方向切换到 V7 调研阶段。历史 AnchorToken 上下文保存在：
+当前项目已经从 V2-V7 的 ShotToken / background AnchorToken / 后处理式 correction 方向切换到 V8 调研准备阶段。历史 AnchorToken 上下文保存在：
 
 ```text
 docs/movie3r/archive_v2_v6/ANCHOR_TOKEN_V6_CONTEXT.md

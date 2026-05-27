@@ -3,7 +3,7 @@
 本文只记录实验过程、现象和阶段性判断。V7 主计划仍见：
 
 ```text
-docs/movie3r/v7/online_human_scene_pose_correction_plan.md
+docs/movie3r/archive_v7/online_human_scene_pose_correction_plan.md
 ```
 
 ## 1. 当前结论
@@ -639,7 +639,7 @@ pre-boundary no-op delta norm: 0.025 on frame 90
 脚本：
 
 ```text
-scripts/dump_v7_implicit_tokens.py
+scripts/archive_v7/dump_v7_implicit_tokens.py
 scripts/overfit_v7_implicit_token_student.py
 scripts/export_v7_implicit_student_viewer_output.py
 ```
@@ -701,5 +701,5 @@ noop_delta_t: 0.00258
 详细表格、viewer 路径和下一步计划见：
 
 ```text
-docs/movie3r/v7/implicit_token_adapter_validation.md
+docs/movie3r/archive_v7/implicit_token_adapter_validation.md
 ```

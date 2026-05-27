@@ -241,7 +241,7 @@ def build_pseudo_labels(case: SmokeCase, case_dir: Path) -> dict:
 
 def main() -> None:
     args = parse_args()
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[2]
     selected = CASES if args.case == "all" else [case for case in CASES if case.name == args.case]
     output_root = (repo_root / args.output_root).resolve() if not args.output_root.is_absolute() else args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=True)

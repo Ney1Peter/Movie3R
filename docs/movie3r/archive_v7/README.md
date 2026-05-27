@@ -1,12 +1,12 @@
-# Movie3R V7
+# Movie3R V7 Archive
 
 ## 阶段定位
 
-V7 当前不是一个已经确定的模型方案，而是新的调研阶段。当前候选主线是 online human-scene pose correction：冻结或基本冻结 Human3R 主干，在每帧 forward 末端增加轻量 correction head，预测一个小的 SE(3) camera pose residual。
+V7 已归档。该阶段不是一个最终模型方案，而是围绕 online human-scene pose correction、offline teacher pseudo labels、implicit token adapter 的调研分支。
 
 V2-V6 的主要工作围绕 ShotToken、background feature anchor、AnchorToken 和 pose-only camera adapter 展开。近期测试表明，这些方向没有完全命中当前最重要的失败场景：低纹理、弱背景特征、简单场景中的 shot boundary 偏移。
 
-## 当前目标
+## 原阶段目标
 
 V7 当前先做四件事：
 
@@ -19,20 +19,24 @@ V7 当前先做四件事：
 
 2026-05-25 追加更新：MS-AIST `shot2` Stage-A 初轮跑了前 12 个候选，11 个完成 pipeline，质量门控接受 2 个。accepted labels 上 student overfit 仍通过，但 teacher pseudo label 可用率偏低；手动检查还确认候选中混有无明显跳变和多人样本，已补充 score filter 和 single-person filter。因此下一步应先扩大筛选或改进 teacher，再进入 20/5 held-out 训练。
 
-## 当前约束
+## 归档结论
+
+2026-05-27 更新：V7 不再作为当前主线推进。近期实验表明，后处理式 floor / human / scene correction 可以作为诊断工具，但在真实视频上容易受 SMPL 检测、floor/background 可靠性和参考帧选择影响，不适合作为下一阶段主方案。后续从 V8 重新定义问题和方法，不再沿用 V7 的后处理式改进路线。
+
+## 原阶段约束
 
 - 暂不继续把 V2-V6 作为主线扩展。
 - 暂不默认背景特征匹配一定可靠。
-- 暂不做 offline post-processing、chunk stitching、pose graph optimization 或 bundle adjustment。
+- 原计划暂不做 offline post-processing、chunk stitching、pose graph optimization 或 bundle adjustment；实际 V7 后续补充了若干 offline teacher / correction 诊断脚本，现一并归档。
 - 当前先整理文档、数据、现象和失败案例，再实现最小 correction head。
 
 ## 相关文档
 
 ```text
 docs/movie3r/current_research_context.md
-docs/movie3r/v7/online_human_scene_pose_correction_plan.md
-docs/movie3r/v7/human_scene_pose_correction_experiment_log.md
-docs/movie3r/v7/implicit_token_adapter_validation.md
+docs/movie3r/archive_v7/online_human_scene_pose_correction_plan.md
+docs/movie3r/archive_v7/human_scene_pose_correction_experiment_log.md
+docs/movie3r/archive_v7/implicit_token_adapter_validation.md
 docs/movie3r/archive_v2_v6/README.md
 tasklist/TODO.md
 ```
