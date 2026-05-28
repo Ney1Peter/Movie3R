@@ -1543,6 +1543,10 @@ class ARCroco3DStereo(CroCoNet):
                 mem = self.pose_retriever.mem.expand(feat_i.shape[0], -1, -1)
                 init_state_feat = state_feat.clone()
                 init_mem = mem.clone()
+                if ret_state:
+                    all_state_args.append(
+                        (state_feat, state_pos, init_state_feat, mem, init_mem)
+                    )
 
             if self.pose_head_flag:
                 global_img_feat_i = self._get_img_level_feat(feat_i)
@@ -1695,6 +1699,10 @@ class ARCroco3DStereo(CroCoNet):
                     1 - reset_mask
                 )
                 mem = init_mem * reset_mask + mem * (1 - reset_mask)
+            if ret_state:
+                all_state_args.append(
+                    (state_feat, state_pos, init_state_feat, mem, init_mem)
+                )
            
         if ret_state:
             return ress, views, all_state_args
@@ -1813,6 +1821,10 @@ class ARCroco3DStereo(CroCoNet):
                 mem = self.pose_retriever.mem.expand(feat_i.shape[0], -1, -1)
                 init_state_feat = state_feat.clone()
                 init_mem = mem.clone()
+                if ret_state:
+                    all_state_args.append(
+                        (state_feat, state_pos, init_state_feat, mem, init_mem)
+                    )
 
             if self.pose_head_flag:
                 global_img_feat_i = self._get_img_level_feat(feat_i)
@@ -1953,6 +1965,10 @@ class ARCroco3DStereo(CroCoNet):
                     1 - reset_mask
                 )
                 mem = init_mem * reset_mask + mem * (1 - reset_mask)
+            if ret_state:
+                all_state_args.append(
+                    (state_feat, state_pos, init_state_feat, mem, init_mem)
+                )
         if ret_state:
             return ress, views, all_state_args
         return ress, views
