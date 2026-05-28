@@ -270,8 +270,8 @@ def write_variant_output(
         json.dump(summary, f, indent=2, sort_keys=True)
 
 
-def plot_metrics(compare_root: Path, all_rows: list[dict], all_anchors: dict[str, np.ndarray]) -> None:
-    out_dir = compare_root / "online_human_motion_diagnostics"
+def plot_metrics(compare_root: Path, output_prefix: str, all_rows: list[dict], all_anchors: dict[str, np.ndarray]) -> Path:
+    out_dir = compare_root / f"{output_prefix}_diagnostics"
     out_dir.mkdir(parents=True, exist_ok=True)
     variants = sorted({row["variant"] for row in all_rows})
     labels = [row["label"] for row in all_rows if row["variant"] == variants[0]]
@@ -318,6 +318,7 @@ def plot_metrics(compare_root: Path, all_rows: list[dict], all_anchors: dict[str
     fig.tight_layout()
     fig.savefig(out_dir / "online_human_motion_anchor_trajectory_xz.png", dpi=180)
     plt.close(fig)
+    return out_dir
 
 
 def main() -> None:
@@ -348,11 +349,11 @@ def main() -> None:
         axis=0,
     )
     all_anchors["raw"] = raw_world_anchors
-    plot_metrics(args.compare_root, all_rows, all_anchors)
+    diagnostics_dir = plot_metrics(args.compare_root, args.output_prefix, all_rows, all_anchors)
 
     summary = {
         "outputs": outputs,
-        "diagnostics": str(args.compare_root / "online_human_motion_diagnostics"),
+        "diagnostics": str(diagnostics_dir),
         "history_mode": args.history_mode,
         "gate_low": args.gate_low,
         "gate_high": args.gate_high,
