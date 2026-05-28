@@ -500,3 +500,185 @@ pelvis / torso / left_foot / right_foot
 Scene/background should remain optional and weak until a more reliable cue is found.
 
 Near-foot floor normal is interesting, but in this case it is not stable enough on Human3R predicted depth to be a strong correction anchor.
+
+## 11. Recurrent Memory / Momentum / Gate Probe
+
+Added script:
+
+```text
+scripts/v8_1_probe_memory_momentum_gate.py
+```
+
+Run command used for the current AABB case:
+
+```bash
+export PYTHONPATH=src:. && export MPLCONFIGDIR=/tmp/matplotlib && CUDA_VISIBLE_DEVICES=7 \
+.venv/bin/python scripts/v8_1_probe_memory_momentum_gate.py \
+  --output_dir output/v8_1_memory_momentum_gate_probe \
+  --device cuda
+```
+
+Main outputs:
+
+```text
+output/v8_1_memory_momentum_gate_probe/anchor_overlays/
+output/v8_1_memory_momentum_gate_probe/state_memory_heatmaps/state_anchor_similarity_panel.png
+output/v8_1_memory_momentum_gate_probe/state_memory_heatmaps/memory_query_similarity_panel.png
+output/v8_1_memory_momentum_gate_probe/momentum_gate_curves/temporal_momentum_curves.png
+output/v8_1_memory_momentum_gate_probe/momentum_gate_curves/state_memory_curves.png
+output/v8_1_memory_momentum_gate_probe/momentum_gate_curves/gate_proxy_curves.png
+output/v8_1_memory_momentum_gate_probe/memory_momentum_gate_metrics.csv
+```
+
+The probe only uses token-accessible sources:
+
+- body anchor image tokens: pelvis, torso, left foot, right foot
+- Human3R predicted SMPL anchors from saved output
+- raw Human3R camera pose
+- recurrent `state_feat`, `state_pos`, and `mem` returned by `ret_state=True`
+- global image token projected through `pose_retriever.proj_q`
+
+It does not use GT camera pose, GT pointmap, background matching, or body anchors outside the four token-validated parts for the gate proxy.
+
+### 11.1 Ret-State Dump Sanity Check
+
+The lighter recurrent path now returns 5 state snapshots for 4 input frames:
+
+```text
+snapshot 0: initial state before frame 0
+snapshot 1: state after frame 0
+snapshot 2: state after frame 1
+snapshot 3: state after frame 2
+snapshot 4: state after frame 3
+```
+
+Observed shapes:
+
+```text
+state_feat: [768, 768]
+mem:        [256, 1536]
+image token grid: [32, 23]
+```
+
+This confirms recurrent memory can be dumped without changing the model architecture.
+
+### 11.2 Temporal Human Momentum Result
+
+The token-aligned human momentum cues are strongly useful on this case.
+
+At the A -> B boundary frame (`view2_B_t2_boundary`):
+
+```text
+raw camera center step:      1.132
+raw human anchor step mean:  0.633
+prev-human fit delta t:      4.382
+prev-human fit delta rot:    106.8 deg
+```
+
+On the normal A -> A step (`view1_A_t1`), the same cues are much smaller:
+
+```text
+raw camera center step:      0.009
+raw human anchor step mean:  0.038
+prev-human fit delta t:      0.201
+prev-human fit delta rot:    4.26 deg
+```
+
+This supports using explicit temporal human anchors as a first-class prompt source.
+
+Candidate token for V8:
+
+```text
+A_history_human =
+  pelvis/torso/left_foot/right_foot token at t
+  + previous corrected/world anchor positions
+  + previous support/human motion state
+```
+
+### 11.3 Recurrent Latent Memory Result
+
+The recurrent state is dumpable and can be visualized by comparing body anchor decoder tokens against `state_feat`.
+
+The state-anchor heatmaps are structured, so the state is not random noise. However, the current direct memory score:
+
+```text
+global image token -> LocalMemory key top-k cosine
+```
+
+is not yet a reliable gate by itself. It does not peak cleanly at the A -> B boundary; in this 4-frame case, the raw memory disagreement is also high at `view1_A_t1`.
+
+Interpretation:
+
+- `state_feat` may still be useful as a latent context token.
+- Direct cosine against `mem` keys is too crude.
+- If memory is used later, it should probably enter through a small adapter/cross-attention block, not as a hand-written scalar gate.
+
+Candidate token for V8:
+
+```text
+A_state =
+  cross-attention(query=body/pose tokens, key_value=state_feat or mem)
+```
+
+but not:
+
+```text
+gate = raw_cosine(global_img_token, mem_key)
+```
+
+### 11.4 Gate Proxy Result
+
+Two heuristic gates were plotted:
+
+```text
+token_aligned_gate_no_memory
+token_aligned_gate_with_memory
+```
+
+The no-memory gate is cleaner for this case:
+
+```text
+view0_A_t:             0.00
+view1_A_t1:            0.08
+view2_B_t2_boundary:   1.00
+view3_B_t3:            0.13
+```
+
+The with-memory gate is still high at the boundary, but it is less clean because the simple memory disagreement cue is noisy:
+
+```text
+view0_A_t:             0.00
+view1_A_t1:            0.27
+view2_B_t2_boundary:   0.83
+view3_B_t3:            0.11
+```
+
+Current conclusion:
+
+```text
+Use temporal human momentum + pose jump as the first gate baseline.
+Keep recurrent memory as an optional latent prompt, not as a scalar gate yet.
+```
+
+### 11.5 Updated Prompt Priority
+
+For the next pose-correction token ablation, prioritize:
+
+```text
+1. A_human_parts:
+   pelvis, torso, left foot, right foot tokens
+
+2. A_history_human:
+   previous token-aligned human anchor state and motion
+
+3. A_camera_motion:
+   raw camera relative pose, velocity, acceleration, jump score
+
+4. A_gate:
+   camera jump + human anchor jump + previous-human fit delta
+
+5. A_state_memory:
+   optional recurrent latent context through adapter attention
+```
+
+Do not prioritize background / near-foot floor normal / raw memory cosine for the first correction token.
