@@ -1,0 +1,223 @@
+# Movie3R V8.1 Plan: Token Extraction and Validation
+
+## 1. 目标
+
+V8.1 的目标不是马上训练 pose correction head，也不是马上把新 token concat 回 Human3R decoder。
+
+当前最重要的是验证两件事：
+
+1. 候选 pose correction token 是否能从 Human3R / CUT3R 的现有输出中正确提取出来；
+2. 这些候选 token 或它们对应的 proxy 指标，是否真的包含 camera pose drift / pose correction 所需的信息。
+
+因此，V8.1 应该先建立一个轻量的 token extraction + visualization + validation pipeline。只有当候选信号被证明有效之后，再决定最终 `A_corr_t` 应该由哪些 token 组成。
+
+## 2. 构造 Pose Correction 候选 Token Pool
+
+当前不提前固定最终的 `A_corr_t`。第一阶段先尽量多提取可能有用的候选信息，然后逐个验证。
+
+候选 token pool 可以包括：
+
+```text
+CandidatePool_t = {
+  camera_motion_token,
+  human_root_token,
+  body_orientation_token,
+  body_part_token,
+  support_contact_token,
+  near_human_scene_token,
+  near_foot_scene_token,
+  human_scene_geometry_token,
+  state_memory_token,
+  temporal_history_token,
+  reliability_token
+}
+```
+
+各类候选信息的作用：
+
+- `camera_motion_token`：来自 `T_raw_t`、`T_raw_{t-1}`、relative pose、translation / rotation jump，用来描述原始相机运动是否异常。
+- `human_root_token`：来自 pelvis / root 的 camera-frame 和 world-frame 位置，用来描述人体整体轨迹。
+- `body_orientation_token`：来自 torso、hip、shoulder 构成的人体朝向，用来观察人体方向在 world frame 中是否突然跳变。
+- `body_part_token`：来自 pelvis、torso、hip、shoulder、feet 等结构化人体点，也可以从这些点投影到 image token grid 后采样对应 token。
+- `support_contact_token`：来自 foot position、foot velocity、support foot state、foot sliding、foot-to-ground relation。它是重要候选，但不是唯一核心。
+- `near_human_scene_token`：来自 human mask 外扩区域或 human bbox 周围的静态背景，重点是以人为中心找局部场景。
+- `near_foot_scene_token`：来自脚附近的地面或局部支撑区域，用来观察 foot-scene relation。
+- `human_scene_geometry_token`：来自 pointmap / depth / confidence，显式计算 human-scene 3D 几何关系，例如 local plane、body-to-scene distance、local residual。
+- `state_memory_token`：来自 recurrent state 或 decoder 中间 token，用来观察历史场景记忆是否提供有用信息。
+- `temporal_history_token`：来自上一帧 raw pose、pelvis、feet、body orientation、support state、previous correction 等。
+- `reliability_token`：来自 pointmap confidence、human confidence、joint visibility、mask quality、near-scene confidence、pose jump score 等，用来判断当前 cue 是否可靠。
+
+这些候选 token 最后不一定都会进入最终 prompt。V8.1 的任务是先把它们 dump 出来，并验证哪些真的 work。
+
+## 3. 验证 Token 是否提取正确
+
+高维 token 不能直接可视化，但可以验证它的来源位置、相似性、跨帧一致性和对应的几何含义。
+
+### 3.1 图像位置验证
+
+对 image encoder token / decoder image token：
+
+1. 将 SMPL pelvis、torso、left foot、right foot 等 3D joints 投影回 RGB 图像；
+2. 根据投影位置找到对应 patch token；
+3. 在图像上画出采样 patch 区域；
+4. 检查这个 patch 是否真的落在目标身体部位或目标背景区域。
+
+需要重点检查：
+
+- pelvis token 是否落在人体中心附近；
+- torso / shoulder / hip token 是否落在对应身体区域；
+- left / right foot token 是否落在脚部或脚附近；
+- near-human scene token 是否在 human mask 外部；
+- near-foot scene token 是否覆盖脚下或脚旁边的局部场景；
+- human mask 是否成功排除了动态人体区域。
+
+### 3.2 Similarity Heatmap 验证
+
+对选中的高维 token，例如 foot token、pelvis token、near-scene token，可以和整张图的 image tokens 做 cosine similarity：
+
+```text
+selected token
+-> cosine similarity with all image tokens
+-> reshape to patch grid
+-> upsample to image size
+-> overlay heatmap on RGB
+```
+
+如果提取正确，期望看到：
+
+- foot token 的高相似区域集中在脚、鞋、脚下地面附近；
+- pelvis / torso token 的高相似区域集中在人体主体附近；
+- near-scene token 的高相似区域集中在人体周围背景，而不是人体内部；
+- shot switch 前后，同一类 token 的语义响应仍然合理。
+
+### 3.3 几何和区域验证
+
+对 pointmap / geometry 相关 token，需要检查：
+
+- local pointmap near human / near foot 是否有合理 3D 分布；
+- local ground / support plane 是否稳定；
+- foot-to-scene distance 是否数值合理；
+- body-to-scene residual 是否受 human mask 影响；
+- confidence map 是否能过滤低质量 pointmap 区域。
+
+### 3.4 State / Memory Token 验证
+
+state token 不一定有直接图像位置，因此先不要求解释每个 state token 的语义。
+
+可以先做弱验证：
+
+- 用 human / body-part query 和 state tokens 做 similarity，观察 top-k state token 是否跨帧稳定；
+- 比较 current-only token 与 current+state token 的 drift proxy 表现；
+- 观察 shot switch 附近 state similarity 是否出现异常变化；
+- 如果模型中能拿到 attention map，再检查 human / pose token 是否在异常帧读取了不同的 state 区域。
+
+V8.1 中 state token 的目标不是完全解释清楚，而是先判断它是否可能提供有用的历史场景记忆。
+
+## 4. 验证 Token 是否有助于 Pose Correction
+
+提取正确不代表一定能纠正 pose。第二步需要验证候选信号是否和 pose drift 相关。
+
+### 4.1 不训练 Head，先做 Proxy 曲线
+
+先计算每一帧的 proxy 指标：
+
+- raw camera translation jump；
+- raw camera rotation jump；
+- pelvis / root world jump；
+- pelvis / root world acceleration；
+- body orientation jump；
+- torso / pelvis trajectory jump；
+- left / right foot world jump；
+- foot sliding residual；
+- foot-to-ground distance；
+- near-human scene confidence；
+- near-foot geometry residual；
+- local plane residual；
+- pointmap confidence drop；
+- state similarity drop；
+- reliability / gate prior score。
+
+然后检查这些曲线在 shot switch 后第一帧是否出现明显异常。
+
+如果某个 proxy 在 drift 帧附近稳定升高，说明对应 token 可能包含 pose correction 信息。
+
+### 4.2 有 GT Pose 时的相关性验证
+
+如果有 ground-truth camera pose 或 teacher pose，可以计算：
+
+- camera translation error；
+- camera rotation error；
+- ATE / RTE；
+- corrected / raw pose relative error；
+- per-frame pose error curve。
+
+然后计算候选 proxy 与 pose error 的相关性，例如：
+
+```text
+foot_sliding_residual vs pose_error
+body_orientation_jump vs pose_error
+pelvis_world_acceleration vs pose_error
+local_geometry_residual vs pose_error
+state_similarity_drop vs pose_error
+confidence_drop vs pose_error
+```
+
+目标不是立刻得到完美预测器，而是找出哪些候选 token 和 pose error 最相关。
+
+### 4.3 没有 GT Pose 时的 Proxy 验证
+
+如果没有 GT pose，可以使用弱监督 proxy：
+
+- shot boundary 后第一帧是否有异常峰值；
+- support foot 是否突然在 world frame 大幅滑动；
+- pelvis / torso world trajectory 是否突然断裂；
+- body orientation 是否突然不合理跳变；
+- local scene geometry 是否和上一帧不一致；
+- pointmap / confidence 是否在失败帧变差。
+
+这些 proxy 不能完全替代 pose error，但可以帮助判断候选 token 是否值得继续使用。
+
+### 4.4 组合验证
+
+当单个候选 token 有初步信号后，再做简单组合验证：
+
+```text
+camera only
+camera + human root
+camera + body orientation
+camera + body parts
+camera + support contact
+camera + local scene
+camera + human-scene geometry
+camera + temporal history
+camera + state memory
+all candidates
+```
+
+第一阶段不需要直接输出 `delta_xi_t`。可以先训练或拟合一个很小的 `pose_error_score` probe：
+
+```text
+candidate tokens -> small MLP / linear probe -> pose_error_score
+```
+
+如果 `pose_error_score` 能在 drift 帧附近升高，说明这些 token 的组合确实有诊断 pose drift 的能力。
+
+之后再进入真正的 pose correction：
+
+```text
+A_corr_t -> delta_xi_t + gate_t
+T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
+```
+
+## 5. V8.1 成功标准
+
+V8.1 的成功标准不是最终修好 pose，而是完成以下验证：
+
+1. 能稳定 dump Human3R / CUT3R 的 raw pose、pointmap、confidence、SMPL joints / mesh、mask，以及可访问的 image / human / state tokens。
+2. pelvis、torso、feet、near-human scene、near-foot scene 的 token 来源位置能被可视化，并且和预期区域一致。
+3. similarity heatmap 能说明高维 token 的响应区域大致合理。
+4. local geometry、body orientation、foot/contact、state/history 等 proxy 指标能被逐帧计算。
+5. 在已知 drift / shot switch 位置，至少一部分候选 proxy 出现可解释异常。
+6. 能通过单 token 和组合 ablation 判断哪些候选信息最有用。
+
+只有当 V8.1 验证通过后，才进入下一阶段：确定最终 `A_corr_t` 的组成，并设计 lightweight pose correction head。
