@@ -91,7 +91,11 @@ def resolve_case(case: SmokeCase, repo_root: Path) -> SmokeCase:
 
 
 def run_teacher(case: SmokeCase, case_dir: Path, args: argparse.Namespace, repo_root: Path) -> None:
-    teacher_script = repo_root / "scripts" / "build_post_shot_local_gauge_teacher.py"
+    # **========== 原始代码：脚本归档前路径 ==========**
+    # teacher_script = repo_root / "scripts" / "build_post_shot_local_gauge_teacher.py"
+    # **========== 新代码：脚本已归档到 archive_v7 ==========**
+    teacher_script = repo_root / "scripts" / "archive_v7" / "build_post_shot_local_gauge_teacher.py"
+    # **========== 结束 ==========**
     corrected_dir = case_dir / "teacher_corrected"
     subset_dir = case_dir / "teacher_subset"
     raw_subset_dir = case_dir / "raw_subset"

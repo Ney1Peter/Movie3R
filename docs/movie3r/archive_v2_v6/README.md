@@ -25,6 +25,12 @@
 | `ANCHOR_TOKEN_V6_CONTEXT.md` | V6 AnchorToken handoff 上下文 |
 | `anchor_token_report_v1/` | AnchorToken V6 图文报告和可视化材料 |
 
+相关历史脚本已归档到：
+
+```text
+scripts/archive_v2_v6/
+```
+
 ## 使用方式
 
 这些文档用于追溯和复盘，不应再被理解为当前主线设计。当前调研状态见：

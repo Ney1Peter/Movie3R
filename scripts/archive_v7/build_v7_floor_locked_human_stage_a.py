@@ -71,7 +71,11 @@ def run_command(cmd: list[str], cwd: Path) -> None:
 def run_floor_normal_estimation(repo: Path, raw_dir: Path, normals_json: Path, frames_for_floor: list[int]) -> None:
     base_cmd = [
         sys.executable,
-        repo / "scripts" / "estimate_saved_output_floor_normals.py",
+        # **========== 原始代码：脚本归档前路径 ==========**
+        # repo / "scripts" / "estimate_saved_output_floor_normals.py",
+        # **========== 新代码：脚本已归档到 archive_v7 ==========**
+        repo / "scripts" / "archive_v7" / "estimate_saved_output_floor_normals.py",
+        # **========== 结束 ==========**
         "--output_dir",
         raw_dir,
         "--json_out",
@@ -309,7 +313,11 @@ def process_case(case: dict, args: argparse.Namespace, root: Path, repo: Path) -
     run_command(
         [
             sys.executable,
-            repo / "scripts" / "align_saved_output_floor_normals.py",
+            # **========== 原始代码：脚本归档前路径 ==========**
+            # repo / "scripts" / "align_saved_output_floor_normals.py",
+            # **========== 新代码：脚本已归档到 archive_v7 ==========**
+            repo / "scripts" / "archive_v7" / "align_saved_output_floor_normals.py",
+            # **========== 结束 ==========**
             "--input_dir",
             raw_dir,
             "--output_dir",
@@ -327,7 +335,11 @@ def process_case(case: dict, args: argparse.Namespace, root: Path, repo: Path) -
     run_command(
         [
             sys.executable,
-            repo / "scripts" / "align_saved_output_floor_human.py",
+            # **========== 原始代码：脚本归档前路径 ==========**
+            # repo / "scripts" / "align_saved_output_floor_human.py",
+            # **========== 新代码：脚本已归档到 archive_v7 ==========**
+            repo / "scripts" / "archive_v7" / "align_saved_output_floor_human.py",
+            # **========== 结束 ==========**
             "--input_dir",
             leveled_dir,
             "--output_dir",
