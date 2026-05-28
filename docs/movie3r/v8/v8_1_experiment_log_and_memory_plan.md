@@ -682,3 +682,170 @@ For the next pose-correction token ablation, prioritize:
 ```
 
 Do not prioritize background / near-foot floor normal / raw memory cosine for the first correction token.
+
+## 12. Online Human-Motion Correction Baseline
+
+Added script:
+
+```text
+scripts/v8_1_build_online_human_motion_correction.py
+```
+
+Run command used:
+
+```bash
+export PYTHONPATH=src:. && export MPLCONFIGDIR=/tmp/matplotlib && \
+.venv/bin/python scripts/v8_1_build_online_human_motion_correction.py --device cpu
+```
+
+Viewer command used for the gated output:
+
+```bash
+export PYTHONPATH=src:. && export MPLCONFIGDIR=/tmp/matplotlib && \
+.venv/bin/python scripts/view_human3r_saved_output.py \
+  --output_dir output/v8_1_human3r_aabb_compare/online_human_motion_gated \
+  --raw_output_dir output/v8_1_human3r_aabb_compare/raw \
+  --viewer_port 8096 \
+  --device cpu \
+  --vis_threshold 2 \
+  --downsample_factor 1 \
+  --smpl_downsample 1 \
+  --camera_downsample 1
+```
+
+Open:
+
+```text
+http://127.0.0.1:8096
+```
+
+### 12.1 What This Baseline Tests
+
+This is the missing online validation step.
+
+Previous `token_aligned_human_only` showed:
+
+```text
+If four token-aligned body anchors are aligned to the correct human trajectory,
+camera pose can be pulled back.
+```
+
+But that target trajectory was effectively an oracle, because it came from AvatarReX GT SMPL world anchors.
+
+The new online baseline removes that oracle.  It only uses:
+
+- current Human3R predicted SMPL camera-space anchors
+- previous corrected world anchors
+- raw Human3R camera pose for the residual/gate
+
+It does not use:
+
+- GT camera pose
+- GT SMPL world trajectory
+- future frames
+- background matching
+- body anchors outside pelvis / torso / left foot / right foot
+
+### 12.2 Online Algorithm
+
+For frame 0:
+
+```text
+T_corr_0 = T_raw_0
+save corrected world anchors:
+  pelvis_0, torso_0, left_foot_0, right_foot_0
+```
+
+For each later frame:
+
+```text
+current anchors in camera frame:
+  pelvis_cam_t, torso_cam_t, left_foot_cam_t, right_foot_cam_t
+
+history target:
+  previous corrected world anchors
+
+fit a rigid camera pose:
+  T_fit_t @ current_anchors_cam_t
+  ~= previous_corrected_anchors_world
+```
+
+Two variants are written:
+
+```text
+online_human_motion_always:
+  gate = 1 for every frame after frame 0
+
+online_human_motion_gated:
+  gate = clip((raw_anchor_history_rmse - 0.08) / (0.35 - 0.08), 0, 1)
+```
+
+The gated version is closer to the intended V8 plugin because normal frames should not be over-corrected.
+
+### 12.3 Outputs
+
+Saved-output directories:
+
+```text
+output/v8_1_human3r_aabb_compare/online_human_motion_always/
+output/v8_1_human3r_aabb_compare/online_human_motion_gated/
+```
+
+Diagnostics:
+
+```text
+output/v8_1_human3r_aabb_compare/online_human_motion_diagnostics/online_human_motion_metrics.png
+output/v8_1_human3r_aabb_compare/online_human_motion_diagnostics/online_human_motion_anchor_trajectory_xz.png
+output/v8_1_human3r_aabb_compare/online_human_motion_summary.json
+```
+
+### 12.4 Result
+
+The gated online version behaves as intended on the current AABB case:
+
+```text
+view0_A_t:
+  gate = 0
+
+view1_A_t1:
+  raw history anchor RMSE = 0.040
+  gate = 0
+  no correction
+
+view2_B_t2_boundary:
+  raw history anchor RMSE = 0.637
+  gate = 1
+  corrected history anchor RMSE = 0.019
+
+view3_B_t3:
+  raw history anchor RMSE = 0.426
+  gate = 1
+  corrected history anchor RMSE = 0.029
+```
+
+This means the token-aligned human history cue does not merely detect drift; it can explicitly pull the pose back in a causal setting.
+
+### 12.5 Updated Interpretation
+
+The strongest validated V8 cue is now:
+
+```text
+pelvis / torso / left_foot / right_foot current tokens
++ previous corrected human-anchor memory
++ raw camera jump / anchor history residual gate
+```
+
+In prompt-token language:
+
+```text
+A_body_part_t:
+  current pelvis, torso, left foot, right foot tokens
+
+A_history_human_t:
+  previous corrected world anchors or their embedded history state
+
+A_gate_t:
+  raw pose jump + current-vs-history human anchor residual
+```
+
+This is stronger and more interpretable than the current recurrent-memory cosine probe.
