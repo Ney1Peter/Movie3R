@@ -849,3 +849,38 @@ A_gate_t:
 ```
 
 This is stronger and more interpretable than the current recurrent-memory cosine probe.
+
+### 12.6 Additional Constant-Velocity History Run
+
+Also ran:
+
+```bash
+export PYTHONPATH=src:. && export MPLCONFIGDIR=/tmp/matplotlib && \
+.venv/bin/python scripts/v8_1_build_online_human_motion_correction.py \
+  --device cpu \
+  --history_mode constant_velocity \
+  --output_prefix online_human_motion_cv
+```
+
+Outputs:
+
+```text
+output/v8_1_human3r_aabb_compare/online_human_motion_cv_always/
+output/v8_1_human3r_aabb_compare/online_human_motion_cv_gated/
+output/v8_1_human3r_aabb_compare/online_human_motion_cv_diagnostics/
+output/v8_1_human3r_aabb_compare/online_human_motion_cv_summary.json
+```
+
+The constant-velocity version is a useful control, but on this 4-frame AABB case it is not clearly better than the simpler previous-anchor target.  The default recommendation remains:
+
+```text
+history_mode = previous
+variant = gated
+```
+
+Reason:
+
+- `previous + gated` does not correct the normal A -> A step.
+- It strongly corrects A -> B.
+- It also keeps B -> B close to the corrected human-anchor history.
+- The method is simpler and less sensitive to short-term human articulation noise.
