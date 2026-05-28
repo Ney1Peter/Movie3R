@@ -6,6 +6,8 @@ Movie3R 是基于 Human3R 的扩展，针对**多镜头电影级人体重建**�
 
 当前项目已从 V2-V7 的 ShotToken / background AnchorToken / 后处理式 correction 路线切换到 **V8 调研准备阶段**。近期测试显示，Human3R 的明显偏移主要出现在低纹理、弱背景特征、简单场景中；RICH / AvatarReX 等纹理丰富数据上原版 Human3R 通常较稳定。
 
+新对话或新 agent 应优先阅读：`docs/movie3r/v8/START_HERE.md`。
+
 ## 关键文件
 
 | 文件 | 用途 |
@@ -55,6 +57,7 @@ docs/movie3r/archive_v7/
 | 文档 | 路径 |
 |------|------|
 | Movie3R 概览 | `docs/movie3r/README.md` |
+| V8 新对话入口 | `docs/movie3r/v8/START_HERE.md` |
 | 当前调研情况 | `docs/movie3r/current_research_context.md` |
 | V8 入口 | `docs/movie3r/v8/README.md` |
 | V7 历史归档 | `docs/movie3r/archive_v7/README.md` |

@@ -5,6 +5,7 @@
 | 文档 | 内容 |
 |---|---|
 | [Movie3R 概览](movie3r/README.md) | 当前项目状态和文档入口 |
+| [V8 新对话入口](movie3r/v8/START_HERE.md) | 背景动机、V2-V7 速览、失败原因和 V8 起点 |
 | [当前调研情况](movie3r/current_research_context.md) | 低纹理 shot change 失败场景说明 |
 | [V8 入口](movie3r/v8/README.md) | V8 调研阶段说明 |
 | [V7 历史归档](movie3r/archive_v7/README.md) | 后处理式 correction / implicit token adapter 历史记录 |

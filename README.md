@@ -12,6 +12,7 @@ Movie3R 是基于 Human3R 的多镜头人体重建研究项目。当前项目已
 
 ```text
 docs/movie3r/current_research_context.md
+docs/movie3r/v8/START_HERE.md
 docs/movie3r/v8/README.md
 ```
 
@@ -71,6 +72,7 @@ Movie3R/
 
 | 文档 | 内容 |
 |---|---|
+| `docs/movie3r/v8/START_HERE.md` | 新对话优先阅读：背景动机、V2-V7 速览、失败原因和 V8 起点 |
 | `docs/movie3r/current_research_context.md` | 当前低纹理 shot change 调研结论 |
 | `docs/movie3r/v8/README.md` | V8 调研阶段入口 |
 | `docs/movie3r/archive_v7/README.md` | V7 历史归档说明 |

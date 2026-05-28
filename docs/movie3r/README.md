@@ -12,6 +12,7 @@ Movie3R 当前准备进入 **V8 调研阶段**。V7 的后处理式 correction /
 
 | 文档 | 内容 |
 |---|---|
+| [V8 新对话入口](v8/START_HERE.md) | 背景动机、V2-V7 速览、失败原因和 V8 起点 |
 | [当前调研情况](current_research_context.md) | 低纹理 shot change 失败场景和方向边界 |
 | [V8 入口](v8/README.md) | V8 调研阶段说明 |
 | [V7 历史归档](archive_v7/README.md) | V7 后处理式 correction / implicit token adapter 记录 |
