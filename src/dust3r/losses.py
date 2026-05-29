@@ -1816,6 +1816,167 @@ class V7PosePseudoLoss(MultiLoss):
         return total, details
 
 
+class V81PosePromptLoss(MultiLoss):
+    """Supervise the V8.1 decoder-in pose prompt from GT camera poses.
+
+    The model branch predicts a corrected pose by replacing the decoder pose
+    token before the original pose head. This criterion therefore supervises
+    pred["camera_pose"] directly, and uses V8 auxiliary outputs only as light
+    regularizers/debug metrics.
+    """
+
+    def __init__(
+        self,
+        translation_weight=1.0,
+        rotation_weight=1.0,
+        latent_weight=0.01,
+        gate_weight=0.0,
+        loss_type="smooth_l1",
+    ):
+        super().__init__()
+        self.translation_weight = float(translation_weight)
+        self.rotation_weight = float(rotation_weight)
+        self.latent_weight = float(latent_weight)
+        self.gate_weight = float(gate_weight)
+        self.loss_type = str(loss_type)
+
+    def get_name(self):
+        return "V81PosePromptLoss"
+
+    def _first_tensor(self, gts, preds):
+        for seq in (preds, gts):
+            for item in seq:
+                for value in item.values():
+                    if torch.is_tensor(value):
+                        return value
+        return None
+
+    def _component_loss(self, pred, target):
+        if self.loss_type == "l1":
+            return (pred - target).abs().mean(dim=-1)
+        if self.loss_type == "mse":
+            return (pred - target).pow(2).mean(dim=-1)
+        return F.smooth_l1_loss(pred, target, reduction="none").mean(dim=-1)
+
+    def _quat_angle(self, pred_quat, gt_quat, eps=1e-7):
+        pred_quat = F.normalize(pred_quat, dim=-1, eps=eps)
+        gt_quat = F.normalize(gt_quat, dim=-1, eps=eps)
+        dot = (pred_quat * gt_quat).sum(dim=-1).abs().clamp(max=1.0 - eps)
+        return 2.0 * torch.acos(dot)
+
+    def _gt_pose_encodings(self, gts):
+        in_camera0 = inv(gts[0]["camera_pose"])
+        return [
+            camera_to_pose_encoding(in_camera0 @ gt["camera_pose"]).clone()
+            for gt in gts
+        ]
+
+    def _pose_errors(self, pred_pose, gt_pose):
+        pred_t, pred_q = pred_pose[:, :3], pred_pose[:, 3:]
+        gt_t, gt_q = gt_pose[:, :3], gt_pose[:, 3:]
+        trans_err = torch.linalg.norm(pred_t - gt_t, dim=-1)
+        rot_err = self._quat_angle(pred_q, gt_q)
+        return trans_err, rot_err
+
+    def _pose_loss(self, pred_pose, gt_pose):
+        pred_t, pred_q = pred_pose[:, :3], pred_pose[:, 3:]
+        gt_t, gt_q = gt_pose[:, :3], gt_pose[:, 3:]
+        t_loss = self._component_loss(pred_t, gt_t)
+        r_loss = self._quat_angle(pred_q, gt_q)
+        return self.translation_weight * t_loss + self.rotation_weight * r_loss
+
+    def compute_loss(self, gts, preds, **kw):
+        ref = self._first_tensor(gts, preds)
+        if ref is None:
+            return torch.zeros(()), {}
+        zero = ref.float().new_zeros(())
+        gt_poses = self._gt_pose_encodings(gts)
+
+        total = zero
+        details = {}
+        pose_losses = []
+        trans_errs = []
+        rot_errs = []
+        raw_trans_errs = []
+        raw_rot_errs = []
+        gate_values = []
+        delta_norms = []
+        latent_terms = []
+        gate_terms = []
+
+        for view_idx, (gt_pose, gt, pred) in enumerate(zip(gt_poses, gts, preds)):
+            pred_pose = pred.get("camera_pose", None)
+            if pred_pose is None:
+                continue
+            pred_pose = pred_pose.float()
+            gt_pose = gt_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
+            pose_loss = self._pose_loss(pred_pose, gt_pose)
+            pose_losses.append(pose_loss.mean())
+
+            trans_err, rot_err = self._pose_errors(pred_pose.detach(), gt_pose.detach())
+            trans_errs.append(trans_err.mean())
+            rot_errs.append(rot_err.mean())
+            details[f"v8_pose_prompt_trans_err/{view_idx}"] = float(trans_err.mean())
+            details[f"v8_pose_prompt_rot_err_deg/{view_idx}"] = float(torch.rad2deg(rot_err.mean()))
+
+            raw_pose = pred.get("v8_raw_camera_pose", None)
+            if raw_pose is not None:
+                raw_pose = raw_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
+                raw_t_err, raw_r_err = self._pose_errors(raw_pose.detach(), gt_pose.detach())
+                raw_trans_errs.append(raw_t_err.mean())
+                raw_rot_errs.append(raw_r_err.mean())
+                details[f"v8_raw_trans_err/{view_idx}"] = float(raw_t_err.mean())
+                details[f"v8_raw_rot_err_deg/{view_idx}"] = float(torch.rad2deg(raw_r_err.mean()))
+
+            delta_raw = pred.get("v8_pose_prompt_delta_raw", None)
+            if delta_raw is not None:
+                delta_term = delta_raw.float().pow(2).mean()
+                latent_terms.append(delta_term)
+                delta_norm = delta_raw.detach().float().norm(dim=-1).mean()
+                delta_norms.append(delta_norm)
+                details[f"v8_delta_norm/{view_idx}"] = float(delta_norm)
+
+            gate = pred.get("v8_pose_prompt_gate", None)
+            if gate is not None:
+                gate = gate.float()
+                gate_values.append(gate.detach().mean())
+                details[f"v8_gate/{view_idx}"] = float(gate.detach().mean())
+                if self.gate_weight > 0 and "shot_label" in gt:
+                    target = gt["shot_label"]
+                    if not torch.is_tensor(target):
+                        target = torch.as_tensor(target, device=gate.device)
+                    target = target.to(device=gate.device, dtype=gate.dtype).reshape(gate.shape[0], 1, 1)
+                    gate_terms.append(F.binary_cross_entropy(gate.clamp(1e-4, 1.0 - 1e-4), target))
+
+        if pose_losses:
+            pose_loss = torch.stack(pose_losses).mean()
+            total = total + pose_loss
+            details["v8_pose_prompt_pose_loss"] = float(pose_loss.detach())
+        if latent_terms and self.latent_weight > 0:
+            latent_loss = torch.stack(latent_terms).mean()
+            total = total + self.latent_weight * latent_loss
+            details["v8_pose_prompt_latent_loss"] = float(latent_loss.detach())
+            details["v8_pose_prompt_latent_loss_weighted"] = float((self.latent_weight * latent_loss).detach())
+        if gate_terms and self.gate_weight > 0:
+            gate_loss = torch.stack(gate_terms).mean()
+            total = total + self.gate_weight * gate_loss
+            details["v8_pose_prompt_gate_loss"] = float(gate_loss.detach())
+            details["v8_pose_prompt_gate_loss_weighted"] = float((self.gate_weight * gate_loss).detach())
+
+        if trans_errs:
+            details["v8_pose_prompt_trans_err"] = float(torch.stack(trans_errs).mean())
+            details["v8_pose_prompt_rot_err_deg"] = float(torch.rad2deg(torch.stack(rot_errs).mean()))
+        if raw_trans_errs:
+            details["v8_raw_trans_err"] = float(torch.stack(raw_trans_errs).mean())
+            details["v8_raw_rot_err_deg"] = float(torch.rad2deg(torch.stack(raw_rot_errs).mean()))
+        if gate_values:
+            details["v8_pose_prompt_gate_mean"] = float(torch.stack(gate_values).mean())
+        if delta_norms:
+            details["v8_pose_prompt_delta_norm"] = float(torch.stack(delta_norms).mean())
+        details["v8_pose_prompt_loss"] = float(total.detach())
+        return total, details
+
+
 class ConfLoss(MultiLoss):
     """Weighted regression by learned confidence.
         Assuming the input pixel_loss is a pixel-level regression loss.
