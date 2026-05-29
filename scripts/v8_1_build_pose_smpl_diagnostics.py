@@ -95,36 +95,33 @@ def rotation_error_deg(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.degrees(angle))
 
 
-def load_raw_avatarrex_gt(args: argparse.Namespace) -> tuple[dict, np.lib.npyio.NpzFile]:
-    calibration_path = args.avatarrex_raw_root / "calibration_full.json"
+def load_raw_avatarrex_gt(args: argparse.Namespace) -> np.lib.npyio.NpzFile:
     smpl_path = args.avatarrex_raw_root / "smpl_params.npz"
-    if not calibration_path.is_file():
-        raise FileNotFoundError(calibration_path)
     if not smpl_path.is_file():
         raise FileNotFoundError(smpl_path)
-    with open(calibration_path, "r", encoding="utf-8") as f:
-        calibration = json.load(f)
-    return calibration, np.load(smpl_path)
+    return np.load(smpl_path)
 
 
 def build_gt_smpl_npzs(args: argparse.Namespace, ref_output_dir: Path) -> list[dict[str, np.ndarray]]:
     """Write GT SMPL in the same head-centered camera-space format as demo.py.
 
-    The AvatarReX_output camera pose is a local c2w used by Human3R/CUT3R, but
-    the SMPL parameters originate from the raw AvatarReX world.  The incorrect
-    first diagnostic version inverted the local c2w to recover SMPL camera
-    coordinates.  That makes the body lie sideways in the viewer.
+    The AvatarReX_output camera pose is a local c2w used by Human3R/CUT3R, and
+    the raw AvatarReX SMPL parameters are in the original actor/world frame.
+    The viewer reconstructs SMPL in camera coordinates and then multiplies by
+    the saved c2w pose, so GT SMPL must be written in the inverse of the same
+    per-frame AvatarReX_output camera pose.
 
     Correct conversion:
-      raw SMPL world --raw calibration R/T--> image camera coordinates
-      root_cam = R_calib @ root_world
-      transl   = head joint in image camera coordinates
+      raw SMPL world --inv(AvatarReX_output c2w)--> viewer camera coordinates
+      root_cam = R_c2w.T @ root_world
+      transl   = R_c2w.T @ (head_world - t_c2w)
 
     This matches SMPL_Layer(person_center="head"), which is what the saved
     Human3R viewer path uses.
     """
-    calibration, smpl_data = load_raw_avatarrex_gt(args)
+    smpl_data = load_raw_avatarrex_gt(args)
     specs = avatarrex_specs(args.seq_a, args.seq_b, int(args.start_frame))
+    gt_poses = load_gt_cameras(args.avatarrex_root, args.split, specs)
     device = torch.device(args.device if args.device == "cuda" and torch.cuda.is_available() else "cpu")
     raw_smplx = smplx.create(
         SMPLX_DIR,
@@ -139,11 +136,9 @@ def build_gt_smpl_npzs(args: argparse.Namespace, ref_output_dir: Path) -> list[d
     gt_smpls = []
     with torch.no_grad():
         for i, (seq, frame) in enumerate(specs):
-            if seq not in calibration:
-                raise KeyError(f"{seq} not found in {args.avatarrex_raw_root / 'calibration_full.json'}")
-            cal = calibration[seq]
-            R_calib = torch.tensor(np.asarray(cal["R"], dtype=np.float32).reshape(3, 3), device=device)
-            T_calib = torch.tensor(np.asarray(cal["T"], dtype=np.float32).reshape(3), device=device)
+            gt_pose = torch.tensor(gt_poses[i], dtype=torch.float32, device=device)
+            R_c2w = gt_pose[:3, :3]
+            t_c2w = gt_pose[:3, 3]
 
             root_world = torch.tensor(smpl_data["global_orient"][frame], dtype=torch.float32, device=device).reshape(1, 3)
             body = torch.tensor(smpl_data["body_pose"][frame], dtype=torch.float32, device=device).reshape(1, 21, 3)
@@ -166,10 +161,11 @@ def build_gt_smpl_npzs(args: argparse.Namespace, ref_output_dir: Path) -> list[d
                 transl=transl_world,
                 expression=expr,
             )
-            joints_cam = world_out.joints @ R_calib.T + T_calib.reshape(1, 1, 3)
+            joints_world = world_out.joints
+            joints_cam = (joints_world - t_c2w.reshape(1, 1, 3)) @ R_c2w
             head_cam = joints_cam[:, head_idx].detach().cpu().numpy().astype(np.float32)
 
-            root_cam_mat = R_calib @ roma.rotvec_to_rotmat(root_world)[0]
+            root_cam_mat = R_c2w.T @ roma.rotvec_to_rotmat(root_world)[0]
             root_cam = roma.rotmat_to_rotvec(root_cam_mat).reshape(1, 1, 3)
             rotvec = torch.cat([root_cam, body, left_hand, right_hand, jaw], dim=1)
 
