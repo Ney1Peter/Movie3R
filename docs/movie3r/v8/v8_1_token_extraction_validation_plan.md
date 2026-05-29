@@ -49,6 +49,45 @@ CandidatePool_t = {
 
 这些候选 token 最后不一定都会进入最终 prompt。V8.1 的任务是先把它们 dump 出来，并验证哪些真的 work。
 
+### 2.1 V8.1 当前最小 Pose Correction Token
+
+当前 V8.1 先不使用所有候选信息，而是先测试一个最小可行版本：
+
+```text
+A_corr_t =
+  A_body_part_t
+  + A_history_human_t
+  + A_camera_motion_t
+  + A_reliability_gate_t
+```
+
+直观拆解如下：
+
+| 组成 | 具体内容 | 显式/隐式 | 作用 |
+|---|---|---|---|
+| `A_body_part_t` | 当前帧 pelvis、torso、left foot、right foot 对应的人体 token | 隐式 token | 提供当前人体结构锚点 |
+| `A_history_human_t` | 上一帧 corrected human anchors / previous body-part state | 显式历史缓存，后续可替换为隐式 memory token | 提供历史参照，判断当前人体是否在 world frame 中突然跳走 |
+| `A_camera_motion_t` | 当前 raw pose 和上一帧 raw/corrected pose 的相对运动、translation jump、rotation jump | 显式 pose motion feature，经过 MLP token 化 | 判断相机运动是否异常 |
+| `A_reliability_gate_t` | human score、body-part token confidence、anchor residual、pose jump score | 显式/隐式混合，经过 MLP token 化 | 决定当前 correction 是否应该强触发 |
+
+其中真正的当前帧人体语义部分是隐式的：
+
+```text
+pelvis token
+torso token
+left foot token
+right foot token
+```
+
+但 `A_corr_t` 整体不是全隐式，因为它还会融合历史 corrected anchors、raw pose jump、gate score 这些显式或半显式信息。它们的用法和 UniCon3R 的 `G_t` 类似：先用数值形式计算，再通过 MLP 映射到 token 维度，最后和人体 token 融合。
+
+V8.1 的核心验证问题是：
+
+```text
+在显式 human-only correction 已经成立的前提下，
+能否用这些 token / tokenized features 拟合同样的 pose correction？
+```
+
 ## 3. 验证 Token 是否提取正确
 
 高维 token 不能直接可视化，但可以验证它的来源位置、相似性、跨帧一致性和对应的几何含义。
