@@ -47,7 +47,7 @@ video frame
   -> scene + camera pose + human reconstruction
 ```
 
-UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token。
+UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token，并且用它预测一个 correction offset，反过来修正 human latent / human reconstruction。
 
 ```text
 video frame
@@ -60,11 +60,31 @@ human token + local scene token + geometry cue + history memory
 image / camera / human tokens + [新增] contact token + recurrent state
   -> decoder
   -> image / camera / human / pose tokens + [新增] refined contact token
-  -> heads / correction branch
-  -> scene + camera pose + contact-aware human reconstruction
+
+[新增] refined contact token + human token
+  -> contact-guided correction head
+  -> 预测 human correction offset / residual
+  -> 应用回 human latent / human prediction
+
+corrected human token / corrected human latent
+  -> human head
+  -> contact-aware human reconstruction
+
+image / pose tokens
+  -> scene / camera heads
+  -> scene + camera pose
 ```
 
 也就是说，UniCon3R 不是完全重做一个模型，而是在 Human3R 这种 foundation backbone 上加一个轻量的 contact-guided correction 分支。
+
+更重要的是，contact token 不是只作为一个额外监督目标输出出来，而是会参与后续修正：
+
+```text
+contact token
+  -> 预测 correction residual
+  -> residual 应用到 human latent / human prediction
+  -> 输出更合理的 human reconstruction
+```
 
 它的核心思想是：
 
