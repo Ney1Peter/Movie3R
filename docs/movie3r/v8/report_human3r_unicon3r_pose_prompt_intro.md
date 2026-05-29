@@ -32,7 +32,48 @@ Human3R 每来一帧，
 
 当前问题是：当输入视频中发生镜头切换时，虽然场景和时间仍然连续，但 Human3R 可能把切换后的相机 pose 预测到错误位置，导致前后帧的人和场景在同一个 world 里对不上。
 
-## 2. UniCon3R 在 Human3R 基础上的改法
+## 2. Human3R Decoder 前后可用的信息
+
+设计 pose correction token 时，必须先分清楚哪些信息在当前帧 decoder 前能拿到，哪些信息必须等当前帧 decoder/head 输出后才有。
+
+一个容易混淆的点是：**当前帧 pointmap 不是 encoder 后直接生成的**。encoder 只输出 image tokens；当前帧 pointmap / confidence / camera pose / SMPL 参数都要经过 decoder 和对应 head 后才输出。但是在线模型可以使用上一帧已经输出过的结果，例如上一帧 pointmap、上一帧人体、上一帧 corrected pose，因为这些不破坏 causal / streaming 设置。
+
+| 信息 | 当前帧 decoder 前能不能拿 | 类型 | 是否适合做 pose correction token |
+|---|---:|---|---|
+| 当前 image tokens | 能 | 隐式 token | 适合，表示当前帧视觉上下文 |
+| 当前 human token / smpl query | 能 | 隐式 token | 很重要，表示当前检测到的人 |
+| 当前 human detection score / location | 能 | 显式/半显式 | 适合，做人体 anchor 和可靠性判断 |
+| 当前 pose token | 能 | 隐式 token | 适合，代表模型当前准备估计 pose 的 query |
+| recurrent state token | 能 | 隐式 token | 适合，代表历史 scene / temporal memory |
+| pose memory `mem` | 能 | 隐式 token | 适合，代表历史 pose / motion memory |
+| 上一帧 raw / corrected pose | 能，需要自己缓存 | 显式 history | 很重要，提供相机运动先验 |
+| 上一帧 pointmap / confidence | 能，需要自己缓存 | 显式 geometry | 适合，可构造 local geometry cue |
+| 上一帧 SMPL / joints / body anchors | 能，需要自己缓存 | 显式 human history | 很重要，可构造人体运动和 anchor consistency |
+| 当前帧 pointmap / confidence | 不能 | 显式 geometry | decoder/head 后才有，可用于 decoder 后 correction plugin |
+| 当前帧 raw camera pose | 不能 | 显式 pose | pose head 后才有，可用于 decoder 后 correction plugin |
+| 当前帧 SMPL joints / mesh | 不能 | 显式 human output | human head 后才有，可用于 decoder 后 correction plugin |
+
+所以如果我们要完全模仿 UniCon3R，把 correction prompt 放进 decoder 前，第一版应该优先使用：
+
+```text
+当前 image / human / pose tokens
++ recurrent state / pose memory
++ 上一帧 pointmap / confidence
++ 上一帧 human anchors
++ 上一帧 corrected pose 和 motion history
+```
+
+如果先做更稳的 decoder 后 pose correction plugin，则可以额外使用：
+
+```text
+当前 raw camera pose
++ 当前 refined pose / human tokens
++ 当前 pointmap / confidence
++ 当前 SMPL joints / body anchors
++ 当前和历史的 anchor residual / motion residual
+```
+
+## 3. UniCon3R 在 Human3R 基础上的改法
 
 Human3R 原始流程可以抽象为：
 
@@ -112,7 +153,7 @@ refined contact token
 就用 contact token 作为额外提示去修正人体重建。
 ```
 
-## 3. UniCon3R 的 Contact Token 怎么设计
+## 4. UniCon3R 的 Contact Token 怎么设计
 
 这里按功能理解 contact token，而不是逐行复现论文实现。
 
@@ -135,7 +176,7 @@ UniCon3R 的 contact token =
 
 然后这个 contact token 不是只拿来输出一个 contact 结果，而是进入 decoder / correction branch，作为中间提示去修正 human reconstruction。
 
-## 4. 我的 Pose Correction 如何参考 Contact Token
+## 5. 我的 Pose Correction 如何参考 Contact Token
 
 我的任务不是修 contact，而是修 camera pose drift。
 
@@ -185,7 +226,7 @@ previous corrected human anchors
 current-vs-history residual
 ```
 
-## 5. 当前已经验证到什么
+## 6. 当前已经验证到什么
 
 目前做了一个 online 显式 baseline，用来验证这个思路是否成立。
 
@@ -239,7 +280,7 @@ B -> B 后续帧:
 它确实可以在 online 条件下纠正 pose。
 ```
 
-## 6. 接下来可以验证什么
+## 7. 接下来可以验证什么
 
 下一步不是马上训练大模型，而是逐步把显式 baseline 变成 token-level prompt。
 
