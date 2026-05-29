@@ -70,6 +70,12 @@ from dust3r.shot_adaptation import ShotTokenGenerator, LayerwisePoseShotAdapter
 # **========== 结束 ==========**
 from dust3r.anchor_pose_adapter import AnchorPoseAdapter, AnchorTokenProjector, PoseAnchorAttention
 from dust3r.v7_pose_adapter import HumanSceneTokenPoseAdapter
+from dust3r.heads.postprocess import postprocess_pose
+from dust3r.v8_pose_prompt import (
+    V81PoseCorrectionPrompt,
+    V81PoseLatentResidualHead,
+    make_v8_corr_pos,
+)
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -206,6 +212,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v7_pose_adapter_max_delta_t=3.0,
         v7_pose_adapter_max_delta_r=0.75,
         v7_pose_adapter_dropout=0.0,
+        v8_pose_prompt_num_body_queries=4,
+        v8_pose_prompt_num_heads=8,
+        v8_pose_prompt_dropout=0.0,
+        v8_pose_prompt_gate_bias=-4.0,
         **croco_kwargs,
     ):
         super().__init__()
@@ -254,6 +264,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v7_pose_adapter_max_delta_t = v7_pose_adapter_max_delta_t
         self.v7_pose_adapter_max_delta_r = v7_pose_adapter_max_delta_r
         self.v7_pose_adapter_dropout = v7_pose_adapter_dropout
+        self.v8_pose_prompt_num_body_queries = v8_pose_prompt_num_body_queries
+        self.v8_pose_prompt_num_heads = v8_pose_prompt_num_heads
+        self.v8_pose_prompt_dropout = v8_pose_prompt_dropout
+        self.v8_pose_prompt_gate_bias = v8_pose_prompt_gate_bias
         self.croco_kwargs = croco_kwargs
 
 
@@ -571,6 +585,18 @@ class ARCroco3DStereo(CroCoNet):
             max_delta_r=getattr(config, "v7_pose_adapter_max_delta_r", 0.75),
             dropout=getattr(config, "v7_pose_adapter_dropout", 0.0),
         )
+        self.v8_pose_prompt = V81PoseCorrectionPrompt(
+            enc_dim=self.enc_embed_dim,
+            dec_dim=self.dec_embed_dim,
+            num_body_queries=getattr(config, "v8_pose_prompt_num_body_queries", 4),
+            num_heads=getattr(config, "v8_pose_prompt_num_heads", 8),
+            memory_dim=self.dec_embed_dim * 2,
+            dropout=getattr(config, "v8_pose_prompt_dropout", 0.0),
+        )
+        self.v8_pose_residual_head = V81PoseLatentResidualHead(
+            dec_dim=self.dec_embed_dim,
+            gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
+        )
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(
         #     enc_dim=self.enc_embed_dim,
@@ -587,6 +613,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_anchor_decoder_tokens = False
         self.enable_anchor_pose_token_adapter = False
         self.enable_v7_pose_adapter = False
+        self.enable_v8_pose_prompt = False
         self.return_v7_pose_adapter_inputs = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
@@ -757,6 +784,8 @@ class ARCroco3DStereo(CroCoNet):
 
     def set_freeze(self, freeze):  # this is for use by downstream models
         self.freeze = freeze
+        if hasattr(self, "enable_v8_pose_prompt"):
+            self.enable_v8_pose_prompt = False
         to_be_frozen = {
             "none": [],
             "mask": [self.mask_token] if hasattr(self, "mask_token") else [],
@@ -829,6 +858,8 @@ class ARCroco3DStereo(CroCoNet):
                 self.downstream_head.dpt_cross,
                 self.downstream_head.dpt_rgb,
                 self.downstream_head.pose_head,
+                self.v8_pose_prompt,
+                self.v8_pose_residual_head,
             ],
             "mhmr": [
                 self.backbone,
@@ -874,6 +905,8 @@ class ARCroco3DStereo(CroCoNet):
                 self.downstream_head.decshape, 
                 self.downstream_head.deccam, 
                 self.downstream_head.decexpression,
+                self.v8_pose_prompt,
+                self.v8_pose_residual_head,
             ]
 
         if freeze == "encoder_and_decoder_and_head":
@@ -1036,6 +1069,43 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_decoder_tokens = False
             self.enable_anchor_pose_token_adapter = False
             self.enable_v7_pose_adapter = True
+            self.enable_v8_pose_prompt = False
+        elif freeze == "v8_pose_prompt":
+            # V8.1: UniCon-style decoder-in prompt. Freeze Human3R and all
+            # previous V2-V7 adapters; train only the prompt builder and latent
+            # residual/gate head.
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                self.layerwise_pose_shot_adapter,
+                self.anchor_pose_adapter,
+                self.anchor_decoder_token_projector,
+                self.anchor_decoder_token_scale,
+                self.anchor_pose_token_attention,
+                self.anchor_pose_token_delta,
+                self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
+            ])
+            for module in [self.v8_pose_prompt, self.v8_pose_residual_head]:
+                for p in module.parameters():
+                    p.requires_grad = True
+            self.enable_shot_adaptation = False
+            self.enable_shot_decoder_token = False
+            self.enable_layerwise_pose_shot_adapter = False
+            self.enable_pose_alignment_adapter = False
+            self.enable_pose_translation_adapter = False
+            self.enable_pose_lora = False
+            self.enable_human_lora = False
+            self.enable_world_lora = False
+            self.enable_anchor_pose_adapter = False
+            self.enable_anchor_decoder_tokens = False
+            self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = False
+            self.enable_v8_pose_prompt = True
         elif freeze == "shot_adaptation":
             # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
             freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
@@ -1106,6 +1176,7 @@ class ARCroco3DStereo(CroCoNet):
             # enable_shot_adaptation 开关打开
             self.enable_shot_adaptation = True
             self.enable_v7_pose_adapter = False
+            self.enable_v8_pose_prompt = False
         else:
             freeze_all_params(to_be_frozen[freeze])
 
@@ -1360,7 +1431,24 @@ class ARCroco3DStereo(CroCoNet):
         pose_token = self.layerwise_pose_shot_adapter(pose_token, q_t)
         return torch.cat([pose_token, f_img[:, 1:]], dim=1)
 
-    def _decoder(self, f_state, pos_state, f_img, pos_img, f_pose, pos_pose, f_smpl, pos_smpl, f_anchor=None, pos_anchor=None, f_shot=None, f_pose_shot=None, use_ttt3r=False):
+    def _decoder(
+        self,
+        f_state,
+        pos_state,
+        f_img,
+        pos_img,
+        f_pose,
+        pos_pose,
+        f_smpl,
+        pos_smpl,
+        f_corr=None,
+        pos_corr=None,
+        f_anchor=None,
+        pos_anchor=None,
+        f_shot=None,
+        f_pose_shot=None,
+        use_ttt3r=False,
+    ):
         final_output = [(f_state, f_img)]  # before projection
         assert f_state.shape[-1] == self.dec_embed_dim
         f_img = self.decoder_embed(f_img)
@@ -1369,8 +1457,14 @@ class ARCroco3DStereo(CroCoNet):
             # **========== V6-B 新代码：AnchorToken 位于 image 和 human token 之间 ==========**
             # Token layout without old shot token: [pose, image, anchor, human].
             # Anchor tokens participate in decoder attention but are removed before the head.
-            token_parts = [f_pose, f_img]
-            pos_parts = [pos_pose, pos_img]
+            token_parts = [f_pose]
+            pos_parts = [pos_pose]
+            if f_corr is not None:
+                assert pos_corr is not None
+                token_parts.append(f_corr)
+                pos_parts.append(pos_corr)
+            token_parts.append(f_img)
+            pos_parts.append(pos_img)
             if f_anchor is not None:
                 assert pos_anchor is not None
                 token_parts.append(f_anchor)
@@ -1467,12 +1561,15 @@ class ARCroco3DStereo(CroCoNet):
         update=None,
         f_shot=None,
         f_pose_shot=None,
+        f_corr=None,
+        pos_corr=None,
         f_anchor=None,
         pos_anchor=None,
         use_ttt3r=False,
     ):
         (new_state_feat, dec), cross_attn_states = self._decoder(
             state_feat, state_pos, current_feat, current_pos, pose_feat, pose_pos, smpl_feat, smpl_pos,
+            f_corr=f_corr, pos_corr=pos_corr,
             f_anchor=f_anchor, pos_anchor=pos_anchor,
             f_shot=f_shot, f_pose_shot=f_pose_shot, use_ttt3r=use_ttt3r
         )
@@ -1628,6 +1725,24 @@ class ARCroco3DStereo(CroCoNet):
         )
         return head_input
 
+    def _blend_v8_prompt_history(self, prev, new, update_mask=None, reset_mask=None):
+        if new is None:
+            return prev
+        if prev is None:
+            prev = torch.zeros_like(new)
+        out = new
+        if update_mask is not None:
+            out = new * update_mask + prev * (1 - update_mask)
+        if reset_mask is not None:
+            out = out * (1 - reset_mask)
+        return out
+
+    def _camera_pose_from_pose_token(self, pose_token):
+        if pose_token is None or not hasattr(self.downstream_head, "pose_head"):
+            return None
+        pose_raw = self.downstream_head.pose_head(pose_token[:, 0].float())
+        return postprocess_pose(pose_raw, self.pose_mode)
+
     def _refresh_pose_dependent_outputs(self, res):
         if "camera_pose" not in res:
             return res
@@ -1736,10 +1851,14 @@ class ARCroco3DStereo(CroCoNet):
         res.update(anchor_info)
         return res
 
-    def _decoder_token_layout(self, dec_tokens, n_humans, n_anchor=0, has_shot=False):
+    def _decoder_token_layout(self, dec_tokens, n_humans, n_corr=0, n_anchor=0, has_shot=False):
         n_shot = 1 if has_shot else 0
         total = dec_tokens.shape[1]
-        img_start = 1
+        pose_start = 0
+        pose_end = 1
+        corr_start = pose_end
+        corr_end = corr_start + int(n_corr)
+        img_start = corr_end
         img_end = total - int(n_anchor) - int(n_humans) - n_shot
         anchor_start = img_end
         anchor_end = anchor_start + int(n_anchor)
@@ -1748,9 +1867,14 @@ class ARCroco3DStereo(CroCoNet):
         if img_end < img_start or human_end + n_shot != total:
             raise ValueError(
                 "Invalid decoder token layout: "
-                f"total={total}, n_anchor={n_anchor}, n_humans={n_humans}, n_shot={n_shot}"
+                f"total={total}, n_corr={n_corr}, n_anchor={n_anchor}, "
+                f"n_humans={n_humans}, n_shot={n_shot}"
             )
         return {
+            "pose_start": pose_start,
+            "pose_end": pose_end,
+            "corr_start": corr_start,
+            "corr_end": corr_end,
             "img_start": img_start,
             "img_end": img_end,
             "anchor_start": anchor_start,
@@ -1761,15 +1885,15 @@ class ARCroco3DStereo(CroCoNet):
             "shot_end": human_end + n_shot,
         }
 
-    def _make_head_input_from_decoder(self, dec, n_humans, n_anchor=0, has_shot=False):
-        layout = self._decoder_token_layout(dec[self.dec_depth], n_humans, n_anchor, has_shot)
+    def _make_head_input_from_decoder(self, dec, n_humans, n_corr=0, n_anchor=0, has_shot=False):
+        layout = self._decoder_token_layout(dec[self.dec_depth], n_humans, n_corr, n_anchor, has_shot)
 
         def image_tokens(layer_tokens):
             return layer_tokens[:, layout["img_start"]:layout["img_end"]]
 
         final_tokens = dec[self.dec_depth]
         final_pose_and_image = torch.cat(
-            [final_tokens[:, 0:1], image_tokens(final_tokens)], dim=1
+            [final_tokens[:, layout["pose_start"]:layout["pose_end"]], image_tokens(final_tokens)], dim=1
         )
         head_input = [
             dec[0].float(),
@@ -1785,7 +1909,7 @@ class ARCroco3DStereo(CroCoNet):
             q_out = final_tokens[:, layout["shot_start"]:layout["shot_end"]]
         return head_input, smpl_token, q_out
 
-    def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation, n_anchor=0):
+    def _slice_decoder_tokens(self, dec, n_humans, enable_shot_adaptation, n_corr=0, n_anchor=0):
         """
         Helper function to safely slice decoder output tokens.
 
@@ -1803,8 +1927,8 @@ class ARCroco3DStereo(CroCoNet):
             smpl_token: [B, N_humans, D] human tokens (for LoRA human) or None
             q_out: [B, 1, D] shot token or None (only when enable_shot_adaptation=True)
         """
-        layout = self._decoder_token_layout(dec[-1], n_humans, n_anchor, enable_shot_adaptation)
-        z_out = dec[-1][:, 0:1]
+        layout = self._decoder_token_layout(dec[-1], n_humans, n_corr, n_anchor, enable_shot_adaptation)
+        z_out = dec[-1][:, layout["pose_start"]:layout["pose_end"]]
         img_tokens = dec[-1][:, layout["img_start"]:layout["img_end"]]
         smpl_token = None
         if n_humans > 0:
@@ -2141,6 +2265,9 @@ class ARCroco3DStereo(CroCoNet):
             S0 = init_state_feat
 
         ress = []
+        v8_prev_corr_token = None
+        v8_prev_pose_token = None
+        v8_prev_gate = None
         for i in range(len(views)):
             feat_i = feat[i]
             pos_i = pos[i]
@@ -2197,6 +2324,26 @@ class ARCroco3DStereo(CroCoNet):
                 self.enable_shot_adaptation
                 and getattr(self, "enable_layerwise_pose_shot_adapter", False)
             ) else None
+            v8_prompt_out = None
+            f_corr = None
+            pos_corr = None
+            n_corr_i = 0
+            if getattr(self, "enable_v8_pose_prompt", False):
+                v8_prompt_out = self.v8_pose_prompt(
+                    image_tokens=feat_i,
+                    pose_token=pose_feat_i,
+                    human_tokens=smpl_feat_i,
+                    state_tokens=state_for_recurrent,
+                    pose_memory=mem,
+                    prev_corr_token=v8_prev_corr_token,
+                    prev_pose_token=v8_prev_pose_token,
+                    prev_gate=v8_prev_gate,
+                )
+                f_corr = v8_prompt_out.corr_tokens
+                n_corr_i = f_corr.shape[1]
+                pos_corr = make_v8_corr_pos(
+                    feat_i.shape[0], n_corr_i, feat_i.device, pos_i.dtype
+                )
             f_anchor, pos_anchor, n_anchor_i, anchor_decoder_info, anchor_mask_i = self._build_anchor_decoder_tokens(
                 feat, pos_i, views, i
             )
@@ -2240,10 +2387,42 @@ class ARCroco3DStereo(CroCoNet):
                 update=views[i].get("update", None),
                 f_shot=f_shot,
                 f_pose_shot=f_pose_shot,
+                f_corr=f_corr,
+                pos_corr=pos_corr,
                 f_anchor=f_anchor_decoder,
                 pos_anchor=pos_anchor_decoder,
             )
             pose_token_for_head = dec[-1][:, 0:1]
+            v8_pose_prompt_info = None
+            v8_corr_token_for_history = None
+            v8_gate_for_history = None
+            if getattr(self, "enable_v8_pose_prompt", False) and n_corr_i > 0:
+                v8_layout = self._decoder_token_layout(
+                    dec[-1],
+                    n_humans_i,
+                    n_corr=n_corr_i,
+                    n_anchor=n_anchor_decoder_i,
+                    has_shot=use_shot_decoder_token,
+                )
+                v8_corr_token = dec[-1][:, v8_layout["corr_start"]:v8_layout["corr_end"]]
+                v8_delta_applied, v8_gate, v8_delta_raw = self.v8_pose_residual_head(v8_corr_token)
+                v8_raw_pose_token = pose_token_for_head
+                pose_token_for_head = pose_token_for_head + v8_delta_applied
+                with torch.no_grad():
+                    v8_raw_camera_pose = self._camera_pose_from_pose_token(v8_raw_pose_token)
+                v8_pose_prompt_info = {
+                    "v8_pose_prompt_gate": v8_gate,
+                    "v8_pose_prompt_delta_raw": v8_delta_raw,
+                    "v8_pose_prompt_delta_applied": v8_delta_applied,
+                    "v8_pose_prompt_delta_norm": v8_delta_raw.norm(dim=-1),
+                    "v8_pose_prompt_corr_token": v8_corr_token,
+                    "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
+                    "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
+                }
+                if v8_raw_camera_pose is not None:
+                    v8_pose_prompt_info["v8_raw_camera_pose"] = v8_raw_camera_pose.detach()
+                v8_corr_token_for_history = v8_corr_token
+                v8_gate_for_history = v8_gate
             pose_token_anchor_info = None
             if getattr(self, "enable_anchor_pose_token_adapter", False):
                 pose_token_for_head, pose_token_anchor_info = self._apply_anchor_pose_token_adapter(
@@ -2262,7 +2441,7 @@ class ARCroco3DStereo(CroCoNet):
             # **========== 原始代码备份：只要启用 Shot Adaptation 就按追加 q_t 切 token ==========**
             # if self.enable_shot_adaptation:
             # **========== 结束 ==========**
-            if n_anchor_decoder_i > 0:
+            if n_corr_i > 0 or n_anchor_decoder_i > 0:
                 # **========== V6-C 原始代码备份：V6-B head 前显式 drop decoder 内 AnchorToken ==========**
                 # head_input, smpl_token, q_out = self._make_head_input_from_decoder(
                 #     dec, n_humans_i, n_anchor=n_anchor_i, has_shot=use_shot_decoder_token)
@@ -2270,7 +2449,12 @@ class ARCroco3DStereo(CroCoNet):
                 #     smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
                 # **========== 结束 ==========**
                 head_input, smpl_token, q_out = self._make_head_input_from_decoder(
-                    dec, n_humans_i, n_anchor=n_anchor_decoder_i, has_shot=use_shot_decoder_token)
+                    dec,
+                    n_humans_i,
+                    n_corr=n_corr_i,
+                    n_anchor=n_anchor_decoder_i,
+                    has_shot=use_shot_decoder_token,
+                )
                 if smpl_token is not None:
                     smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
             elif use_shot_decoder_token:
@@ -2318,7 +2502,10 @@ class ARCroco3DStereo(CroCoNet):
                     ]
                     smpl_token = None
 
-            if getattr(self, "enable_anchor_pose_token_adapter", False):
+            if (
+                getattr(self, "enable_anchor_pose_token_adapter", False)
+                or getattr(self, "enable_v8_pose_prompt", False)
+            ):
                 head_input = self._replace_head_pose_token(head_input, pose_token_for_head)
 
             res = self._downstream_head(
@@ -2330,6 +2517,8 @@ class ARCroco3DStereo(CroCoNet):
                 res.update(anchor_decoder_info)
             if pose_token_anchor_info is not None:
                 res.update(pose_token_anchor_info)
+            if v8_pose_prompt_info is not None:
+                res.update(v8_pose_prompt_info)
 
             if getattr(self, "enable_anchor_pose_adapter", False):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
@@ -2340,6 +2529,7 @@ class ARCroco3DStereo(CroCoNet):
                     dec,
                     n_humans_i,
                     enable_shot_adaptation=use_shot_decoder_token,
+                    n_corr=n_corr_i,
                     n_anchor=n_anchor_decoder_i,
                 )
                 res = self._attach_v7_pose_adapter_inputs(
@@ -2364,6 +2554,7 @@ class ARCroco3DStereo(CroCoNet):
                 # Use helper to safely slice decoder tokens
                 z_out, img_tokens, h_token, q_out = self._slice_decoder_tokens(
                     dec, n_humans_i, enable_shot_adaptation=use_shot_decoder_token,
+                    n_corr=n_corr_i,
                     n_anchor=n_anchor_decoder_i)
                 if q_out is None:
                     q_out = q_cond
@@ -2467,6 +2658,25 @@ class ARCroco3DStereo(CroCoNet):
                     1 - reset_mask
                 )
                 mem = init_mem * reset_mask + mem * (1 - reset_mask)
+            if getattr(self, "enable_v8_pose_prompt", False):
+                v8_prev_corr_token = self._blend_v8_prompt_history(
+                    v8_prev_corr_token,
+                    v8_corr_token_for_history,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
+                v8_prev_pose_token = self._blend_v8_prompt_history(
+                    v8_prev_pose_token,
+                    pose_token_for_head,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
+                v8_prev_gate = self._blend_v8_prompt_history(
+                    v8_prev_gate,
+                    v8_gate_for_history,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
             all_state_args.append(
                 (state_feat, state_pos, init_state_feat, mem, init_mem)
             )
