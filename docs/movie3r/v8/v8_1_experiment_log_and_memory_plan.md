@@ -34,7 +34,7 @@ The working mental model of Human3R is:
 2. These tokens interact with recurrent state tokens in the decoder through attention.
 3. The decoder outputs refined image, pose, human tokens, then downstream heads predict pointmap/depth, camera pose, SMPL-X body, mask, confidence, etc.
 
-The V8 correction module should be a plugin around these outputs/tokens, not a new reconstruction model.
+The V8 correction module should be a UniCon-style decoder-in prompt/refinement branch around existing tokens, not a new reconstruction model.
 
 ## 3. What UniCon3R Adds
 
@@ -780,7 +780,7 @@ online_human_motion_gated:
   gate = clip((raw_anchor_history_rmse - 0.08) / (0.35 - 0.08), 0, 1)
 ```
 
-The gated version is closer to the intended V8 plugin because normal frames should not be over-corrected.
+The gated version is closer to the intended V8 gating behavior because normal frames should not be over-corrected.
 
 Important clarification:
 
@@ -807,7 +807,7 @@ frame 2 and later:
   if the residual is large, fit a camera correction
 ```
 
-This test is not yet a pure token-vector correction head.  It is a token-aligned explicit-anchor baseline:
+This test is not yet a UniCon-style decoder-in correction prompt. It is a token-aligned explicit-anchor baseline:
 
 ```text
 current implementation:
@@ -819,7 +819,8 @@ why this is still useful:
 
 next step:
   replace explicit anchor coordinates / hand-written residuals
-  with prompt tokens and a lightweight correction head
+  with A_corr_t tokens that enter the decoder
+  and a lightweight residual latent head after the decoder
 ```
 
 ### 12.3 Outputs

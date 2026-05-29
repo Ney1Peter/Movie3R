@@ -109,16 +109,20 @@ human token + scene token + contact geometry + contact history
 Movie3R V8:
 human token + body structure token + local scene token + geometry token + pose/history token
 -> pose correction prompt
--> 判断 / 修正 camera pose drift
+-> 进入 decoder
+-> 修正 pose latent / camera pose
 ```
 
-第一阶段先不训练 delta pose head，也不把 token concat 回 Human3R decoder。先做一个 sidecar validation pipeline：
+V8 的目标是明确的 UniCon-style 设计：`A_corr_t` 必须作为 prompt token 进入 Human3R decoder，并在 decoder 内和 pose / image / human / state tokens 交互。
 
 ```text
-Human3R frozen output
--> 提取候选 pose correction token pool
--> 可视化和验证每个候选 token 是否有意义
--> 分析这些候选 token 是否和 pose drift 相关
+image token + pose token + human token + A_corr_t + recurrent state
+-> frozen decoder
+-> refined image token / refined pose token / refined human token / refined A_corr_t
+-> refined A_corr_t 预测 pose latent residual
+-> corrected pose token
+-> pose head
+-> corrected camera pose
 ```
 
 ### 3.2 第一阶段先构造候选 Token Pool
@@ -144,14 +148,14 @@ CandidatePool_t = {
 
 每个候选 token 的含义：
 
-- `camera_motion_token`：表示 raw camera pose 的相对运动、旋转变化、平移变化和异常跳变；
-- `human_root_token`：表示 pelvis / root 的位置和速度，是人体整体轨迹 anchor；
+- `camera_motion_token`：进入当前帧 decoder 前主要来自上一帧 raw/corrected pose、pose memory 和当前 coarse pose token；当前帧 raw pose 只作为训练监督或评估；
+- `human_root_token`：当前帧来自 human prompt / human token / learned body-part query，上一帧可以使用 cached pelvis / root 作为历史；
 - `body_orientation_token`：表示 torso、hip、shoulder 构成的人体朝向，用来观察 shot switch 后人体朝向是否异常；
-- `body_part_token`：表示 pelvis、torso、hip、shoulder、feet 等结构化人体点；
+- `body_part_token`：表示 pelvis、torso、hip、shoulder、feet 等结构化人体部位；decoder-in 版本由 learned body-part query 从当前 image / human tokens 中读取；
 - `support_contact_token`：表示脚、支撑状态、foot sliding、foot-to-ground relation；它是强 cue，但不是唯一 cue；
 - `near_human_scene_token`：表示人体附近的静态场景区域，例如 human mask 外扩背景 ring；
 - `near_foot_scene_token`：表示脚附近地面或局部支撑区域；
-- `human_scene_geometry_token`：表示人体和周围 pointmap / depth / local plane 的显式 3D 几何关系；
+- `human_scene_geometry_token`：表示人体和周围 pointmap / depth / local plane 的显式 3D 几何关系；当前帧 decoder 前优先使用上一帧缓存 pointmap；
 - `temporal_history_token`：表示上一帧 pose、pelvis、body orientation、feet、support state 等历史状态；
 - `reliability_token`：表示当前人体、pointmap、局部场景、contact cue 是否可信。
 
@@ -169,7 +173,7 @@ human structure + local scene + human-scene geometry + pose/history
 
 也就是说，V8 的核心不是一定要依赖脚或 contact，而是以人为中心收集能够解释 camera pose drift 的候选证据。脚和 contact 只是其中一类很强但有条件的证据。
 
-候选信号验证有效之后，再组合成最终 prompt：
+候选信号验证有效之后，再组合成进入 decoder 的最终 prompt：
 
 ```text
 A_corr_t = SelectAndFuse(
@@ -177,17 +181,23 @@ A_corr_t = SelectAndFuse(
 )
 ```
 
-后续如果验证有效，再扩展为：
+`A_corr_t` 的作用不是在 decoder 后直接替换 pose，而是先参与 decoder 内部 attention：
 
 ```text
-A_corr_t -> pose_error_score
+pose token / human token / image token / state token / A_corr_t
+-> decoder attention
+-> refined pose token + refined A_corr_t
 ```
 
-再进一步：
+decoder 之后再模仿 UniCon3R 的 latent refinement：
 
 ```text
-A_corr_t -> delta_xi_t + gate_t
-T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
+refined A_corr_t
+-> residual head
+-> delta pose latent
+
+corrected pose token = refined pose token + gate * delta pose latent
+corrected pose token -> pose head -> T_corr_t
 ```
 
 ### 3.3 第一版如何验证
@@ -224,7 +234,7 @@ T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
 
 第一阶段成功标准：
 
-> 不训练任何 correction head，仅通过 Human3R 输出构造候选 pose correction tokens，就能在 drift 帧附近找到可解释、可视化、可量化的异常信号。
+> 能构造一个进入 decoder 的 `A_corr_t`，并验证它的组成信息在 drift 帧附近具有可解释、可视化、可量化的异常信号。
 
 这可以证明 V8 的核心假设成立：人体结构、人体周围局部场景、显式 3D 几何和历史状态可以作为 Human3R camera pose drift correction 的结构化 anchor。支撑脚和 contact 是重要候选，但不预先假设它们一定是唯一或最优的选择。
 
@@ -251,9 +261,10 @@ V8.1 的重点是先跑通最小闭环：
 
 ```text
 frozen Human3R
--> dump current human/body-part tokens
--> 构造 token-aligned A_corr_t
--> 小 probe / MLP 预测 pose error 或 delta pose
+-> 在 decoder 前构造 token-aligned A_corr_t
+-> A_corr_t 和 pose / image / human / state tokens 一起进入 decoder
+-> refined A_corr_t 预测 pose latent residual
+-> corrected pose token 经过 pose head 输出 corrected pose
 -> 可视化 corrected pose
 ```
 

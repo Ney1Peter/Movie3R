@@ -47,7 +47,7 @@ video frame
   -> scene + camera pose + human reconstruction
 ```
 
-UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token。这个 token 不是 decoder 后面的普通后处理特征，而是和 image / camera / human tokens 一起进入 decoder，在 decoder 里面通过 attention 和 human token 交互。decoder 输出 refined contact token 后，再用它预测 contact 和 human latent residual，反过来修正 human reconstruction。
+UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token。这个 token 会和 image / camera / human tokens 一起进入 decoder，在 decoder 里面通过 attention 和 human token 交互。decoder 输出 refined contact token 后，再用它预测 contact 和 human latent residual，反过来修正 human reconstruction。
 
 ```text
 video frame
@@ -131,9 +131,9 @@ refined contact token
 | 上一帧 raw / corrected pose | 能，需要自己缓存 | 显式 history | 很重要，提供相机运动先验 |
 | 上一帧 pointmap / confidence | 能，需要自己缓存 | 上一帧 scene head 输出 | 适合，可构造 local geometry cue |
 | 上一帧 SMPL / joints / body anchors | 能，需要自己缓存 | 上一帧 human head 输出 | 很重要，可构造人体运动和 anchor consistency |
-| 当前帧 pointmap / confidence | 不能 | 当前帧 scene head 输出 | decoder/head 后才有，可用于 decoder 后 correction plugin |
-| 当前帧 raw camera pose | 不能 | 当前帧 pose head 输出 | pose head 后才有，可用于 decoder 后 correction plugin |
-| 当前帧 SMPL joints / mesh | 不能 | 当前帧 human head 输出 | human head 后才有，可用于 decoder 后 correction plugin |
+| 当前帧 pointmap / confidence | 不能 | 当前帧 scene head 输出 | decoder/head 后才有，不能用于构造当前帧 decoder-in `A_corr_t` |
+| 当前帧 raw camera pose | 不能 | 当前帧 pose head 输出 | pose head 后才有，不能用于构造当前帧 decoder-in `A_corr_t` |
+| 当前帧 SMPL joints / mesh | 不能 | 当前帧 human head 输出 | human head 后才有，不能用于构造当前帧 decoder-in `A_corr_t` |
 
 所以如果我们要完全模仿 UniCon3R，把 correction prompt 放进当前帧 decoder 前，第一版应该优先使用：
 
@@ -145,15 +145,7 @@ refined contact token
 + 上一帧 corrected pose 和 motion history
 ```
 
-如果先做更稳的 decoder 后 pose correction plugin，则可以额外使用当前帧 head 已经输出的结果：
-
-```text
-当前 raw camera pose
-+ 当前 refined pose / human tokens
-+ 当前 pointmap / confidence
-+ 当前 SMPL joints / body anchors
-+ 当前和历史的 anchor residual / motion residual
-```
+因此当前主线不是 decoder 后修正，而是 UniCon-style decoder-in prompt：`A_corr_t` 必须在当前帧 decoder 前构造，并和 image / pose / human / state tokens 一起进入 decoder。
 
 ## 4. UniCon3R 的 Contact Token 怎么设计
 
@@ -242,9 +234,9 @@ human-centric pose cue -> 修正 camera pose
 
 ```text
 A_corr_t =
-  current body-part tokens
+  current body-part prompt tokens
   + previous human-anchor history
-  + raw camera motion cue
+  + previous pose / pose-memory cue
   + correction gate
 ```
 
@@ -256,7 +248,23 @@ torso token
 left foot token
 right foot token
 previous corrected human anchors
-current-vs-history residual
+previous pose / correction history
+```
+
+它进入模型的方式应该模仿 UniCon3R：
+
+```text
+image token + pose token + human token + A_corr_t + recurrent state
+  -> decoder
+  -> refined pose token + refined A_corr_t
+
+refined A_corr_t
+  -> residual head
+  -> delta pose latent
+
+refined pose token + delta pose latent
+  -> pose head
+  -> corrected camera pose
 ```
 
 ## 6. 当前已经验证到什么
@@ -323,9 +331,9 @@ B -> B 后续帧:
 |---|---|---|
 | 1 | 保持显式四点 anchor，测试更多 AABB case | 看 online human-motion correction 是否稳定泛化 |
 | 2 | 用 token heatmap / body-part token 替代显式部位坐标 | 验证 token 层面是否真的能提供同样信息 |
-| 3 | 构造 `A_corr_t` prompt token | 把 body token、history、camera motion、gate 融合起来 |
-| 4 | 训练小 MLP / adapter 预测 pose error score | 先判断是否需要修正，不直接输出 pose |
-| 5 | 再训练 residual SE(3) correction head | 输出 `delta_xi_t`，修正 `T_raw_t` |
+| 3 | 构造 decoder-in `A_corr_t` prompt token | 把 body token、history、pose memory、gate 融合起来 |
+| 4 | 把 `A_corr_t` 和 Human3R tokens 一起送入 decoder | 验证 prompt 是否能在 decoder 内和 pose / human / state 交互 |
+| 5 | 训练 residual latent head | 用 refined `A_corr_t` 修正 refined pose token，再由 pose head 输出 corrected pose |
 
 第一版最推荐的 token 组合是：
 

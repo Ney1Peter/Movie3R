@@ -1,15 +1,15 @@
-# Movie3R V8.1 Plan: Token Extraction and Validation
+# Movie3R V8.1 Plan: UniCon-Style Pose Prompt Validation
 
 ## 1. 目标
 
-V8.1 的目标不是马上训练 pose correction head，也不是马上把新 token concat 回 Human3R decoder。
+V8.1 的目标是跑通一个 UniCon-style 的 pose correction prompt：`A_corr_t` 在当前帧 decoder 前构造，并和 image / pose / human / state tokens 一起进入 decoder。
 
 当前最重要的是验证两件事：
 
-1. 候选 pose correction token 是否能从 Human3R / CUT3R 的现有输出中正确提取出来；
-2. 这些候选 token 或它们对应的 proxy 指标，是否真的包含 camera pose drift / pose correction 所需的信息。
+1. `A_corr_t` 的候选组成是否能从当前帧 decoder 前信息和上一帧缓存中构造出来；
+2. `A_corr_t` 进入 decoder 后，refined correction token 是否能通过小 residual head 修正 pose latent。
 
-因此，V8.1 应该先建立一个轻量的 token extraction + visualization + validation pipeline。只有当候选信号被证明有效之后，再决定最终 `A_corr_t` 应该由哪些 token 组成。
+因此，V8.1 要验证的是：像 UniCon3R 的 contact token 一样，把 pose correction prompt 放进 decoder 内部交互，是否能改善 camera pose drift。
 
 ## 2. 构造 Pose Correction 候选 Token Pool
 
@@ -35,23 +35,23 @@ CandidatePool_t = {
 
 各类候选信息的作用：
 
-- `camera_motion_token`：来自 `T_raw_t`、`T_raw_{t-1}`、relative pose、translation / rotation jump，用来描述原始相机运动是否异常。
-- `human_root_token`：来自 pelvis / root 的 camera-frame 和 world-frame 位置，用来描述人体整体轨迹。
+- `camera_motion_token`：进入 decoder 前只能来自上一帧 raw/corrected pose、pose memory、当前 coarse pose token 等；当前帧 `T_raw_t` 只能作为 decoder 后监督或评估，不作为 `A_corr_t` 输入。
+- `human_root_token`：当前帧优先来自 human prompt / human token / learned body-part query；上一帧可以使用 cached pelvis / root 作为历史。
 - `body_orientation_token`：来自 torso、hip、shoulder 构成的人体朝向，用来观察人体方向在 world frame 中是否突然跳变。
-- `body_part_token`：来自 pelvis、torso、hip、shoulder、feet 等结构化人体点，也可以从这些点投影到 image token grid 后采样对应 token。
+- `body_part_token`：最终 decoder-in 版本来自 learned body-part query 对当前 image / human tokens 的读取；可视化验证时可以用 SMPL pelvis、torso、feet 投影来检查这些 token 是否落在合理区域。
 - `support_contact_token`：来自 foot position、foot velocity、support foot state、foot sliding、foot-to-ground relation。它是重要候选，但不是唯一核心。
 - `near_human_scene_token`：来自 human mask 外扩区域或 human bbox 周围的静态背景，重点是以人为中心找局部场景。
-- `near_foot_scene_token`：来自脚附近的地面或局部支撑区域，用来观察 foot-scene relation。
-- `human_scene_geometry_token`：来自 pointmap / depth / confidence，显式计算 human-scene 3D 几何关系，例如 local plane、body-to-scene distance、local residual。
+- `near_foot_scene_token`：来自脚附近的地面或局部支撑区域，用来观察 foot-scene relation；decoder-in 版本优先使用上一帧缓存和当前图像 token。
+- `human_scene_geometry_token`：进入 decoder 前优先来自上一帧 pointmap / depth / confidence，显式计算 human-scene 3D 几何关系，例如 local plane、body-to-scene distance、local residual；当前帧 pointmap 只能作为监督或评估。
 - `state_memory_token`：来自 recurrent state 或 decoder 中间 token，用来观察历史场景记忆是否提供有用信息。
-- `temporal_history_token`：来自上一帧 raw pose、pelvis、feet、body orientation、support state、previous correction 等。
+- `temporal_history_token`：来自上一帧 raw/corrected pose、pelvis、feet、body orientation、support state、previous correction 等。
 - `reliability_token`：来自 pointmap confidence、human confidence、joint visibility、mask quality、near-scene confidence、pose jump score 等，用来判断当前 cue 是否可靠。
 
 这些候选 token 最后不一定都会进入最终 prompt。V8.1 的任务是先把它们 dump 出来，并验证哪些真的 work。
 
 ### 2.1 V8.1 当前最小 Pose Correction Token
 
-当前 V8.1 先不使用所有候选信息，而是先测试一个最小可行版本：
+当前 V8.1 先不使用所有候选信息，而是先测试一个最小可行的 decoder-in prompt：
 
 ```text
 A_corr_t =
@@ -65,10 +65,10 @@ A_corr_t =
 
 | 组成 | 具体内容 | 显式/隐式 | 作用 |
 |---|---|---|---|
-| `A_body_part_t` | 当前帧 pelvis、torso、left foot、right foot 对应的人体 token | 隐式 token | 提供当前人体结构锚点 |
+| `A_body_part_t` | pelvis、torso、left foot、right foot 四个 learned body-part query 从当前 image / human tokens 中读取到的部位 token | 隐式 token | 提供当前人体结构锚点 |
 | `A_history_human_t` | 上一帧 corrected human anchors / previous body-part state | 显式历史缓存，后续可替换为隐式 memory token | 提供历史参照，判断当前人体是否在 world frame 中突然跳走 |
-| `A_camera_motion_t` | 当前 raw pose 和上一帧 raw/corrected pose 的相对运动、translation jump、rotation jump | 显式 pose motion feature，经过 MLP token 化 | 判断相机运动是否异常 |
-| `A_reliability_gate_t` | human score、body-part token confidence、anchor residual、pose jump score | 显式/隐式混合，经过 MLP token 化 | 决定当前 correction 是否应该强触发 |
+| `A_camera_motion_t` | 上一帧 raw/corrected pose、pose memory、当前 coarse pose token | 显式历史 + 隐式 pose prior，经过 MLP token 化 | 提供相机运动先验 |
+| `A_reliability_gate_t` | human score、body-part token confidence、历史 anchor consistency、previous confidence | 显式/隐式混合，经过 MLP token 化 | 决定当前 correction 是否应该强触发 |
 
 其中真正的当前帧人体语义部分是隐式的：
 
@@ -79,13 +79,14 @@ left foot token
 right foot token
 ```
 
-但 `A_corr_t` 整体不是全隐式，因为它还会融合历史 corrected anchors、raw pose jump、gate score 这些显式或半显式信息。它们的用法和 UniCon3R 的 `G_t` 类似：先用数值形式计算，再通过 MLP 映射到 token 维度，最后和人体 token 融合。
+但 `A_corr_t` 整体不是全隐式，因为它还会融合上一帧 corrected anchors、上一帧 pose history、gate score 这些显式或半显式信息。它们的用法和 UniCon3R 的 `G_t` 类似：先用数值形式计算，再通过 MLP 映射到 token 维度，最后和人体 token 融合。
 
 V8.1 的核心验证问题是：
 
 ```text
 在显式 human-only correction 已经成立的前提下，
-能否用这些 token / tokenized features 拟合同样的 pose correction？
+能否把这些 token / tokenized features 作为 A_corr_t 放进 decoder，
+并让 refined A_corr_t 修正 pose latent？
 ```
 
 ## 3. 验证 Token 是否提取正确
@@ -96,10 +97,12 @@ V8.1 的核心验证问题是：
 
 对 image encoder token / decoder image token：
 
-1. 将 SMPL pelvis、torso、left foot、right foot 等 3D joints 投影回 RGB 图像；
-2. 根据投影位置找到对应 patch token；
-3. 在图像上画出采样 patch 区域；
-4. 检查这个 patch 是否真的落在目标身体部位或目标背景区域。
+1. 用 Human3R 输出或数据集 GT 的 SMPL pelvis、torso、left foot、right foot 等 3D joints 投影回 RGB 图像，作为验证标尺；
+2. 根据投影位置找到对应 patch token，检查 body-part query 读到的 token 是否和这些区域相近；
+3. 在图像上画出采样 patch 区域或 attention / similarity heatmap；
+4. 检查这些区域是否真的落在目标身体部位或目标背景区域。
+
+注意：SMPL 投影在这里主要是验证工具，不是最终 decoder-in `A_corr_t` 在当前帧使用的输入。最终当前帧 body-part token 应该由 learned query 从当前 image / human tokens 中读取。
 
 需要重点检查：
 
@@ -233,70 +236,98 @@ camera + state memory
 all candidates
 ```
 
-第一阶段不需要直接输出 `delta_xi_t`。可以先训练或拟合一个很小的 `pose_error_score` probe：
+第一阶段的组合验证也应围绕 decoder-in prompt 展开。可以先让 refined `A_corr_t` 预测一个 pose error / drift gate：
 
 ```text
-candidate tokens -> small MLP / linear probe -> pose_error_score
+image / pose / human tokens + A_corr_t + state
+-> decoder
+-> refined A_corr_t
+-> small gate head
+-> pose_error_score
 ```
 
-如果 `pose_error_score` 能在 drift 帧附近升高，说明这些 token 的组合确实有诊断 pose drift 的能力。
+如果 `pose_error_score` 能在 drift 帧附近升高，说明这些 token 进入 decoder 后仍然保留了诊断 pose drift 的能力。
 
-之后再进入真正的 pose correction：
+之后再进入真正的 latent pose correction：
 
 ```text
-A_corr_t -> delta_xi_t + gate_t
-T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
+image / pose / human tokens + A_corr_t + state
+-> decoder
+-> refined pose token + refined A_corr_t
+-> residual head(refined A_corr_t)
+-> delta pose latent + gate
+
+corrected pose token = refined pose token + gate * delta pose latent
+corrected pose token -> pose head -> T_corr_t
 ```
 
-### 4.5 V8.1 最小闭环测试：隐式 Human Token Correction
+### 4.5 V8.1 最小闭环测试：UniCon-Style Human Pose Prompt
 
-在完成 token 提取和显式 proxy 验证后，V8.1 可以先做一个最小闭环测试。目标不是解决所有人体运动情况，而是验证：
+在完成 token 提取和显式 proxy 验证后，V8.1 做一个最小闭环训练。目标不是解决所有人体运动情况，而是验证：
 
 ```text
-仅使用 Human3R 内部可访问的人体相关 token，
-是否能预测出有用的 pose correction，
-并在可视化中把 drift pose 拉回去。
+A_corr_t 进入 Human3R decoder 后，
+refined A_corr_t 是否能产生有用的 pose latent residual，
+并通过 pose head 输出 corrected camera pose。
 ```
 
 第一版输入尽量保持简单，只使用已经验证过的 token-aligned 人体部位：
 
 ```text
+decoder 前构造:
 A_corr_t =
   pelvis token
   + torso token
   + left foot token
   + right foot token
   + previous corrected human-anchor memory
-  + raw camera motion / pose jump cue
+  + previous pose / pose memory cue
   + reliability gate cue
+
+decoder 内:
+image / pose / human tokens + A_corr_t + state
+  -> decoder attention
+
+decoder 后:
+refined A_corr_t
+  -> residual head
+  -> delta pose latent
+
+refined pose token + delta pose latent
+  -> pose head
+  -> corrected pose
 ```
 
-这里的 previous corrected human-anchor memory 可以先用上一帧显式 corrected anchors 作为 teacher memory，后续再替换成纯 token memory。这样做的目的不是最终方案定型，而是先验证 token 特征能不能学习到“人作为 pose correction anchor”的关系。
+这里的 previous corrected human-anchor memory 可以先用上一帧显式 corrected anchors 作为历史输入，后续再替换成纯 token memory。关键是：当前帧 correction token 仍然进入 decoder，并在 decoder 内和 pose / human / image / state tokens 交互。
 
 建议按三个级别推进：
 
 | 级别 | 做法 | 目的 |
 |---|---|---|
-| Level 1 | token probe 预测 pose error score / drift gate | 验证人体 token 能否判断哪一帧 pose 有问题 |
-| Level 2 | token probe 预测 explicit human-only correction 的 `delta pose` | 验证人体 token 能否拟合已经验证有效的显式 correction teacher |
-| Level 3 | 把预测的 `delta pose` 应用到 Human3R raw pose，并用 viewer 可视化 | 验证完整 token-to-correction 闭环是否成立 |
+| Level 1 | refined `A_corr_t` 预测 pose error score / drift gate | 验证 correction prompt 进入 decoder 后还能识别错误帧 |
+| Level 2 | refined `A_corr_t` 预测 pose latent residual，修正 pose token | 验证 correction prompt 能影响 pose latent |
+| Level 3 | corrected pose token 经过 pose head 输出 `T_corr_t` 并用 viewer 可视化 | 验证完整 decoder-in prompt-to-pose 闭环是否成立 |
 
 这一阶段可以先使用一个或少量 AABB case 做 overfit / sanity check：
 
 ```text
 input:
-  frozen Human3R dumped tokens
-  raw camera pose
-  explicit human-only correction teacher 或 GT camera pose
+  current image / pose / human tokens
+  A_corr_t
+  recurrent state
+  previous-frame cached anchors / pose history
 
 output:
   pose_error_score
-  predicted delta pose / gate
+  delta pose latent / gate
   corrected Human3R viewer result
   raw vs corrected camera trajectory comparison
+
+supervision:
+  GT camera pose 或 explicit human-only correction teacher
 ```
 
-如果这个闭环在小样本上都无法拟合，说明当前 token 设计不够；如果可以拟合，再扩大到 10 组 AABB 做 train / validation split。
+如果这个 decoder-in 闭环在小样本上都无法拟合，说明当前 `A_corr_t` 设计或注入位置不够；如果可以拟合，再扩大到 10 组 AABB 做 train / validation split。
 
 ## 5. V8.1 成功标准
 
@@ -308,6 +339,6 @@ V8.1 的成功标准不是最终修好 pose，而是完成以下验证：
 4. local geometry、body orientation、foot/contact、state/history 等 proxy 指标能被逐帧计算。
 5. 在已知 drift / shot switch 位置，至少一部分候选 proxy 出现可解释异常。
 6. 能通过单 token 和组合 ablation 判断哪些候选信息最有用。
-7. 最小 token probe 能在小样本 sanity check 中拟合 pose error / delta pose，并输出可视化 corrected pose，用来判断隐式人体 token 是否具备 correction 闭环能力。
+7. 最小 UniCon-style decoder-in prompt 能在小样本 sanity check 中拟合 pose error / pose latent residual，并输出可视化 corrected pose，用来判断隐式人体 token 是否具备 correction 闭环能力。
 
-只有当 V8.1 验证通过后，才进入下一阶段：确定最终 `A_corr_t` 的组成，并设计 lightweight pose correction head。
+只有当 V8.1 验证通过后，才进入下一阶段：确定最终 `A_corr_t` 的组成，并扩大训练数据和 ablation。
