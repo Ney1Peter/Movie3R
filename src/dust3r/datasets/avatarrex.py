@@ -59,6 +59,61 @@ def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx):
     return all(osp.isfile(path) for path in required_paths)
 
 
+def _avatarrex_load_camera_pose(split_path, seq_name, frame_idx):
+    frame_str = f"{int(frame_idx):08d}"
+    cam_path = osp.join(split_path, seq_name, "cam", f"{frame_str}.npz")
+    cam = np.load(cam_path)
+    return cam["pose"].astype(np.float32)
+
+
+def _avatarrex_camera_view_direction(camera_pose):
+    # Dataset camera_pose is c2w. The camera z-axis is enough for view-pair angle
+    # filtering; using +z or -z gives the same pair angle when used consistently.
+    direction = np.asarray(camera_pose[:3, 2], dtype=np.float32)
+    norm = np.linalg.norm(direction)
+    if not np.isfinite(norm) or norm < 1e-8:
+        return np.array([0.0, 0.0, 1.0], dtype=np.float32)
+    return direction / norm
+
+
+def _avatarrex_camera_angle_deg(pose_a, pose_b):
+    dir_a = _avatarrex_camera_view_direction(pose_a)
+    dir_b = _avatarrex_camera_view_direction(pose_b)
+    cos_angle = float(np.clip(np.dot(dir_a, dir_b), -1.0, 1.0))
+    return float(np.degrees(np.arccos(cos_angle)))
+
+
+def _avatarrex_read_sample_manifest(manifest_path):
+    if manifest_path is None:
+        return None
+    records = []
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        text = f.read().strip()
+    if not text:
+        return tuple()
+    if text[0] == "[":
+        parsed = json.loads(text)
+        records.extend(parsed)
+    else:
+        for line in text.splitlines():
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+
+    samples = []
+    for record in records:
+        if isinstance(record, (list, tuple)) and len(record) == 3:
+            seq_a, seq_b, start_frame = record
+        else:
+            seq_a = record.get("seqA", record.get("seq_a"))
+            seq_b = record.get("seqB", record.get("seq_b"))
+            start_frame = record.get("start_frame", record.get("frame", record.get("t")))
+        if seq_a is None or seq_b is None or start_frame is None:
+            raise ValueError(f"Invalid AvatarReX AABB manifest record: {record}")
+        samples.append((str(seq_a), str(seq_b), int(start_frame)))
+    return tuple(samples)
+
+
 def _empty_anchor_info(top_k=16):
     return dict(
         anchor_valid=np.array(False, dtype=np.bool_),
@@ -131,6 +186,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         anchor_top_k=16,
         anchor_quality_threshold=0.0,
         fixed_samples=None,
+        manifest_path=None,
+        min_view_angle_deg=None,
+        max_view_angle_deg=None,
+        max_samples=None,
+        pair_strategy="all",
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -143,7 +203,18 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.anchor_cache_only = anchor_cache_only
         self.anchor_top_k = anchor_top_k
         self.anchor_quality_threshold = anchor_quality_threshold
-        self.fixed_samples = self._normalize_fixed_samples(fixed_samples)
+        manifest_samples = _avatarrex_read_sample_manifest(manifest_path)
+        if fixed_samples is not None and manifest_samples is not None:
+            raise ValueError("Use either fixed_samples or manifest_path, not both.")
+        self.fixed_samples = self._normalize_fixed_samples(
+            fixed_samples if fixed_samples is not None else manifest_samples
+        )
+        self.manifest_path = manifest_path
+        self.min_view_angle_deg = min_view_angle_deg
+        self.max_view_angle_deg = max_view_angle_deg
+        self.max_samples = None if max_samples is None else int(max_samples)
+        self.pair_strategy = str(pair_strategy)
+        self.sample_view_angles = {}
         self.anchor_cache_index = {}
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
@@ -257,6 +328,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             print(f"  AvatarReX_AABB skipped incomplete samples: {skipped:,}/{before_file_filter:,}")
         # **========== 结束 ==========**
 
+        self._apply_view_angle_filter(seq_dir)
+
         if self.anchor_cache_root:
             self._load_anchor_cache_index()
             if self.anchor_cache_only:
@@ -282,6 +355,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             print(f"  AvatarReX_AABB fixed_samples: {len(self.samples):,}/{before:,} samples")
         # **========== 结束 ==========**
 
+        self._apply_max_samples()
+
     @staticmethod
     def _normalize_fixed_samples(fixed_samples):
         if fixed_samples is None:
@@ -299,6 +374,72 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             seq_a, seq_b, start_frame = sample
             normalized.append((str(seq_a), str(seq_b), int(start_frame)))
         return tuple(normalized)
+
+    def _pair_angle_deg(self, split_path, seqA_name, seqB_name):
+        key = (seqA_name, seqB_name)
+        if key in self.sample_view_angles:
+            return self.sample_view_angles[key]
+        frame_id = self.frame_ids[0]
+        pose_a = _avatarrex_load_camera_pose(split_path, seqA_name, frame_id)
+        pose_b = _avatarrex_load_camera_pose(split_path, seqB_name, frame_id)
+        angle = _avatarrex_camera_angle_deg(pose_a, pose_b)
+        self.sample_view_angles[key] = angle
+        return angle
+
+    def _apply_view_angle_filter(self, split_path):
+        if self.min_view_angle_deg is None and self.max_view_angle_deg is None:
+            return
+
+        min_angle = -np.inf if self.min_view_angle_deg is None else float(self.min_view_angle_deg)
+        max_angle = np.inf if self.max_view_angle_deg is None else float(self.max_view_angle_deg)
+        before = len(self.samples)
+        filtered = []
+        for sample in self.samples:
+            seqA_name, seqB_name, _ = sample
+            angle = self._pair_angle_deg(split_path, seqA_name, seqB_name)
+            if min_angle <= angle <= max_angle:
+                filtered.append(sample)
+        self.samples = filtered
+        print(
+            "  AvatarReX_AABB view-angle filter: "
+            f"{len(self.samples):,}/{before:,} samples "
+            f"({min_angle:.1f} <= angle <= {max_angle:.1f})"
+        )
+
+        if self.pair_strategy == "all":
+            return
+        if self.pair_strategy == "top_angle":
+            self.samples.sort(
+                key=lambda s: self._pair_angle_deg(split_path, s[0], s[1]),
+                reverse=True,
+            )
+            return
+        if self.pair_strategy == "fixed":
+            return
+        raise ValueError(
+            "AvatarReX_AABB pair_strategy must be one of "
+            f"'all', 'top_angle', 'fixed', got {self.pair_strategy!r}"
+        )
+
+    def _apply_max_samples(self):
+        if self.max_samples is None:
+            return
+        before = len(self.samples)
+        self.samples = self.samples[: self.max_samples]
+        print(f"  AvatarReX_AABB max_samples: {len(self.samples):,}/{before:,} samples")
+
+    def get_sample_metadata(self, idx):
+        seqA_name, seqB_name, start_frame = self.samples[idx]
+        split_path = osp.join(self.ROOT, self.split)
+        start_pos = self.frame_to_pos[int(start_frame)]
+        frames = [self.frame_ids[start_pos + offset] for offset in range(4)]
+        return {
+            "seqA": seqA_name,
+            "seqB": seqB_name,
+            "start_frame": int(start_frame),
+            "frames": frames,
+            "view_angle_deg": self._pair_angle_deg(split_path, seqA_name, seqB_name),
+        }
 
     def _sample_has_required_files(self, split_path, seqA_name, seqB_name, start_frame):
         start_pos = self.frame_to_pos.get(int(start_frame))
@@ -420,11 +561,15 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         ]
 
         boundary_anchor_info = self._load_anchor_info(seqA_name, seqB_name, t)
+        view_angle_deg = np.array(
+            self._pair_angle_deg(split_path, seqA_name, seqB_name), dtype=np.float32
+        )
         for v, (seq_name, cam_id, frame_idx, annots, shot_label) in enumerate(view_specs):
             view = self._load_view(
                 split_path, seq_name, cam_id, frame_idx, annots,
                 resolution, rng, v, shot_label,
             )
+            view["aabb_view_angle_deg"] = view_angle_deg
             view.update(boundary_anchor_info if v == 2 else _empty_anchor_info(self.anchor_top_k))
             views.append(view)
 
