@@ -1,0 +1,90 @@
+# V8.1 strict one-sample overfit.
+# Purpose: verify whether the UniCon-style decoder-in pose prompt can memorize
+# one 180-degree AvatarReX AABB camera switch when train/val/test are identical.
+defaults:
+  - train
+  - _self_
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_num_body_queries=4, v8_pose_prompt_num_heads=8,
+  v8_pose_prompt_dropout=0.0, v8_pose_prompt_gate_bias=0.0))
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth
+pretrained_mhmr: null
+load_only_encoder: False
+
+num_views: 4
+num_test_views: 4
+n_corres_train: 0
+n_corres_test: 0
+
+avatarrex_root: /data/wangzheng/iJCV-CODE/data/Avatarrex_output
+v8_single_sample: "[('22010710', '22053923', 0)]"
+
+train_dataset: 300 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_single_sample})
+val_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_single_sample})
+test_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_single_sample})
+
+# This is a capacity test, not a regularized training setup. We deliberately
+# emphasize rotation and remove gate/latent regularization to see whether the
+# branch can memorize the single 180-degree camera switch.
+train_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0)
+test_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0)
+
+batch_size: 1
+accum_iter: 1
+epochs: 1
+num_workers: 0
+gradient_checkpointing: true
+amp: 1
+benchmark: False
+fixed_length: True
+
+lr: 3.0e-04
+min_lr: 1.0e-05
+warmup_epochs: 0
+weight_decay: 0.0
+
+eval_freq: 1
+save_freq: 1
+keep_freq: 1
+print_freq: 10
+print_img_freq: 1000000
+structured_log_freq: 1
+save_code: false
+
+exp_name: v8_1_pose_prompt_overfit_1sample_start0_gpu7
+logdir: ./${save_dir}/${exp_name}/logs
+output_dir: ./${save_dir}/${exp_name}/
+
+console_log_keys:
+  - lr
+  - loss
+  - v8_pose_prompt_pose_loss
+  - v8_pose_prompt_trans_err
+  - v8_pose_prompt_rot_err_deg
+  - v8_raw_trans_err
+  - v8_raw_rot_err_deg
+  - v8_pose_prompt_gate_mean
+  - v8_pose_prompt_delta_norm
+
+step_log_keys:
+  - loss
+  - lr
+  - v8_pose_prompt_pose_loss
+  - v8_pose_prompt_trans_err
+  - v8_pose_prompt_rot_err_deg
+  - v8_raw_trans_err
+  - v8_raw_rot_err_deg
+  - v8_pose_prompt_gate_mean
+  - v8_pose_prompt_delta_norm
