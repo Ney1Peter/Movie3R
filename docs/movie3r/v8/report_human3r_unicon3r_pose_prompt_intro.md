@@ -178,6 +178,37 @@ UniCon3R 的 contact token =
 
 然后这个 contact token 不是只拿来输出一个 contact 结果，而是进入 decoder / correction branch，作为中间提示去修正 human reconstruction。
 
+更细一点看，UniCon3R 最终进入 decoder 的 contact token 不是显式 contact 表，而是一个 latent prompt token。论文里的核心形式可以理解为：
+
+```text
+C_t = MLP(H_t + U_scene + G_t + M_t)
+```
+
+其中哪些是显式信息、哪些是隐式信息，可以这样拆：
+
+| 组成 | 含义 | 显式/隐式 |
+|---|---|---|
+| `H_t` | human prompt / human token，表示当前人 | 隐式 token |
+| `U_scene` | 当前图像 token 和 recurrent state 读出来的人附近场景上下文 | 隐式 token |
+| `G_t` | 从上一帧 world pointmap 采样的人附近局部 3D 坐标 | 显式几何，再转成 token |
+| `M_t` | temporal momentum，来自上一帧 refined contact token `C'_{t-1}` | 隐式历史 token |
+| `gamma` | 当前 scene cue 和 memory scene cue 的融合 gate | 隐式 gate |
+| human anchor `u_t` | 当前人的 2D anchor，用来定位采样窗口 | 显式位置，但主要用于采样，不是最终 token 主体 |
+
+这里最典型的显式信息是 `G_t`。它进入 decoder 前会先被 token 化：
+
+```text
+上一帧 world pointmap X_{t-1}
++ 当前人 2D anchor u_t
+  -> 在人附近取局部窗口
+  -> RoIAlign 得到局部 3D 坐标 patch
+  -> pooling 得到一个 R3 geometry descriptor
+  -> MLP 映射到 decoder token 维度
+  -> geometry token G_t
+```
+
+所以 decoder 里看到的不是原始 `(x, y, z)` 坐标，而是已经被 MLP 编码后的 geometry token。这个设计说明：显式 cue 和隐式 token 并不冲突，显式几何可以先转成 token，再和 human token、scene token、history token 融合。
+
 ## 5. 我的 Pose Correction 如何参考 Contact Token
 
 我的任务不是修 contact，而是修 camera pose drift。
