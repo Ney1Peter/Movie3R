@@ -32,11 +32,15 @@ from dust3r.datasets.utils.transforms import ImgNorm
 from dust3r.utils.image import imread_cv2
 
 
+def _empty_depthmap(image_shape):
+    h, w = image_shape[:2]
+    return np.zeros((h, w), dtype=np.float32)
+
+
 def _load_depthmap_meters(depth_path, image_shape):
     """Load DA3 depth as float32 meters, supporting legacy uint16 millimeters."""
     if not osp.exists(depth_path):
-        h, w = image_shape[:2]
-        return np.zeros((h, w), dtype=np.float32)
+        return _empty_depthmap(image_shape)
 
     depth_raw = np.load(depth_path)
     depthmap = depth_raw.astype(np.float32)
@@ -48,14 +52,15 @@ def _load_depthmap_meters(depth_path, image_shape):
     return depthmap
 
 
-def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx):
+def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx, require_depth=True):
     frame_str = f"{int(frame_idx):08d}"
     required_paths = [
         osp.join(split_path, seq_name, "rgb", f"{frame_str}.png"),
         osp.join(split_path, seq_name, "cam", f"{frame_str}.npz"),
-        osp.join(split_path, seq_name, "depth", f"{frame_str}.npy"),
         osp.join(split_path, seq_name, "smpl", f"{frame_str}.pkl"),
     ]
+    if require_depth:
+        required_paths.append(osp.join(split_path, seq_name, "depth", f"{frame_str}.npy"))
     return all(osp.isfile(path) for path in required_paths)
 
 
@@ -191,6 +196,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         max_view_angle_deg=None,
         max_samples=None,
         pair_strategy="all",
+        load_da3_depth=True,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -214,6 +220,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.max_view_angle_deg = max_view_angle_deg
         self.max_samples = None if max_samples is None else int(max_samples)
         self.pair_strategy = str(pair_strategy)
+        self.load_da3_depth = bool(load_da3_depth)
         self.sample_view_angles = {}
         self.anchor_cache_index = {}
         self.smpl_key2shape = {
@@ -293,6 +300,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # **========== 结束 ==========**
 
         print(f"  {len(self.scenes)} sequences, {self.num_frames} frames each")
+        if not self.load_da3_depth:
+            print("  AvatarReX_AABB: DA3 depth disabled; depthmap is zero-filled for pose-only training")
         print(f"  Building AABB index...")
 
         # AABB: 两两跨序列组合（允许同序列但这里只有不同序列才有效）
@@ -451,10 +460,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         t2 = self.frame_ids[start_pos + 2]
         t3 = self.frame_ids[start_pos + 3]
         return (
-            _avatarrex_has_required_frame_files(split_path, seqA_name, t)
-            and _avatarrex_has_required_frame_files(split_path, seqA_name, t1)
-            and _avatarrex_has_required_frame_files(split_path, seqB_name, t2)
-            and _avatarrex_has_required_frame_files(split_path, seqB_name, t3)
+            _avatarrex_has_required_frame_files(split_path, seqA_name, t, require_depth=self.load_da3_depth)
+            and _avatarrex_has_required_frame_files(split_path, seqA_name, t1, require_depth=self.load_da3_depth)
+            and _avatarrex_has_required_frame_files(split_path, seqB_name, t2, require_depth=self.load_da3_depth)
+            and _avatarrex_has_required_frame_files(split_path, seqB_name, t3, require_depth=self.load_da3_depth)
         )
 
     def _load_anchor_cache_index(self):
@@ -615,7 +624,13 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         #     h, w = rgb_image.shape[:2]
         #     depthmap = np.zeros((h, w), dtype=np.float32)
         # **========== 新代码：兼容旧 uint16 毫米和新 float32 米单位 ==========**
-        depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        # V8.1 pose-prompt experiments can disable DA3 pseudo-depth completely:
+        # the pose loss does not use GT depth, and Human3R's predicted pointmap
+        # is the reconstruction cue we want to inspect.
+        if self.load_da3_depth:
+            depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        else:
+            depthmap = _empty_depthmap(rgb_image.shape)
         # **========== 结束 ==========**
 
         # Mask（可能不存在）
@@ -746,6 +761,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         allow_repeat=False,
         seed=None,
         anchor_top_k=16,
+        load_da3_depth=True,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_Video requires ROOT"
@@ -755,6 +771,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.max_interval = 4
         self.max_humans = 10
         self.anchor_top_k = anchor_top_k
+        self.load_da3_depth = bool(load_da3_depth)
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
             "smplx_body_pose": (21, 3),
@@ -815,6 +832,8 @@ class AvatarReX_Video(BaseMultiViewDataset):
 
         print(f"  AvatarReX_Video: {len(self.scenes)} sequences, "
               f"{self.num_frames} frames each, frames {self.frame_ids[0]}-{self.frame_ids[-1]}")
+        if not self.load_da3_depth:
+            print("  AvatarReX_Video: DA3 depth disabled; depthmap is zero-filled for pose-only training")
 
         # 构建索引：每个 scene 的每个有效起始位置
         self.samples = []
@@ -850,7 +869,9 @@ class AvatarReX_Video(BaseMultiViewDataset):
 
         for v in range(self.num_views):
             frame_idx = self.frame_ids[start_pos + v]
-            if not _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx):
+            if not _avatarrex_has_required_frame_files(
+                split_path, seq_name, frame_idx, require_depth=self.load_da3_depth
+            ):
                 return False
         return True
 
@@ -916,7 +937,13 @@ class AvatarReX_Video(BaseMultiViewDataset):
         #     h, w = rgb_image.shape[:2]
         #     depthmap = np.zeros((h, w), dtype=np.float32)
         # **========== 新代码：兼容旧 uint16 毫米和新 float32 米单位 ==========**
-        depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        # V8.1 pose-prompt experiments can disable DA3 pseudo-depth completely:
+        # the pose loss does not use GT depth, and Human3R's predicted pointmap
+        # is the reconstruction cue we want to inspect.
+        if self.load_da3_depth:
+            depthmap = _load_depthmap_meters(depth_path, rgb_image.shape)
+        else:
+            depthmap = _empty_depthmap(rgb_image.shape)
         # **========== 结束 ==========**
 
         # Mask

@@ -35,6 +35,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
     parser.add_argument("--seed", type=int, default=101)
+    parser.add_argument(
+        "--load_da3_depth",
+        action="store_true",
+        help="Load AvatarReX_output depth into GT views. Disabled by default for V8.1 pose-only checks.",
+    )
     parser.add_argument("--render", action="store_true")
     parser.add_argument("--render_video", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
@@ -68,6 +73,7 @@ def main() -> None:
         seed=args.seed,
         n_corres=0,
         fixed_samples=[(args.seq_a, args.seq_b, int(args.start_frame))],
+        load_da3_depth=bool(args.load_da3_depth),
     )
     loader = torch.utils.data.DataLoader(
         dataset,
@@ -120,6 +126,8 @@ def main() -> None:
         "output_dir": str(args.output_dir),
         "resolution": list(args.resolution),
         "inference_path": "AvatarReX_AABB dataloader + inference",
+        "load_da3_depth": bool(args.load_da3_depth),
+        "note": "Saved depth/pointmap comes from the model prediction; AvatarReX DA3 depth is not used unless --load_da3_depth is set.",
         "saved_output": True,
     }
     with open(args.output_dir / "avatarrex_aabb_save_summary.json", "w", encoding="utf-8") as f:
