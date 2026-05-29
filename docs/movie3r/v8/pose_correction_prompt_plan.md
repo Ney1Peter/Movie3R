@@ -227,3 +227,77 @@ T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
 > 不训练任何 correction head，仅通过 Human3R 输出构造候选 pose correction tokens，就能在 drift 帧附近找到可解释、可视化、可量化的异常信号。
 
 这可以证明 V8 的核心假设成立：人体结构、人体周围局部场景、显式 3D 几何和历史状态可以作为 Human3R camera pose drift correction 的结构化 anchor。支撑脚和 contact 是重要候选，但不预先假设它们一定是唯一或最优的选择。
+
+### 3.4 版本切分：V8.1 先跑通，V8.2 再处理人体真实运动
+
+当前 human-only 显式实验已经说明：pelvis、torso、left foot、right foot 这四个 token-aligned body anchors 对镜头切换后的 pose drift 很敏感，并且可以把错误 pose 拉回去。
+
+但是这个实验隐含了一个较强假设：
+
+```text
+人短时间内基本停在原地。
+```
+
+如果人正在走路、跳舞、蹲下或者快速运动，不能简单把当前人体位置硬对齐到上一帧人体位置。否则真实的人体运动会被误认为 camera drift。
+
+因此 V8 可以分成两个阶段：
+
+| 版本 | 目标 | 核心假设 |
+|---|---|---|
+| V8.1 | 先验证隐式人体 token 是否能支撑 pose correction 闭环 | 短时间人体位移较小，先用 previous corrected anchors 做历史参照 |
+| V8.2 | 加入 motion-aware human history | 人不是静态锚点，而是连续运动锚点 |
+
+V8.1 的重点是先跑通最小闭环：
+
+```text
+frozen Human3R
+-> dump current human/body-part tokens
+-> 构造 token-aligned A_corr_t
+-> 小 probe / MLP 预测 pose error 或 delta pose
+-> 可视化 corrected pose
+```
+
+这一步回答的问题是：
+
+```text
+不依赖显式 GT 人体锚点时，
+Human3R 内部的人体 token 是否真的包含足够信息来纠正 camera pose drift？
+```
+
+V8.2 再把“人体静止锚点”升级为“人体连续运动锚点”：
+
+```text
+previous corrected anchors:
+  p_{t-1}, p_{t-2}, ...
+
+estimated human velocity:
+  v_{t-1} = p_{t-1} - p_{t-2}
+
+predicted current anchor:
+  p_pred_t = p_{t-1} + v_{t-1}
+
+motion residual:
+  p_raw_t - p_pred_t
+```
+
+这样 correction 不再假设人不动，而是假设：
+
+```text
+人在相邻短时间内的运动应该连续，不应该在 world frame 里突然瞬移。
+```
+
+V8.2 的 pose correction token 可以增加：
+
+```text
+A_history_human_motion =
+  previous corrected anchors
+  + previous velocity
+  + previous acceleration
+  + previous gate / correction confidence
+
+A_motion_residual =
+  current raw anchors
+  - predicted current anchors from motion history
+```
+
+如果所有稳定人体部位的 residual 方向和大小比较一致，更像 camera pose drift；如果只有单个部位异常，更像人体动作、遮挡或 SMPL 误差，应该降低 correction gate。

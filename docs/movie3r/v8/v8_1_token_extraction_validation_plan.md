@@ -209,6 +209,56 @@ A_corr_t -> delta_xi_t + gate_t
 T_corr_t = exp(gate_t * delta_xi_t) @ T_raw_t
 ```
 
+### 4.5 V8.1 最小闭环测试：隐式 Human Token Correction
+
+在完成 token 提取和显式 proxy 验证后，V8.1 可以先做一个最小闭环测试。目标不是解决所有人体运动情况，而是验证：
+
+```text
+仅使用 Human3R 内部可访问的人体相关 token，
+是否能预测出有用的 pose correction，
+并在可视化中把 drift pose 拉回去。
+```
+
+第一版输入尽量保持简单，只使用已经验证过的 token-aligned 人体部位：
+
+```text
+A_corr_t =
+  pelvis token
+  + torso token
+  + left foot token
+  + right foot token
+  + previous corrected human-anchor memory
+  + raw camera motion / pose jump cue
+  + reliability gate cue
+```
+
+这里的 previous corrected human-anchor memory 可以先用上一帧显式 corrected anchors 作为 teacher memory，后续再替换成纯 token memory。这样做的目的不是最终方案定型，而是先验证 token 特征能不能学习到“人作为 pose correction anchor”的关系。
+
+建议按三个级别推进：
+
+| 级别 | 做法 | 目的 |
+|---|---|---|
+| Level 1 | token probe 预测 pose error score / drift gate | 验证人体 token 能否判断哪一帧 pose 有问题 |
+| Level 2 | token probe 预测 explicit human-only correction 的 `delta pose` | 验证人体 token 能否拟合已经验证有效的显式 correction teacher |
+| Level 3 | 把预测的 `delta pose` 应用到 Human3R raw pose，并用 viewer 可视化 | 验证完整 token-to-correction 闭环是否成立 |
+
+这一阶段可以先使用一个或少量 AABB case 做 overfit / sanity check：
+
+```text
+input:
+  frozen Human3R dumped tokens
+  raw camera pose
+  explicit human-only correction teacher 或 GT camera pose
+
+output:
+  pose_error_score
+  predicted delta pose / gate
+  corrected Human3R viewer result
+  raw vs corrected camera trajectory comparison
+```
+
+如果这个闭环在小样本上都无法拟合，说明当前 token 设计不够；如果可以拟合，再扩大到 10 组 AABB 做 train / validation split。
+
 ## 5. V8.1 成功标准
 
 V8.1 的成功标准不是最终修好 pose，而是完成以下验证：
@@ -219,5 +269,6 @@ V8.1 的成功标准不是最终修好 pose，而是完成以下验证：
 4. local geometry、body orientation、foot/contact、state/history 等 proxy 指标能被逐帧计算。
 5. 在已知 drift / shot switch 位置，至少一部分候选 proxy 出现可解释异常。
 6. 能通过单 token 和组合 ablation 判断哪些候选信息最有用。
+7. 最小 token probe 能在小样本 sanity check 中拟合 pose error / delta pose，并输出可视化 corrected pose，用来判断隐式人体 token 是否具备 correction 闭环能力。
 
 只有当 V8.1 验证通过后，才进入下一阶段：确定最终 `A_corr_t` 的组成，并设计 lightweight pose correction head。
