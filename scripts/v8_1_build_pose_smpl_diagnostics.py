@@ -21,18 +21,19 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import roma
+import smplx
 from smplx.joint_names import JOINT_NAMES
 
-from dust3r.datasets.avatarrex import AvatarReX_AABB
-from dust3r.smpl_model import SMPLModel
-from dust3r.utils.device import todevice
 from dust3r.utils.smpl_layer import SMPL_Layer
+from dust3r.smpl_model import SMPLX_DIR
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pred_output_dir", type=Path, required=True)
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
+    parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
     parser.add_argument("--split", default="Training")
     parser.add_argument("--seq_a", default="22010710")
     parser.add_argument("--seq_b", default="22053923")
@@ -94,54 +95,83 @@ def rotation_error_deg(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.degrees(angle))
 
 
+def load_raw_avatarrex_gt(args: argparse.Namespace) -> tuple[dict, np.lib.npyio.NpzFile]:
+    calibration_path = args.avatarrex_raw_root / "calibration_full.json"
+    smpl_path = args.avatarrex_raw_root / "smpl_params.npz"
+    if not calibration_path.is_file():
+        raise FileNotFoundError(calibration_path)
+    if not smpl_path.is_file():
+        raise FileNotFoundError(smpl_path)
+    with open(calibration_path, "r", encoding="utf-8") as f:
+        calibration = json.load(f)
+    return calibration, np.load(smpl_path)
+
+
 def build_gt_smpl_npzs(args: argparse.Namespace, ref_output_dir: Path) -> list[dict[str, np.ndarray]]:
-    dataset = AvatarReX_AABB(
-        split=args.split,
-        ROOT=str(args.avatarrex_root),
-        resolution=tuple(args.resolution),
-        num_views=4,
-        aug_crop=0,
-        allow_repeat=True,
-        seed=args.seed,
-        n_corres=0,
-        fixed_samples=[(args.seq_a, args.seq_b, int(args.start_frame))],
-    )
-    views = next(iter(torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0)))
+    """Write GT SMPL in the same head-centered camera-space format as demo.py.
+
+    The AvatarReX_output camera pose is a local c2w used by Human3R/CUT3R, but
+    the SMPL parameters originate from the raw AvatarReX world.  The incorrect
+    first diagnostic version inverted the local c2w to recover SMPL camera
+    coordinates.  That makes the body lie sideways in the viewer.
+
+    Correct conversion:
+      raw SMPL world --raw calibration R/T--> image camera coordinates
+      root_cam = R_calib @ root_world
+      transl   = head joint in image camera coordinates
+
+    This matches SMPL_Layer(person_center="head"), which is what the saved
+    Human3R viewer path uses.
+    """
+    calibration, smpl_data = load_raw_avatarrex_gt(args)
+    specs = avatarrex_specs(args.seq_a, args.seq_b, int(args.start_frame))
     device = torch.device(args.device if args.device == "cuda" and torch.cuda.is_available() else "cpu")
-    views = todevice(views, device)
-    smpl_model = SMPLModel(device, model_args={"patch_size": 16, "mhmr_img_res": 896, "bb_patch_size": 14})
+    raw_smplx = smplx.create(
+        SMPLX_DIR,
+        "smplx",
+        gender="neutral",
+        use_pca=False,
+        flat_hand_mean=True,
+        num_betas=10,
+    ).to(device).eval()
     head_idx = JOINT_NAMES.index("head")
 
     gt_smpls = []
     with torch.no_grad():
-        for i, view in enumerate(views):
-            smpl_mask = view["smpl_mask"][0].bool()
-            if not smpl_mask.any():
-                raise RuntimeError(f"No raw GT SMPL in view {i} before visibility filtering")
-            h = int(torch.where(smpl_mask)[0][0])
-            shape = view["smplx_shape"][0, h].reshape(1, -1)
-            root = view["smplx_root_pose"][0, h].reshape(1, 1, 3)
-            body = view["smplx_body_pose"][0, h].reshape(1, 21, 3)
-            left_hand = view["smplx_left_hand_pose"][0, h].reshape(1, 15, 3)
-            right_hand = view["smplx_right_hand_pose"][0, h].reshape(1, 15, 3)
-            jaw = view["smplx_jaw_pose"][0, h].reshape(1, 1, 3)
-            transl = view["smplx_transl"][0, h].reshape(1, 3)
-            expr = smpl_model.smplx_neutral_11.expression.repeat(1, 1)
+        for i, (seq, frame) in enumerate(specs):
+            if seq not in calibration:
+                raise KeyError(f"{seq} not found in {args.avatarrex_raw_root / 'calibration_full.json'}")
+            cal = calibration[seq]
+            R_calib = torch.tensor(np.asarray(cal["R"], dtype=np.float32).reshape(3, 3), device=device)
+            T_calib = torch.tensor(np.asarray(cal["T"], dtype=np.float32).reshape(3), device=device)
 
-            raw_out = smpl_model.smplx_neutral_11(
-                global_orient=root.reshape(1, 3),
+            root_world = torch.tensor(smpl_data["global_orient"][frame], dtype=torch.float32, device=device).reshape(1, 3)
+            body = torch.tensor(smpl_data["body_pose"][frame], dtype=torch.float32, device=device).reshape(1, 21, 3)
+            left_hand = torch.tensor(smpl_data["left_hand_pose"][frame], dtype=torch.float32, device=device).reshape(1, 15, 3)
+            right_hand = torch.tensor(smpl_data["right_hand_pose"][frame], dtype=torch.float32, device=device).reshape(1, 15, 3)
+            jaw = torch.tensor(smpl_data["jaw_pose"][frame], dtype=torch.float32, device=device).reshape(1, 1, 3)
+            shape = torch.tensor(smpl_data["betas"][0], dtype=torch.float32, device=device).reshape(1, 10)
+            transl_world = torch.tensor(smpl_data["transl"][frame], dtype=torch.float32, device=device).reshape(1, 3)
+            expr = torch.tensor(smpl_data["expression"][frame], dtype=torch.float32, device=device).reshape(1, 10)
+
+            world_out = raw_smplx(
+                global_orient=root_world,
                 body_pose=body.reshape(1, 21 * 3),
                 jaw_pose=jaw.reshape(1, 3),
-                leye_pose=view["smplx_leye_pose"][0, h].reshape(1, 3),
-                reye_pose=view["smplx_reye_pose"][0, h].reshape(1, 3),
+                leye_pose=torch.zeros(1, 3, device=device),
+                reye_pose=torch.zeros(1, 3, device=device),
                 left_hand_pose=left_hand.reshape(1, 15 * 3),
                 right_hand_pose=right_hand.reshape(1, 15 * 3),
-                betas=shape.reshape(1, -1),
-                transl=transl,
+                betas=shape,
+                transl=transl_world,
                 expression=expr,
             )
-            head_cam = raw_out.joints[:, head_idx].detach().cpu().numpy().astype(np.float32)
-            rotvec = torch.cat([root, body, left_hand, right_hand, jaw], dim=1)
+            joints_cam = world_out.joints @ R_calib.T + T_calib.reshape(1, 1, 3)
+            head_cam = joints_cam[:, head_idx].detach().cpu().numpy().astype(np.float32)
+
+            root_cam_mat = R_calib @ roma.rotvec_to_rotmat(root_world)[0]
+            root_cam = roma.rotmat_to_rotvec(root_cam_mat).reshape(1, 1, 3)
+            rotvec = torch.cat([root_cam, body, left_hand, right_hand, jaw], dim=1)
 
             src_smpl = np.load(ref_output_dir / "smpl" / f"{i:06d}.npz", allow_pickle=True)
             gt_smpls.append(
