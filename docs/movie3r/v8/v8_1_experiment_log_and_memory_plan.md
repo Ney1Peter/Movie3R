@@ -782,6 +782,46 @@ online_human_motion_gated:
 
 The gated version is closer to the intended V8 plugin because normal frames should not be over-corrected.
 
+Important clarification:
+
+```text
+The "corrected history" for frame 1 comes from frame 0.
+Frame 0 has no previous frame, so it keeps T_raw_0 as T_corr_0.
+The four body anchors under T_corr_0 are then saved as the first history.
+```
+
+Therefore, the online chain is:
+
+```text
+frame 0:
+  raw pose is used as the initial world frame
+  save corrected anchors from raw frame 0
+
+frame 1:
+  compare current raw anchors with frame-0 corrected anchors
+  if the residual is small, keep raw pose
+  save frame-1 final anchors
+
+frame 2 and later:
+  compare current raw anchors with the previous final anchors
+  if the residual is large, fit a camera correction
+```
+
+This test is not yet a pure token-vector correction head.  It is a token-aligned explicit-anchor baseline:
+
+```text
+current implementation:
+  Human3R predicted SMPL joints -> four explicit body-anchor coordinates
+
+why this is still useful:
+  these four parts were already validated as token-accessible regions
+  and the online test proves their history can correct camera pose
+
+next step:
+  replace explicit anchor coordinates / hand-written residuals
+  with prompt tokens and a lightweight correction head
+```
+
 ### 12.3 Outputs
 
 Saved-output directories:
