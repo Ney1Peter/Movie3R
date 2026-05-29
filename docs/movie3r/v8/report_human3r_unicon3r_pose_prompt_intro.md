@@ -47,7 +47,7 @@ video frame
   -> scene + camera pose + human reconstruction
 ```
 
-UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token，并且用它预测一个 correction offset，反过来修正 human latent / human reconstruction。
+UniCon3R 的核心改动是：在这个流程中额外加入 contact prompt / contact token。这个 token 不是 decoder 后面的普通后处理特征，而是和 image / camera / human tokens 一起进入 decoder，在 decoder 里面通过 attention 和 human token 交互。decoder 输出 refined contact token 后，再用它预测 contact 和 human latent residual，反过来修正 human reconstruction。
 
 ```text
 video frame
@@ -59,14 +59,24 @@ human token + local scene token + geometry cue + history memory
 
 image / camera / human tokens + [新增] contact token + recurrent state
   -> decoder
-  -> image / camera / human / pose tokens + [新增] refined contact token
+  -> refined image / camera / human / pose tokens + [新增] refined contact token
 
-[新增] refined contact token + human token
-  -> contact-guided correction head
-  -> 预测 human correction offset / residual
-  -> 应用回 human latent / human prediction
+refined human token + HMR prior
+  -> refined human latent
 
-corrected human token / corrected human latent
+[新增] refined contact token + HMR prior
+  -> contact latent
+
+contact latent
+  -> contact head
+  -> 预测 SMPL mesh 上每个 vertex 的 contact probability
+
+contact latent
+  -> residual head
+  -> 预测 human latent residual: delta H
+
+refined human latent + delta H
+  -> corrected human latent
   -> human head
   -> contact-aware human reconstruction
 
@@ -75,15 +85,23 @@ image / pose tokens
   -> scene + camera pose
 ```
 
-也就是说，UniCon3R 不是完全重做一个模型，而是在 Human3R 这种 foundation backbone 上加一个轻量的 contact-guided correction 分支。
+也就是说，UniCon3R 不是完全重做一个模型，而是在 Human3R 这种 foundation backbone 上加一个轻量的 contact-guided prompt / refinement 分支。
 
-更重要的是，contact token 不是只作为一个额外监督目标输出出来，而是会参与后续修正：
+这里要避免一个歧义：不是简单把 refined contact token 和 refined human token 拼起来，然后一起过两个 head。更接近论文公式的流程是：decoder 后得到 `H'_t` 和 `C'_t`；`H'_t` concat HMR prior 得到 `H_tilde`，`C'_t` concat HMR prior 得到 `C_tilde`。然后 `C_tilde` 分别进入 contact head 和 residual head；residual head 输出的 `delta H` 加回 `H_tilde`，再交给 human head 输出最终 SMPL / mesh。
+
+更重要的是，contact token 有两个作用，不能只理解成一个 contact 分类输出：
 
 ```text
-contact token
-  -> 预测 correction residual
-  -> residual 应用到 human latent / human prediction
-  -> 输出更合理的 human reconstruction
+作用 1：decoder 内交互
+contact token 和 human token 一起进入 decoder
+  -> human token 可以吸收 contact / scene / geometry 信息
+
+作用 2：decoder 后 refinement
+refined contact token
+  -> contact head: 预测哪里接触
+  -> residual head: 预测 delta H
+  -> delta H 加回 refined human latent
+  -> human head 输出更合理的 SMPL / mesh
 ```
 
 它的核心思想是：
