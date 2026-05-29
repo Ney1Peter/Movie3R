@@ -88,6 +88,31 @@ def _avatarrex_camera_angle_deg(pose_a, pose_b):
     return float(np.degrees(np.arccos(cos_angle)))
 
 
+def _load_avatarrex_raw_calibration(raw_calibration_root):
+    if raw_calibration_root is None:
+        return None
+    calibration_path = osp.join(str(raw_calibration_root), "calibration_full.json")
+    if not osp.isfile(calibration_path):
+        raise FileNotFoundError(f"AvatarReX raw calibration not found: {calibration_path}")
+    with open(calibration_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _raw_calibration_c2w(calibration, seq_name):
+    """Return raw AvatarReX c2w from calibration convention X_cam = R @ X_world + T."""
+    if calibration is None:
+        return None
+    if seq_name not in calibration:
+        raise KeyError(f"{seq_name} not found in raw AvatarReX calibration")
+    cal = calibration[seq_name]
+    R_w2c = np.asarray(cal["R"], dtype=np.float32).reshape(3, 3)
+    T_w2c = np.asarray(cal["T"], dtype=np.float32).reshape(3)
+    pose = np.eye(4, dtype=np.float32)
+    pose[:3, :3] = R_w2c.T
+    pose[:3, 3] = -R_w2c.T @ T_w2c
+    return pose
+
+
 def _avatarrex_read_sample_manifest(manifest_path):
     if manifest_path is None:
         return None
@@ -197,6 +222,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         max_samples=None,
         pair_strategy="all",
         load_da3_depth=True,
+        raw_calibration_root=None,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -221,6 +247,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.max_samples = None if max_samples is None else int(max_samples)
         self.pair_strategy = str(pair_strategy)
         self.load_da3_depth = bool(load_da3_depth)
+        self.raw_calibration_root = raw_calibration_root
+        self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
         self.sample_view_angles = {}
         self.anchor_cache_index = {}
         self.smpl_key2shape = {
@@ -302,6 +330,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         print(f"  {len(self.scenes)} sequences, {self.num_frames} frames each")
         if not self.load_da3_depth:
             print("  AvatarReX_AABB: DA3 depth disabled; depthmap is zero-filled for pose-only training")
+        if self.raw_calibration is not None:
+            print(f"  AvatarReX_AABB: raw calibration camera pose enabled from {self.raw_calibration_root}")
         print(f"  Building AABB index...")
 
         # AABB: 两两跨序列组合（允许同序列但这里只有不同序列才有效）
@@ -614,6 +644,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         cam = np.load(cam_path)
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
+        raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -719,6 +750,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
+            **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,
             dataset="AvatarReX_AABB",
             label=f"{seq_name}_{frame_str}",
@@ -762,6 +794,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         seed=None,
         anchor_top_k=16,
         load_da3_depth=True,
+        raw_calibration_root=None,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_Video requires ROOT"
@@ -772,6 +805,8 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.max_humans = 10
         self.anchor_top_k = anchor_top_k
         self.load_da3_depth = bool(load_da3_depth)
+        self.raw_calibration_root = raw_calibration_root
+        self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
             "smplx_body_pose": (21, 3),
@@ -834,6 +869,8 @@ class AvatarReX_Video(BaseMultiViewDataset):
               f"{self.num_frames} frames each, frames {self.frame_ids[0]}-{self.frame_ids[-1]}")
         if not self.load_da3_depth:
             print("  AvatarReX_Video: DA3 depth disabled; depthmap is zero-filled for pose-only training")
+        if self.raw_calibration is not None:
+            print(f"  AvatarReX_Video: raw calibration camera pose enabled from {self.raw_calibration_root}")
 
         # 构建索引：每个 scene 的每个有效起始位置
         self.samples = []
@@ -927,6 +964,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         cam = np.load(cam_path)
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
+        raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -1027,6 +1065,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
+            **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,
             dataset="AvatarReX_Video",
             label=f"{seq_name}_{frame_str}",

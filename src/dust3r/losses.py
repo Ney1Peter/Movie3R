@@ -1832,6 +1832,7 @@ class V81PosePromptLoss(MultiLoss):
         latent_weight=0.01,
         gate_weight=0.0,
         loss_type="smooth_l1",
+        pose_key="camera_pose",
     ):
         super().__init__()
         self.translation_weight = float(translation_weight)
@@ -1839,6 +1840,7 @@ class V81PosePromptLoss(MultiLoss):
         self.latent_weight = float(latent_weight)
         self.gate_weight = float(gate_weight)
         self.loss_type = str(loss_type)
+        self.pose_key = str(pose_key)
 
     def get_name(self):
         return "V81PosePromptLoss"
@@ -1865,9 +1867,12 @@ class V81PosePromptLoss(MultiLoss):
         return 2.0 * torch.acos(dot)
 
     def _gt_pose_encodings(self, gts):
-        in_camera0 = inv(gts[0]["camera_pose"])
+        pose_key = self.pose_key
+        if pose_key not in gts[0]:
+            raise KeyError(f"V81PosePromptLoss pose_key={pose_key!r} not found in GT view")
+        in_camera0 = inv(gts[0][pose_key])
         return [
-            camera_to_pose_encoding(in_camera0 @ gt["camera_pose"]).clone()
+            camera_to_pose_encoding(in_camera0 @ gt[pose_key]).clone()
             for gt in gts
         ]
 
