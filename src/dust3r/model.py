@@ -1106,6 +1106,80 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_pose_token_adapter = False
             self.enable_v7_pose_adapter = False
             self.enable_v8_pose_prompt = True
+        elif freeze == "v8_pose_prompt_pose_head":
+            # V8.1 ablation: match the UniCon3R fine-tuning pattern more
+            # closely by training the decoder-in prompt branch plus the
+            # original pose head. The backbone, recurrent decoder, scene/human
+            # heads, MHM-R branch, and old V2-V7 adapters stay frozen.
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                self.layerwise_pose_shot_adapter,
+                self.anchor_pose_adapter,
+                self.anchor_decoder_token_projector,
+                self.anchor_decoder_token_scale,
+                self.anchor_pose_token_attention,
+                self.anchor_pose_token_delta,
+                self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
+            ])
+            for module in [self.v8_pose_prompt, self.v8_pose_residual_head, self.downstream_head.pose_head]:
+                for p in module.parameters():
+                    p.requires_grad = True
+            self.enable_shot_adaptation = False
+            self.enable_shot_decoder_token = False
+            self.enable_layerwise_pose_shot_adapter = False
+            self.enable_pose_alignment_adapter = False
+            self.enable_pose_translation_adapter = False
+            self.enable_pose_lora = False
+            self.enable_human_lora = False
+            self.enable_world_lora = False
+            self.enable_anchor_pose_adapter = False
+            self.enable_anchor_decoder_tokens = False
+            self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = False
+            self.enable_v8_pose_prompt = True
+        elif freeze == "pose_head_only":
+            # V8.1 ablation: train only the original pose head, without adding
+            # A_corr_t to the decoder. This checks whether a single-sample
+            # improvement can be explained by pose-head memorization alone.
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                self.layerwise_pose_shot_adapter,
+                self.anchor_pose_adapter,
+                self.anchor_decoder_token_projector,
+                self.anchor_decoder_token_scale,
+                self.anchor_pose_token_attention,
+                self.anchor_pose_token_delta,
+                self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
+                self.v8_pose_prompt,
+                self.v8_pose_residual_head,
+            ])
+            for p in self.downstream_head.pose_head.parameters():
+                p.requires_grad = True
+            self.enable_shot_adaptation = False
+            self.enable_shot_decoder_token = False
+            self.enable_layerwise_pose_shot_adapter = False
+            self.enable_pose_alignment_adapter = False
+            self.enable_pose_translation_adapter = False
+            self.enable_pose_lora = False
+            self.enable_human_lora = False
+            self.enable_world_lora = False
+            self.enable_anchor_pose_adapter = False
+            self.enable_anchor_decoder_tokens = False
+            self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = False
+            self.enable_v8_pose_prompt = False
         elif freeze == "shot_adaptation":
             # 冻结所有原始模块（使用 freeze_all_params 设置 requires_grad=False）
             freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
