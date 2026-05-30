@@ -127,7 +127,7 @@ def main() -> None:
     )
 
     add_path_to_dust3r(str(args.model_path))
-    model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device).eval()
+    model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device).float().eval()
     smpl_model = SMPLModel(
         device,
         model_args={
