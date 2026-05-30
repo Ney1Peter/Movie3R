@@ -251,3 +251,120 @@ Before any new AvatarReX pose-prompt training run:
 4. Set `load_da3_depth=False` unless the experiment explicitly studies DA3 as a weak monocular cue.
 5. Use no-depth raw calibration + SMPL viewer as the coordinate sanity check.
 6. Only after this check passes, evaluate model-corrected pointmap / SMPL in the Human3R viewer.
+
+## 2026-05-30 Update: Single-Sample Pose-Head Ablation
+
+### Goal
+
+After noticing that UniCon3R fine-tunes its original human head in addition to its new residual/contact heads, we tested whether V8.1 should also fine-tune the original pose head.
+
+Same sample as the previous successful run:
+
+```text
+seq_a = 22010710
+seq_b = 22053923
+start_frame = 0
+views = A_t, A_t+1, B_t+2, B_t+3
+target = raw_camera_pose from calibration_full.json
+load_da3_depth = False
+```
+
+### Compared Runs
+
+| Name | Trainable modules | Purpose |
+| --- | --- | --- |
+| A raw | none | Original Human3R baseline |
+| B prompt frozen pose head | V8.1 prompt + residual/gate only | Previous successful decoder-in prompt sanity check |
+| C prompt + pose head | V8.1 prompt + residual/gate + original pose head | UniCon-style head fine-tuning analogue |
+| D pose head only | original pose head only, no `A_corr_t` | Check whether single-sample success is just pose-head memorization |
+
+New freeze modes:
+
+```text
+freeze = "v8_pose_prompt_pose_head"
+freeze = "pose_head_only"
+```
+
+The ablation configs skip redundant epoch-end `checkpoint-last.pth` and save only the final checkpoint to avoid filling `/tmp`.
+
+### Training Observations
+
+C run:
+
+```text
+output_dir:
+  /tmp/movie3r_v8_1_ablation_scratch
+export:
+  /tmp/movie3r_v8_1_ablation_posehead_prompt_output
+final train step:
+  v8_pose_prompt_trans_err = 0.0016
+  v8_pose_prompt_rot_err_deg = 0.0560
+```
+
+D run:
+
+```text
+output_dir:
+  /tmp/movie3r_v8_1_pose_head_only_scratch
+export:
+  /tmp/movie3r_v8_1_ablation_pose_head_only_output
+final train step:
+  v8_pose_prompt_trans_err = 0.0040
+  v8_pose_prompt_rot_err_deg = 0.0560
+```
+
+Important caveat: the training log is in the pose-encoding loss space. For final judgment, use the exported `camera/*.npz` 4x4 pose against the raw-calibration relative target.
+
+### Exported 4x4 Camera Pose Metrics
+
+Metrics below compare saved viewer camera poses with:
+
+```text
+T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
+```
+
+| Run | Mean trans err | Mean rot err | B-frame trans err | B-frame rot err |
+| --- | ---: | ---: | ---: | ---: |
+| A raw Human3R | 1.8148 | 89.6905 deg | 3.6261 | 179.2521 deg |
+| B prompt, frozen pose head | 0.0705 | 0.5742 deg | 0.1370 | 0.9818 deg |
+| C prompt + pose head | 0.0296 | 0.0489 deg | 0.0541 | 0.0492 deg |
+| D pose head only | 0.0371 | 1.4408 deg | 0.0569 | 0.8253 deg |
+
+Per-frame exported metrics:
+
+```text
+C prompt + pose head:
+  frame 0: trans 0.0042, rot 0.0485 deg
+  frame 1: trans 0.0058, rot 0.0485 deg
+  frame 2: trans 0.0480, rot 0.0335 deg
+  frame 3: trans 0.0602, rot 0.0650 deg
+
+D pose head only:
+  frame 0: trans 0.0200, rot 2.2569 deg
+  frame 1: trans 0.0145, rot 1.8559 deg
+  frame 2: trans 0.0657, rot 1.2206 deg
+  frame 3: trans 0.0481, rot 0.4300 deg
+```
+
+### Interpretation
+
+Single-sample overfit alone is not enough to prove the prompt contribution, because D shows that the original pose head can memorize this one AABB sample surprisingly well.
+
+However, C is still the best of the tested variants in exported 4x4 pose space:
+
+- It keeps B-frame translation similar to D.
+- It greatly improves rotation compared with D.
+- It is closer to the UniCon3R design, where the new prompt branch and the original downstream head are adapted together.
+
+So the next small-scale experiment should not conclude from single-sample overfit. It should compare B/C/D on a held-out set:
+
+```text
+train: 5-10 AABB samples
+test: 5 held-out start frames or camera pairs
+```
+
+Expected decision rule:
+
+- If C beats B and D on held-out samples, pose-head fine-tuning is useful and prompt is contributing.
+- If D matches C on held-out samples, the prompt is not yet necessary or not being used effectively.
+- If C overfits train but hurts held-out, use a lower LR for pose head or only fine-tune the last pose-head layer.
