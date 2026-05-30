@@ -64,6 +64,58 @@ load_da3_depth=False
 
 Human3R 自己预测的 pointmap/depth 可以作为模型输出或可视化 cue 看，但 DA3 depth 不能用来验证跨相机世界坐标是否正确。
 
+## 2026-05-30 关键更新：V8.1 小批量 C 版本效果可用
+
+在单样本 overfit 之后，已经跑通 10 个 AvatarReX AABB clip 的小批量 C 版本训练：
+
+```text
+C version:
+  A_corr_t 进入 decoder
+  + V8.1 prompt / residual / gate branch
+  + 微调原 pose head
+  + 冻结 backbone / decoder / scene head / human head
+```
+
+训练设置：
+
+```text
+train:
+  10 fixed AABB clips
+  1000 steps
+  batch size = 1
+  raw calibration pose target
+  load_da3_depth=False
+```
+
+测试结果：
+
+```text
+same-pair held-out:
+  raw B-frame: 178.4 deg / 3.56
+  C B-frame:     1.70 deg / 0.043
+
+new-pair held-out:
+  raw B-frame: 156.4 deg / 3.31
+  C B-frame:    15.0 deg / 0.39
+```
+
+可视化检查：
+
+```text
+same-pair viewer:
+  http://127.0.0.1:8115
+
+new-pair viewer:
+  http://127.0.0.1:8116
+```
+
+经验结论：
+
+- C 版本已经足够作为下一步扩大数据量训练的 baseline。
+- same-pair 泛化很好，new-pair 也明显优于 raw Human3R，但还有剩余误差。
+- 当前 `gate_mean` 接近 0，说明这轮成功主要可能由 pose head 微调承担；后续要继续监控 prompt/residual/gate 是否真正起作用。
+- 下一步应该扩大到更多 AABB clips 和更多 camera pairs，同时保留 same-pair / new-pair held-out 测试。
+
 ## 当前代码状态
 
 V7 已归档，V8 尚未确定新的模型结构或训练方案。当前原版 Human3R 推理仍可正常运行。

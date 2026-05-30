@@ -485,3 +485,107 @@ The old one-sample overfit and ablation outputs in `/tmp/movie3r_v8_1_*` were re
 ```
 
 The retained checkpoint is about 4.5G. Remove it after exporting any required viewer outputs or after copying the metrics/checkpoint to a longer-term location.
+
+### Viewer Checks
+
+Two viewer checks were launched after the small-batch evaluation.
+
+Same-pair held-out:
+
+```text
+sample:
+  22010710 -> 22053923, start_frame=60
+viewer:
+  http://127.0.0.1:8115
+output:
+  /tmp/movie3r_v8_1_view_same60_c/corrected
+raw overlay:
+  /tmp/movie3r_v8_1_view_same60_c/raw_human3r
+metric:
+  B-frame rot/trans = 1.9722 deg / 0.0744 for this sample
+```
+
+New-pair held-out:
+
+```text
+sample:
+  22053903 -> 22139907, start_frame=0
+viewer:
+  http://127.0.0.1:8116
+output:
+  /tmp/movie3r_v8_1_view_newpair0_c/corrected
+raw overlay:
+  /tmp/movie3r_v8_1_view_newpair0_c/raw_human3r
+metric:
+  B-frame rot/trans = 4.6353 deg / 0.1091 for this sample
+```
+
+Visual observation:
+
+- Same-pair held-out looks clearly corrected.
+- The selected new-pair held-out sample also looks good, though numerically it is harder than same-pair.
+- The raw Human3R camera overlay remains useful: it makes the original camera-switch failure easy to compare against the corrected result.
+
+### Lessons Before Scaling Up
+
+This run gives enough confidence to move from sanity check to larger training, but the next run should keep the following rules.
+
+Method:
+
+- Continue with the C version as the main branch:
+
+```text
+A_corr_t enters decoder
+-> decoder refines A_corr_t with image / human / pose / state context
+-> residual/gate head updates the pose token
+-> fine-tuned original pose head outputs camera_pose
+```
+
+- This is the closest current implementation to the intended UniCon-style design.
+- Do not switch back to sidecar/post-processing correction for the main V8.1 experiment.
+
+Data:
+
+- Use raw calibration camera poses only.
+- Keep `load_da3_depth=False`; DA3 depth is not metric supervision.
+- Use AABB clips with large camera changes, ideally above 60 deg, and include many camera pairs.
+- Keep explicit held-out splits:
+  - same-pair different time;
+  - new-pair different cameras;
+  - ideally new sequence/person if available later.
+
+Training:
+
+- The 10-sample run used 1000 steps, batch size 1, so each sample was seen roughly 100 times.
+- Larger training should reduce repeated exposure per exact clip and increase camera-pair diversity.
+- Save fewer checkpoints because each full checkpoint is about 4.5G.
+
+Diagnostics:
+
+- Always report raw Human3R baseline on the same test set.
+- Report B-frame-only metrics separately, because view 2/3 are the camera-switch failure region.
+- Always inspect at least one same-pair and one new-pair viewer.
+- Continue logging:
+  - `v8_pose_prompt_gate_mean`;
+  - `v8_pose_prompt_delta_norm`;
+  - corrected vs raw pose error.
+
+Important warning:
+
+In this C small-batch run, `gate_mean` went almost to zero. This means the current success is likely carried mainly by the fine-tuned pose head, even though the decoder-in prompt path is present. For larger training, this may still be useful, but it does not yet prove that the correction prompt/residual branch is being strongly used.
+
+The next larger experiment should therefore treat this as the first working baseline, not as the final proof of the prompt design. A good next step is:
+
+```text
+train:
+  50-200 AABB clips, many camera pairs
+test:
+  same-pair held-out + new-pair held-out
+compare:
+  raw Human3R vs C
+optional ablation:
+  C with lower pose-head LR
+  C with pose-head-last-layer only
+  B frozen pose head
+  D pose head only
+```
