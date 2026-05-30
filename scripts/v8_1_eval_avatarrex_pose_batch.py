@@ -143,7 +143,8 @@ def main() -> None:
         for sample_idx, views in enumerate(loader):
             views = todevice(views, device)
             smpl_model.update_smpl_gt(views)
-            output, _ = model(views, ret_state=True, inference=True)
+            with torch.cuda.amp.autocast(enabled=device.type == "cuda"):
+                output, _ = model(views, ret_state=True, inference=True)
 
             raw_poses = torch.cat([view["raw_camera_pose"].float() for view in views], dim=0)
             target = torch.matmul(torch.linalg.inv(raw_poses[:1]), raw_poses)
