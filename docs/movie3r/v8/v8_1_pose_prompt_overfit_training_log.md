@@ -368,3 +368,120 @@ Expected decision rule:
 - If C beats B and D on held-out samples, pose-head fine-tuning is useful and prompt is contributing.
 - If D matches C on held-out samples, the prompt is not yet necessary or not being used effectively.
 - If C overfits train but hurts held-out, use a lower LR for pose head or only fine-tune the last pose-head layer.
+
+## 2026-05-30 Update: 10-Sample Small-Batch C Experiment
+
+This experiment tests the selected C version beyond a single AABB case:
+
+```text
+C = decoder-in A_corr_t
+  + V8.1 prompt / residual / gate branch
+  + fine-tune original pose head
+  + frozen backbone / decoder / scene head / human head
+```
+
+The goal is to check whether the one-sample success still holds on a small batch, and whether it generalizes to held-out time steps or camera pairs.
+
+### Setup
+
+Config:
+
+```text
+config/train_v8_pose_prompt_posehead_smallbatch_nodepth_rawpose.yaml
+```
+
+Training command:
+
+```text
+PYTHONPATH=src:. CUDA_VISIBLE_DEVICES=4 HYDRA_FULL_ERROR=1 MPLCONFIGDIR=/tmp/matplotlib \
+.venv/bin/python src/train.py \
+  --config-name train_v8_pose_prompt_posehead_smallbatch_nodepth_rawpose \
+  exp_name=v8_1_pose_prompt_posehead_smallbatch_nodepth_rawpose_gpu4 \
+  output_dir=/tmp/movie3r_v8_1_pose_prompt_posehead_smallbatch_nodepth_rawpose_gpu4 \
+  logdir=/tmp/movie3r_v8_1_pose_prompt_posehead_smallbatch_nodepth_rawpose_gpu4/logs
+```
+
+Important settings:
+
+- Dataset: AvatarReX AABB, `num_views=4`.
+- Training samples: 10 fixed AABB samples.
+- Same-pair held-out test: 5 unseen start frames from pair `22010710 -> 22053923`.
+- New-pair held-out test: 5 unseen camera pairs.
+- Pose target: raw calibration relative camera pose, `T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i`.
+- DA3 depth: disabled, `load_da3_depth=False`.
+- Checkpoint output: one final checkpoint only, to avoid filling disk.
+
+### Training Result
+
+Final train step:
+
+| Metric | Value |
+| --- | ---: |
+| loss | 0.0049 |
+| corrected trans err | 0.0117 |
+| corrected rot err | 0.0560 deg |
+| raw trans err | 0.0124 |
+| raw rot err | 0.0560 deg |
+| gate mean | ~0 |
+| delta latent norm | 3.9738 |
+
+Epoch average:
+
+| Metric | Value |
+| --- | ---: |
+| loss | 0.1891 |
+| corrected trans err | 0.2070 |
+| corrected rot err | 1.8494 deg |
+| raw trans err | 0.2058 |
+| raw rot err | 1.7843 deg |
+| gate mean | 0.0052 |
+
+The 10-sample training set can be fit. However, `gate_mean` collapses close to zero, so in this C run the visible correction is mostly carried by the fine-tuned pose head rather than by a strong gated latent residual.
+
+### Batch Eval Metrics
+
+All metrics compare exported/predicted camera poses with the raw-calibration relative target.
+
+| Split | Raw B-frame trans | Raw B-frame rot | C B-frame trans | C B-frame rot | C mean trans | C mean rot |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| train 10 samples | n/a | n/a | 0.0305 | 0.9503 deg | 0.0205 | 1.0002 deg |
+| same-pair held-out 5 samples | 3.5639 | 178.4228 deg | 0.0432 | 1.7038 deg | 0.0261 | 1.6410 deg |
+| new-pair held-out 5 samples | 3.3134 | 156.4334 deg | 0.3873 | 14.9843 deg | 0.1983 | 7.8621 deg |
+
+JSON outputs:
+
+```text
+/tmp/movie3r_v8_1_smallbatch_eval/raw_same_pair.json
+/tmp/movie3r_v8_1_smallbatch_eval/raw_new_pair.json
+/tmp/movie3r_v8_1_smallbatch_eval/c_small_train.json
+/tmp/movie3r_v8_1_smallbatch_eval/c_small_same_pair.json
+/tmp/movie3r_v8_1_smallbatch_eval/c_small_new_pair.json
+```
+
+### Interpretation
+
+This is a useful first small-batch result:
+
+- Same camera pair, unseen time steps: correction is very strong.
+- New camera pairs: correction still improves the raw Human3R failure by a large margin, but the remaining error is not negligible.
+- The C design is trainable and can correct large A/B camera switches without DA3 depth.
+
+The main warning is that the learned gate is not behaving like the intended UniCon-style correction gate yet. It quickly goes to almost zero. Because the original pose head is trainable in C, the model can still solve the task through pose-head adaptation.
+
+Next controlled ablations should test:
+
+1. C with a lower pose-head learning rate, so the prompt/residual branch is forced to contribute more.
+2. C with only the last pose-head layer trainable.
+3. B-style frozen pose head on the same 10-sample split.
+4. D-style pose-head-only on the same 10-sample split.
+
+### Tmp Cleanup
+
+The old one-sample overfit and ablation outputs in `/tmp/movie3r_v8_1_*` were removed after this run to free disk space. The current retained files are:
+
+```text
+/tmp/movie3r_v8_1_pose_prompt_posehead_smallbatch_nodepth_rawpose_gpu4/
+/tmp/movie3r_v8_1_smallbatch_eval/
+```
+
+The retained checkpoint is about 4.5G. Remove it after exporting any required viewer outputs or after copying the metrics/checkpoint to a longer-term location.
