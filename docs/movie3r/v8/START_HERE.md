@@ -116,6 +116,12 @@ new-pair viewer:
 - 当前 `gate_mean` 接近 0，说明这轮成功主要可能由 pose head 微调承担；后续要继续监控 prompt/residual/gate 是否真正起作用。
 - 下一步应该扩大到更多 AABB clips 和更多 camera pairs，同时保留 same-pair / new-pair held-out 测试。
 
+大规模训练计划见：
+
+```text
+docs/movie3r/v8/v8_1_large_scale_training_plan.md
+```
+
 ## 当前代码状态
 
 V7 已归档，V8 尚未确定新的模型结构或训练方案。当前原版 Human3R 推理仍可正常运行。
