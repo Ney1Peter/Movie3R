@@ -36,10 +36,33 @@ def parse_samples(text: str) -> list[tuple[str, str, int]]:
     return out
 
 
+def parse_manifest(path: Path) -> list[tuple[str, str, int]]:
+    records = []
+    text = path.read_text(encoding="utf-8").strip()
+    if not text:
+        return []
+    if text[0] == "[":
+        parsed = json.loads(text)
+    else:
+        parsed = [json.loads(line) for line in text.splitlines() if line.strip()]
+    for record in parsed:
+        if isinstance(record, (list, tuple)) and len(record) == 3:
+            seq_a, seq_b, start_frame = record
+        else:
+            seq_a = record.get("seqA", record.get("seq_a"))
+            seq_b = record.get("seqB", record.get("seq_b"))
+            start_frame = record.get("start_frame", record.get("frame", record.get("t")))
+        if seq_a is None or seq_b is None or start_frame is None:
+            raise ValueError(f"Bad manifest record in {path}: {record!r}")
+        records.append((str(seq_a), str(seq_b), int(start_frame)))
+    return records
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model_path", type=Path, required=True)
-    parser.add_argument("--samples", required=True, help="Python literal list of (seq_a, seq_b, start_frame)")
+    parser.add_argument("--samples", default=None, help="Python literal list of (seq_a, seq_b, start_frame)")
+    parser.add_argument("--manifest_path", type=Path, default=None, help="JSON/JSONL manifest of AvatarReX AABB samples")
     parser.add_argument("--name", default="eval")
     parser.add_argument("--output_json", type=Path, required=True)
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
@@ -74,7 +97,11 @@ def summarize_frames(frame_rows: list[dict]) -> dict:
 
 def main() -> None:
     args = parse_args()
-    samples = parse_samples(args.samples)
+    if (args.samples is None) == (args.manifest_path is None):
+        raise ValueError("Pass exactly one of --samples or --manifest_path")
+    samples = parse_samples(args.samples) if args.samples is not None else parse_manifest(args.manifest_path)
+    if not samples:
+        raise ValueError("No samples to evaluate")
     device = torch.device(args.device if args.device == "cuda" and torch.cuda.is_available() else "cpu")
 
     dataset = AvatarReX_AABB(
@@ -146,6 +173,7 @@ def main() -> None:
     result = {
         "name": args.name,
         "model_path": str(args.model_path),
+        "manifest_path": None if args.manifest_path is None else str(args.manifest_path),
         "samples": [list(s) for s in samples],
         "summary": summarize_frames(frame_rows),
         "sample_metrics": sample_rows,

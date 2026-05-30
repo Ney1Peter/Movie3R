@@ -337,3 +337,97 @@ output/v8_1_aabb_manifests/stage_a_test_new_200.jsonl
 5. Train Stage A C model.
 
 6. Evaluate and visualize the same-pair/new-pair/failure cases.
+
+## Stage A Preparation Status
+
+Preparation completed on 2026-05-30. Training has not been started yet.
+
+Generated manifests:
+
+```text
+output/v8_1_aabb_manifests/stage_a_10k/
+  metadata.json
+  stage_a_train_10k.jsonl
+  stage_a_val_same_200.jsonl
+  stage_a_test_same_200.jsonl
+  stage_a_val_new_200.jsonl
+  stage_a_test_new_200.jsonl
+```
+
+Manifest size:
+
+```text
+1.3M total
+```
+
+Final Stage A split:
+
+| Manifest | Records | Ordered pairs | Unordered pairs | Start frame range | Angle buckets |
+| --- | ---: | ---: | ---: | --- | --- |
+| train | 10000 | 122 | 61 | 0-1496 | 2500 each |
+| val_same | 200 | 102 | 57 | 1501-1696 | 50 each |
+| test_same | 200 | 96 | 58 | 1700-1897 | 50 each |
+| val_new | 200 | 26 | 13 | 14-1897 | 50 each |
+| test_new | 200 | 26 | 13 | 2-1897 | 50 each |
+
+Leakage checks:
+
+```text
+val_same unordered pairs are subset of train pairs: true
+test_same unordered pairs are subset of train pairs: true
+val_new unordered pairs intersect train pairs: 0
+test_new unordered pairs intersect train pairs: 0
+val_new unordered pairs intersect test_new pairs: 0
+train max end frame: 1499
+val_same min start / max end: 1501 / 1699
+test_same min start: 1700
+```
+
+Prepared config:
+
+```text
+config/train_v8_pose_prompt_posehead_stage_a_10k_nodepth_rawpose.yaml
+```
+
+The config dry-run passed with:
+
+```text
+epochs=0
+save_final_checkpoint=false
+```
+
+Dry-run verified:
+
+- manifest paths resolve correctly;
+- train/val/test dataloaders build correctly;
+- raw calibration target is enabled;
+- DA3 depth is disabled;
+- model loads from `src/human3r_896L.pth`;
+- trainable parameter groups include V8.1 prompt/residual/gate and original pose head;
+- no checkpoint is saved during dry-run.
+
+Training command to run after explicit confirmation:
+
+```text
+PYTHONPATH=src:. CUDA_VISIBLE_DEVICES=4 HYDRA_FULL_ERROR=1 MPLCONFIGDIR=/tmp/matplotlib \
+.venv/bin/python src/train.py \
+  --config-name train_v8_pose_prompt_posehead_stage_a_10k_nodepth_rawpose \
+  exp_name=v8_1_pose_prompt_posehead_stage_a_10k_nodepth_rawpose_gpu4 \
+  output_dir=/tmp/movie3r_v8_1_pose_prompt_posehead_stage_a_10k_nodepth_rawpose_gpu4 \
+  logdir=/tmp/movie3r_v8_1_pose_prompt_posehead_stage_a_10k_nodepth_rawpose_gpu4/logs
+```
+
+Expected runtime:
+
+```text
+about 6-7 hours on one GPU, based on the 10-sample run speed
+```
+
+Disk note:
+
+```text
+one final checkpoint ~= 4.5G
+/tmp currently also keeps the previous small-batch checkpoint
+```
+
+Before starting Stage A training, confirm whether to keep the previous small-batch checkpoint or delete it to increase `/tmp` free space.
