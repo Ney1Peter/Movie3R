@@ -177,8 +177,11 @@ class Attention(nn.Module):
         q_type = q.dtype
         k_type = k.dtype
         if self.rope is not None:
-            q = q.to(torch.float16)
-            k = k.to(torch.float16)
+            # V8.1 eval note: the local cuRoPE extension expects float inputs.
+            # q = q.to(torch.float16)
+            # k = k.to(torch.float16)
+            q = q.float()
+            k = k.float()
             with torch.autocast(device_type="cuda", enabled=False):
                 q = self.rope(q, xpos)
                 k = self.rope(k, xpos)
@@ -289,13 +292,17 @@ class CrossAttention(nn.Module):
         k_type = k.dtype
         if self.rope is not None:
             if qpos is not None:
-                q = q.to(torch.float16)
+                # V8.1 eval note: the local cuRoPE extension expects float inputs.
+                # q = q.to(torch.float16)
+                q = q.float()
                 with torch.autocast(device_type="cuda", enabled=False):
                     q = self.rope(q, qpos)
                 q = q.to(q_type)
 
             if kpos is not None:
-                k = k.to(torch.float16)
+                # V8.1 eval note: the local cuRoPE extension expects float inputs.
+                # k = k.to(torch.float16)
+                k = k.float()
                 with torch.autocast(device_type="cuda", enabled=False):
                     k = self.rope(k, kpos)
                 k = k.to(k_type)
