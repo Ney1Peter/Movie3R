@@ -16,6 +16,54 @@ Human3R 在很多纹理丰富的视频上表现稳定，例如 RICH / AvatarReX 
 
 V8 要重新从这个失败模式出发，不再默认沿用之前的 post-processing correction 或 pseudo-label teacher。
 
+## 2026-05-30 关键更新：V8.1 raw-camera overfit 已跑通
+
+V8.1 已经完成一个成功的 UniCon-style decoder-in pose prompt 单样本 overfit：
+
+```text
+sample:
+  AvatarReX AABB 22010710 -> 22053923, start_frame=0
+
+result:
+  corrected trans err = 0.0075
+  corrected rot err   = 0.0617 deg
+
+viewer:
+  http://127.0.0.1:8112
+```
+
+这次成功的关键不是换模型结构，而是修正训练 target 的坐标系。
+
+以后使用 AvatarReX 做 V8.1 pose correction 时必须注意：
+
+1. 不要用 `Avatarrex_output/Training/<seq>/cam/*.npz` 里的 processed `camera_pose` 作为最终监督 target。它在当前 AABB case 的 B 视角会出现 `y-axis ~= -1` 的 up-axis 翻转，导致训练 loss 很低但可视化上下颠倒。
+2. 正确 target 来自 raw calibration：
+
+```text
+/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
+X_cam = R_w2c @ X_world + T_w2c
+R_c2w = R_w2c.T
+t_c2w = -R_w2c.T @ T_w2c
+T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
+```
+
+3. 正确 B 视角应该是：
+
+```text
+z-axis ~= -1
+y-axis ~= +1
+```
+
+如果看到 B 视角 `y-axis ~= -1`，说明又用了错误的 processed pose。
+
+4. `Avatarrex_output/depth/*.npy` 是 DA3 / monocular pseudo-depth，不是 metric GT depth。V8.1 pose-only 训练和坐标 sanity check 必须使用：
+
+```text
+load_da3_depth=False
+```
+
+Human3R 自己预测的 pointmap/depth 可以作为模型输出或可视化 cue 看，但 DA3 depth 不能用来验证跨相机世界坐标是否正确。
+
 ## 当前代码状态
 
 V7 已归档，V8 尚未确定新的模型结构或训练方案。当前原版 Human3R 推理仍可正常运行。

@@ -925,3 +925,130 @@ Reason:
 - It strongly corrects A -> B.
 - It also keeps B -> B close to the corrected human-anchor history.
 - The method is simpler and less sensitive to short-term human articulation noise.
+
+## 13. V8.1 Decoder-In Pose Prompt Overfit Success and Coordinate Fix
+
+### 13.1 Result
+
+On 2026-05-30, the V8.1 UniCon-style decoder-in pose prompt successfully overfit one AvatarReX AABB sample using the correct raw calibration camera pose target.
+
+The successful run used:
+
+```text
+sample:
+  seq_a = 22010710
+  seq_b = 22053923
+  start_frame = 0
+
+config:
+  config/train_v8_pose_prompt_overfit_1sample_start0_nodepth_rawpose.yaml
+
+checkpoint:
+  /tmp/movie3r_v8_1_pose_prompt_overfit_1sample_start0_nodepth_rawpose_gpu4/checkpoint-last.pth
+
+viewer:
+  http://127.0.0.1:8112
+```
+
+Final eval:
+
+```text
+corrected trans err = 0.0075
+corrected rot err   = 0.0617 deg
+raw trans err       = 0.1154
+raw rot err         = 4.7876 deg
+```
+
+The visual result matches expectation: the B-camera frames are no longer upside down.
+
+### 13.2 Why the Earlier Low-Loss Result Was Wrong
+
+The earlier overfit run used the processed `camera_pose` stored in:
+
+```text
+/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training/<seq>/cam/*.npz
+```
+
+That target can make the loss decrease, but for the AABB B camera it contains a roll/up-axis flip in the viewer convention:
+
+```text
+processed camera_pose B frame:
+  z-axis ~= -1
+  y-axis ~= -1   # wrong: upside-down camera
+```
+
+Therefore the model did learn the target, but the target itself was wrong for the Human3R saved-output viewer and raw SMPL/camera sanity check.
+
+### 13.3 Correct Camera Convention
+
+The correct AvatarReX camera target for this experiment comes from:
+
+```text
+/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
+```
+
+Raw calibration convention:
+
+```text
+X_cam = R_w2c @ X_world + T_w2c
+```
+
+Convert to viewer/training c2w:
+
+```text
+R_c2w = R_w2c.T
+t_c2w = -R_w2c.T @ T_w2c
+```
+
+Use the relative pose to the first frame as the loss target:
+
+```text
+T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
+```
+
+Correct B-frame axes:
+
+```text
+raw calibration B frame:
+  z-axis ~= -1
+  y-axis ~= +1
+```
+
+This keeps the 180-degree viewpoint change but preserves the up direction.
+
+### 13.4 DA3 Depth Boundary
+
+AvatarReX `depth/*.npy` in `Avatarrex_output` should not be treated as metric GT depth for V8.1 pose correction. It is DA3 / monocular pseudo-depth and can have arbitrary or inconsistent scale.
+
+For V8.1 pose prompt training:
+
+```text
+load_da3_depth = False
+```
+
+Allowed:
+
+- Use zero-filled `depthmap` in dataloader for pose-only training compatibility.
+- Use Human3R predicted pointmap/depth as model output or visualization cue.
+- Use raw calibration camera + raw SMPL in no-depth viewer for coordinate sanity.
+
+Not allowed:
+
+- Do not validate pose with raw calibration camera + DA3 pointcloud.
+- Do not supervise camera/world geometry with DA3 depth.
+- Do not use DA3 depth to decide whether A/B camera alignment is correct.
+
+### 13.5 Practical Rule
+
+Before trusting any V8.1 AvatarReX result, print the target axes:
+
+```text
+expected:
+  frame 0/1: y-axis ~= +1, z-axis ~= +1
+  frame 2/3: y-axis ~= +1, z-axis ~= -1
+
+wrong:
+  frame 2/3: y-axis ~= -1
+```
+
+If the B-frame `y-axis` is negative, the target is the old processed pose and the result will look upside down even if the training loss is excellent.

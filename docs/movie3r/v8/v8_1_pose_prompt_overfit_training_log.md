@@ -80,3 +80,174 @@ The new V8.1 branch is trainable, the loss is connected, and the corrected pose 
 3. Track raw vs corrected translation and rotation error separately.
 4. Add stronger gate diagnostics or adjust gate supervision.
 5. Watch `v8_pose_prompt_delta_norm`; if it keeps growing, increase latent regularization or reduce learning rate.
+
+## 2026-05-30 Update: Raw-Camera Pose Overfit Success
+
+### What Passed
+
+The V8.1 UniCon-style decoder-in pose prompt was successfully overfit on one fixed AvatarReX AABB sample after fixing the camera-pose target coordinate system.
+
+Sample:
+
+```text
+seq_a = 22010710
+seq_b = 22053923
+start_frame = 0
+views = A_t, A_t+1, B_t+2, B_t+3
+```
+
+Training command:
+
+```bash
+cd /data/wangzheng/iJCV-CODE/Movie3R
+export PYTHONPATH=src:.
+export CUDA_VISIBLE_DEVICES=4
+export HYDRA_FULL_ERROR=1
+export MPLCONFIGDIR=/tmp/matplotlib
+.venv/bin/python src/train.py \
+  --config-name train_v8_pose_prompt_overfit_1sample_start0_nodepth_rawpose \
+  exp_name=v8_1_pose_prompt_overfit_1sample_start0_nodepth_rawpose_gpu4 \
+  logdir=/tmp/movie3r_v8_1_pose_prompt_overfit_1sample_start0_nodepth_rawpose_gpu4/logs \
+  output_dir=/tmp/movie3r_v8_1_pose_prompt_overfit_1sample_start0_nodepth_rawpose_gpu4/
+```
+
+Output:
+
+```text
+checkpoint:
+  /tmp/movie3r_v8_1_pose_prompt_overfit_1sample_start0_nodepth_rawpose_gpu4/checkpoint-last.pth
+
+saved inference:
+  /tmp/movie3r_v8_1_pose_prompt_train_start0_nodepth_rawpose/v8_dataset
+
+viewer:
+  http://127.0.0.1:8112
+```
+
+Final evaluation:
+
+| Target | Corrected Trans Err | Corrected Rot Err | Raw Trans Err | Raw Rot Err |
+| --- | ---: | ---: | ---: | ---: |
+| `raw_camera_pose` | 0.0075 | 0.0617 deg | 0.1154 | 4.7876 deg |
+
+Visual result:
+
+- The previous B-frame upside-down failure is fixed.
+- The corrected B-frame camera has the expected orientation:
+
+```text
+frame 2/3 corrected:
+  y-axis ~= +1
+  z-axis ~= -1
+```
+
+This is the expected 180-degree view change without the erroneous roll/up-axis flip.
+
+### What This Proves
+
+This run is the intended V8.1 training style:
+
+```text
+A_corr_t token enters decoder
+  -> decoder refines correction token with image / human / pose / state tokens
+  -> residual head predicts pose-token residual
+  -> corrected pose token goes through the original pose head
+  -> corrected camera_pose is supervised by pose loss
+```
+
+It is not a post-processing pose smoother, not BA, not pose graph optimization, and not a sidecar head applied after inference.
+
+The inference path remains recurrent / online. During inference it does not read future frames or GT pose. GT pose is used only as the training loss target.
+
+### Critical Coordinate-System Lesson
+
+The first successful-looking run was actually wrong. It used `Avatarrex_output/Training/<seq>/cam/*.npz` as `camera_pose` supervision. That processed pose is not the correct target for this viewer/SMPL coordinate convention on the AABB test.
+
+Old wrong target:
+
+```text
+source:
+  Avatarrex_output/Training/<seq>/cam/*.npz
+field:
+  camera_pose = cam["pose"]
+
+problem on B frames:
+  z-axis ~= -1
+  y-axis ~= -1
+```
+
+The `z-axis ~= -1` part is expected for the opposite camera view, but `y-axis ~= -1` means the camera up direction is flipped. Training against this target made the loss very low while the viewer still showed the last two frames upside down. The model was learning the wrong target correctly.
+
+Correct target:
+
+```text
+source:
+  /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
+
+calibration convention:
+  X_cam = R_w2c @ X_world + T_w2c
+
+c2w conversion:
+  R_c2w = R_w2c.T
+  t_c2w = -R_w2c.T @ T_w2c
+
+loss target:
+  T_rel_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
+```
+
+Correct B-frame orientation:
+
+```text
+raw calibration target:
+  z-axis ~= -1
+  y-axis ~= +1
+```
+
+Implementation state:
+
+- `AvatarReX_AABB` now can emit `raw_camera_pose` from raw calibration.
+- `V81PosePromptLoss` now supports `pose_key`.
+- The rawpose config uses:
+
+```text
+V81PosePromptLoss(..., pose_key='raw_camera_pose')
+AvatarReX_AABB(..., load_da3_depth=False, raw_calibration_root="/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1")
+```
+
+### DA3 Depth Rule
+
+Do not use `Avatarrex_output/depth/*.npy` as metric GT depth for V8.1 pose correction.
+
+Reason:
+
+- These depth files are DA3 / monocular pseudo-depth.
+- They are not guaranteed to be in the same metric scale as raw calibration and SMPL.
+- Using them as camera/world geometry can create false conclusions about alignment.
+
+Allowed:
+
+- Keep `depthmap` zero-filled for pose-only V8.1 training:
+
+```text
+load_da3_depth=False
+```
+
+- Use Human3R's own predicted pointmap/depth for visualization or as a model output/cue.
+- Use raw calibration + SMPL without DA3 depth for coordinate sanity checks.
+
+Not allowed:
+
+- Do not use DA3 depth as cross-camera metric GT.
+- Do not use DA3 depth to validate whether camera pose is correct.
+- Do not mix raw calibration camera + raw SMPL + DA3 pointcloud and treat the scene as GT.
+
+### Debug Protocol Before Future Training
+
+Before any new AvatarReX pose-prompt training run:
+
+1. Print the relative pose target axes for all four frames.
+2. B frames should have `z-axis ~= -1` and `y-axis ~= +1`.
+3. If B frames show `y-axis ~= -1`, the target is wrong.
+4. Set `load_da3_depth=False` unless the experiment explicitly studies DA3 as a weak monocular cue.
+5. Use no-depth raw calibration + SMPL viewer as the coordinate sanity check.
+6. Only after this check passes, evaluate model-corrected pointmap / SMPL in the Human3R viewer.

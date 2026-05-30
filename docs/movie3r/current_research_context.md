@@ -67,6 +67,8 @@ docs/movie3r/archive_v2_v6/
 
 2026-05-25 追加更新：MS-AIST `shot2` Stage-A 初轮已跑前 12 个候选，11 个完成 raw / teacher / token pipeline，1 个因 stable window 内 SMPL 漏检导致 teacher 失败。质量门控后只有 2 个 pseudo labels 被接受，accepted clip 的 pooled-token student overfit 仍然通过。手动检查确认 `shot2` 候选中混有无明显跳变和多人样本，现已补充 detection score 过滤和 SMPL 单人检测过滤。这说明当前瓶颈主要是 offline teacher label 质量和筛选命中率，不应在未筛选的 pseudo labels 上直接做 20/5 multi-clip 训练。
 
+2026-05-30 更新：V8.1 的 UniCon-style decoder-in pose prompt 已在一个 AvatarReX AABB 样本上完成成功 overfit。关键经验是训练监督必须使用 raw calibration camera pose，而不是 `Avatarrex_output/Training/<seq>/cam/*.npz` 中的 processed `camera_pose`。后者在当前 AABB B 视角会出现 `y-axis ~= -1` 的 up-axis 翻转，导致 loss 很低但可视化上下颠倒。正确坐标来自 `/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json`，按 `X_cam = R_w2c @ X_world + T_w2c` 转为 `R_c2w = R_w2c.T, t_c2w = -R_w2c.T @ T_w2c`，再用 `inv(raw_camera_pose_0) @ raw_camera_pose_i` 作为相对 pose target。该成功 run 的最终验证误差为 `trans_err=0.0075, rot_err=0.0617 deg`，viewer 为 `http://127.0.0.1:8112`。同时确认 `Avatarrex_output/depth/*.npy` 是 DA3 pseudo-depth，不能作为跨相机 metric GT 或坐标 sanity check；V8.1 pose-only 训练应使用 `load_da3_depth=False`。
+
 本文记录目前观察到的问题变化和方向边界。V7 历史记录见：
 
 ```text
