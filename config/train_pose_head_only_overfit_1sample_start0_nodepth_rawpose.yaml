@@ -60,6 +60,8 @@ weight_decay: 0.0
 eval_freq: 0
 save_freq: 1000000
 keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
 print_freq: 10
 print_img_freq: 1000000
 structured_log_freq: 1

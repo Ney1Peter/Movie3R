@@ -571,7 +571,7 @@ def train(args):
 
         # Save immediately the last checkpoint
         # epoch 开头先保存上一轮 last，这样即使后面训练中断，也有最近 checkpoint。
-        if epoch > args.start_epoch:
+        if epoch > args.start_epoch and getattr(args, "save_last_checkpoint", True):
             if (
                 args.save_freq
                 and np.allclose(epoch / args.save_freq, int(epoch / args.save_freq))
@@ -676,7 +676,10 @@ def train(args):
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     printer.info("Training time {}".format(total_time_str))
 
-    save_final_model(accelerator, args, args.epochs, model, best_so_far=best_so_far)
+    if getattr(args, "save_final_checkpoint", True):
+        save_final_model(accelerator, args, args.epochs, model, best_so_far=best_so_far)
+    else:
+        printer.info("Skipping final checkpoint because save_final_checkpoint=false")
 
 
 def save_final_model(accelerator, args, epoch, model_without_ddp, best_so_far=None):
