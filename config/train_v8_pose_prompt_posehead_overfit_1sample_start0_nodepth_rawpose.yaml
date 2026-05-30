@@ -54,9 +54,10 @@ warmup_epochs: 0
 weight_decay: 0.0
 
 # For the single-sample ablation, avoid duplicate 4.6G best/last checkpoints.
+# Do not set save_freq to 0 because train_one_epoch uses it in a modulo.
 # The final checkpoint is still written and used for export.
 eval_freq: 0
-save_freq: 0
+save_freq: 1000000
 keep_freq: 0
 print_freq: 10
 print_img_freq: 1000000
