@@ -431,3 +431,71 @@ one final checkpoint ~= 4.5G
 ```
 
 Before starting Stage A training, confirm whether to keep the previous small-batch checkpoint or delete it to increase `/tmp` free space.
+
+## 11. Stage A Run Result, 2026-05-31
+
+Stage A has been run once with the planned C-version setup.
+
+Training setup:
+
+```text
+config:
+  config/train_v8_pose_prompt_posehead_stage_a_10k_nodepth_rawpose.yaml
+train manifest:
+  output/v8_1_aabb_manifests/stage_a_10k/stage_a_train_10k.jsonl
+checkpoint:
+  /tmp/movie3r_v8_1_pose_prompt_posehead_stage_a_10k_nodepth_rawpose_gpu4/checkpoint-final.pth
+GPU:
+  CUDA_VISIBLE_DEVICES=4
+```
+
+Training finished cleanly:
+
+```text
+train_loss = 1.319617
+train_v8_pose_prompt_trans_err = 0.523174
+train_v8_pose_prompt_rot_err_deg = 13.857566
+train_v8_raw_trans_err = 0.523182
+train_v8_raw_rot_err_deg = 13.854701
+train_v8_pose_prompt_gate_mean = 0.0002056
+train_v8_pose_prompt_delta_norm = 35.6418
+```
+
+Important interpretation:
+
+- There was no NaN, OOM, or traceback.
+- Corrected metrics are almost identical to raw metrics.
+- `gate_mean` collapsed close to zero.
+- Therefore this run mostly validates that the C-version training loop and pose-head fine-tuning can run at scale, but it does not yet prove that the UniCon-style residual/gate branch is doing useful correction.
+
+Evaluation results:
+
+| Split | Clips | Mean trans err | Mean rot err | B-frame trans err | B-frame rot err |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `val_same_200` | 200 | 0.2657 | 8.11 deg | 0.5206 | 16.21 deg |
+| `test_same_200` | 200 | 0.3113 | 10.08 deg | 0.6113 | 19.41 deg |
+| `val_new_200` | 200 | 0.3974 | 13.86 deg | 0.7837 | 26.98 deg |
+| `test_new_200` | 200 | 0.4218 | 14.63 deg | 0.8328 | 28.53 deg |
+
+Evaluation JSON outputs:
+
+```text
+output/v8_1_stage_a_eval/stage_a_val_same_200_checkpoint_final.json
+output/v8_1_stage_a_eval/stage_a_test_same_200_checkpoint_final.json
+output/v8_1_stage_a_eval/stage_a_val_new_200_checkpoint_final.json
+output/v8_1_stage_a_eval/stage_a_test_new_200_checkpoint_final.json
+```
+
+Current conclusion:
+
+- Same-pair held-out is easier and gives usable numbers.
+- New-pair held-out is significantly harder, especially on B frames after the camera switch.
+- The next method change should focus on preventing gate collapse and forcing the decoder-in correction token to matter, rather than simply training longer.
+
+Recommended next ablations:
+
+1. Add weak gate supervision for B frames or high pose-error frames.
+2. Lower pose-head learning rate so the residual/gate branch cannot be bypassed too easily.
+3. Try pose-head-last-layer-only fine-tuning.
+4. Compare against a frozen-pose-head version where only prompt/residual/gate is trainable.
+5. Add per-view gate logging, especially `view0/view1/view2/view3`, because the target failure is mainly at the A to B boundary and the B continuation.

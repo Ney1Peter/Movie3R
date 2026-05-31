@@ -122,9 +122,35 @@ new-pair viewer:
 docs/movie3r/v8/v8_1_large_scale_training_plan.md
 ```
 
+## 2026-05-31 关键更新：Stage A 10k 已完成
+
+第一轮 Stage A 大规模训练已经跑完：
+
+```text
+checkpoint:
+  /tmp/movie3r_v8_1_pose_prompt_posehead_stage_a_10k_nodepth_rawpose_gpu4/checkpoint-final.pth
+
+eval outputs:
+  output/v8_1_stage_a_eval/
+```
+
+核心观察：
+
+- 训练正常完成，没有 NaN、OOM 或 traceback。
+- same-pair held-out 结果可用。
+- new-pair held-out 明显更难，B 段误差更大。
+- `gate_mean` 约为 `0.0002`，基本塌到 0。
+- 因此这轮更像验证了训练闭环和 pose head 微调，而不是证明 UniCon-style residual/gate branch 已经真正起作用。
+
+详细训练指标、四组评估指标和下一步 ablation 见：
+
+```text
+docs/movie3r/v8/v8_1_large_scale_training_plan.md
+```
+
 ## 当前代码状态
 
-V7 已归档，V8 尚未确定新的模型结构或训练方案。当前原版 Human3R 推理仍可正常运行。
+V7 已归档，V8 当前主线是 V8.1 UniCon-style decoder-in pose prompt。当前原版 Human3R 推理仍可正常运行，V8.1 训练代码用于 pose correction 实验。
 
 保留历史代码的原因是兼容旧 checkpoint 和复现实验，不代表当前主线：
 
