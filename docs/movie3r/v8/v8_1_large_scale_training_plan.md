@@ -499,3 +499,80 @@ Recommended next ablations:
 3. Try pose-head-last-layer-only fine-tuning.
 4. Compare against a frozen-pose-head version where only prompt/residual/gate is trainable.
 5. Add per-view gate logging, especially `view0/view1/view2/view3`, because the target failure is mainly at the A to B boundary and the B continuation.
+
+## 12. Prompt-Only Stage A Ablation, 2026-06-01
+
+This run freezes the original Human3R pose head and trains only the V8.1
+decoder-in correction branch:
+
+```text
+trainable:
+  v8_pose_prompt.*
+  v8_pose_residual_head.*
+frozen:
+  encoder / decoder / DPT head / human head / original pose head
+config:
+  config/train_v8_pose_prompt_stage_a_10k_nodepth_rawpose.yaml
+checkpoint:
+  output/v8_1_train_runs/v8_1_pose_prompt_stage_a_10k_nodepth_rawpose/checkpoint-final.pth
+```
+
+Purpose:
+
+- isolate whether the UniCon-style correct pose token can learn useful camera
+  correction without relying on pose-head fine-tuning;
+- keep the same Stage A 10k train manifest and same raw-camera-pose GT target
+  as the previous pose-head run.
+
+Training finished cleanly on GPU4:
+
+```text
+train_v8_pose_prompt_trans_err = 0.5185
+train_v8_pose_prompt_rot_err_deg = 17.3174
+train_v8_raw_trans_err = 0.5648
+train_v8_raw_rot_err_deg = 19.6255
+train_v8_pose_prompt_gate_mean = 0.0036
+train_v8_pose_prompt_delta_norm = 766.3116
+```
+
+Interpretation:
+
+- Unlike the pose-head fine-tuning run, the corrected train metrics are clearly
+  better than raw, so the prompt/residual branch is not completely bypassed.
+- However, `gate_mean` is still very small and `delta_norm` is extremely large.
+  The branch is learning through an unhealthy scale tradeoff: huge residual
+  multiplied by tiny gate.
+- This supports the core direction, but the next version should regularize or
+  supervise the gate/residual scale instead of just training longer.
+
+Quick held-out check on the first 20 `test_new` clips:
+
+| Model | Clips | Mean trans err | Mean rot err | B-frame trans err | B-frame rot err |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original Human3R | 20 | 1.4341 | 63.29 deg | 2.8641 | 126.50 deg |
+| Prompt-only V8.1 | 20 | 0.4379 | 13.62 deg | 0.8671 | 27.10 deg |
+
+Single smoke sample:
+
+```text
+sample:
+  seqA=22070932, seqB=22053903, start_frame=1625
+Original Human3R B frames:
+  3.2934 m / 177.94 deg
+Prompt-only V8.1 B frames:
+  0.5057 m / 19.16 deg
+```
+
+Current conclusion:
+
+- Freezing the original pose head and training only the correct pose token branch
+  can substantially improve severe A-to-B camera-switch failures on this small
+  held-out check.
+- It is still numerically less stable than desired because the gate collapses
+  near zero while the residual grows very large.
+- Next useful ablations:
+  1. add gate supervision for B frames or high-error frames;
+  2. add residual norm regularization;
+  3. try fixed-gate / no-gate ablation;
+  4. add per-view gate and delta logging;
+  5. rerun full 200-clip eval once the eval script has progress logging.

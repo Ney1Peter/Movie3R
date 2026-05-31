@@ -148,6 +148,28 @@ eval outputs:
 docs/movie3r/v8/v8_1_large_scale_training_plan.md
 ```
 
+## 2026-06-01 关键更新：Prompt-only ablation 已完成
+
+这次实验冻结原版 Human3R pose head，只训练：
+
+```text
+v8_pose_prompt.*
+v8_pose_residual_head.*
+```
+
+对应 checkpoint：
+
+```text
+output/v8_1_train_runs/v8_1_pose_prompt_stage_a_10k_nodepth_rawpose/checkpoint-final.pth
+```
+
+核心观察：
+
+- 训练集上 corrected pose 明显优于 raw pose，说明 correct pose token 分支本身可以学到东西。
+- `test_new` 前 20 个样本上，原版 Human3R 的 B 段误差是 `2.864m / 126.50deg`，prompt-only V8.1 是 `0.867m / 27.10deg`。
+- 但是 `gate_mean` 仍然很小，`delta_norm` 很大，说明目前是“大 residual × 小 gate”的不健康形式。
+- 下一步应该优先做 gate supervision、residual norm regularization、fixed-gate/no-gate ablation，而不是只扩大训练。
+
 ## 当前代码状态
 
 V7 已归档，V8 当前主线是 V8.1 UniCon-style decoder-in pose prompt。当前原版 Human3R 推理仍可正常运行，V8.1 训练代码用于 pose correction 实验。
