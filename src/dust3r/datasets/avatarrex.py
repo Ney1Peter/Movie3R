@@ -54,21 +54,63 @@ def _load_depthmap_meters(depth_path, image_shape):
 
 def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx, require_depth=True):
     frame_str = f"{int(frame_idx):08d}"
+    seq_path = _avatarrex_scene_path(split_path, seq_name)
     required_paths = [
-        osp.join(split_path, seq_name, "rgb", f"{frame_str}.png"),
-        osp.join(split_path, seq_name, "cam", f"{frame_str}.npz"),
-        osp.join(split_path, seq_name, "smpl", f"{frame_str}.pkl"),
+        osp.join(seq_path, "rgb", f"{frame_str}.png"),
+        osp.join(seq_path, "cam", f"{frame_str}.npz"),
+        osp.join(seq_path, "smpl", f"{frame_str}.pkl"),
     ]
     if require_depth:
-        required_paths.append(osp.join(split_path, seq_name, "depth", f"{frame_str}.npy"))
+        required_paths.append(osp.join(seq_path, "depth", f"{frame_str}.npy"))
     return all(osp.isfile(path) for path in required_paths)
 
 
 def _avatarrex_load_camera_pose(split_path, seq_name, frame_idx):
     frame_str = f"{int(frame_idx):08d}"
-    cam_path = osp.join(split_path, seq_name, "cam", f"{frame_str}.npz")
+    cam_path = osp.join(_avatarrex_scene_path(split_path, seq_name), "cam", f"{frame_str}.npz")
     cam = np.load(cam_path)
     return cam["pose"].astype(np.float32)
+
+
+def _avatarrex_scene_path(split_path, seq_name):
+    return osp.join(split_path, *str(seq_name).split("/"))
+
+
+def _avatarrex_is_sequence_dir(path):
+    return (
+        osp.isdir(osp.join(path, "rgb"))
+        and osp.isdir(osp.join(path, "cam"))
+        and osp.isdir(osp.join(path, "smpl"))
+    )
+
+
+def _avatarrex_discover_sequences(split_path):
+    """Return sequence names relative to split_path.
+
+    Supports both layouts:
+      split/22010708/{rgb,cam,smpl}
+      split/lbn1/22010708/{rgb,cam,smpl}
+    """
+    direct = []
+    grouped = []
+    for name in sorted(os.listdir(split_path)):
+        path = osp.join(split_path, name)
+        if not osp.isdir(path):
+            continue
+        if _avatarrex_is_sequence_dir(path):
+            direct.append(name)
+            continue
+        for child in sorted(os.listdir(path)):
+            child_path = osp.join(path, child)
+            if osp.isdir(child_path) and _avatarrex_is_sequence_dir(child_path):
+                grouped.append(f"{name}/{child}")
+    return direct if direct else grouped
+
+
+def _avatarrex_frame_ids(split_path, seq_name):
+    rgb_dir = osp.join(_avatarrex_scene_path(split_path, seq_name), "rgb")
+    frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
+    return [int(osp.splitext(f)[0]) for f in frames]
 
 
 def _avatarrex_camera_view_direction(camera_pose):
@@ -91,6 +133,15 @@ def _avatarrex_camera_angle_deg(pose_a, pose_b):
 def _load_avatarrex_raw_calibration(raw_calibration_root):
     if raw_calibration_root is None:
         return None
+    if isinstance(raw_calibration_root, dict):
+        grouped = {}
+        for group, root in raw_calibration_root.items():
+            calibration_path = osp.join(str(root), "calibration_full.json")
+            if not osp.isfile(calibration_path):
+                raise FileNotFoundError(f"AvatarReX raw calibration not found: {calibration_path}")
+            with open(calibration_path, "r", encoding="utf-8") as f:
+                grouped[str(group)] = json.load(f)
+        return {"__grouped_avatarrex_calibration__": True, "groups": grouped}
     calibration_path = osp.join(str(raw_calibration_root), "calibration_full.json")
     if not osp.isfile(calibration_path):
         raise FileNotFoundError(f"AvatarReX raw calibration not found: {calibration_path}")
@@ -102,6 +153,18 @@ def _raw_calibration_c2w(calibration, seq_name):
     """Return raw AvatarReX c2w from calibration convention X_cam = R @ X_world + T."""
     if calibration is None:
         return None
+    if isinstance(calibration, dict) and calibration.get("__grouped_avatarrex_calibration__"):
+        parts = str(seq_name).split("/", 1)
+        if len(parts) != 2:
+            raise KeyError(
+                f"Grouped AvatarReX raw calibration requires seq_name like 'group/seq', got {seq_name}"
+            )
+        group, seq_key = parts
+        groups = calibration["groups"]
+        if group not in groups:
+            raise KeyError(f"{group} not found in grouped AvatarReX raw calibration")
+        calibration = groups[group]
+        seq_name = seq_key
     if seq_name not in calibration:
         raise KeyError(f"{seq_name} not found in raw AvatarReX calibration")
     cal = calibration[seq_name]
@@ -301,10 +364,9 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         if not osp.exists(seq_dir):
             raise FileNotFoundError(f"AvatarReX data not found at {seq_dir}")
 
-        self.scenes = sorted([
-            d for d in os.listdir(seq_dir)
-            if osp.isdir(osp.join(seq_dir, d))
-        ])
+        self.scenes = _avatarrex_discover_sequences(seq_dir)
+        if not self.scenes:
+            raise FileNotFoundError(f"No AvatarReX sequence directories found under {seq_dir}")
 
         # 每个序列只有 1 个相机（cam_id=0000）
         self.seq_cams = {s: [0] for s in self.scenes}
@@ -318,16 +380,15 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # self.num_frames = len(frames)
         # self.seq_frames = {s: self.num_frames for s in self.scenes}
         # **========== 新代码：使用真实文件名帧号，例如 00000005 起始 ==========**
+        self.scene_frame_ids = {s: _avatarrex_frame_ids(seq_dir, s) for s in self.scenes}
         sample_seq = self.scenes[0]
-        rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
-        frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
-        self.frame_ids = [int(osp.splitext(f)[0]) for f in frames]
+        self.frame_ids = self.scene_frame_ids[sample_seq]
         self.frame_to_pos = {frame_id: pos for pos, frame_id in enumerate(self.frame_ids)}
         self.num_frames = len(self.frame_ids)
-        self.seq_frames = {s: self.num_frames for s in self.scenes}
+        self.seq_frames = {s: len(ids) for s, ids in self.scene_frame_ids.items()}
         # **========== 结束 ==========**
 
-        print(f"  {len(self.scenes)} sequences, {self.num_frames} frames each")
+        print(f"  {len(self.scenes)} sequences, sample sequence has {self.num_frames} frames")
         if not self.load_da3_depth:
             print("  AvatarReX_AABB: DA3 depth disabled; depthmap is zero-filled for pose-only training")
         if self.raw_calibration is not None:
@@ -337,22 +398,26 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # AABB: 两两跨序列组合（允许同序列但这里只有不同序列才有效）
         # seqA, seqB 来自不同的序列目录（不同相机）
         # t ∈ [0, num_frames-4]（需要 t, t+1, t+2, t+3 均有效）
-        self.samples = []
-        for i, seqA in enumerate(self.scenes):
-            for j, seqB in enumerate(self.scenes):
-                if i == j:
-                    continue  # 跳过同一相机
-                # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
-                # for t in range(self.num_frames - 3):
-                #     self.samples.append((seqA, seqB, t))
-                # **========== 新代码：样本保存真实起始帧号，便于和 cache/start_frame 对齐 ==========**
-                for start_pos in range(self.num_frames - 3):
-                    self.samples.append((seqA, seqB, self.frame_ids[start_pos]))
-                # **========== 结束 ==========**
+        if self.fixed_samples:
+            self.samples = list(self.fixed_samples)
+            print(f"  AvatarReX_AABB manifest/fixed samples: {len(self.samples):,}")
+        else:
+            self.samples = []
+            for i, seqA in enumerate(self.scenes):
+                for j, seqB in enumerate(self.scenes):
+                    if i == j:
+                        continue  # 跳过同一相机
+                    # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
+                    # for t in range(self.num_frames - 3):
+                    #     self.samples.append((seqA, seqB, t))
+                    # **========== 新代码：使用每个 seqA 真实帧号，便于和 cache/start_frame 对齐 ==========**
+                    for frame_id in self.scene_frame_ids[seqA]:
+                        if frame_id + 3 <= self.scene_frame_ids[seqA][-1]:
+                            self.samples.append((seqA, seqB, frame_id))
+                    # **========== 结束 ==========**
 
-        print(f"  AvatarReX_AABB: {len(self.samples):,} samples "
-              f"({len(self.scenes)} cameras × {len(self.scenes)-1} pairs × {self.num_frames-3} time steps, "
-              f"frames {self.frame_ids[0]}-{self.frame_ids[-1]})")
+            print(f"  AvatarReX_AABB: {len(self.samples):,} candidate samples "
+                  f"from {len(self.scenes)} sequence folders")
 
         # **========== 原始代码：索引阶段不检查文件完整性，缺帧会在 DataLoader 读图时报错 ==========**
         # self.samples 保持上方构建结果，不做文件存在性过滤。
@@ -382,16 +447,13 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # **========== 结束 ==========**
         # **========== V6.1 overfit 新代码：允许显式指定一个或多个 AABB sample ==========**
         if self.fixed_samples:
-            sample_set = set(self.samples)
-            missing = [sample for sample in self.fixed_samples if sample not in sample_set]
+            missing = [sample for sample in self.fixed_samples if sample not in self.samples]
             if missing:
                 raise ValueError(
                     "AvatarReX_AABB fixed_samples not found after file/cache filtering: "
-                    f"{missing}"
+                    f"{missing[:10]}{' ...' if len(missing) > 10 else ''}"
                 )
-            before = len(self.samples)
-            self.samples = list(self.fixed_samples)
-            print(f"  AvatarReX_AABB fixed_samples: {len(self.samples):,}/{before:,} samples")
+            print(f"  AvatarReX_AABB fixed_samples: {len(self.samples):,} valid samples")
         # **========== 结束 ==========**
 
         self._apply_max_samples()
@@ -418,7 +480,13 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         key = (seqA_name, seqB_name)
         if key in self.sample_view_angles:
             return self.sample_view_angles[key]
-        frame_id = self.frame_ids[0]
+        common_frames = sorted(
+            set(self.scene_frame_ids.get(seqA_name, []))
+            .intersection(self.scene_frame_ids.get(seqB_name, []))
+        )
+        if not common_frames:
+            raise ValueError(f"No common frame ids for {seqA_name} and {seqB_name}")
+        frame_id = common_frames[0]
         pose_a = _avatarrex_load_camera_pose(split_path, seqA_name, frame_id)
         pose_b = _avatarrex_load_camera_pose(split_path, seqB_name, frame_id)
         angle = _avatarrex_camera_angle_deg(pose_a, pose_b)
@@ -470,8 +538,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
     def get_sample_metadata(self, idx):
         seqA_name, seqB_name, start_frame = self.samples[idx]
         split_path = osp.join(self.ROOT, self.split)
-        start_pos = self.frame_to_pos[int(start_frame)]
-        frames = [self.frame_ids[start_pos + offset] for offset in range(4)]
+        frames = [int(start_frame) + offset for offset in range(4)]
         return {
             "seqA": seqA_name,
             "seqB": seqB_name,
@@ -481,14 +548,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         }
 
     def _sample_has_required_files(self, split_path, seqA_name, seqB_name, start_frame):
-        start_pos = self.frame_to_pos.get(int(start_frame))
-        if start_pos is None or start_pos + 3 >= len(self.frame_ids):
-            return False
-
-        t = self.frame_ids[start_pos]
-        t1 = self.frame_ids[start_pos + 1]
-        t2 = self.frame_ids[start_pos + 2]
-        t3 = self.frame_ids[start_pos + 3]
+        t = int(start_frame)
+        t1 = t + 1
+        t2 = t + 2
+        t3 = t + 3
         return (
             _avatarrex_has_required_frame_files(split_path, seqA_name, t, require_depth=self.load_da3_depth)
             and _avatarrex_has_required_frame_files(split_path, seqA_name, t1, require_depth=self.load_da3_depth)
@@ -566,12 +629,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # t1 = t + 1
         # t2 = t + 2
         # t3 = t + 3
-        # **========== 新代码：从真实帧号列表中取连续四个可用文件帧 ==========**
-        start_pos = self.frame_to_pos[t]
-        t = self.frame_ids[start_pos]
-        t1 = self.frame_ids[start_pos + 1]
-        t2 = self.frame_ids[start_pos + 2]
-        t3 = self.frame_ids[start_pos + 3]
+        # **========== 新代码：使用 manifest/索引中的真实起始帧号 ==========**
+        t = int(t)
+        t1 = t + 1
+        t2 = t + 2
+        t3 = t + 3
         # **========== 结束 ==========**
         cam = 0  # 每个序列只有 1 个相机，ID=0
 
@@ -619,7 +681,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         """加载 SMPL 参数。"""
         # fast 脚本输出为扁平结构：smpl/{frame:08d}.pkl（无 camera 子目录）
         smpl_path = osp.join(
-            split_path, seq_name, "smpl",
+            _avatarrex_scene_path(split_path, seq_name), "smpl",
             f"{frame_idx:08d}.pkl"
         )
         annots = []
@@ -634,9 +696,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         frame_str = f"{frame_idx:08d}"  # 原始文件格式: 00000000.png
 
         # fast 脚本输出为扁平结构：rgb/{frame:08d}.png, cam/{frame:08d}.npz（无 camera 子目录）
-        rgb_path = osp.join(split_path, seq_name, "rgb", f"{frame_str}.png")
-        cam_path = osp.join(split_path, seq_name, "cam", f"{frame_str}.npz")
-        depth_path = osp.join(split_path, seq_name, "depth", f"{frame_str}.npy")
+        seq_path = _avatarrex_scene_path(split_path, seq_name)
+        rgb_path = osp.join(seq_path, "rgb", f"{frame_str}.png")
+        cam_path = osp.join(seq_path, "cam", f"{frame_str}.npz")
+        depth_path = osp.join(seq_path, "depth", f"{frame_str}.npy")
 
         rgb_image = imread_cv2(rgb_path)
 
@@ -665,7 +728,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # **========== 结束 ==========**
 
         # Mask（可能不存在）
-        mask_path = osp.join(split_path, seq_name, "mask", f"{frame_str}.png")
+        mask_path = osp.join(seq_path, "mask", f"{frame_str}.png")
         if osp.exists(mask_path):
             mask_image = imread_cv2(mask_path)
         else:

@@ -1,0 +1,91 @@
+# V8.1 Stage B prompt-only:
+# - train on grouped AvatarReX lbn1 + zxc
+# - hold out zzr as new person/action test
+# - freeze original Human3R pose head; train only A_corr_t prompt + residual/gate
+defaults:
+  - train
+  - _self_
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_num_body_queries=4, v8_pose_prompt_num_heads=8,
+  v8_pose_prompt_dropout=0.0, v8_pose_prompt_gate_bias=0.0))
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth
+pretrained_mhmr: null
+load_only_encoder: False
+
+num_views: 4
+num_test_views: 4
+n_corres_train: 0
+n_corres_test: 0
+
+avatarrex_root: /data/wangzheng/iJCV-CODE/data/Avatarrex_output
+v8_stage_b_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_1_aabb_manifests/stage_b_40k
+avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1','zxc':'/data/wangzheng/iJCV-CODE/data/avatarrex_zxc','zzr':'/data/wangzheng/iJCV-CODE/data/avatarrex_zzr'}"
+
+train_dataset: 40000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_train_40k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_val_in_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_test_new_zzr_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+train_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')
+test_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')
+
+batch_size: 1
+accum_iter: 1
+epochs: 1
+num_workers: 2
+gradient_checkpointing: true
+amp: 1
+benchmark: False
+fixed_length: True
+
+lr: 1.0e-03
+min_lr: 1.0e-05
+warmup_epochs: 0
+weight_decay: 0.0
+
+eval_freq: 0
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+print_freq: 50
+print_img_freq: 1000000
+structured_log_freq: 10
+save_code: false
+
+exp_name: v8_1_pose_prompt_stage_b_40k_grouped_nodepth_rawpose
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_1_train_runs/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_1_train_runs/${exp_name}
+
+console_log_keys:
+  - lr
+  - loss
+  - v8_pose_prompt_pose_loss
+  - v8_pose_prompt_trans_err
+  - v8_pose_prompt_rot_err_deg
+  - v8_raw_trans_err
+  - v8_raw_rot_err_deg
+  - v8_pose_prompt_gate_mean
+  - v8_pose_prompt_delta_norm
+
+step_log_keys:
+  - loss
+  - lr
+  - v8_pose_prompt_pose_loss
+  - v8_pose_prompt_trans_err
+  - v8_pose_prompt_rot_err_deg
+  - v8_raw_trans_err
+  - v8_raw_rot_err_deg
+  - v8_pose_prompt_gate_mean
+  - v8_pose_prompt_delta_norm
