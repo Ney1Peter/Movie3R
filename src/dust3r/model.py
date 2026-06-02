@@ -216,6 +216,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_num_heads=8,
         v8_pose_prompt_dropout=0.0,
         v8_pose_prompt_gate_bias=-4.0,
+        v8_pose_prompt_use_history=True,
+        v8_pose_prompt_use_pose_memory=True,
+        v8_pose_prompt_use_reliability=True,
+        v8_pose_prompt_use_gate=True,
         **croco_kwargs,
     ):
         super().__init__()
@@ -268,6 +272,10 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_num_heads = v8_pose_prompt_num_heads
         self.v8_pose_prompt_dropout = v8_pose_prompt_dropout
         self.v8_pose_prompt_gate_bias = v8_pose_prompt_gate_bias
+        self.v8_pose_prompt_use_history = v8_pose_prompt_use_history
+        self.v8_pose_prompt_use_pose_memory = v8_pose_prompt_use_pose_memory
+        self.v8_pose_prompt_use_reliability = v8_pose_prompt_use_reliability
+        self.v8_pose_prompt_use_gate = v8_pose_prompt_use_gate
         self.croco_kwargs = croco_kwargs
 
 
@@ -592,10 +600,14 @@ class ARCroco3DStereo(CroCoNet):
             num_heads=getattr(config, "v8_pose_prompt_num_heads", 8),
             memory_dim=self.dec_embed_dim * 2,
             dropout=getattr(config, "v8_pose_prompt_dropout", 0.0),
+            use_history=getattr(config, "v8_pose_prompt_use_history", True),
+            use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
+            use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
         )
         self.v8_pose_residual_head = V81PoseLatentResidualHead(
             dec_dim=self.dec_embed_dim,
             gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
+            use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
         )
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(

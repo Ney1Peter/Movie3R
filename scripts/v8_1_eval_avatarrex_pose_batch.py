@@ -66,12 +66,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--name", default="eval")
     parser.add_argument("--output_json", type=Path, required=True)
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
-    parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
+    parser.add_argument(
+        "--avatarrex_raw_root",
+        default="/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
+        help="Raw AvatarReX calibration root, or a Python dict string for grouped roots.",
+    )
     parser.add_argument("--split", default="Training")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
     parser.add_argument("--seed", type=int, default=101)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
+
+
+def parse_raw_root(value: str):
+    text = str(value)
+    if text.strip().startswith("{"):
+        parsed = ast.literal_eval(text)
+        if not isinstance(parsed, dict):
+            raise ValueError(f"--avatarrex_raw_root dict string expected, got {type(parsed).__name__}")
+        return {str(k): str(v) for k, v in parsed.items()}
+    return text
 
 
 def rotation_error_deg(pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -115,7 +129,7 @@ def main() -> None:
         n_corres=0,
         fixed_samples=samples,
         load_da3_depth=False,
-        raw_calibration_root=str(args.avatarrex_raw_root),
+        raw_calibration_root=parse_raw_root(args.avatarrex_raw_root),
     )
     loader = torch.utils.data.DataLoader(
         dataset,

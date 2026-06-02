@@ -46,6 +46,9 @@ class V81PoseCorrectionPrompt(nn.Module):
         num_heads: int = 8,
         memory_dim: Optional[int] = None,
         dropout: float = 0.0,
+        use_history: bool = True,
+        use_pose_memory: bool = True,
+        use_reliability: bool = True,
     ):
         super().__init__()
         self.enc_dim = int(enc_dim)
@@ -53,6 +56,9 @@ class V81PoseCorrectionPrompt(nn.Module):
         self.num_body_queries = int(num_body_queries)
         self.num_corr_tokens = 4
         self.memory_dim = int(memory_dim or dec_dim * 2)
+        self.use_history = bool(use_history)
+        self.use_pose_memory = bool(use_pose_memory)
+        self.use_reliability = bool(use_reliability)
 
         self.image_proj = nn.Linear(self.enc_dim, self.dec_dim)
         self.human_proj = nn.Linear(self.dec_dim, self.dec_dim)
@@ -131,33 +137,51 @@ class V81PoseCorrectionPrompt(nn.Module):
         )
         body_summary = body_tokens.mean(dim=1, keepdim=True)
 
-        if prev_corr_token is None:
+        if not self.use_history:
+            prev_corr = pose_token.new_zeros(batch_size, 1, self.dec_dim)
+            prev_pose = pose_token.new_zeros(batch_size, 1, self.dec_dim)
+        elif prev_corr_token is None:
             prev_corr = self.no_history_token.expand(batch_size, -1, -1)
+            prev_pose = pose_token if prev_pose_token is None else self._mean_or_zero(prev_pose_token, batch_size, pose_token)
         else:
             prev_corr = self._mean_or_zero(prev_corr_token, batch_size, pose_token)
-        prev_pose = pose_token if prev_pose_token is None else self._mean_or_zero(prev_pose_token, batch_size, pose_token)
+            prev_pose = pose_token if prev_pose_token is None else self._mean_or_zero(prev_pose_token, batch_size, pose_token)
         history_token = self.history_mlp(torch.cat([prev_corr, prev_pose], dim=-1))
 
-        state_summary = self._mean_or_zero(
-            self.state_proj(state_tokens) if state_tokens is not None else None,
-            batch_size,
-            pose_token,
-        )
-        memory_summary = self._project_memory(pose_memory, batch_size, pose_token)
-        camera_motion_token = self.camera_mlp(torch.cat([pose_token, memory_summary, prev_pose], dim=-1))
+        if self.use_pose_memory:
+            memory_summary = self._project_memory(pose_memory, batch_size, pose_token)
+            camera_motion_token = self.camera_mlp(torch.cat([pose_token, memory_summary, prev_pose], dim=-1))
+        else:
+            memory_summary = pose_token.new_zeros(batch_size, 1, self.dec_dim)
+            camera_motion_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
-        if prev_gate is None:
+        if prev_gate is None or not self.use_reliability:
             gate_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
         else:
             gate_value = prev_gate.reshape(batch_size, 1, 1).to(dtype=pose_token.dtype, device=pose_token.device)
             gate_token = gate_value.expand(-1, -1, self.dec_dim)
-        reliability_token = self.reliability_mlp(torch.cat([body_summary, state_summary, gate_token], dim=-1))
+        if self.use_reliability:
+            state_summary = self._mean_or_zero(
+                self.state_proj(state_tokens) if state_tokens is not None else None,
+                batch_size,
+                pose_token,
+            )
+            reliability_token = self.reliability_mlp(torch.cat([body_summary, state_summary, gate_token], dim=-1))
+        else:
+            reliability_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
+        token_items = [(0, body_summary)]
+        if self.use_history:
+            token_items.append((1, history_token))
+        if self.use_pose_memory:
+            token_items.append((2, camera_motion_token))
+        if self.use_reliability:
+            token_items.append((3, reliability_token))
         corr_tokens = torch.cat(
-            [body_summary, history_token, camera_motion_token, reliability_token],
+            [token + self.token_type_embed[:, type_idx:type_idx + 1] for type_idx, token in token_items],
             dim=1,
         )
-        corr_tokens = self.out_norm(corr_tokens + self.token_type_embed)
+        corr_tokens = self.out_norm(corr_tokens)
 
         return V81PosePromptOutput(
             corr_tokens=corr_tokens,
@@ -172,9 +196,10 @@ class V81PoseCorrectionPrompt(nn.Module):
 class V81PoseLatentResidualHead(nn.Module):
     """Predict a latent residual for the refined pose token."""
 
-    def __init__(self, dec_dim: int, hidden_dim: Optional[int] = None, gate_bias: float = -4.0):
+    def __init__(self, dec_dim: int, hidden_dim: Optional[int] = None, gate_bias: float = -4.0, use_gate: bool = True):
         super().__init__()
         self.dec_dim = int(dec_dim)
+        self.use_gate = bool(use_gate)
         hidden = int(hidden_dim or dec_dim)
         self.delta_head = nn.Sequential(
             nn.LayerNorm(self.dec_dim),
@@ -196,6 +221,9 @@ class V81PoseLatentResidualHead(nn.Module):
     def forward(self, refined_corr_tokens: torch.Tensor):
         pooled = refined_corr_tokens.mean(dim=1)
         delta = self.delta_head(pooled).unsqueeze(1)
-        gate = torch.sigmoid(self.gate_head(pooled)).unsqueeze(1)
+        if self.use_gate:
+            gate = torch.sigmoid(self.gate_head(pooled)).unsqueeze(1)
+        else:
+            gate = torch.ones(delta.shape[0], 1, 1, device=delta.device, dtype=delta.dtype)
         corrected_delta = gate * delta
         return corrected_delta, gate, delta
