@@ -18,6 +18,8 @@ V8 需要重新定义 shot-change 场景下的目标、约束和最小实验，�
 
 2026-05-30 更新：V8.1 已经跑通一个关键 sanity check。使用 raw calibration camera pose 作为监督 target 后，UniCon-style decoder-in pose prompt 可以在一个 AvatarReX AABB 样本上 overfit，并把后两帧 B-camera pose 修到正确方向。这个结果证明当前 decoder-in prompt / pose-token residual / original pose head 链路是通的。
 
+2026-06-02 更新：V8.2 设计已整理为新的主线文档，并已加入第一版训练前置代码。核心变化是把 `A_corr_t` 定义为 human-centric current-history pose relation prompt，而不是简单的四个固定人体部位 token。它更接近 UniCon3R 的 contact relation prompt：decoder-in relation token + 显式 drift/alignment 监督 + residual pose latent refinement。
+
 第一阶段建议继续做三件事：
 
 1. 建立低纹理 boundary failure set 和高纹理 stable control set。
@@ -47,6 +49,16 @@ V8 需要重新定义 shot-change 场景下的目标、约束和最小实验，�
 ```text
 docs/movie3r/archive_v7/
 scripts/archive_v7/
+```
+
+## 当前 V8 文档
+
+```text
+docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
+docs/movie3r/v8/v8_1_unicon_style_implementation_plan.md
+docs/movie3r/v8/v8_1_token_extraction_validation_plan.md
+docs/movie3r/v8/v8_1_large_scale_training_plan.md
+docs/movie3r/v8/report_human3r_unicon3r_pose_prompt_intro.md
 ```
 
 ## 历史速览

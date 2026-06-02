@@ -170,9 +170,62 @@ output/v8_1_train_runs/v8_1_pose_prompt_stage_a_10k_nodepth_rawpose/checkpoint-f
 - 但是 `gate_mean` 仍然很小，`delta_norm` 很大，说明目前是“大 residual × 小 gate”的不健康形式。
 - 下一步应该优先做 gate supervision、residual norm regularization、fixed-gate/no-gate ablation，而不是只扩大训练。
 
+## 2026-06-02 关键更新：V8.2 Pose Relation Prompt
+
+V8.1 的实验说明 decoder-in pose prompt 链路能工作，但也暴露出一个设计问题：当前的四个 body queries 本质上只是 learnable queries，并没有被显式监督成 pelvis / torso / left foot / right foot。因此不能简单把它们解释成稳定的人体部位 token。
+
+V8.2 的新主线是把 `A_corr_t` 定义为 human-centric current-history pose relation prompt：
+
+```text
+当前 human / image / pose tokens
++ recurrent state memory
++ 上一帧 corrected pose / human anchors / correction token
++ drift / reliability cue
+  -> A_corr_t
+
+A_corr_t 进入 decoder
+  -> refined A_corr_t
+  -> drift score / gate head
+  -> pose latent residual head
+  -> corrected pose token
+  -> pose head
+  -> corrected camera pose
+```
+
+这更接近 UniCon3R 的范式：不是手工指定某个 token 一定等于脚或骨盆，而是构造一个专门学习“当前帧和历史世界是否对齐”的 relation prompt，并用显式 pose / drift 监督训练它。
+
+详细设计见：
+
+```text
+docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
+```
+
+当前第一版训练前置代码也已加入：
+
+```text
+src/dust3r/v8_pose_prompt.py
+  V82PoseRelationPrompt
+  V82PoseRelationResidualHead
+
+src/dust3r/losses.py
+  V82PoseRelationLoss
+
+config/train_v8_2_pose_relation_small.yaml
+```
+
+当前 V8.2 只使用 3 个 relation tokens：
+
+```text
+semantic pose-scene context
+explicit latent alignment cue
+temporal correction momentum
+```
+
+第一版训练只启用 `L_pose_gt + L_drift_score/gate + L_improvement_margin + L_residual_small`，暂时不启用 pointmap/floor/contact/body-part auxiliary。
+
 ## 当前代码状态
 
-V7 已归档，V8 当前主线是 V8.1 UniCon-style decoder-in pose prompt。当前原版 Human3R 推理仍可正常运行，V8.1 训练代码用于 pose correction 实验。
+V7 已归档，V8 当前主线从 V8.1 UniCon-style decoder-in pose prompt 推进到 V8.2 pose relation prompt。当前原版 Human3R 推理仍可正常运行，V8.1 训练代码用于 pose correction 实验；V8.2 已有第一版训练前置代码，但还没有正式开始训练。
 
 保留历史代码的原因是兼容旧 checkpoint 和复现实验，不代表当前主线：
 

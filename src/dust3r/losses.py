@@ -1,4 +1,5 @@
 from copy import copy, deepcopy
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -1978,6 +1979,196 @@ class V81PosePromptLoss(MultiLoss):
             details["v8_pose_prompt_gate_mean"] = float(torch.stack(gate_values).mean())
         if delta_norms:
             details["v8_pose_prompt_delta_norm"] = float(torch.stack(delta_norms).mean())
+        details["v8_pose_prompt_loss"] = float(total.detach())
+        return total, details
+
+
+class V82PoseRelationLoss(V81PosePromptLoss):
+    """V8.2 loss for the UniCon-style pose-relation prompt.
+
+    Compared with V81PosePromptLoss, this criterion adds relation-specific
+    supervision:
+      - drift/gate target from raw camera-pose error,
+      - improvement margin against the raw pose,
+      - residual-size regularization.
+    """
+
+    def __init__(
+        self,
+        translation_weight=1.0,
+        rotation_weight=1.0,
+        residual_weight=1.0e-4,
+        drift_weight=0.2,
+        improvement_weight=0.1,
+        loss_type="smooth_l1",
+        pose_key="camera_pose",
+        drift_trans_scale=0.5,
+        drift_rot_scale_deg=45.0,
+        improvement_margin=0.0,
+    ):
+        super().__init__(
+            translation_weight=translation_weight,
+            rotation_weight=rotation_weight,
+            latent_weight=residual_weight,
+            gate_weight=0.0,
+            loss_type=loss_type,
+            pose_key=pose_key,
+        )
+        self.residual_weight = float(residual_weight)
+        self.drift_weight = float(drift_weight)
+        self.improvement_weight = float(improvement_weight)
+        self.drift_trans_scale = float(drift_trans_scale)
+        self.drift_rot_scale_deg = float(drift_rot_scale_deg)
+        self.improvement_margin = float(improvement_margin)
+
+    def get_name(self):
+        return "V82PoseRelationLoss"
+
+    def _normalized_pose_error(self, trans_err, rot_err):
+        trans_scale = max(self.drift_trans_scale, 1e-6)
+        rot_scale = max(math.radians(self.drift_rot_scale_deg), 1e-6)
+        return trans_err / trans_scale + rot_err / rot_scale
+
+    def compute_loss(self, gts, preds, **kw):
+        ref = self._first_tensor(gts, preds)
+        if ref is None:
+            return torch.zeros(()), {}
+        zero = ref.float().new_zeros(())
+        gt_poses = self._gt_pose_encodings(gts)
+
+        total = zero
+        details = {}
+        pose_losses = []
+        trans_errs = []
+        rot_errs = []
+        raw_trans_errs = []
+        raw_rot_errs = []
+        gate_values = []
+        delta_norms = []
+        residual_terms = []
+        drift_terms = []
+        drift_targets = []
+        improvement_terms = []
+        improvements = []
+
+        for view_idx, (gt_pose, gt, pred) in enumerate(zip(gt_poses, gts, preds)):
+            pred_pose = pred.get("camera_pose", None)
+            if pred_pose is None:
+                continue
+            pred_pose = pred_pose.float()
+            gt_pose = gt_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
+
+            pose_loss = self._pose_loss(pred_pose, gt_pose)
+            pose_losses.append(pose_loss.mean())
+
+            trans_err_for_loss, rot_err_for_loss = self._pose_errors(pred_pose, gt_pose)
+            corrected_norm_err_for_loss = self._normalized_pose_error(
+                trans_err_for_loss,
+                rot_err_for_loss,
+            )
+            trans_err, rot_err = self._pose_errors(pred_pose.detach(), gt_pose.detach())
+            trans_errs.append(trans_err.mean())
+            rot_errs.append(rot_err.mean())
+            details[f"v82_trans_err/{view_idx}"] = float(trans_err.mean())
+            details[f"v82_rot_err_deg/{view_idx}"] = float(torch.rad2deg(rot_err.mean()))
+
+            corrected_norm_err = self._normalized_pose_error(trans_err, rot_err)
+            raw_norm_err = None
+            raw_pose = pred.get("v8_raw_camera_pose", None)
+            if raw_pose is not None:
+                raw_pose = raw_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
+                raw_t_err, raw_r_err = self._pose_errors(raw_pose.detach(), gt_pose.detach())
+                raw_trans_errs.append(raw_t_err.mean())
+                raw_rot_errs.append(raw_r_err.mean())
+                raw_norm_err = self._normalized_pose_error(raw_t_err, raw_r_err)
+                details[f"v82_raw_trans_err/{view_idx}"] = float(raw_t_err.mean())
+                details[f"v82_raw_rot_err_deg/{view_idx}"] = float(torch.rad2deg(raw_r_err.mean()))
+
+                if self.improvement_weight > 0:
+                    margin_term = F.relu(
+                        corrected_norm_err_for_loss - raw_norm_err.detach() + self.improvement_margin
+                    )
+                    improvement_terms.append(margin_term.mean())
+                    improvements.append((raw_norm_err - corrected_norm_err).mean())
+
+                if self.drift_weight > 0:
+                    drift_target = raw_norm_err.clamp(0.0, 1.0).detach().reshape(-1, 1, 1)
+                    drift_targets.append(drift_target.mean())
+                    drift_logit = pred.get("v8_pose_prompt_drift_logit", None)
+                    gate = pred.get("v8_pose_prompt_gate", None)
+                    if drift_logit is not None:
+                        drift_logit = drift_logit.float().reshape_as(drift_target)
+                        drift_terms.append(F.binary_cross_entropy_with_logits(drift_logit, drift_target))
+                    elif gate is not None:
+                        gate_for_loss = gate.float().reshape_as(drift_target).clamp(1e-4, 1.0 - 1e-4)
+                        drift_terms.append(F.binary_cross_entropy(gate_for_loss, drift_target))
+
+            delta_raw = pred.get("v8_pose_prompt_delta_raw", None)
+            if delta_raw is not None:
+                delta_raw = delta_raw.float()
+                residual_terms.append(delta_raw.pow(2).mean())
+                delta_norm = delta_raw.detach().norm(dim=-1).mean()
+                delta_norms.append(delta_norm)
+                details[f"v82_delta_norm/{view_idx}"] = float(delta_norm)
+
+            gate = pred.get("v8_pose_prompt_gate", None)
+            if gate is not None:
+                gate = gate.float()
+                gate_values.append(gate.detach().mean())
+                details[f"v82_gate/{view_idx}"] = float(gate.detach().mean())
+
+        if pose_losses:
+            pose_loss = torch.stack(pose_losses).mean()
+            total = total + pose_loss
+            details["v82_pose_loss"] = float(pose_loss.detach())
+        if residual_terms and self.residual_weight > 0:
+            residual_loss = torch.stack(residual_terms).mean()
+            total = total + self.residual_weight * residual_loss
+            details["v82_residual_small_loss"] = float(residual_loss.detach())
+            details["v82_residual_small_loss_weighted"] = float((self.residual_weight * residual_loss).detach())
+        if drift_terms and self.drift_weight > 0:
+            drift_loss = torch.stack(drift_terms).mean()
+            total = total + self.drift_weight * drift_loss
+            details["v82_drift_loss"] = float(drift_loss.detach())
+            details["v82_drift_loss_weighted"] = float((self.drift_weight * drift_loss).detach())
+        if improvement_terms and self.improvement_weight > 0:
+            improvement_loss = torch.stack(improvement_terms).mean()
+            total = total + self.improvement_weight * improvement_loss
+            details["v82_improvement_margin_loss"] = float(improvement_loss.detach())
+            details["v82_improvement_margin_loss_weighted"] = float((self.improvement_weight * improvement_loss).detach())
+
+        if trans_errs:
+            details["v82_trans_err"] = float(torch.stack(trans_errs).mean())
+            details["v82_rot_err_deg"] = float(torch.rad2deg(torch.stack(rot_errs).mean()))
+        if raw_trans_errs:
+            details["v82_raw_trans_err"] = float(torch.stack(raw_trans_errs).mean())
+            details["v82_raw_rot_err_deg"] = float(torch.rad2deg(torch.stack(raw_rot_errs).mean()))
+        if gate_values:
+            details["v82_gate_mean"] = float(torch.stack(gate_values).mean())
+        if delta_norms:
+            details["v82_delta_norm"] = float(torch.stack(delta_norms).mean())
+        if drift_targets:
+            details["v82_drift_target_mean"] = float(torch.stack(drift_targets).mean())
+        if improvements:
+            details["v82_norm_error_improvement"] = float(torch.stack(improvements).mean())
+
+        # Keep the old V8 names in logs so existing parsers can still find the
+        # headline metrics while V8.2-specific keys carry the new losses.
+        if "v82_pose_loss" in details:
+            details["v8_pose_prompt_pose_loss"] = details["v82_pose_loss"]
+        if "v82_trans_err" in details:
+            details["v8_pose_prompt_trans_err"] = details["v82_trans_err"]
+        if "v82_rot_err_deg" in details:
+            details["v8_pose_prompt_rot_err_deg"] = details["v82_rot_err_deg"]
+        if "v82_raw_trans_err" in details:
+            details["v8_raw_trans_err"] = details["v82_raw_trans_err"]
+        if "v82_raw_rot_err_deg" in details:
+            details["v8_raw_rot_err_deg"] = details["v82_raw_rot_err_deg"]
+        if "v82_gate_mean" in details:
+            details["v8_pose_prompt_gate_mean"] = details["v82_gate_mean"]
+        if "v82_delta_norm" in details:
+            details["v8_pose_prompt_delta_norm"] = details["v82_delta_norm"]
+        details["v82_pose_relation_loss"] = float(total.detach())
         details["v8_pose_prompt_loss"] = float(total.detach())
         return total, details
 

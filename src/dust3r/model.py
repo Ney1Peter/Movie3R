@@ -74,6 +74,8 @@ from dust3r.heads.postprocess import postprocess_pose
 from dust3r.v8_pose_prompt import (
     V81PoseCorrectionPrompt,
     V81PoseLatentResidualHead,
+    V82PoseRelationPrompt,
+    V82PoseRelationResidualHead,
     make_v8_corr_pos,
 )
 printer = get_logger(__name__, log_level="DEBUG")
@@ -212,6 +214,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v7_pose_adapter_max_delta_t=3.0,
         v7_pose_adapter_max_delta_r=0.75,
         v7_pose_adapter_dropout=0.0,
+        v8_pose_prompt_variant="v8_1",
         v8_pose_prompt_num_body_queries=4,
         v8_pose_prompt_num_heads=8,
         v8_pose_prompt_dropout=0.0,
@@ -268,6 +271,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v7_pose_adapter_max_delta_t = v7_pose_adapter_max_delta_t
         self.v7_pose_adapter_max_delta_r = v7_pose_adapter_max_delta_r
         self.v7_pose_adapter_dropout = v7_pose_adapter_dropout
+        self.v8_pose_prompt_variant = v8_pose_prompt_variant
         self.v8_pose_prompt_num_body_queries = v8_pose_prompt_num_body_queries
         self.v8_pose_prompt_num_heads = v8_pose_prompt_num_heads
         self.v8_pose_prompt_dropout = v8_pose_prompt_dropout
@@ -593,22 +597,40 @@ class ARCroco3DStereo(CroCoNet):
             max_delta_r=getattr(config, "v7_pose_adapter_max_delta_r", 0.75),
             dropout=getattr(config, "v7_pose_adapter_dropout", 0.0),
         )
-        self.v8_pose_prompt = V81PoseCorrectionPrompt(
-            enc_dim=self.enc_embed_dim,
-            dec_dim=self.dec_embed_dim,
-            num_body_queries=getattr(config, "v8_pose_prompt_num_body_queries", 4),
-            num_heads=getattr(config, "v8_pose_prompt_num_heads", 8),
-            memory_dim=self.dec_embed_dim * 2,
-            dropout=getattr(config, "v8_pose_prompt_dropout", 0.0),
-            use_history=getattr(config, "v8_pose_prompt_use_history", True),
-            use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
-            use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
-        )
-        self.v8_pose_residual_head = V81PoseLatentResidualHead(
-            dec_dim=self.dec_embed_dim,
-            gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
-            use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
-        )
+        self.v8_pose_prompt_variant = str(getattr(config, "v8_pose_prompt_variant", "v8_1"))
+        if self.v8_pose_prompt_variant in {"v8_2", "relation", "relation_v8_2"}:
+            self.v8_pose_prompt = V82PoseRelationPrompt(
+                enc_dim=self.enc_embed_dim,
+                dec_dim=self.dec_embed_dim,
+                num_heads=getattr(config, "v8_pose_prompt_num_heads", 8),
+                memory_dim=self.dec_embed_dim * 2,
+                dropout=getattr(config, "v8_pose_prompt_dropout", 0.0),
+                use_history=getattr(config, "v8_pose_prompt_use_history", True),
+                use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
+                use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
+            )
+            self.v8_pose_residual_head = V82PoseRelationResidualHead(
+                dec_dim=self.dec_embed_dim,
+                gate_bias=getattr(config, "v8_pose_prompt_gate_bias", 0.0),
+                use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
+            )
+        else:
+            self.v8_pose_prompt = V81PoseCorrectionPrompt(
+                enc_dim=self.enc_embed_dim,
+                dec_dim=self.dec_embed_dim,
+                num_body_queries=getattr(config, "v8_pose_prompt_num_body_queries", 4),
+                num_heads=getattr(config, "v8_pose_prompt_num_heads", 8),
+                memory_dim=self.dec_embed_dim * 2,
+                dropout=getattr(config, "v8_pose_prompt_dropout", 0.0),
+                use_history=getattr(config, "v8_pose_prompt_use_history", True),
+                use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
+                use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
+            )
+            self.v8_pose_residual_head = V81PoseLatentResidualHead(
+                dec_dim=self.dec_embed_dim,
+                gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
+                use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
+            )
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(
         #     enc_dim=self.enc_embed_dim,
@@ -2353,6 +2375,7 @@ class ARCroco3DStereo(CroCoNet):
         ress = []
         v8_prev_corr_token = None
         v8_prev_pose_token = None
+        v8_prev_delta_token = None
         v8_prev_gate = None
         for i in range(len(views)):
             feat_i = feat[i]
@@ -2423,6 +2446,7 @@ class ARCroco3DStereo(CroCoNet):
                     pose_memory=mem,
                     prev_corr_token=v8_prev_corr_token,
                     prev_pose_token=v8_prev_pose_token,
+                    prev_delta_token=v8_prev_delta_token,
                     prev_gate=v8_prev_gate,
                 )
                 f_corr = v8_prompt_out.corr_tokens
@@ -2481,6 +2505,7 @@ class ARCroco3DStereo(CroCoNet):
             pose_token_for_head = dec[-1][:, 0:1]
             v8_pose_prompt_info = None
             v8_corr_token_for_history = None
+            v8_delta_for_history = None
             v8_gate_for_history = None
             if getattr(self, "enable_v8_pose_prompt", False) and n_corr_i > 0:
                 v8_layout = self._decoder_token_layout(
@@ -2491,7 +2516,12 @@ class ARCroco3DStereo(CroCoNet):
                     has_shot=use_shot_decoder_token,
                 )
                 v8_corr_token = dec[-1][:, v8_layout["corr_start"]:v8_layout["corr_end"]]
-                v8_delta_applied, v8_gate, v8_delta_raw = self.v8_pose_residual_head(v8_corr_token)
+                v8_head_out = self.v8_pose_residual_head(v8_corr_token)
+                if len(v8_head_out) == 4:
+                    v8_delta_applied, v8_gate, v8_delta_raw, v8_drift_logit = v8_head_out
+                else:
+                    v8_delta_applied, v8_gate, v8_delta_raw = v8_head_out
+                    v8_drift_logit = None
                 v8_raw_pose_token = pose_token_for_head
                 pose_token_for_head = pose_token_for_head + v8_delta_applied
                 with torch.no_grad():
@@ -2505,9 +2535,12 @@ class ARCroco3DStereo(CroCoNet):
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                if v8_drift_logit is not None:
+                    v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
                     v8_pose_prompt_info["v8_raw_camera_pose"] = v8_raw_camera_pose.detach()
                 v8_corr_token_for_history = v8_corr_token
+                v8_delta_for_history = v8_delta_applied
                 v8_gate_for_history = v8_gate
             pose_token_anchor_info = None
             if getattr(self, "enable_anchor_pose_token_adapter", False):
@@ -2757,6 +2790,12 @@ class ARCroco3DStereo(CroCoNet):
                     update_mask=update_mask,
                     reset_mask=reset_mask,
                 )
+                v8_prev_delta_token = self._blend_v8_prompt_history(
+                    v8_prev_delta_token,
+                    v8_delta_for_history,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
                 v8_prev_gate = self._blend_v8_prompt_history(
                     v8_prev_gate,
                     v8_gate_for_history,
@@ -2908,6 +2947,7 @@ class ARCroco3DStereo(CroCoNet):
         )
         v8_prev_corr_token = None
         v8_prev_pose_token = None
+        v8_prev_delta_token = None
         v8_prev_gate = None
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
@@ -3073,6 +3113,7 @@ class ARCroco3DStereo(CroCoNet):
                     pose_memory=mem,
                     prev_corr_token=v8_prev_corr_token,
                     prev_pose_token=v8_prev_pose_token,
+                    prev_delta_token=v8_prev_delta_token,
                     prev_gate=v8_prev_gate,
                 )
                 f_corr = v8_prompt_out.corr_tokens
@@ -3160,6 +3201,7 @@ class ARCroco3DStereo(CroCoNet):
             pose_token_for_head = dec[-1][:, 0:1]
             v8_pose_prompt_info = None
             v8_corr_token_for_history = None
+            v8_delta_for_history = None
             v8_gate_for_history = None
             if getattr(self, "enable_v8_pose_prompt", False) and n_corr_i > 0:
                 v8_layout = self._decoder_token_layout(
@@ -3170,7 +3212,12 @@ class ARCroco3DStereo(CroCoNet):
                     has_shot=use_shot_decoder_token,
                 )
                 v8_corr_token = dec[-1][:, v8_layout["corr_start"]:v8_layout["corr_end"]]
-                v8_delta_applied, v8_gate, v8_delta_raw = self.v8_pose_residual_head(v8_corr_token)
+                v8_head_out = self.v8_pose_residual_head(v8_corr_token)
+                if len(v8_head_out) == 4:
+                    v8_delta_applied, v8_gate, v8_delta_raw, v8_drift_logit = v8_head_out
+                else:
+                    v8_delta_applied, v8_gate, v8_delta_raw = v8_head_out
+                    v8_drift_logit = None
                 v8_raw_pose_token = pose_token_for_head
                 pose_token_for_head = pose_token_for_head + v8_delta_applied
                 with torch.no_grad():
@@ -3184,9 +3231,12 @@ class ARCroco3DStereo(CroCoNet):
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                if v8_drift_logit is not None:
+                    v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
                     v8_pose_prompt_info["v8_raw_camera_pose"] = v8_raw_camera_pose.detach()
                 v8_corr_token_for_history = v8_corr_token
+                v8_delta_for_history = v8_delta_applied
                 v8_gate_for_history = v8_gate
             pose_token_anchor_info = None
             if getattr(self, "enable_anchor_pose_token_adapter", False):
@@ -3499,6 +3549,12 @@ class ARCroco3DStereo(CroCoNet):
                 v8_prev_pose_token = self._blend_v8_prompt_history(
                     v8_prev_pose_token,
                     pose_token_for_head,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
+                v8_prev_delta_token = self._blend_v8_prompt_history(
+                    v8_prev_delta_token,
+                    v8_delta_for_history,
                     update_mask=update_mask,
                     reset_mask=reset_mask,
                 )
