@@ -86,7 +86,7 @@ def train_one(ablation: dict, args: argparse.Namespace, env: dict) -> Path:
         "src/train.py",
         "--config-name",
         "train_v8_pose_prompt_ablation_small",
-        f"model={model_expr(ablation)}",
+        f'model="{model_expr(ablation)}"',
         f"exp_name={ablation['id']}",
         f"logdir={run_dir / 'logs'}",
         f"output_dir={run_dir}",

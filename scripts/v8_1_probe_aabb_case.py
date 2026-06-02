@@ -120,6 +120,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--drift_r_deg", nargs=3, type=float, default=[0.0, 8.0, -6.0])
     parser.add_argument("--max_points", type=int, default=4096)
     parser.add_argument("--min_smpl_iou", type=float, default=0.50)
+    parser.add_argument(
+        "--skip_synthetic_correction",
+        action="store_true",
+        help="Only draw explicit overlays and token heatmaps. Useful for grouped RGB/mask/SMPL data without depth.",
+    )
     return parser.parse_args()
 
 
@@ -397,10 +402,14 @@ def load_view(
     stem = f"{frame:08d}"
     rgb_orig = read_rgb(root / "rgb" / f"{stem}.png")
     mask_orig = read_mask(root / "mask" / f"{stem}.png")
-    depth_raw = np.load(root / "depth" / f"{stem}.npy")
-    depth_m = depth_raw.astype(np.float32)
-    if np.issubdtype(depth_raw.dtype, np.integer):
-        depth_m /= 1000.0
+    depth_path = root / "depth" / f"{stem}.npy"
+    if depth_path.is_file():
+        depth_raw = np.load(depth_path)
+        depth_m = depth_raw.astype(np.float32)
+        if np.issubdtype(depth_raw.dtype, np.integer):
+            depth_m /= 1000.0
+    else:
+        depth_m = np.zeros(mask_orig.shape, dtype=np.float32)
     pose = projector.camera_to_world_pose(seq)
     K_orig = projector.intrinsics(seq)
     params = resize_crop_params(rgb_orig.shape[1], rgb_orig.shape[0], args.size)
@@ -820,7 +829,9 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(metrics_rows)
 
-    correction_summary = run_synthetic_correction(args, views, dirs["correction"])
+    correction_summary = None
+    if not args.skip_synthetic_correction:
+        correction_summary = run_synthetic_correction(args, views, dirs["correction"])
     print(json.dumps({"output_dir": str(args.output_dir), "grid_hw": grid_hw, "correction": correction_summary}, indent=2))
 
 
