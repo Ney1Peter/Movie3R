@@ -132,6 +132,109 @@ selected token
 - near-scene token 的高相似区域集中在人体周围背景，而不是人体内部；
 - shot switch 前后，同一类 token 的语义响应仍然合理。
 
+### 3.2.1 Body-Part Token 前置验证实验
+
+当前 heatmap 只能说明“GT 指定的部位 patch token 是否包含对应语义”，还不能说明“模型不看 GT 就能唯一找到这个部位”。因此 V8.1 需要把 body-part token 的验证拆成三个层级。
+
+#### Experiment 1: GT-anchor token discriminativeness
+
+目的：验证四个部位的 encoder token 是否真的比其他区域更像对应部位，而不是全图到处都高响应。
+
+四个部位统一验证：
+
+```text
+pelvis
+torso
+left foot
+right foot
+```
+
+流程：
+
+```text
+RGB
+  -> frozen Human3R encoder
+  -> last-layer patch tokens
+
+GT SMPL joints + camera
+  -> 投影 pelvis / torso / left foot / right foot 到图像
+  -> 找到对应 patch token 作为 query token
+
+query token
+  -> 和同一帧所有 patch tokens 做 cosine similarity
+  -> 得到 heatmap 和 top-k patch
+  -> 用 GT body-part region 只做评价
+```
+
+这里 GT 的作用只是在实验中定义 query token 和评价区域。最终方法不应该依赖当前帧 GT 去构造 `A_corr_t`。
+
+注意：top-k 指标必须排除 query patch 自己。否则 top-1 一定是原始 query token，无法验证“其他高响应 patch 是否也落在正确部位”。
+
+输出：
+
+| 输出 | 含义 |
+|---|---|
+| explicit overlay | SMPL 投影、mask、body-part anchor 是否正确 |
+| body-part heatmap | query token 与全图 token 的相似度分布 |
+| top-k patch overlay | 相似度最高的 patch 是否落在目标部位 / 人体 / 背景 |
+| metrics csv | 每个部位的 target/outside margin、top-k hit、背景误报 |
+
+核心指标：
+
+| 指标 | 解释 | 期望 |
+|---|---|---|
+| `target_mean_sim` | 目标部位区域平均相似度 | 越高越好 |
+| `outside_mean_sim` | 非目标区域平均相似度 | 越低越好 |
+| `target_outside_margin` | 二者差值 | 大于 0，越大越好 |
+| `top1_target_hit` | top-1 patch 是否在目标区域 | 1 更好 |
+| `top5_target_hit_rate` | top-5 patch 落在目标区域比例 | 越高越好 |
+| `top5_human_hit_rate` | top-5 patch 落在人体 mask 比例 | 越高越好 |
+| `top5_background_hit_rate` | top-5 patch 落在背景比例 | 越低越好 |
+| `top1_pixel_error` | top-1 patch center 到 GT anchor 的像素距离 | 越小越好 |
+
+判断标准：
+
+- pelvis / torso 不要求 top-k 只落在一个小圆内，但应该主要落在人体躯干或人体 mask 内。
+- left foot / right foot 允许两只脚之间有一定混淆，但不能经常响应到墙、天花板、远处背景。
+- 如果左右脚区分不稳定，后续可以退化为 `foot token` 或 `lower-body token`，不强行使用 left/right foot identity。
+
+#### Experiment 2: Cross-frame body-part retrieval
+
+目的：验证不看当前帧 GT，只用上一帧 body-part token，能否在下一帧或 shot switch 后找到同一类人体部位。
+
+流程：
+
+```text
+frame t:
+  GT 只用于取 source body-part token
+
+frame t+1 / B_t+2:
+  不使用 GT 搜索
+  source token 与目标帧所有 patch tokens 做 similarity
+  用目标帧 GT 只做评价
+```
+
+这一步更接近 online pose correction，因为它验证的是“历史人体 anchor token 能否在当前帧提供对应关系”。
+
+#### Experiment 3: Prototype / linear-probe body-part retrieval
+
+目的：验证完全不依赖当前样本 GT 的自动部位定位能力。
+
+两种可选方式：
+
+```text
+prototype search:
+  从 support frames 提取 pelvis / torso / foot token 原型
+  在新图中直接搜索最相似 patch
+
+linear probe:
+  冻结 encoder
+  训练极小 patch classifier / body-part query
+  输出 pelvis / torso / left foot / right foot 概率图
+```
+
+这一步可以作为后续更正式的 token 自动定位验证，但 V8.1 第一轮先完成 Experiment 1 和 Experiment 2。
+
 ### 3.3 几何和区域验证
 
 对 pointmap / geometry 相关 token，需要检查：
