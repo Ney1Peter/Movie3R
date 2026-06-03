@@ -420,6 +420,74 @@ def _collect_anchor_pose_details(preds):
     return details
 
 
+def _v8_image_only_forward_enabled(model):
+    base_model = _unwrap_model(model)
+    return bool(getattr(base_model, "v8_pose_prompt_image_only", False))
+
+
+def _make_zero_ray_map(view):
+    ray_map = view.get("ray_map", None)
+    if torch.is_tensor(ray_map):
+        return torch.zeros_like(ray_map)
+
+    img = view["img"]
+    batch_size, _, height, width = img.shape
+    return torch.zeros(
+        batch_size,
+        height,
+        width,
+        6,
+        device=img.device,
+        dtype=img.dtype,
+    )
+
+
+def _make_false_ray_mask(view):
+    ray_mask = view.get("ray_mask", None)
+    if torch.is_tensor(ray_mask):
+        return torch.zeros_like(ray_mask).bool()
+    return torch.zeros_like(view["img_mask"]).bool()
+
+
+def _make_v8_image_only_model_batch(batch):
+    """Create the model-forward batch used by V8.3 image-only training.
+
+    The original batch still carries GT pose/SMPL/depth fields for the loss.
+    This copy intentionally removes them from model forward so training sees
+    the same input family as real video inference.
+    """
+
+    keep_keys = {
+        "img",
+        "img_mhmr",
+        "K_mhmr",
+        "true_shape",
+        "img_mask",
+        "reset",
+        "update",
+        "dataset",
+        "label",
+        "instance",
+        "idx",
+        "rng",
+        "is_video",
+        "is_metric",
+        "is_metric_scale",
+        "camera_only",
+        "depth_only",
+        "single_view",
+        "quantile",
+    }
+
+    clean_batch = []
+    for view in batch:
+        clean_view = {k: view[k] for k in keep_keys if k in view}
+        clean_view["ray_mask"] = _make_false_ray_mask(view)
+        clean_view["ray_map"] = _make_zero_ray_map(view)
+        clean_batch.append(clean_view)
+    return clean_batch
+
+
 def loss_of_one_batch(
     batch,
     model,
@@ -459,8 +527,19 @@ def loss_of_one_batch(
             # noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
             # **========== 结束 ==========**
             smpl_model.update_smpl_gt(batch)
-            output = model(batch)
-            preds, batch = output.ress, output.views
+            # **========== V8.2 原始代码备份：GT-enhanced batch 直接进入 model forward ==========
+            # output = model(batch)
+            # preds, batch = output.ress, output.views
+            # **========== 结束 ==========**
+            if _v8_image_only_forward_enabled(model):
+                gt_batch = batch
+                model_batch = _make_v8_image_only_model_batch(gt_batch)
+                output = model(model_batch)
+                preds = output.ress
+                batch = gt_batch
+            else:
+                output = model(batch)
+                preds, batch = output.ress, output.views
             # **========== V5 原始代码：训练 ShotToken 时计算 legacy shot auxiliary losses ==========**
             # preds_off = _compute_shot_off_preds(batch, model)
             # noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)

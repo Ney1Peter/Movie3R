@@ -223,6 +223,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_use_pose_memory=True,
         v8_pose_prompt_use_reliability=True,
         v8_pose_prompt_use_gate=True,
+        v8_pose_prompt_image_only=False,
         **croco_kwargs,
     ):
         super().__init__()
@@ -280,6 +281,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_use_pose_memory = v8_pose_prompt_use_pose_memory
         self.v8_pose_prompt_use_reliability = v8_pose_prompt_use_reliability
         self.v8_pose_prompt_use_gate = v8_pose_prompt_use_gate
+        self.v8_pose_prompt_image_only = v8_pose_prompt_image_only
         self.croco_kwargs = croco_kwargs
 
 
@@ -598,6 +600,7 @@ class ARCroco3DStereo(CroCoNet):
             dropout=getattr(config, "v7_pose_adapter_dropout", 0.0),
         )
         self.v8_pose_prompt_variant = str(getattr(config, "v8_pose_prompt_variant", "v8_1"))
+        self.v8_pose_prompt_image_only = bool(getattr(config, "v8_pose_prompt_image_only", False))
         if self.v8_pose_prompt_variant in {"v8_2", "relation", "relation_v8_2"}:
             self.v8_pose_prompt = V82PoseRelationPrompt(
                 enc_dim=self.enc_embed_dim,
@@ -2320,13 +2323,18 @@ class ARCroco3DStereo(CroCoNet):
         feat = feat_ls[-1]
         mhmr_feat = mhmr_feat_ls[-1]
 
+        # V8.3 image-only training must match real inference: human tokens come
+        # from MHMR detections, not GT smpl_mask/smpl_uv injected for losses.
+        human_tokenizer_inference = inference or bool(
+            getattr(self, "v8_pose_prompt_image_only", False)
+        )
         scores, smpl_tk_mhmr, pos_mhmr, smpl_loc, msks = self.smpl_tokenizer_mhmr(
-            mhmr_feat, pos, views, inference)
+            mhmr_feat, pos, views, human_tokenizer_inference)
         smpl_tk_cut3r, pos_cut3r, smpl_uv_cut3r = self.smpl_tokenizer_cut3r(
-            feat, pos, views, smpl_loc, inference)
+            feat, pos, views, smpl_loc, human_tokenizer_inference)
         
         # fuse CUT3R and MHMR smpl tokens
-        smpl_query = self.token_fuse(smpl_tk_mhmr, smpl_tk_cut3r, inference)
+        smpl_query = self.token_fuse(smpl_tk_mhmr, smpl_tk_cut3r, human_tokenizer_inference)
         pos_central = pos_cut3r
 
         state_feat, state_pos = self._init_state(feat[0], pos[0])
@@ -2814,8 +2822,11 @@ class ARCroco3DStereo(CroCoNet):
         feat = feat_ls[-1]
         mhmr_feat = mhmr_feat_ls[-1]
 
+        human_tokenizer_inference = inference or bool(
+            getattr(self, "v8_pose_prompt_image_only", False)
+        )
         scores, smpl_tk_mhmr, pos_mhmr, smpl_loc, msks = self.smpl_tokenizer_mhmr(
-            mhmr_feat, pos, views, inference)
+            mhmr_feat, pos, views, human_tokenizer_inference)
 
         # naive CUT3R+MHMR
         smpl_query = smpl_tk_mhmr
@@ -2917,14 +2928,14 @@ class ARCroco3DStereo(CroCoNet):
                 ress, views, state_args = self._forward_impl_naive(views, ret_state=ret_state, inference=inference)
                 return ARCroco3DStereoOutput(ress=ress, views=views), state_args
             else:
-                ress, views = self._forward_impl_naive(views, ret_state=ret_state)
+                ress, views = self._forward_impl_naive(views, ret_state=ret_state, inference=inference)
                 return ARCroco3DStereoOutput(ress=ress, views=views)
         else:
             if ret_state:
                 ress, views, state_args = self._forward_impl(views, ret_state=ret_state, inference=inference)
                 return ARCroco3DStereoOutput(ress=ress, views=views), state_args
             else:
-                ress, views = self._forward_impl(views, ret_state=ret_state)
+                ress, views = self._forward_impl(views, ret_state=ret_state, inference=inference)
                 return ARCroco3DStereoOutput(ress=ress, views=views)
 
 
