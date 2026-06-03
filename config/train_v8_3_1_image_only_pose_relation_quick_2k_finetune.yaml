@@ -1,0 +1,24 @@
+defaults:
+  - train_v8_3_image_only_pose_relation_quick_2k
+  - _self_
+
+# V8.3.1: continue training the strict image-only pose prompt from the V8.3
+# quick checkpoint. This isolates whether the current failure is mainly
+# under-training before changing the model structure.
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_3_train_runs/v8_3_image_only_pose_relation_quick_2k/checkpoint-final.pth
+resume: null
+
+epochs: 6
+lr: 2.0e-04
+min_lr: 2.0e-05
+warmup_epochs: 0
+
+eval_freq: 1
+save_final_checkpoint: true
+save_last_checkpoint: false
+save_freq: 1000000
+keep_freq: 0
+
+exp_name: v8_3_1_image_only_pose_relation_quick_2k_finetune
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_3_train_runs/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_3_train_runs/${exp_name}
