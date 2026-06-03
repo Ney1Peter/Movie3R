@@ -223,6 +223,44 @@ temporal correction momentum
 
 第一版训练只启用 `L_pose_gt + L_drift_score/gate + L_improvement_margin + L_residual_small`，暂时不启用 pointmap/floor/contact/body-part auxiliary。
 
+## 2026-06-03 关键更新：V8.3 Image-Only Pose Prompt
+
+V8.2 Stage-B 在 AvatarReX dataloader eval 上有效，但严格改成普通 RGB 图片文件夹推理后，泛化明显变差。排查后发现，训练/测试 dataloader 路径中仍然保留了一些不适合真实 image-only 推理的输入信号：
+
+```text
+ray_map / ray_mask
+shot_label
+GT-like camera / geometry fields
+```
+
+这会让模型容易学到：
+
+```text
+第 2/3 帧要强修
+```
+
+而不是真正学到：
+
+```text
+根据当前人体、历史人体/pose memory 和图像 token 判断该怎么修。
+```
+
+V8.3 的目标是：
+
+```text
+4-frame image-only pose correction
+模型 forward 只看 RGB 产生的 tokens 和内部 memory
+GT 只用于 loss / evaluation
+```
+
+当前仍然只做 4 帧训练，先不扩展到长序列，因为 Human3R 原训练本身也是 4 帧视频式训练。V8.3 的重点是先把短序列 image-only correction 跑通。
+
+详细计划见：
+
+```text
+docs/movie3r/v8/v8_3_image_only_pose_prompt_plan.md
+```
+
 ## 当前代码状态
 
 V7 已归档，V8 当前主线从 V8.1 UniCon-style decoder-in pose prompt 推进到 V8.2 pose relation prompt。当前原版 Human3R 推理仍可正常运行，V8.1 训练代码用于 pose correction 实验；V8.2 已有第一版训练前置代码，但还没有正式开始训练。
