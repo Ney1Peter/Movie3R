@@ -31,9 +31,9 @@ SMPLX_DIR = REPO_ROOT / "src" / "models"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
+    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="Training")
+    parser.add_argument("--split", default="training")
     parser.add_argument("--seq_a", default="22010710")
     parser.add_argument("--seq_b", default="22053923")
     parser.add_argument("--start_frame", type=int, default=0)
@@ -43,7 +43,7 @@ def parse_args() -> argparse.Namespace:
         "--depth_mode",
         choices=["raw", "empty"],
         default="raw",
-        help="raw uses Avatarrex_output depth files, which are DA3 pseudo-depth here; empty shows only cameras and SMPL.",
+        help="raw uses converted depth files, which are DA3 pseudo-depth here; empty shows only cameras and SMPL.",
     )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()

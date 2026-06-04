@@ -15,8 +15,8 @@ import numpy as np
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
-    parser.add_argument("--split", default="Training")
+    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
+    parser.add_argument("--split", default="training")
     parser.add_argument("--raw_calibration_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_1_aabb_manifests/stage_a_10k"))
     parser.add_argument("--seed", type=int, default=20260530)

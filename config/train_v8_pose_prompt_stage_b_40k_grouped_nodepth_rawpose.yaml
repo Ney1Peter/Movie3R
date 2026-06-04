@@ -29,13 +29,13 @@ num_test_views: 4
 n_corres_train: 0
 n_corres_test: 0
 
-avatarrex_root: /data/wangzheng/iJCV-CODE/data/Avatarrex_output
+avatarrex_root: /data/wangzheng/iJCV-CODE/data
 v8_stage_b_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_1_aabb_manifests/stage_b_40k
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1','zxc':'/data/wangzheng/iJCV-CODE/data/avatarrex_zxc','zzr':'/data/wangzheng/iJCV-CODE/data/avatarrex_zzr'}"
 
-train_dataset: 40000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_train_40k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
-val_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_val_in_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
-test_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_test_new_zzr_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+train_dataset: 40000 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_train_40k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_val_in_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 2000 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_test_new_zzr_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
 
 train_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')
 test_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')

@@ -27,7 +27,7 @@ RAW_ROOTS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--training_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training"))
+    parser.add_argument("--training_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/training"))
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_1_aabb_manifests/round1_ablation_small"))
     parser.add_argument("--groups", nargs="+", default=["lbn1", "zxc", "zzr"])
     parser.add_argument("--seed", type=int, default=20260602)

@@ -3,9 +3,9 @@
 
 Stage B uses grouped training data:
 
-  Training/lbn1/<camera_seq>/
-  Training/zxc/<camera_seq>/
-  Training/zzr/<camera_seq>/
+  training/lbn1/<camera_seq>/
+  training/zxc/<camera_seq>/
+  training/zzr/<camera_seq>/
 
 The manifest stores sequence names as relative paths, e.g.:
 
@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--training_root",
         type=Path,
-        default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training"),
+        default=Path("/data/wangzheng/iJCV-CODE/data/training"),
     )
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_1_aabb_manifests/stage_b_40k"))
     parser.add_argument("--seed", type=int, default=20260601)

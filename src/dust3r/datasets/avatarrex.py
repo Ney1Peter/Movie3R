@@ -12,7 +12,7 @@ AvatarReX Dataset for Human3R
    - is_video=False，学习镜头跳变
 
 目录结构（由 preprocess_avatarrex_fast.py 生成）：
-  ROOT/Training/{seq_id}/
+  ROOT/training/{seq_id}/
     rgb/{frame:08d}.png    ← PNG（扁平结构，无 camera 子目录）
     cam/{frame:08d}.npz    ← pose(4,4) + intrinsics(3,3)
     smpl/{frame:08d}.pkl   ← SMPLX参数
@@ -266,7 +266,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
     def __init__(
         self,
         *args,
-        split="Training",
+        split="training",
         ROOT=None,
         num_views=4,
         resolution=(512, 288),
@@ -847,7 +847,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
     def __init__(
         self,
         *args,
-        split="Training",
+        split="training",
         ROOT=None,
         num_views=4,
         resolution=(512, 288),

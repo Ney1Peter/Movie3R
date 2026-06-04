@@ -25,9 +25,9 @@ def parse_args():
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"),
+        default=Path("/data/wangzheng/iJCV-CODE/data"),
     )
-    parser.add_argument("--split", default="Training")
+    parser.add_argument("--split", default="training")
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_1_aabb_dataloader_check"))
     parser.add_argument("--num_samples", type=int, default=10)
     parser.add_argument("--min_view_angle_deg", type=float, default=60.0)

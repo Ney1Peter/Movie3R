@@ -32,9 +32,9 @@ from dust3r.smpl_model import SMPLX_DIR
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pred_output_dir", type=Path, required=True)
-    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
+    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="Training")
+    parser.add_argument("--split", default="training")
     parser.add_argument("--seq_a", default="22010710")
     parser.add_argument("--seq_b", default="22053923")
     parser.add_argument("--start_frame", type=int, default=0)

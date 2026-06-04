@@ -49,9 +49,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compare_root", type=Path, default=REPO_ROOT / "output" / "v8_1_human3r_aabb_compare")
     parser.add_argument("--output_name", default="token_aligned_human_nearfoot_scene")
-    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
+    parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="Training")
+    parser.add_argument("--split", default="training")
     parser.add_argument(
         "--scene_regions",
         default="near_foot",

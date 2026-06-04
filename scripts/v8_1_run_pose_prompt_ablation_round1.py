@@ -111,7 +111,7 @@ def eval_one(name: str, model_path: Path, manifest: Path, output_json: Path, arg
         "--output_json",
         str(output_json),
         "--avatarrex_root",
-        "/data/wangzheng/iJCV-CODE/data/Avatarrex_output",
+        "/data/wangzheng/iJCV-CODE/data",
         "--avatarrex_raw_root",
         RAW_ROOTS,
         "--device",

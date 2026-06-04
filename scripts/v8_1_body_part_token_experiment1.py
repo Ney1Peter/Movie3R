@@ -45,7 +45,7 @@ BODY_PARTS = ["pelvis", "torso", "left_foot", "right_foot"]
 DEFAULT_CASES = [
     {
         "case_id": "lbn1_22053925_22010708_00000692",
-        "split": "Training/lbn1",
+        "split": "training/lbn1",
         "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
         "seq_a": "22053925",
         "seq_b": "22010708",
@@ -53,7 +53,7 @@ DEFAULT_CASES = [
     },
     {
         "case_id": "zxc_22053925_22010710_00000289",
-        "split": "Training/zxc",
+        "split": "training/zxc",
         "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
         "seq_a": "22053925",
         "seq_b": "22010710",
@@ -61,7 +61,7 @@ DEFAULT_CASES = [
     },
     {
         "case_id": "zzr_22070935_22053926_00001117",
-        "split": "Training/zzr",
+        "split": "training/zzr",
         "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
         "seq_a": "22070935",
         "seq_b": "22053926",
@@ -72,7 +72,7 @@ DEFAULT_CASES = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/Avatarrex_output"))
+    parser.add_argument("--root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--model_path", type=Path, default=REPO_ROOT / "src" / "human3r_896L.pth")
     parser.add_argument("--output_dir", type=Path, default=REPO_ROOT / "output" / "v8_1_body_part_token_experiment1")
     parser.add_argument("--size", type=int, default=512)

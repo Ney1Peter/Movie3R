@@ -33,16 +33,16 @@ num_test_views: 4
 n_corres_train: 0
 n_corres_test: 0
 
-avatarrex_root: /data/wangzheng/iJCV-CODE/data/Avatarrex_output
+avatarrex_root: /data/wangzheng/iJCV-CODE/data
 avatarrex_raw_root: /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1
 
 v8_small_train_samples: "[('22010710', '22053923', 0), ('22010710', '22053923', 120), ('22010710', '22053923', 240), ('22010710', '22053923', 360), ('22010710', '22053923', 480), ('22053907', '22070928', 0), ('22053917', '22053925', 120), ('22010714', '22053926', 240), ('22010716', '22053908', 360), ('22010708', '22070935', 480)]"
 v8_small_test_same_samples: "[('22010710', '22053923', 60), ('22010710', '22053923', 180), ('22010710', '22053923', 300), ('22010710', '22053923', 420), ('22010710', '22053923', 540)]"
 v8_small_test_new_samples: "[('22053903', '22139907', 0), ('22053912', '22070932', 120), ('22053908', '22053912', 240), ('22053917', '22053923', 360), ('22010710', '22139907', 480)]"
 
-train_dataset: 1000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_train_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
-val_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_test_same_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
-test_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_test_new_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
+train_dataset: 1000 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_train_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
+val_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_test_same_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
+test_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_small_test_new_samples}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")
 
 train_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')
 test_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=5.0, latent_weight=0.0, gate_weight=0.0, pose_key='raw_camera_pose')
