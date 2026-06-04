@@ -1,0 +1,39 @@
+# V8.4 smoke run with zxc removed and batch size 4.
+#
+# Purpose:
+# - Check whether the filtered lbn1 + zzr + thuman00 + thuman02 manifests can
+#   use a larger single-card batch after the zxc human-detection failures are
+#   removed.
+# - Keep this as a short dataloader/forward/loss smoke test before replacing
+#   any long-running training job.
+defaults:
+  - train_v8_4_mixed_aabb_aaaa_image_only_pose_relation
+  - _self_
+
+v8_mixed_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_mixed_aabb_aaaa_manifests_no_zxc
+avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/avatarrex_zzr'}"
+
+train_dataset: 256 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 128 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=102, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: null
+test_dataset: 32 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=301, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 16 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=302, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+batch_size: 4
+accum_iter: 1
+epochs: 1
+num_workers: 4
+gradient_checkpointing: false
+
+eval_freq: 0
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: false
+early_stopping_patience: 0
+
+print_freq: 20
+structured_log_freq: 10
+print_img_freq: 1000000
+
+exp_name: v8_4_mixed_no_zxc_bs4_smoke
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}
