@@ -1265,6 +1265,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
             dataset="AvatarReX_Video",
             label=f"{seq_name}_{frame_str}",
             instance=rgb_path,
+            aabb_view_angle_deg=np.array(0.0, dtype=np.float32),
             is_metric=self.is_metric,
             is_video=True,           # 连续视频
             quantile=np.array(1, dtype=np.float32),

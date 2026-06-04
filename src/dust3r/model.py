@@ -2318,6 +2318,39 @@ class ARCroco3DStereo(CroCoNet):
             fused_tk_list = fused_tk.chunk(num_view, dim=0)
         return fused_tk_list
 
+    def _group_flat_human_token_list(self, flat_list, num_view, batch_size):
+        """Regroup per-image inference human tokens into per-view batches.
+
+        The inference tokenizer returns one [1, N_i, D] tensor for every flattened
+        view/batch image. Training with batch_size > 1 needs one [B, N_max, D]
+        tensor per video view so decoder tokens remain sample-local.
+        """
+        if flat_list is None or len(flat_list) == num_view:
+            return flat_list
+        if len(flat_list) != num_view * batch_size:
+            return flat_list
+
+        grouped = []
+        for view_idx in range(num_view):
+            chunks = []
+            max_humans = 0
+            ref = flat_list[view_idx * batch_size]
+            for batch_idx in range(batch_size):
+                item = flat_list[view_idx * batch_size + batch_idx]
+                if item.ndim >= 3 and item.shape[0] == 1:
+                    item = item.squeeze(0)
+                chunks.append(item)
+                max_humans = max(max_humans, int(item.shape[0]))
+
+            trailing_shape = tuple(ref.shape[2:]) if ref.ndim >= 3 else tuple(ref.shape[1:])
+            out = ref.new_zeros((batch_size, max_humans, *trailing_shape))
+            for batch_idx, item in enumerate(chunks):
+                n_humans = int(item.shape[0])
+                if n_humans > 0:
+                    out[batch_idx, :n_humans] = item
+            grouped.append(out)
+        return grouped
+
     def _forward_impl(self, views, ret_state=False, inference=False):
         shape, feat_ls, pos, mhmr_feat_ls = self._encode_views_mhmr(views)
         feat = feat_ls[-1]
@@ -2335,6 +2368,13 @@ class ARCroco3DStereo(CroCoNet):
         
         # fuse CUT3R and MHMR smpl tokens
         smpl_query = self.token_fuse(smpl_tk_mhmr, smpl_tk_cut3r, human_tokenizer_inference)
+        if human_tokenizer_inference and feat[0].shape[0] > 1:
+            num_view = len(views)
+            batch_size = feat[0].shape[0]
+            smpl_query = self._group_flat_human_token_list(smpl_query, num_view, batch_size)
+            smpl_tk_mhmr = self._group_flat_human_token_list(smpl_tk_mhmr, num_view, batch_size)
+            pos_cut3r = self._group_flat_human_token_list(pos_cut3r, num_view, batch_size)
+            smpl_loc = self._group_flat_human_token_list(smpl_loc, num_view, batch_size)
         pos_central = pos_cut3r
 
         state_feat, state_pos = self._init_state(feat[0], pos[0])

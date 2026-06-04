@@ -202,12 +202,19 @@ class SMPLModel(object):
                 verts_cam = verts.clone()
                 jts_cam = jts.clone()
                 T_w2c_selected = T_w2c[idx_h[0]]
-                T = T_w2c_selected[smpl_world_selected]
-                R = T[:, :3, :3]
-                t = T[:, :3, 3]
+                T_verts = T_w2c_selected[smpl_world_selected].to(
+                    device=verts_cam.device, dtype=verts_cam.dtype
+                )
+                R = T_verts[:, :3, :3]
+                t = T_verts[:, :3, 3]
                 verts_cam[smpl_world_selected] = torch.einsum(
                     "bij,bnj->bni", R, verts[smpl_world_selected]
                 ) + t[:, None, :]
+                T_jts = T_w2c_selected[smpl_world_selected].to(
+                    device=jts_cam.device, dtype=jts_cam.dtype
+                )
+                R = T_jts[:, :3, :3]
+                t = T_jts[:, :3, 3]
                 jts_cam[smpl_world_selected] = torch.einsum(
                     "bij,bnj->bni", R, jts[smpl_world_selected]
                 ) + t[:, None, :]
@@ -239,9 +246,14 @@ class SMPLModel(object):
             ):
                 root_world_rot = target['smpl_rotvec'][smpl_world_selected, 0]
                 root_world_mat = roma.rotvec_to_rotmat(root_world_rot)
-                R_w2c = T_w2c_selected[smpl_world_selected, :3, :3]
-                target['smpl_rotvec'][smpl_world_selected, 0] = roma.rotmat_to_rotvec(
+                R_w2c = T_w2c_selected[smpl_world_selected, :3, :3].to(
+                    device=root_world_mat.device, dtype=root_world_mat.dtype
+                )
+                root_cam_rot = roma.rotmat_to_rotvec(
                     R_w2c @ root_world_mat
+                )
+                target['smpl_rotvec'][smpl_world_selected, 0] = root_cam_rot.to(
+                    dtype=target['smpl_rotvec'].dtype
                 )
             target['smpl_rotmat'] = roma.rotvec_to_rotmat(target['smpl_rotvec'])
             target['smpl_shape'] = smpl_dict['smplx_shape'][smpl_mask]

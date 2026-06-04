@@ -28,6 +28,16 @@ def make_v8_corr_pos(batch_size, num_tokens, device, dtype):
     return -torch.ones(batch_size, num_tokens, 2, device=device, dtype=dtype)
 
 
+def _has_aligned_batch(tokens: Optional[torch.Tensor], batch_size: int) -> bool:
+    return (
+        tokens is not None
+        and tokens.ndim >= 3
+        and tokens.numel() > 0
+        and tokens.shape[0] == batch_size
+        and tokens.shape[1] > 0
+    )
+
+
 class V81PoseCorrectionPrompt(nn.Module):
     """Build A_corr_t before the decoder.
 
@@ -99,12 +109,12 @@ class V81PoseCorrectionPrompt(nn.Module):
         self.out_norm = nn.LayerNorm(self.dec_dim)
 
     def _mean_or_zero(self, tokens: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
-        if tokens is None or tokens.numel() == 0 or tokens.shape[1] == 0:
+        if not _has_aligned_batch(tokens, batch_size):
             return ref.new_zeros(batch_size, 1, self.dec_dim)
         return tokens.mean(dim=1, keepdim=True)
 
     def _project_memory(self, pose_memory: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
-        if pose_memory is None or pose_memory.numel() == 0 or pose_memory.shape[1] == 0:
+        if not _has_aligned_batch(pose_memory, batch_size):
             return ref.new_zeros(batch_size, 1, self.dec_dim)
         return self.memory_proj(pose_memory).mean(dim=1, keepdim=True)
 
@@ -124,7 +134,8 @@ class V81PoseCorrectionPrompt(nn.Module):
         batch_size = image_tokens.shape[0]
         image_ctx = self.image_proj(image_tokens)
         contexts = [image_ctx]
-        if human_tokens is not None and human_tokens.numel() > 0 and human_tokens.shape[1] > 0:
+        # If a tokenizer returns unbatched detections, do not share them across samples.
+        if _has_aligned_batch(human_tokens, batch_size):
             contexts.append(self.human_proj(human_tokens))
         context = self.context_norm(torch.cat(contexts, dim=1))
 
@@ -156,10 +167,12 @@ class V81PoseCorrectionPrompt(nn.Module):
             memory_summary = pose_token.new_zeros(batch_size, 1, self.dec_dim)
             camera_motion_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
-        if prev_gate is None or not self.use_reliability:
+        if prev_gate is None or prev_gate.reshape(-1).numel() != batch_size or not self.use_reliability:
             gate_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
         else:
-            gate_value = prev_gate.reshape(batch_size, 1, 1).to(dtype=pose_token.dtype, device=pose_token.device)
+            gate_value = prev_gate.reshape(-1).reshape(batch_size, 1, 1).to(
+                dtype=pose_token.dtype, device=pose_token.device
+            )
             gate_token = gate_value.expand(-1, -1, self.dec_dim)
         if self.use_reliability:
             state_summary = self._mean_or_zero(
@@ -308,24 +321,22 @@ class V82PoseRelationPrompt(nn.Module):
         self.out_norm = nn.LayerNorm(self.dec_dim)
 
     def _mean_or_zero(self, tokens: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
-        if tokens is None or tokens.numel() == 0 or tokens.shape[1] == 0:
+        if not _has_aligned_batch(tokens, batch_size):
             return ref.new_zeros(batch_size, 1, self.dec_dim)
         return tokens.mean(dim=1, keepdim=True)
 
     def _project_memory(self, pose_memory: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
         if (
-            pose_memory is None
+            not _has_aligned_batch(pose_memory, batch_size)
             or not self.use_pose_memory
-            or pose_memory.numel() == 0
-            or pose_memory.shape[1] == 0
         ):
             return ref.new_zeros(batch_size, 1, self.dec_dim)
         return self.memory_proj(pose_memory)
 
     def _gate_token(self, prev_gate: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
-        if prev_gate is None or prev_gate.numel() == 0 or not self.use_reliability:
+        if prev_gate is None or prev_gate.reshape(-1).numel() != batch_size or not self.use_reliability:
             return ref.new_zeros(batch_size, 1, self.dec_dim)
-        gate_value = prev_gate.reshape(batch_size, 1, 1).to(device=ref.device, dtype=ref.dtype)
+        gate_value = prev_gate.reshape(-1).reshape(batch_size, 1, 1).to(device=ref.device, dtype=ref.dtype)
         return gate_value.expand(-1, -1, self.dec_dim)
 
     def forward(
@@ -345,7 +356,9 @@ class V82PoseRelationPrompt(nn.Module):
         query = self.query_norm(self.relation_query.expand(batch_size, -1, -1))
 
         current_parts = [self.image_proj(image_tokens), pose_token]
-        if human_tokens is not None and human_tokens.numel() > 0 and human_tokens.shape[1] > 0:
+        # Keep image-only batch training sample-local: mismatched human tokens
+        # cannot be assigned safely to batch elements.
+        if _has_aligned_batch(human_tokens, batch_size):
             current_parts.append(self.human_proj(human_tokens))
         current_context = self.current_norm(torch.cat(current_parts, dim=1))
         current_token, current_attn = self.current_attention(
@@ -357,12 +370,12 @@ class V82PoseRelationPrompt(nn.Module):
         )
 
         memory_parts = []
-        if state_tokens is not None and state_tokens.numel() > 0 and state_tokens.shape[1] > 0:
+        if _has_aligned_batch(state_tokens, batch_size):
             memory_parts.append(self.state_proj(state_tokens))
         projected_memory = self._project_memory(pose_memory, batch_size, pose_token)
         if projected_memory.numel() > 0 and projected_memory.shape[1] > 0:
             memory_parts.append(projected_memory)
-        if prev_corr_token is not None and prev_corr_token.numel() > 0 and self.use_history:
+        if _has_aligned_batch(prev_corr_token, batch_size) and self.use_history:
             memory_parts.append(prev_corr_token)
         if memory_parts:
             memory_context = self.memory_norm(torch.cat(memory_parts, dim=1))
