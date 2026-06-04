@@ -1,0 +1,28 @@
+# Long V8.4 mixed AABB/AAAA run, single-card batch size 1.
+#
+# Keep batch_size=1 to match online inference and avoid human-token padding
+# side effects when MHMR misses a cropped person in one sample but not another.
+defaults:
+  - train_v8_4_mixed_aabb_aaaa_image_only_pose_relation
+  - _self_
+
+batch_size: 1
+accum_iter: 1
+epochs: 12
+num_workers: 4
+gradient_checkpointing: false
+
+eval_freq: 1
+save_freq: 2
+keep_freq: 4
+save_last_checkpoint: true
+save_final_checkpoint: true
+early_stopping_patience: 4
+
+print_freq: 100
+structured_log_freq: 50
+print_img_freq: 1000000
+
+exp_name: v8_4_mixed_aabb_aaaa_image_only_pose_relation_long_bs1
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}

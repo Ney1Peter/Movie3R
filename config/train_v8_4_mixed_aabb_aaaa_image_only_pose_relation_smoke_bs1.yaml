@@ -1,0 +1,23 @@
+# Smoke test for the V8.4 mixed AABB/AAAA bs=1 training path.
+defaults:
+  - train_v8_4_mixed_aabb_aaaa_image_only_pose_relation_long_bs1
+  - _self_
+
+train_dataset: 4 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 4 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=102, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: ''
+test_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split="${v8_mixed_test_split}", ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=301, n_corres=0, manifest_path="${v8_mixed_manifest_root}/test_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 1 @ AvatarReX_Video(allow_repeat=True, split="${v8_mixed_test_split}", ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=302, n_corres=0, manifest_path="${v8_mixed_manifest_root}/test_aaaa_1k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+epochs: 1
+num_workers: 0
+eval_freq: 0
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: false
+early_stopping_patience: 99
+print_freq: 1
+structured_log_freq: 1
+
+exp_name: v8_4_mixed_aabb_aaaa_image_only_pose_relation_smoke_bs1
+logdir: /tmp/v8_4_mixed_aabb_aaaa_image_only_pose_relation_smoke_bs1/logs
+output_dir: /tmp/v8_4_mixed_aabb_aaaa_image_only_pose_relation_smoke_bs1
