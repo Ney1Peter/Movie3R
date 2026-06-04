@@ -177,7 +177,12 @@ def clone_views(views):
 
 
 def transform_root_pose_to_camera(views) -> None:
-    """Convert smplx_root_pose from world to camera coordinates in-place."""
+    """Legacy diagnostic: force root pose to camera coordinates in-place.
+
+    This is intentionally kept only as a wrong-path comparison.  For THUman,
+    SMPL-X must be generated in world space and then transformed to camera
+    space as a mesh/joint cloud.
+    """
     for view in views:
         if "smplx_root_pose" not in view or "camera_pose" not in view:
             continue
@@ -195,7 +200,7 @@ def transform_root_pose_to_camera(views) -> None:
 
 def process_views_with_mode(views, smpl_model: SMPLModel, mode: str):
     work = clone_views(views)
-    if mode == "camera_root":
+    if mode == "legacy_camera_root_wrong":
         transform_root_pose_to_camera(work)
     elif mode != "loader_current":
         raise ValueError(mode)
@@ -234,7 +239,8 @@ def main() -> None:
         "samples": [],
         "coordinate_rule": {
             "camera_pose": "stored c2w from THUman calibration X_cam = R_w2c @ X_world + T_w2c",
-            "smpl_transl_in_loader": "world transl is transformed to camera coordinates by AvatarReX_AABB._load_view",
+            "loader_current": "THUman SMPL root/transl stay in world coordinates; SMPLModel transforms generated mesh/joints to camera",
+            "legacy_camera_root_wrong": "diagnostic only: forcing root/transl into camera before SMPL-X is not equivalent and should not be used",
             "raw_camera_pose": "None for current THUman conversion unless a raw_calibration source is added",
         },
     }
@@ -253,7 +259,7 @@ def main() -> None:
 
         mode_views = {
             mode: process_views_with_mode(views, smpl_model, mode)
-            for mode in ("loader_current", "camera_root")
+            for mode in ("loader_current", "legacy_camera_root_wrong")
         }
 
         for view_idx in range(len(views)):

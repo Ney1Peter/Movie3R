@@ -76,6 +76,10 @@ def _avatarrex_scene_path(split_path, seq_name):
     return osp.join(split_path, *str(seq_name).split("/"))
 
 
+def _avatarrex_is_thuman_sequence(seq_name):
+    return str(seq_name).split("/", 1)[0].startswith("thuman")
+
+
 def _avatarrex_is_sequence_dir(path):
     return (
         osp.isdir(osp.join(path, "rgb"))
@@ -708,6 +712,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
+        smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -801,7 +806,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             # smplx_transl 使用变换后的相机坐标系值
             if k == "smplx_transl":
                 for h in range(len(humans)):
-                    smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
+                    # AvatarReX stores camera-space SMPL for Human3R training.
+                    # THUman stores the original world-space SMPL and lets
+                    # SMPLModel transform the generated mesh to camera space.
+                    if not smpl_params_are_world:
+                        smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
 
         # img/ray mask
         img_mask, ray_mask = self.get_img_and_ray_masks(
@@ -813,6 +822,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
+            T_w2c=np.linalg.inv(camera_pose).astype(np.float32),
+            human_params_are_world=np.array(smpl_params_are_world, dtype=np.bool_),
             **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,
             dataset="AvatarReX_AABB",
@@ -1028,6 +1039,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
+        smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -1116,7 +1128,11 @@ class AvatarReX_Video(BaseMultiViewDataset):
             # smplx_transl 使用变换后的相机坐标系值
             if k == "smplx_transl":
                 for h in range(len(humans)):
-                    smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
+                    # AvatarReX stores camera-space SMPL for Human3R training.
+                    # THUman stores the original world-space SMPL and lets
+                    # SMPLModel transform the generated mesh to camera space.
+                    if not smpl_params_are_world:
+                        smpl_dict[k][h] = humans[h]["_smplx_transl_cam"]
 
         # Masks
         img_mask, ray_mask = self.get_img_and_ray_masks(
@@ -1128,6 +1144,8 @@ class AvatarReX_Video(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
+            T_w2c=np.linalg.inv(camera_pose).astype(np.float32),
+            human_params_are_world=np.array(smpl_params_are_world, dtype=np.bool_),
             **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,
             dataset="AvatarReX_Video",

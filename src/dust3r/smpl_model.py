@@ -182,17 +182,47 @@ class SMPLModel(object):
         )
         verts, jts = out.vertices.reshape(nhv, -1, 3), out.joints.reshape(nhv, -1, 3)
 
-        j2d = perspective_projection(jts, K[idx_h[0]])
-        v2d = perspective_projection(verts, K[idx_h[0]])
+        human_params_are_world = None
+        if "human_params_are_world" in views[0]:
+            human_params_are_world = torch.stack(
+                [view["human_params_are_world"] for view in views], dim=0
+            ).view(-1).bool()
+
+        T_w2c = None
+        if "T_w2c" in views[0]:
+            T_w2c = torch.stack([view["T_w2c"] for view in views], dim=0)
+            T_w2c = T_w2c.view(-1, *T_w2c.shape[2:])
+
+        verts_cam, jts_cam = verts, jts
+        smpl_world_selected = None
+        T_w2c_selected = None
+        if human_params_are_world is not None and T_w2c is not None:
+            smpl_world_selected = human_params_are_world[idx_h[0]]
+            if smpl_world_selected.any():
+                verts_cam = verts.clone()
+                jts_cam = jts.clone()
+                T_w2c_selected = T_w2c[idx_h[0]]
+                T = T_w2c_selected[smpl_world_selected]
+                R = T[:, :3, :3]
+                t = T[:, :3, 3]
+                verts_cam[smpl_world_selected] = torch.einsum(
+                    "bij,bnj->bni", R, verts[smpl_world_selected]
+                ) + t[:, None, :]
+                jts_cam[smpl_world_selected] = torch.einsum(
+                    "bij,bnj->bni", R, jts[smpl_world_selected]
+                ) + t[:, None, :]
+
+        j2d = perspective_projection(jts_cam, K[idx_h[0]])
+        v2d = perspective_projection(verts_cam, K[idx_h[0]])
 
         # Translation of the primary keypoint
         root_joint_idx = JOINT_NAMES.index(self.person_center)
-        target['smpl_transl'] = jts[:,root_joint_idx] # [nhv,3]
-        target['smpl_transl_pelvis'] = jts[:,0] # [nhv,3]
+        target['smpl_transl'] = jts_cam[:,root_joint_idx] # [nhv,3]
+        target['smpl_transl_pelvis'] = jts_cam[:,0] # [nhv,3]
 
         # Fill in target
-        target['smpl_v3d'] = verts
-        target['smpl_j3d'] = jts
+        target['smpl_v3d'] = verts_cam
+        target['smpl_j3d'] = jts_cam
         target['smpl_j2d'] = j2d
         target['smpl_v2d'] = v2d
 
@@ -202,6 +232,17 @@ class SMPLModel(object):
                                         smpl_dict['smplx_left_hand_pose'],
                                         smpl_dict['smplx_right_hand_pose'],
                                         smpl_dict['smplx_jaw_pose']],2)[smpl_mask] # [bs,nhmax]
+            if (
+                smpl_world_selected is not None
+                and T_w2c_selected is not None
+                and smpl_world_selected.any()
+            ):
+                root_world_rot = target['smpl_rotvec'][smpl_world_selected, 0]
+                root_world_mat = roma.rotvec_to_rotmat(root_world_rot)
+                R_w2c = T_w2c_selected[smpl_world_selected, :3, :3]
+                target['smpl_rotvec'][smpl_world_selected, 0] = roma.rotmat_to_rotvec(
+                    R_w2c @ root_world_mat
+                )
             target['smpl_rotmat'] = roma.rotvec_to_rotmat(target['smpl_rotvec'])
             target['smpl_shape'] = smpl_dict['smplx_shape'][smpl_mask]
 
