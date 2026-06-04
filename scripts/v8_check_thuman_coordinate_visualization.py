@@ -31,6 +31,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
     parser.add_argument(
+        "--include_legacy_wrong",
+        action="store_true",
+        help="Also show the old wrong diagnostic path that forces SMPL root/transl into camera before SMPL-X.",
+    )
+    parser.add_argument(
         "--samples",
         default=(
             "thuman00/cam00,thuman00/cam04,0;"
@@ -240,7 +245,7 @@ def main() -> None:
         "coordinate_rule": {
             "camera_pose": "stored c2w from THUman calibration X_cam = R_w2c @ X_world + T_w2c",
             "loader_current": "THUman SMPL root/transl stay in world coordinates; SMPLModel transforms generated mesh/joints to camera",
-            "legacy_camera_root_wrong": "diagnostic only: forcing root/transl into camera before SMPL-X is not equivalent and should not be used",
+            "legacy_camera_root_wrong": "diagnostic only and hidden by default: forcing root/transl into camera before SMPL-X is not equivalent and should not be used",
             "raw_camera_pose": "None for current THUman conversion unless a raw_calibration source is added",
         },
     }
@@ -257,10 +262,14 @@ def main() -> None:
         sample_record["camera_centers"] = [pose[:3, 3].tolist() for pose in poses]
         sample_record["camera_z_axes"] = [pose[:3, 2].tolist() for pose in poses]
 
-        mode_views = {
-            mode: process_views_with_mode(views, smpl_model, mode)
-            for mode in ("loader_current", "legacy_camera_root_wrong")
-        }
+        mode_names = ["loader_current"]
+        # The old path is intentionally kept behind a flag because it is a
+        # wrong-coordinate diagnostic, not a valid THUman visualization.
+        # if args.include_legacy_wrong:
+        #     mode_names.append("legacy_camera_root_wrong")
+        if args.include_legacy_wrong:
+            mode_names.append("legacy_camera_root_wrong")
+        mode_views = {mode: process_views_with_mode(views, smpl_model, mode) for mode in mode_names}
 
         for view_idx in range(len(views)):
             view = mode_views["loader_current"][view_idx]
