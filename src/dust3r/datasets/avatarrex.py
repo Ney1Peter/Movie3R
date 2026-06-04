@@ -218,6 +218,36 @@ def _avatarrex_read_sample_manifest(manifest_path):
     return tuple(samples)
 
 
+def _avatarrex_read_video_manifest(manifest_path):
+    if manifest_path is None:
+        return None
+    records = []
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        text = f.read().strip()
+    if not text:
+        return tuple()
+    if text[0] == "[":
+        parsed = json.loads(text)
+        records.extend(parsed)
+    else:
+        for line in text.splitlines():
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+
+    samples = []
+    for record in records:
+        if isinstance(record, (list, tuple)) and len(record) == 2:
+            seq_name, start_frame = record
+        else:
+            seq_name = record.get("seq", record.get("seqA", record.get("seq_a")))
+            start_frame = record.get("start_frame", record.get("frame", record.get("t")))
+        if seq_name is None or start_frame is None:
+            raise ValueError(f"Invalid AvatarReX Video manifest record: {record}")
+        samples.append((str(seq_name), int(start_frame)))
+    return tuple(samples)
+
+
 def _empty_anchor_info(top_k=16):
     return dict(
         anchor_valid=np.array(False, dtype=np.bool_),
@@ -458,7 +488,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # **========== 结束 ==========**
         # **========== V6.1 overfit 新代码：允许显式指定一个或多个 AABB sample ==========**
         if self.fixed_samples:
-            missing = [sample for sample in self.fixed_samples if sample not in self.samples]
+            # Large V8 manifests can contain tens of thousands of samples, so
+            # membership checks must use a set instead of repeatedly scanning a list.
+            sample_set = set(self.samples)
+            missing = [sample for sample in self.fixed_samples if sample not in sample_set]
             if missing:
                 raise ValueError(
                     "AvatarReX_AABB fixed_samples not found after file/cache filtering: "
@@ -879,6 +912,8 @@ class AvatarReX_Video(BaseMultiViewDataset):
         allow_repeat=False,
         seed=None,
         anchor_top_k=16,
+        fixed_samples=None,
+        manifest_path=None,
         load_da3_depth=True,
         raw_calibration_root=None,
         **kwargs,
@@ -890,6 +925,13 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.max_interval = 4
         self.max_humans = 10
         self.anchor_top_k = anchor_top_k
+        manifest_samples = _avatarrex_read_video_manifest(manifest_path)
+        if fixed_samples is not None and manifest_samples is not None:
+            raise ValueError("Use either fixed_samples or manifest_path, not both.")
+        self.fixed_samples = self._normalize_fixed_samples(
+            fixed_samples if fixed_samples is not None else manifest_samples
+        )
+        self.manifest_path = manifest_path
         self.load_da3_depth = bool(load_da3_depth)
         self.raw_calibration_root = raw_calibration_root
         self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
@@ -926,10 +968,16 @@ class AvatarReX_Video(BaseMultiViewDataset):
         if not osp.exists(seq_dir):
             raise FileNotFoundError(f"AvatarReX data not found at {seq_dir}")
 
-        self.scenes = sorted([
-            d for d in os.listdir(seq_dir)
-            if osp.isdir(osp.join(seq_dir, d))
-        ])
+        # **========== 原始代码：只支持 split/seq/{rgb,cam,smpl} 扁平结构 ==========**
+        # self.scenes = sorted([
+        #     d for d in os.listdir(seq_dir)
+        #     if osp.isdir(osp.join(seq_dir, d))
+        # ])
+        # **========== 新代码：兼容 split/group/seq/{rgb,cam,smpl} 分组结构 ==========**
+        self.scenes = _avatarrex_discover_sequences(seq_dir)
+        if not self.scenes:
+            raise FileNotFoundError(f"No AvatarReX sequence directories found under {seq_dir}")
+        # **========== 结束 ==========**
 
         # 每个序列只有 1 个相机（cam_id=0000）
         self.seq_cams = {s: [0] for s in self.scenes}
@@ -942,33 +990,48 @@ class AvatarReX_Video(BaseMultiViewDataset):
         # self.num_frames = len(frames)
         # self.seq_frames = {s: self.num_frames for s in self.scenes}
         # **========== 新代码：使用真实文件名帧号，例如 00000005 起始 ==========**
+        # sample_seq = self.scenes[0]
+        # rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
+        # frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
+        # self.frame_ids = [int(osp.splitext(f)[0]) for f in frames]
+        # self.frame_to_pos = {frame_id: pos for pos, frame_id in enumerate(self.frame_ids)}
+        # self.num_frames = len(self.frame_ids)
+        # self.seq_frames = {s: self.num_frames for s in self.scenes}
+        # **========== 新代码：每个序列使用自己的真实帧号，兼容 THUman 缺帧/不同长度 ==========**
+        self.scene_frame_ids = {s: _avatarrex_frame_ids(seq_dir, s) for s in self.scenes}
+        self.scene_frame_to_pos = {
+            s: {frame_id: pos for pos, frame_id in enumerate(ids)}
+            for s, ids in self.scene_frame_ids.items()
+        }
         sample_seq = self.scenes[0]
-        rgb_dir = osp.join(seq_dir, sample_seq, "rgb")
-        frames = sorted([f for f in os.listdir(rgb_dir) if f.endswith(".png")])
-        self.frame_ids = [int(osp.splitext(f)[0]) for f in frames]
-        self.frame_to_pos = {frame_id: pos for pos, frame_id in enumerate(self.frame_ids)}
+        self.frame_ids = self.scene_frame_ids[sample_seq]
         self.num_frames = len(self.frame_ids)
-        self.seq_frames = {s: self.num_frames for s in self.scenes}
+        self.seq_frames = {s: len(ids) for s, ids in self.scene_frame_ids.items()}
         # **========== 结束 ==========**
 
         print(f"  AvatarReX_Video: {len(self.scenes)} sequences, "
-              f"{self.num_frames} frames each, frames {self.frame_ids[0]}-{self.frame_ids[-1]}")
+              f"sample sequence has {self.num_frames} frames, frames {self.frame_ids[0]}-{self.frame_ids[-1]}")
         if not self.load_da3_depth:
             print("  AvatarReX_Video: DA3 depth disabled; depthmap is zero-filled for pose-only training")
         if self.raw_calibration is not None:
             print(f"  AvatarReX_Video: raw calibration camera pose enabled from {self.raw_calibration_root}")
 
         # 构建索引：每个 scene 的每个有效起始位置
-        self.samples = []
-        for seq_idx, seq_name in enumerate(self.scenes):
-            # 可起始位置：[0, num_frames - num_views]
-            # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
-            # for t in range(self.num_frames - self.num_views + 1):
-            #     self.samples.append((seq_name, t))
-            # **========== 新代码：样本保存真实起始帧号 ==========**
-            for start_pos in range(self.num_frames - self.num_views + 1):
-                self.samples.append((seq_name, self.frame_ids[start_pos]))
-            # **========== 结束 ==========**
+        if self.fixed_samples:
+            self.samples = list(self.fixed_samples)
+            print(f"  AvatarReX_Video manifest/fixed samples: {len(self.samples):,}")
+        else:
+            self.samples = []
+            for seq_idx, seq_name in enumerate(self.scenes):
+                frame_ids = self.scene_frame_ids[seq_name]
+                # 可起始位置：[0, len(frame_ids) - num_views]
+                # **========== 原始代码：所有序列共用 self.frame_ids ==========**
+                # for start_pos in range(self.num_frames - self.num_views + 1):
+                #     self.samples.append((seq_name, self.frame_ids[start_pos]))
+                # **========== 新代码：样本保存当前序列自己的真实起始帧号 ==========**
+                for start_pos in range(len(frame_ids) - self.num_views + 1):
+                    self.samples.append((seq_name, frame_ids[start_pos]))
+                # **========== 结束 ==========**
 
         # **========== 原始代码：索引阶段不检查文件完整性，缺帧会在 DataLoader 读图时报错 ==========**
         # self.samples 保持上方构建结果，不做文件存在性过滤。
@@ -983,15 +1046,47 @@ class AvatarReX_Video(BaseMultiViewDataset):
             print(f"  AvatarReX_Video skipped incomplete samples: {skipped:,}/{before_file_filter:,}")
         # **========== 结束 ==========**
 
+        if self.fixed_samples:
+            # Large V8 manifests can contain tens of thousands of samples, so
+            # membership checks must use a set instead of repeatedly scanning a list.
+            sample_set = set(self.samples)
+            missing = [sample for sample in self.fixed_samples if sample not in sample_set]
+            if missing:
+                raise ValueError(
+                    "AvatarReX_Video fixed_samples not found after file filtering: "
+                    f"{missing[:10]}{' ...' if len(missing) > 10 else ''}"
+                )
+            print(f"  AvatarReX_Video fixed_samples: {len(self.samples):,} valid samples")
+
         print(f"  AvatarReX_Video: {len(self.samples):,} samples")
 
+    @staticmethod
+    def _normalize_fixed_samples(fixed_samples):
+        if fixed_samples is None:
+            return None
+        if isinstance(fixed_samples, tuple) and len(fixed_samples) == 2:
+            fixed_samples = [fixed_samples]
+
+        normalized = []
+        for sample in fixed_samples:
+            if len(sample) != 2:
+                raise ValueError(
+                    "Each AvatarReX_Video fixed sample must be "
+                    "(seq_name, start_frame)"
+                )
+            seq_name, start_frame = sample
+            normalized.append((str(seq_name), int(start_frame)))
+        return tuple(normalized)
+
     def _sample_has_required_files(self, split_path, seq_name, start_frame):
-        start_pos = self.frame_to_pos.get(int(start_frame))
-        if start_pos is None or start_pos + self.num_views > len(self.frame_ids):
+        frame_to_pos = self.scene_frame_to_pos.get(seq_name, {})
+        frame_ids = self.scene_frame_ids.get(seq_name, [])
+        start_pos = frame_to_pos.get(int(start_frame))
+        if start_pos is None or start_pos + self.num_views > len(frame_ids):
             return False
 
         for v in range(self.num_views):
-            frame_idx = self.frame_ids[start_pos + v]
+            frame_idx = frame_ids[start_pos + v]
             if not _avatarrex_has_required_frame_files(
                 split_path, seq_name, frame_idx, require_depth=self.load_da3_depth
             ):
@@ -1022,9 +1117,10 @@ class AvatarReX_Video(BaseMultiViewDataset):
         #         shot_labels[v],
         #     ))
         # **========== 新代码：从真实帧号列表中取连续 num_views 个可用文件帧 ==========**
-        start_pos = self.frame_to_pos[t]
+        frame_ids = self.scene_frame_ids[seq_name]
+        start_pos = self.scene_frame_to_pos[seq_name][int(t)]
         for v in range(num_views):
-            frame_idx = self.frame_ids[start_pos + v]
+            frame_idx = frame_ids[start_pos + v]
             view = self._load_view(
                 split_path, seq_name, cam, frame_idx, resolution, rng, v,
                 shot_labels[v],
@@ -1039,10 +1135,11 @@ class AvatarReX_Video(BaseMultiViewDataset):
         """加载单个 view。"""
         frame_str = f"{frame_idx:08d}"
 
-        rgb_path = osp.join(split_path, seq_name, "rgb", f"{frame_str}.png")
-        cam_path = osp.join(split_path, seq_name, "cam", f"{frame_str}.npz")
-        depth_path = osp.join(split_path, seq_name, "depth", f"{frame_str}.npy")
-        smpl_path = osp.join(split_path, seq_name, "smpl", f"{frame_str}.pkl")
+        seq_path = _avatarrex_scene_path(split_path, seq_name)
+        rgb_path = osp.join(seq_path, "rgb", f"{frame_str}.png")
+        cam_path = osp.join(seq_path, "cam", f"{frame_str}.npz")
+        depth_path = osp.join(seq_path, "depth", f"{frame_str}.npy")
+        smpl_path = osp.join(seq_path, "smpl", f"{frame_str}.pkl")
 
         rgb_image = imread_cv2(rgb_path)
 
@@ -1077,7 +1174,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         # **========== 结束 ==========**
 
         # Mask
-        mask_path = osp.join(split_path, seq_name, "mask", f"{frame_str}.png")
+        mask_path = osp.join(seq_path, "mask", f"{frame_str}.png")
         if osp.exists(mask_path):
             mask_image = imread_cv2(mask_path)
         else:
