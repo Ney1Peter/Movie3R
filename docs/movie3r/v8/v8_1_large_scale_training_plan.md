@@ -17,13 +17,16 @@ This is the current UniCon-style decoder-in baseline. Do not switch back to side
 
 ## Data Audit
 
-Only this dataset is used for the next stage:
+Canonical training data is stored here:
 
 ```text
-/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training
+/data/wangzheng/iJCV-CODE/data/Training
 ```
 
-There is no separate `Val` or `Test` directory under `Avatarrex_output`. Therefore, validation and testing must be built as held-out splits inside `Training`.
+The old `/data/wangzheng/iJCV-CODE/data/training` and
+`/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training` paths are only
+compatibility symlinks.  There is no separate `Val` or `Test` directory;
+validation and testing must be built as held-out splits inside `Training`.
 
 Current `Training` contains:
 

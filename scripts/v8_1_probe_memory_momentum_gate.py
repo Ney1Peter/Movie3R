@@ -71,7 +71,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--token_aligned_dir", type=Path, default=None)
     parser.add_argument("--root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="training")
+    parser.add_argument("--split", default="Training")
     parser.add_argument("--model_path", type=Path, default=REPO_ROOT / "src" / "human3r_896L.pth")
     parser.add_argument("--output_dir", type=Path, default=REPO_ROOT / "output" / "v8_1_memory_momentum_gate_probe")
     parser.add_argument("--size", type=int, default=512)

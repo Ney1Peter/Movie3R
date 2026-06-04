@@ -29,13 +29,13 @@ n_corres_train: 0
 n_corres_test: 0
 
 avatarrex_root: /data/wangzheng/iJCV-CODE/data
-v8_train_samples: "[('22010710', '22053923', 0), ('22010710', '22053923', 1)]"
-v8_val_samples: "[('22010710', '22053923', 2), ('22010710', '22053923', 3)]"
-v8_test_samples: "[('22010710', '22053923', 4), ('22010710', '22053923', 5)]"
+v8_train_samples: "[('lbn1/22010710', 'lbn1/22053923', 0), ('lbn1/22010710', 'lbn1/22053923', 1)]"
+v8_val_samples: "[('lbn1/22010710', 'lbn1/22053923', 2), ('lbn1/22010710', 'lbn1/22053923', 3)]"
+v8_test_samples: "[('lbn1/22010710', 'lbn1/22053923', 4), ('lbn1/22010710', 'lbn1/22053923', 5)]"
 
-train_dataset: 20 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=11, n_corres=0, fixed_samples=${v8_train_samples})
-val_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=22, n_corres=0, fixed_samples=${v8_val_samples})
-test_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=33, n_corres=0, fixed_samples=${v8_test_samples})
+train_dataset: 20 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=11, n_corres=0, fixed_samples=${v8_train_samples})
+val_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=22, n_corres=0, fixed_samples=${v8_val_samples})
+test_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=33, n_corres=0, fixed_samples=${v8_test_samples})
 
 train_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=0.1, latent_weight=0.001, gate_weight=0.05)
 test_criterion: V81PosePromptLoss(translation_weight=1.0, rotation_weight=0.1, latent_weight=0.0, gate_weight=0.0)

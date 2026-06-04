@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--training_root",
         type=Path,
-        default=Path("/data/wangzheng/iJCV-CODE/data/training"),
+        default=Path("/data/wangzheng/iJCV-CODE/data/Training"),
     )
     parser.add_argument("--group", required=True, choices=("lbn1", "zxc", "zzr"))
     parser.add_argument("--output_dir", type=Path, required=True)

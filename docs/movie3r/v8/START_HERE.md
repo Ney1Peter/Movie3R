@@ -36,8 +36,9 @@ viewer:
 
 以后使用 AvatarReX 做 V8.1 pose correction 时必须注意：
 
-1. 不要用 `/data/wangzheng/iJCV-CODE/data/training/<group>/<seq>/cam/*.npz` 里的 processed `camera_pose` 作为最终监督 target。它是给 SMPL/depth 预处理和数据组织用的相机坐标，不是 V8 pose correction 的监督坐标；直接拿它算 loss 或画 GT camera 会导致坐标系错位。
-2. 正确 target 来自 raw calibration：
+1. V8 当前统一训练目录是 `/data/wangzheng/iJCV-CODE/data/Training`；旧的 `/data/wangzheng/iJCV-CODE/data/training` 和 `Avatarrex_output/Training` 只作为兼容 symlink 保留。
+2. 不要用 `/data/wangzheng/iJCV-CODE/data/Training/<group>/<seq>/cam/*.npz` 里的 processed `camera_pose` 作为最终监督 target。它是给 SMPL/depth 预处理和数据组织用的相机坐标，不是 V8 pose correction 的监督坐标；直接拿它算 loss 或画 GT camera 会导致坐标系错位。
+3. 正确 target 来自 raw calibration：
 
 ```text
 /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
@@ -49,7 +50,7 @@ t_c2w = -R_w2c.T @ T_w2c
 T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
 ```
 
-3. 训练、指标和 GT camera 可视化都必须使用同一个 target：
+4. 训练、指标和 GT camera 可视化都必须使用同一个 target：
 
 ```text
 raw_camera_pose_i = raw calibration c2w for camera i
@@ -58,7 +59,7 @@ T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
 
 如果看到 B 视角 `y-axis ~= -1`，说明又用了错误的 processed pose。
 
-4. `Avatarrex_output/depth/*.npy` 是 DA3 / monocular pseudo-depth，不是 metric GT depth。V8.1 pose-only 训练和坐标 sanity check 必须使用：
+5. `Avatarrex_output/depth/*.npy` 是 DA3 / monocular pseudo-depth，不是 metric GT depth。V8.1 pose-only 训练和坐标 sanity check 必须使用：
 
 ```text
 load_da3_depth=False

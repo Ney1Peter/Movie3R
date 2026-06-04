@@ -2,9 +2,9 @@ defaults:
   - train_v8_3_image_only_pose_relation_stage_b_40k_lbn1_zxc_to_zzr
   - _self_
 
-train_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_train_40k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
-val_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_val_in_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
-test_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_test_new_zzr_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+train_dataset: 2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_train_40k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_val_in_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 1 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_stage_b_manifest_root}/stage_b_test_new_zzr_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
 
 num_workers: 0
 print_freq: 1

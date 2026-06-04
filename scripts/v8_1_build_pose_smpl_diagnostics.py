@@ -36,9 +36,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pred_output_dir", type=Path, required=True)
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="training")
-    parser.add_argument("--seq_a", default="22010710")
-    parser.add_argument("--seq_b", default="22053923")
+    parser.add_argument("--split", default="Training")
+    parser.add_argument("--seq_a", default="lbn1/22010710")
+    parser.add_argument("--seq_b", default="lbn1/22053923")
     parser.add_argument("--start_frame", type=int, default=0)
     parser.add_argument("--output_root", type=Path, required=True)
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
@@ -160,9 +160,10 @@ def build_gt_smpl_npzs(args: argparse.Namespace, ref_output_dir: Path) -> list[d
     gt_smpls = []
     with torch.no_grad():
         for i, (seq, frame) in enumerate(specs):
-            if seq not in calibration:
-                raise KeyError(f"{seq} not found in {args.avatarrex_raw_root / 'calibration_full.json'}")
-            cal = calibration[seq]
+            seq_key = seq.split("/", 1)[1] if "/" in seq else seq
+            if seq_key not in calibration:
+                raise KeyError(f"{seq_key} not found in {args.avatarrex_raw_root / 'calibration_full.json'}")
+            cal = calibration[seq_key]
             R_calib = torch.tensor(np.asarray(cal["R"], dtype=np.float32).reshape(3, 3), device=device)
             T_calib = torch.tensor(np.asarray(cal["T"], dtype=np.float32).reshape(3), device=device)
 

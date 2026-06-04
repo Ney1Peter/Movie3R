@@ -166,11 +166,18 @@ def _raw_calibration_c2w(calibration, seq_name):
         group, seq_key = parts
         groups = calibration["groups"]
         if group not in groups:
+            if _avatarrex_is_thuman_sequence(seq_name):
+                return None
             raise KeyError(f"{group} not found in grouped AvatarReX raw calibration")
         calibration = groups[group]
         seq_name = seq_key
     if seq_name not in calibration:
-        raise KeyError(f"{seq_name} not found in raw AvatarReX calibration")
+        if "/" in str(seq_name):
+            _, seq_key = str(seq_name).split("/", 1)
+            if seq_key in calibration:
+                seq_name = seq_key
+        if seq_name not in calibration:
+            raise KeyError(f"{seq_name} not found in raw AvatarReX calibration")
     cal = calibration[seq_name]
     R_w2c = np.asarray(cal["R"], dtype=np.float32).reshape(3, 3)
     T_w2c = np.asarray(cal["T"], dtype=np.float32).reshape(3)
@@ -270,7 +277,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
     def __init__(
         self,
         *args,
-        split="training",
+        split="Training",
         ROOT=None,
         num_views=4,
         resolution=(512, 288),
@@ -713,6 +720,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
         smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
+        if raw_camera_pose is None and smpl_params_are_world:
+            # THUman stores the official c2w camera directly in cam/*.npz.
+            # Unlike AvatarReX, it does not need a separate raw calibration
+            # target for V8 pose losses.
+            raw_camera_pose = camera_pose
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -858,7 +870,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
     def __init__(
         self,
         *args,
-        split="training",
+        split="Training",
         ROOT=None,
         num_views=4,
         resolution=(512, 288),
@@ -1040,6 +1052,11 @@ class AvatarReX_Video(BaseMultiViewDataset):
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
         smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
+        if raw_camera_pose is None and smpl_params_are_world:
+            # THUman stores the official c2w camera directly in cam/*.npz.
+            # Unlike AvatarReX, it does not need a separate raw calibration
+            # target for V8 pose losses.
+            raw_camera_pose = camera_pose
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):

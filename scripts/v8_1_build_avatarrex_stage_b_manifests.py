@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--training_root",
         type=Path,
-        default=Path("/data/wangzheng/iJCV-CODE/data/training"),
+        default=Path("/data/wangzheng/iJCV-CODE/data/Training"),
     )
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_1_aabb_manifests/stage_b_40k"))
     parser.add_argument("--seed", type=int, default=20260601)

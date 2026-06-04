@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--raw_dir", type=Path, default=None)
     parser.add_argument("--corrected_dir", type=Path, default=None)
     parser.add_argument("--data_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
-    parser.add_argument("--split", type=str, default="training")
+    parser.add_argument("--split", type=str, default="Training")
     parser.add_argument(
         "--raw_calibration_root",
         type=Path,

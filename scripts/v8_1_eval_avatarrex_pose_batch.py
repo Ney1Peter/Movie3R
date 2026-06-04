@@ -71,7 +71,7 @@ def parse_args() -> argparse.Namespace:
         default="/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
         help="Raw AvatarReX calibration root, or a Python dict string for grouped roots.",
     )
-    parser.add_argument("--split", default="training")
+    parser.add_argument("--split", default="Training")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
     parser.add_argument("--seed", type=int, default=101)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")

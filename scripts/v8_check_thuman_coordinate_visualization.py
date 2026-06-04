@@ -26,7 +26,7 @@ from dust3r.utils.device import todevice
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--training_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
-    parser.add_argument("--split", default="training")
+    parser.add_argument("--split", default="Training")
     parser.add_argument("--output_dir", type=Path, default=Path("output/v8_thuman_coordinate_check"))
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))

@@ -30,11 +30,12 @@ V8 需要重新定义 shot-change 场景下的目标、约束和最小实验，�
 
 使用 AvatarReX 做 V8 pose correction 时：
 
+- 当前统一训练目录是 `/data/wangzheng/iJCV-CODE/data/Training`；旧的 `/data/wangzheng/iJCV-CODE/data/training` 和 `Avatarrex_output/Training` 只是兼容 symlink。
 - pose supervision 使用 `raw_camera_pose`，来自 raw AvatarReX calibration：
   `/data/wangzheng/iJCV-CODE/data/avatarrex_{lbn1,zxc,zzr}/calibration_full.json`。
 - 正确 target 是相对第 0 帧的 raw calibration camera：
   `T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i`。
-- 不要把 `/data/wangzheng/iJCV-CODE/data/training/<group>/<seq>/cam/*.npz` 的 processed `camera_pose` 当作最终监督 target 或 GT camera 可视化；它是给 SMPL/depth 预处理和数据组织用的坐标。
+- 不要把 `/data/wangzheng/iJCV-CODE/data/Training/<group>/<seq>/cam/*.npz` 的 processed `camera_pose` 当作最终监督 target 或 GT camera 可视化；它是给 SMPL/depth 预处理和数据组织用的坐标。
 - 指标和 viewer 中的 GT camera 也必须用 raw calibration target，再对齐到 saved Human3R output 的第 0 帧 viewer gauge。
 - V8.1 pose-only 训练使用 `load_da3_depth=False`。
 - `Avatarrex_output/depth/*.npy` 是 DA3 pseudo-depth，不是跨相机 metric GT depth，不能用来验证世界坐标是否对齐。

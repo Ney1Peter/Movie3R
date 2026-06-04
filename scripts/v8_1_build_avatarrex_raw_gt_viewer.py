@@ -33,9 +33,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
-    parser.add_argument("--split", default="training")
-    parser.add_argument("--seq_a", default="22010710")
-    parser.add_argument("--seq_b", default="22053923")
+    parser.add_argument("--split", default="Training")
+    parser.add_argument("--seq_a", default="lbn1/22010710")
+    parser.add_argument("--seq_b", default="lbn1/22053923")
     parser.add_argument("--start_frame", type=int, default=0)
     parser.add_argument("--output_dir", type=Path, required=True)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
@@ -56,6 +56,10 @@ def avatarrex_specs(seq_a: str, seq_b: str, start_frame: int) -> list[tuple[str,
         (seq_b, start_frame + 2),
         (seq_b, start_frame + 3),
     ]
+
+
+def raw_calibration_key(seq: str) -> str:
+    return seq.split("/", 1)[1] if "/" in seq else seq
 
 
 def true_c2w_from_calibration(cal: dict) -> np.ndarray:
@@ -152,6 +156,7 @@ def main() -> None:
 
     frame_metrics = []
     for out_idx, (seq, frame) in enumerate(avatarrex_specs(args.seq_a, args.seq_b, int(args.start_frame))):
+        seq_key = raw_calibration_key(seq)
         root = args.avatarrex_root / args.split / seq
         stem = f"{frame:08d}"
         color = cv2.imread(str(root / "rgb" / f"{stem}.png"), cv2.IMREAD_COLOR)
@@ -167,9 +172,9 @@ def main() -> None:
         else:
             depth = np.zeros(color.shape[:2], dtype=np.float32)
             conf = np.zeros(color.shape[:2], dtype=np.float32)
-        K = np.asarray(calibration[seq]["K"], dtype=np.float32).reshape(3, 3)
-        pose = true_c2w_from_calibration(calibration[seq])
-        smpl = build_gt_smpl(raw_smplx, smpl_data, calibration[seq], frame, mask, device)
+        K = np.asarray(calibration[seq_key]["K"], dtype=np.float32).reshape(3, 3)
+        pose = true_c2w_from_calibration(calibration[seq_key])
+        smpl = build_gt_smpl(raw_smplx, smpl_data, calibration[seq_key], frame, mask, device)
 
         cv2.imwrite(str(args.output_dir / "color" / f"{out_idx:06d}.png"), color)
         np.save(args.output_dir / "depth" / f"{out_idx:06d}.npy", depth)
