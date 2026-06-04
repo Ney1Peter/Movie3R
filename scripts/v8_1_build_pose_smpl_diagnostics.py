@@ -8,8 +8,10 @@ this script writes:
   gt_camera_pred_smpl/  : GT camera + predicted SMPL
   gt_camera_gt_smpl/    : GT camera + GT SMPL
 
-The GT cameras are aligned to the prediction's frame-0 coordinate system so the
-outputs can be compared in the same viewer world frame.
+The GT cameras are raw AvatarReX calibration poses, aligned to the prediction's
+frame-0 coordinate system so the outputs can be compared in the same viewer
+world frame. Do not use ``training/<seq>/cam/*.npz`` as this diagnostic camera
+target; V8 pose losses use ``raw_camera_pose`` from ``calibration_full.json``.
 """
 
 from __future__ import annotations
@@ -81,11 +83,29 @@ def avatarrex_specs(seq_a: str, seq_b: str, start_frame: int) -> list[tuple[str,
     ]
 
 
-def load_gt_cameras(root: Path, split: str, specs: list[tuple[str, int]]) -> list[np.ndarray]:
+def raw_calibration_c2w(calibration: dict, seq: str) -> np.ndarray:
+    """Match AvatarReX_AABB raw_camera_pose target: X_cam = R @ X_world + T."""
+    seq_key = seq.split("/", 1)[1] if "/" in seq else seq
+    if seq_key not in calibration:
+        raise KeyError(f"{seq_key} not found in raw AvatarReX calibration")
+    cal = calibration[seq_key]
+    R_w2c = np.asarray(cal["R"], dtype=np.float32).reshape(3, 3)
+    T_w2c = np.asarray(cal["T"], dtype=np.float32).reshape(3)
+    pose = np.eye(4, dtype=np.float32)
+    pose[:3, :3] = R_w2c.T
+    pose[:3, 3] = -R_w2c.T @ T_w2c
+    return pose
+
+
+def load_gt_cameras(raw_root: Path, specs: list[tuple[str, int]]) -> list[np.ndarray]:
+    calibration_path = raw_root / "calibration_full.json"
+    if not calibration_path.is_file():
+        raise FileNotFoundError(calibration_path)
+    with open(calibration_path, "r", encoding="utf-8") as f:
+        calibration = json.load(f)
     gt_poses = []
-    for seq, frame in specs:
-        cam = np.load(root / split / seq / "cam" / f"{frame:08d}.npz")
-        gt_poses.append(cam["pose"].astype(np.float32))
+    for seq, _frame in specs:
+        gt_poses.append(raw_calibration_c2w(calibration, seq))
     return gt_poses
 
 
@@ -277,7 +297,7 @@ def main() -> None:
 
     pred_poses, pred_intrinsics = load_saved_cameras(args.pred_output_dir)
     specs = avatarrex_specs(args.seq_a, args.seq_b, int(args.start_frame))
-    gt_poses = load_gt_cameras(args.avatarrex_root, args.split, specs)
+    gt_poses = load_gt_cameras(args.avatarrex_raw_root, specs)
     align = pred_poses[0] @ np.linalg.inv(gt_poses[0])
     aligned_gt_poses = [(align @ gt_pose).astype(np.float32) for gt_pose in gt_poses]
     gt_smpls = build_gt_smpl_npzs(args, args.pred_output_dir)
@@ -298,7 +318,8 @@ def main() -> None:
 
     metrics = {
         "pred_output_dir": str(args.pred_output_dir),
-        "gt_camera_alignment": "T_gt_aligned_i = T_pred_0 @ inv(T_gt_0) @ T_gt_i",
+        "gt_camera_source": str(args.avatarrex_raw_root / "calibration_full.json"),
+        "gt_camera_alignment": "T_gt_aligned_i = T_pred_0 @ inv(raw_camera_pose_0) @ raw_camera_pose_i",
         "outputs": {
             "pred_camera_gt_smpl": str(pred_camera_gt_smpl),
             "gt_camera_pred_smpl": str(gt_camera_pred_smpl),

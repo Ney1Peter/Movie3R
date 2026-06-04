@@ -28,12 +28,14 @@ V8 需要重新定义 shot-change 场景下的目标、约束和最小实验，�
 
 ## V8.1 AvatarReX 坐标系规则
 
-使用 AvatarReX 做 V8.1 pose correction 时：
+使用 AvatarReX 做 V8 pose correction 时：
 
-- pose supervision 使用 `raw_camera_pose`，来自 `/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json`。
-- 不要把 `Avatarrex_output/Training/<seq>/cam/*.npz` 的 processed `camera_pose` 当作最终监督 target；它可能在 B 视角引入 up-axis 翻转。
-- 正确 B 视角应满足 `z-axis ~= -1` 且 `y-axis ~= +1`。
-- 如果 B 视角 `y-axis ~= -1`，说明坐标系又错了。
+- pose supervision 使用 `raw_camera_pose`，来自 raw AvatarReX calibration：
+  `/data/wangzheng/iJCV-CODE/data/avatarrex_{lbn1,zxc,zzr}/calibration_full.json`。
+- 正确 target 是相对第 0 帧的 raw calibration camera：
+  `T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i`。
+- 不要把 `/data/wangzheng/iJCV-CODE/data/training/<group>/<seq>/cam/*.npz` 的 processed `camera_pose` 当作最终监督 target 或 GT camera 可视化；它是给 SMPL/depth 预处理和数据组织用的坐标。
+- 指标和 viewer 中的 GT camera 也必须用 raw calibration target，再对齐到 saved Human3R output 的第 0 帧 viewer gauge。
 - V8.1 pose-only 训练使用 `load_da3_depth=False`。
 - `Avatarrex_output/depth/*.npy` 是 DA3 pseudo-depth，不是跨相机 metric GT depth，不能用来验证世界坐标是否对齐。
 

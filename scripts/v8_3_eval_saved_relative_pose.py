@@ -3,6 +3,15 @@
 
 The model is not run here. This script only reads saved ``camera/*.npz`` files
 and the RGB source paths recorded in ``input_manifest.json``.
+
+For V8 pose-prompt experiments, the correct GT target is the dataloader's
+``raw_camera_pose`` from AvatarReX ``calibration_full.json``:
+
+    T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
+
+Do not use ``training/<group>/<seq>/cam/*.npz`` as the pose target here.  Those
+processed person-relative poses are useful for SMPL/depth preprocessing, but
+they are not the camera target used by the V8 losses.
 """
 
 from __future__ import annotations
@@ -20,6 +29,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pred_dir", type=Path, required=True)
     parser.add_argument("--raw_dir", type=Path, default=None)
     parser.add_argument("--output_json", type=Path, required=True)
+    parser.add_argument("--data_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
+    parser.add_argument(
+        "--raw_calibration_root",
+        type=Path,
+        default=None,
+        help="Raw AvatarReX root with calibration_full.json. Defaults to data/avatarrex_<group>.",
+    )
     return parser.parse_args()
 
 
@@ -28,15 +44,25 @@ def load_pose(path: Path) -> np.ndarray:
     return data["pose"].astype(np.float64)
 
 
-def source_to_gt_cam_path(source: str) -> Path:
-    path = Path(source)
-    parts = list(path.parts)
-    try:
-        rgb_idx = parts.index("rgb")
-    except ValueError as exc:
-        raise ValueError(f"Source path does not contain /rgb/: {source}") from exc
-    parts[rgb_idx] = "cam"
-    return Path(*parts).with_suffix(".npz")
+def load_raw_calibration(root: Path) -> dict:
+    path = root / "calibration_full.json"
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def raw_calibration_c2w(calibration: dict, seq: str) -> np.ndarray:
+    """Match AvatarReX_AABB raw_camera_pose target: X_cam = R @ X_world + T."""
+    seq_key = seq.split("/", 1)[1] if "/" in seq else seq
+    if seq_key not in calibration:
+        raise KeyError(f"{seq_key} not found in raw calibration")
+    cal = calibration[seq_key]
+    R_w2c = np.asarray(cal["R"], dtype=np.float32).reshape(3, 3)
+    T_w2c = np.asarray(cal["T"], dtype=np.float32).reshape(3)
+    pose = np.eye(4, dtype=np.float32)
+    pose[:3, :3] = R_w2c.T
+    pose[:3, 3] = -R_w2c.T @ T_w2c
+    return pose.astype(np.float64)
 
 
 def rotation_error_deg(pred: np.ndarray, target: np.ndarray) -> float:
@@ -110,9 +136,10 @@ def evaluate_output(name: str, output_dir: Path, gt_poses: list[np.ndarray]) -> 
 def main() -> None:
     args = parse_args()
     manifest = json.loads(args.input_manifest.read_text(encoding="utf-8"))
-    sources = [frame["source"] for frame in manifest["frames"]]
-    gt_cam_paths = [source_to_gt_cam_path(source) for source in sources]
-    gt_poses = [load_pose(path) for path in gt_cam_paths]
+    group = manifest.get("group") or str(manifest["frames"][0]["seq"]).split("/", 1)[0]
+    raw_calibration_root = args.raw_calibration_root or (args.data_root / f"avatarrex_{group}")
+    calibration = load_raw_calibration(raw_calibration_root)
+    gt_poses = [raw_calibration_c2w(calibration, frame["seq"]) for frame in manifest["frames"]]
 
     results = {
         "input_manifest": str(args.input_manifest),
@@ -121,7 +148,9 @@ def main() -> None:
         "seqA": manifest.get("seqA"),
         "seqB": manifest.get("seqB"),
         "start_frame": manifest.get("start_frame"),
-        "gt_cam_paths": [str(path) for path in gt_cam_paths],
+        "gt_source": "raw_calibration",
+        "raw_calibration_root": str(raw_calibration_root),
+        "target": "T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i",
         "pred": evaluate_output("pred", args.pred_dir, gt_poses),
     }
     if args.raw_dir is not None:

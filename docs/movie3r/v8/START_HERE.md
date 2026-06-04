@@ -36,22 +36,24 @@ viewer:
 
 以后使用 AvatarReX 做 V8.1 pose correction 时必须注意：
 
-1. 不要用 `Avatarrex_output/Training/<seq>/cam/*.npz` 里的 processed `camera_pose` 作为最终监督 target。它在当前 AABB case 的 B 视角会出现 `y-axis ~= -1` 的 up-axis 翻转，导致训练 loss 很低但可视化上下颠倒。
+1. 不要用 `/data/wangzheng/iJCV-CODE/data/training/<group>/<seq>/cam/*.npz` 里的 processed `camera_pose` 作为最终监督 target。它是给 SMPL/depth 预处理和数据组织用的相机坐标，不是 V8 pose correction 的监督坐标；直接拿它算 loss 或画 GT camera 会导致坐标系错位。
 2. 正确 target 来自 raw calibration：
 
 ```text
 /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
+/data/wangzheng/iJCV-CODE/data/avatarrex_zxc/calibration_full.json
+/data/wangzheng/iJCV-CODE/data/avatarrex_zzr/calibration_full.json
 X_cam = R_w2c @ X_world + T_w2c
 R_c2w = R_w2c.T
 t_c2w = -R_w2c.T @ T_w2c
 T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
 ```
 
-3. 正确 B 视角应该是：
+3. 训练、指标和 GT camera 可视化都必须使用同一个 target：
 
 ```text
-z-axis ~= -1
-y-axis ~= +1
+raw_camera_pose_i = raw calibration c2w for camera i
+T_target_i = inv(raw_camera_pose_0) @ raw_camera_pose_i
 ```
 
 如果看到 B 视角 `y-axis ~= -1`，说明又用了错误的 processed pose。
