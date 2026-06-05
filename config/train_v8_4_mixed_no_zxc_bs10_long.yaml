@@ -26,7 +26,9 @@ num_workers: 4
 gradient_checkpointing: false
 
 eval_freq: 1
-save_freq: 2
+# Refresh checkpoint-last several times per epoch so benchmark evaluation can
+# sample an in-progress run without waiting for the next permanent checkpoint.
+save_freq: 0.25
 keep_freq: 4
 save_last_checkpoint: true
 save_final_checkpoint: true

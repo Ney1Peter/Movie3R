@@ -30,7 +30,9 @@ from dust3r.inference import loss_of_one_batch
 from dust3r.losses import V82PoseRelationLoss
 from dust3r.model import ARCroco3DStereo
 from dust3r.smpl_model import SMPLModel
+from dust3r.utils.camera import pose_encoding_to_camera
 from dust3r.utils.device import todevice
+from dust3r.utils.geometry import inv
 
 
 DEFAULT_RAW_ROOTS = {
@@ -66,6 +68,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=401)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--name", default=None)
+    parser.add_argument(
+        "--dump_poses",
+        action="store_true",
+        help="Also save GT/raw/corrected 4x4 camera matrices for viewer comparisons.",
+    )
     return parser.parse_args()
 
 
@@ -191,8 +198,97 @@ def row_identity(record: dict) -> dict:
     return {key: record[key] for key in keys if key in record}
 
 
+def tensor_to_numpy(value: torch.Tensor) -> np.ndarray:
+    return value.detach().float().cpu().numpy()
+
+
+def stack_pose_field(preds: list[dict], key: str, batch_size: int, device: torch.device) -> torch.Tensor:
+    fields = []
+    for pred in preds:
+        value = pred.get(key, None)
+        if value is None:
+            fields.append(torch.full((batch_size, 7), np.nan, device=device))
+        else:
+            fields.append(value.detach().float())
+    return torch.stack(fields, dim=1)
+
+
+def stack_optional_field(preds: list[dict], key: str, batch_size: int, device: torch.device) -> torch.Tensor:
+    fields = []
+    for pred in preds:
+        value = pred.get(key, None)
+        if value is None:
+            fields.append(torch.full((batch_size, 1), np.nan, device=device))
+            continue
+        value = value.detach().float().reshape(batch_size, -1)
+        fields.append(value)
+    return torch.stack(fields, dim=1)
+
+
+def dump_pose_matrices(
+    output_dir: Path,
+    subset: str,
+    records: list[dict],
+    batch: list[dict],
+    preds: list[dict],
+) -> list[str]:
+    """Save one compressed pose bundle per clip.
+
+    The model predicts relative camera pose encodings in the same coordinate
+    system used by V82PoseRelationLoss. For visualization we save both relative
+    matrices and GT-anchored absolute matrices. The absolute raw/corrected
+    matrices use GT view-0 only as an evaluation anchor; GT is not model input.
+    """
+    pose_dir = output_dir / "poses" / subset
+    pose_dir.mkdir(parents=True, exist_ok=True)
+
+    batch_size = int(batch[0]["raw_camera_pose"].shape[0])
+    device = batch[0]["raw_camera_pose"].device
+    gt_abs = torch.stack([view["raw_camera_pose"].detach().float() for view in batch], dim=1)
+    gt0_inv = inv(gt_abs[:, 0])
+    gt_rel = torch.matmul(gt0_inv[:, None], gt_abs)
+
+    corrected_enc = stack_pose_field(preds, "camera_pose", batch_size, device)
+    raw_enc = stack_pose_field(preds, "v8_raw_camera_pose", batch_size, device)
+    gate = stack_optional_field(preds, "v8_pose_prompt_gate", batch_size, device)
+    drift_logit = stack_optional_field(preds, "v8_pose_prompt_drift_logit", batch_size, device)
+    delta_norm = stack_optional_field(preds, "v8_pose_prompt_delta_norm", batch_size, device)
+
+    saved_paths = []
+    for batch_idx, record in enumerate(records):
+        stem = f"{int(record.get('benchmark_index', batch_idx)):04d}_{record.get('clip_type', 'clip')}_{record.get('group', 'group')}"
+        if record.get("angle_bucket"):
+            stem += f"_{record['angle_bucket']}"
+        path = pose_dir / f"{stem}.npz"
+
+        corrected_rel = pose_encoding_to_camera(corrected_enc[batch_idx]).detach().float()
+        raw_rel = pose_encoding_to_camera(raw_enc[batch_idx]).detach().float()
+        gt0_abs = gt_abs[batch_idx, 0]
+        corrected_abs = torch.matmul(gt0_abs[None], corrected_rel)
+        raw_abs = torch.matmul(gt0_abs[None], raw_rel)
+
+        metadata = json.dumps(row_identity(record), sort_keys=True)
+        np.savez_compressed(
+            path,
+            metadata=np.asarray(metadata),
+            gt_c2w_abs=tensor_to_numpy(gt_abs[batch_idx]),
+            gt_c2w_rel=tensor_to_numpy(gt_rel[batch_idx]),
+            raw_pose_encoding=tensor_to_numpy(raw_enc[batch_idx]),
+            corrected_pose_encoding=tensor_to_numpy(corrected_enc[batch_idx]),
+            raw_c2w_rel=tensor_to_numpy(raw_rel),
+            corrected_c2w_rel=tensor_to_numpy(corrected_rel),
+            raw_c2w_abs_gt0=tensor_to_numpy(raw_abs),
+            corrected_c2w_abs_gt0=tensor_to_numpy(corrected_abs),
+            gate=tensor_to_numpy(gate[batch_idx]),
+            drift_logit=tensor_to_numpy(drift_logit[batch_idx]),
+            delta_norm=tensor_to_numpy(delta_norm[batch_idx]),
+        )
+        saved_paths.append(str(path.relative_to(output_dir)))
+    return saved_paths
+
+
 @torch.no_grad()
-def eval_subset(args, model, criterion, smpl_model, device, subset: str) -> tuple[list[dict], dict]:
+def eval_subset(args, model, criterion, smpl_model, device, subset: str, output_dir: Path) -> tuple[list[dict], dict]:
     manifest_path = args.benchmark_dir / f"{subset}.jsonl"
     records = load_jsonl(manifest_path)
     dataset = make_dataset(args, subset, manifest_path)
@@ -220,6 +316,9 @@ def eval_subset(args, model, criterion, smpl_model, device, subset: str) -> tupl
             inference=False,
             smpl_model=smpl_model,
         )
+        pose_paths = []
+        if args.dump_poses:
+            pose_paths = dump_pose_matrices(output_dir, subset, batch_records, batch, result["pred"])
         loss, details = result["loss"]
         compact = compact_details(details)
         loss_value = safe_float(loss)
@@ -229,15 +328,17 @@ def eval_subset(args, model, criterion, smpl_model, device, subset: str) -> tupl
         if int(args.batch_size) == 1 and batch_records:
             row = row_identity(batch_records[0])
             row.update(compact)
+            if pose_paths:
+                row["pose_npz"] = pose_paths[0]
             rows.append(row)
         else:
-            row = {
-                "benchmark_subset": subset,
-                "benchmark_index": len(rows),
-                "batch_size": len(batch_records),
-            }
-            row.update(compact)
-            rows.append(row)
+            for batch_idx, record in enumerate(batch_records):
+                row = row_identity(record)
+                row["batch_size"] = len(batch_records)
+                row.update(compact)
+                if batch_idx < len(pose_paths):
+                    row["pose_npz"] = pose_paths[batch_idx]
+                rows.append(row)
 
     return rows, summarize_rows(rows)
 
@@ -278,7 +379,7 @@ def main() -> None:
         "subsets": {},
     }
     for subset in [s.strip() for s in args.subsets.split(",") if s.strip()]:
-        rows, subset_summary = eval_subset(args, model, criterion, smpl_model, device, subset)
+        rows, subset_summary = eval_subset(args, model, criterion, smpl_model, device, subset, output_dir)
         all_rows.extend(rows)
         summary["subsets"][subset] = subset_summary
         write_csv(output_dir / f"{subset}.csv", rows)
@@ -288,6 +389,16 @@ def main() -> None:
         )
 
     summary["overall"] = summarize_rows(all_rows)
+    if args.dump_poses:
+        pose_index = [row for row in all_rows if "pose_npz" in row]
+        with (output_dir / "poses_index.jsonl").open("w", encoding="utf-8") as f:
+            for row in pose_index:
+                f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+        summary["pose_dump"] = {
+            "count": len(pose_index),
+            "index": "poses_index.jsonl",
+            "coordinate_note": "raw/corrected absolute matrices are anchored by GT view-0 for evaluation visualization only.",
+        }
     (output_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     write_csv(output_dir / "all_rows.csv", all_rows)
 
