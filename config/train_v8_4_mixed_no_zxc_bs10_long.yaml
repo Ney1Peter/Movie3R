@@ -1,0 +1,41 @@
+# Long V8.4 mixed AABB/AAAA run with zxc removed, batch size 10.
+#
+# Dataset:
+# - lbn1 + zzr + thuman00 + thuman02
+# - AABB teaches cross-view camera jump correction.
+# - AAAA teaches continuous clips should receive small/no correction.
+#
+# Batch size 10 is intentionally not a power of two. It is the largest practical
+# single-card batch from the L20 smoke tests with enough memory margin for long
+# training; bs=11 ran but was close to the limit, and bs=12 OOMed.
+defaults:
+  - train_v8_4_mixed_aabb_aaaa_image_only_pose_relation
+  - _self_
+
+v8_mixed_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_mixed_aabb_aaaa_manifests_no_zxc
+avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/avatarrex_zzr'}"
+
+train_dataset: 48000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 16000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=102, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 1602 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=201, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 800 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=202, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 1602 @ AvatarReX_AABB(allow_repeat=True, split="${v8_mixed_test_split}", ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=301, n_corres=0, manifest_path="${v8_mixed_manifest_root}/test_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 800 @ AvatarReX_Video(allow_repeat=True, split="${v8_mixed_test_split}", ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=302, n_corres=0, manifest_path="${v8_mixed_manifest_root}/test_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+batch_size: 10
+accum_iter: 1
+epochs: 12
+num_workers: 4
+gradient_checkpointing: false
+
+eval_freq: 1
+save_freq: 2
+keep_freq: 4
+save_last_checkpoint: true
+save_final_checkpoint: true
+early_stopping_patience: 4
+
+print_freq: 100
+structured_log_freq: 50
+print_img_freq: 1000000
+
+exp_name: v8_4_mixed_no_zxc_bs10_long
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_train_runs/${exp_name}
