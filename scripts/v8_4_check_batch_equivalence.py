@@ -19,15 +19,14 @@ from dust3r.utils.device import to_cpu, todevice
 
 
 RAW_ROOTS = {
-    "lbn1": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
-    "zxc": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
-    "zzr": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
+    "lbn1": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
+    "zzr": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr",
 }
 
 
 def build_dataset(kind: str):
     root = "/data/wangzheng/iJCV-CODE/data"
-    manifest_root = Path("/data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_mixed_aabb_aaaa_manifests")
+    manifest_root = Path("/data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_mixed_aabb_aaaa_manifests_no_zxc")
     common = dict(
         allow_repeat=True,
         split="Training",
@@ -42,13 +41,13 @@ def build_dataset(kind: str):
     if kind == "aabb":
         return AvatarReX_AABB(
             seed=101,
-            manifest_path=str(manifest_root / "train_aabb_60k.jsonl"),
+            manifest_path=str(manifest_root / "train_aabb_no_zxc.jsonl"),
             **common,
         )
     if kind == "aaaa":
         return AvatarReX_Video(
             seed=102,
-            manifest_path=str(manifest_root / "train_aaaa_20k.jsonl"),
+            manifest_path=str(manifest_root / "train_aaaa_no_zxc.jsonl"),
             **common,
         )
     raise ValueError(f"Unknown dataset kind: {kind}")
@@ -156,7 +155,7 @@ def run_check(model, smpl_model, dataset, indices, device, keys):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config/train_v8_4_mixed_aabb_aaaa_image_only_pose_relation.yaml")
+    parser.add_argument("--config", default="config/train_v8_4_mixed_no_zxc_bs10_long.yaml")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--indices", default="0,1")
     parser.add_argument("--output", default="")

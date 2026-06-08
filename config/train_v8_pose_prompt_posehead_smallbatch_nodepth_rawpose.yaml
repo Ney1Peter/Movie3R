@@ -34,7 +34,7 @@ n_corres_train: 0
 n_corres_test: 0
 
 avatarrex_root: /data/wangzheng/iJCV-CODE/data
-avatarrex_raw_root: /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1
+avatarrex_raw_root: /data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1
 
 v8_small_train_samples: "[('lbn1/22010710', 'lbn1/22053923', 0), ('lbn1/22010710', 'lbn1/22053923', 120), ('lbn1/22010710', 'lbn1/22053923', 240), ('lbn1/22010710', 'lbn1/22053923', 360), ('lbn1/22010710', 'lbn1/22053923', 480), ('lbn1/22053907', 'lbn1/22070928', 0), ('lbn1/22053917', 'lbn1/22053925', 120), ('lbn1/22010714', 'lbn1/22053926', 240), ('lbn1/22010716', 'lbn1/22053908', 360), ('lbn1/22010708', 'lbn1/22070935', 480)]"
 v8_small_test_same_samples: "[('lbn1/22010710', 'lbn1/22053923', 60), ('lbn1/22010710', 'lbn1/22053923', 180), ('lbn1/22010710', 'lbn1/22053923', 300), ('lbn1/22010710', 'lbn1/22053923', 420), ('lbn1/22010710', 'lbn1/22053923', 540)]"

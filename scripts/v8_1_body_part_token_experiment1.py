@@ -46,7 +46,7 @@ DEFAULT_CASES = [
     {
         "case_id": "lbn1_22053925_22010708_00000692",
         "split": "training/lbn1",
-        "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
+        "raw_root": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
         "seq_a": "22053925",
         "seq_b": "22010708",
         "start_frame": 692,
@@ -54,7 +54,7 @@ DEFAULT_CASES = [
     {
         "case_id": "zxc_22053925_22010710_00000289",
         "split": "training/zxc",
-        "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
+        "raw_root": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc",
         "seq_a": "22053925",
         "seq_b": "22010710",
         "start_frame": 289,
@@ -62,7 +62,7 @@ DEFAULT_CASES = [
     {
         "case_id": "zzr_22070935_22053926_00001117",
         "split": "training/zzr",
-        "raw_root": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
+        "raw_root": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr",
         "seq_a": "22070935",
         "seq_b": "22053926",
         "start_frame": 1117,

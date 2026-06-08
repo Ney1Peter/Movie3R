@@ -68,7 +68,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--avatarrex_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument(
         "--avatarrex_raw_root",
-        default="/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
+        default="/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
         help="Raw AvatarReX calibration root, or a Python dict string for grouped roots.",
     )
     parser.add_argument("--split", default="Training")

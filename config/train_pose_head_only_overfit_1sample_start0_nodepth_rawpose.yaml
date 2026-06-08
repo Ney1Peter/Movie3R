@@ -30,7 +30,7 @@ n_corres_train: 0
 n_corres_test: 0
 
 avatarrex_root: /data/wangzheng/iJCV-CODE/data
-avatarrex_raw_root: /data/wangzheng/iJCV-CODE/data/avatarrex_lbn1
+avatarrex_raw_root: /data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1
 v8_single_sample: "[('lbn1/22010710', 'lbn1/22053923', 0)]"
 
 train_dataset: 500 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${avatarrex_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, fixed_samples=${v8_single_sample}, load_da3_depth=False, raw_calibration_root="${avatarrex_raw_root}")

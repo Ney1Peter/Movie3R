@@ -19,9 +19,9 @@ import numpy as np
 
 
 RAW_ROOTS = {
-    "lbn1": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
-    "zxc": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
-    "zzr": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
+    "lbn1": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
+    "zxc": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc",
+    "zzr": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr",
 }
 
 

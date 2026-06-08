@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RAW_ROOTS = "{'lbn1':'/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1','zxc':'/data/wangzheng/iJCV-CODE/data/avatarrex_zxc','zzr':'/data/wangzheng/iJCV-CODE/data/avatarrex_zzr'}"
+RAW_ROOTS = "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr'}"
 
 
 ABLATIONS = [

@@ -41,9 +41,9 @@ viewer:
 3. 正确 target 来自 raw calibration：
 
 ```text
-/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1/calibration_full.json
-/data/wangzheng/iJCV-CODE/data/avatarrex_zxc/calibration_full.json
-/data/wangzheng/iJCV-CODE/data/avatarrex_zzr/calibration_full.json
+/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1/calibration_full.json
+/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc/calibration_full.json
+/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr/calibration_full.json
 X_cam = R_w2c @ X_world + T_w2c
 R_c2w = R_w2c.T
 t_c2w = -R_w2c.T @ T_w2c

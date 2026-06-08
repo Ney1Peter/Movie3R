@@ -36,8 +36,8 @@ from dust3r.utils.geometry import inv
 
 
 DEFAULT_RAW_ROOTS = {
-    "lbn1": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
-    "zzr": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
+    "lbn1": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
+    "zzr": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr",
 }
 
 

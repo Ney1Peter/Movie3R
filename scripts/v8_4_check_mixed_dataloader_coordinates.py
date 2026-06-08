@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--manifest_root",
         type=Path,
-        default=Path("output/v8_4_mixed_aabb_aaaa_manifests"),
+        default=Path("output/v8_4_mixed_aabb_aaaa_manifests_no_zxc"),
     )
     parser.add_argument(
         "--output_dir",
@@ -314,12 +314,11 @@ def main() -> None:
     device = torch.device(args.device if args.device == "cuda" and torch.cuda.is_available() else "cpu")
 
     raw_roots = {
-        "lbn1": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
-        "zxc": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
-        "zzr": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr",
+        "lbn1": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1",
+        "zzr": "/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr",
     }
-    aabb_record = choose_aabb(load_jsonl(args.manifest_root / "test_aabb_2k.jsonl"))
-    aaaa_record = choose_aaaa(load_jsonl(args.manifest_root / "test_aaaa_1k.jsonl"))
+    aabb_record = choose_aabb(load_jsonl(args.manifest_root / "test_aabb_no_zxc.jsonl"))
+    aaaa_record = choose_aaaa(load_jsonl(args.manifest_root / "test_aaaa_no_zxc.jsonl"))
 
     aabb_dataset = AvatarReX_AABB(
         split=args.split,

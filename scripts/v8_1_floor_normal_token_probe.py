@@ -43,7 +43,7 @@ from scripts.v8_1_probe_aabb_case import (  # noqa: E402
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
-    parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1"))
+    parser.add_argument("--avatarrex_raw_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1"))
     parser.add_argument("--split", default="Training")
     parser.add_argument("--seq_a", default="lbn1/22070932")
     parser.add_argument("--seq_b", default="lbn1/22070935")
