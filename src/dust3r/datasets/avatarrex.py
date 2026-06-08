@@ -25,9 +25,12 @@ import os.path as osp
 import json
 import numpy as np
 import pickle
+import PIL.Image
+import cv2
 from tqdm import tqdm
 
 from dust3r.datasets.base.base_multiview_dataset import BaseMultiViewDataset
+from dust3r.datasets.utils import cropping
 from dust3r.datasets.utils.transforms import ImgNorm
 from dust3r.utils.image import imread_cv2
 
@@ -50,6 +53,70 @@ def _load_depthmap_meters(depth_path, image_shape):
     depthmap[~np.isfinite(depthmap)] = 0.0
     depthmap[depthmap > 200.0] = 0.0
     return depthmap
+
+
+def _human3r_demo_target_size(resolution):
+    if isinstance(resolution, int):
+        return int(resolution)
+    return int(max(resolution))
+
+
+def _resize_crop_like_human3r_demo(image, depthmap, mask, intrinsics, resolution, square_ok=False):
+    """Match ``dust3r.utils.image.load_images(size=512)`` and update geometry.
+
+    Human3R demo inference first resizes the long image edge to ``size`` and
+    then center-crops to a multiple of 16. V8 pose-prompt training should see
+    the same image family; otherwise the raw Human3R pose being corrected is
+    not the same raw pose as demo/video inference.
+    """
+
+    if not isinstance(image, PIL.Image.Image):
+        image = PIL.Image.fromarray(image)
+    if mask is not None and not isinstance(mask, PIL.Image.Image):
+        mask = PIL.Image.fromarray(mask)
+
+    w0, h0 = image.size
+    size = _human3r_demo_target_size(resolution)
+    scale = float(size) / float(max(w0, h0))
+    w1, h1 = tuple(int(round(x * scale)) for x in image.size)
+    interp = cropping.lanczos if max(w0, h0) > size else cropping.bicubic
+    image = image.resize((w1, h1), interp)
+    if depthmap is not None:
+        depthmap = cv2.resize(
+            depthmap,
+            (w1, h1),
+            fx=scale,
+            fy=scale,
+            interpolation=cv2.INTER_NEAREST,
+        )
+    if mask is not None:
+        mask = mask.resize((w1, h1), PIL.Image.NEAREST)
+
+    intrinsics = intrinsics.copy()
+    intrinsics[:2, :] *= scale
+
+    cx, cy = w1 // 2, h1 // 2
+    halfw, halfh = ((2 * cx) // 16) * 8, ((2 * cy) // 16) * 8
+    if not square_ok and w1 == h1:
+        halfh = int(3 * halfw / 4)
+    crop_bbox = (
+        int(cx - halfw),
+        int(cy - halfh),
+        int(cx + halfw),
+        int(cy + halfh),
+    )
+
+    if mask is None:
+        image, depthmap, intrinsics = cropping.crop_image_depthmap(
+            image, depthmap, intrinsics, crop_bbox
+        )
+        return image, depthmap, intrinsics
+
+    image, depthmap, mask, intrinsics = cropping.crop_image_depthmap_mask(
+        image, depthmap, mask, intrinsics, crop_bbox
+    )
+    mask = (np.asarray(mask) > 127).astype(np.float32)
+    return image, depthmap, mask, intrinsics
 
 
 def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx, require_depth=True):
@@ -327,6 +394,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         pair_strategy="all",
         load_da3_depth=True,
         raw_calibration_root=None,
+        resize_mode="dataset_crop",
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -353,6 +421,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.load_da3_depth = bool(load_da3_depth)
         self.raw_calibration_root = raw_calibration_root
         self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
+        self.resize_mode = str(resize_mode)
         self.sample_view_angles = {}
         self.anchor_cache_index = {}
         self.smpl_key2shape = {
@@ -785,7 +854,16 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             mask_image = None
 
         # 图像预处理（crop/resize）
-        if mask_image is not None:
+        if self.resize_mode in ("human3r_demo", "demo"):
+            if mask_image is not None:
+                rgb_image, depthmap, mask_image, intrinsics = _resize_crop_like_human3r_demo(
+                    rgb_image, depthmap, mask_image, intrinsics, resolution
+                )
+            else:
+                rgb_image, depthmap, intrinsics = _resize_crop_like_human3r_demo(
+                    rgb_image, depthmap, None, intrinsics, resolution
+                )
+        elif mask_image is not None:
             rgb_image, depthmap, mask_image, intrinsics = \
                 self._crop_resize_if_necessary_mask(
                     rgb_image, depthmap, mask_image, intrinsics,
@@ -916,6 +994,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         manifest_path=None,
         load_da3_depth=True,
         raw_calibration_root=None,
+        resize_mode="dataset_crop",
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_Video requires ROOT"
@@ -935,6 +1014,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.load_da3_depth = bool(load_da3_depth)
         self.raw_calibration_root = raw_calibration_root
         self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
+        self.resize_mode = str(resize_mode)
         self.smpl_key2shape = {
             "smplx_root_pose": (1, 3),
             "smplx_body_pose": (21, 3),
@@ -1187,7 +1267,16 @@ class AvatarReX_Video(BaseMultiViewDataset):
                 annots = pickle.load(f)
 
         # Crop/resize
-        if mask_image is not None:
+        if self.resize_mode in ("human3r_demo", "demo"):
+            if mask_image is not None:
+                rgb_image, depthmap, mask_image, intrinsics = _resize_crop_like_human3r_demo(
+                    rgb_image, depthmap, mask_image, intrinsics, resolution
+                )
+            else:
+                rgb_image, depthmap, intrinsics = _resize_crop_like_human3r_demo(
+                    rgb_image, depthmap, None, intrinsics, resolution
+                )
+        elif mask_image is not None:
             rgb_image, depthmap, mask_image, intrinsics = \
                 self._crop_resize_if_necessary_mask(
                     rgb_image, depthmap, mask_image, intrinsics,

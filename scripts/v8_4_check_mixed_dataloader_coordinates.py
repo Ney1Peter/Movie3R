@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("output/v8_4_mixed_dataloader_coordinate_check"),
     )
+    parser.add_argument("--resize_mode", default="human3r_demo")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
 
@@ -323,7 +324,8 @@ def main() -> None:
     aabb_dataset = AvatarReX_AABB(
         split=args.split,
         ROOT=str(args.data_root),
-        resolution=(512, 288),
+        resolution=512,
+        resize_mode=args.resize_mode,
         num_views=4,
         aug_crop=0,
         allow_repeat=True,
@@ -336,7 +338,8 @@ def main() -> None:
     aaaa_dataset = AvatarReX_Video(
         split=args.split,
         ROOT=str(args.data_root),
-        resolution=(512, 288),
+        resolution=512,
+        resize_mode=args.resize_mode,
         num_views=4,
         aug_crop=0,
         allow_repeat=True,

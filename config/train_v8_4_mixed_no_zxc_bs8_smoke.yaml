@@ -11,12 +11,12 @@ defaults:
 v8_mixed_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_4_mixed_aabb_aaaa_manifests_no_zxc
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr'}"
 
-train_dataset: 256 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=101, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 128 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=102, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+train_dataset: 256 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=101, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 128 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=102, n_corres=0, manifest_path="${v8_mixed_manifest_root}/train_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
 val_dataset: null
-test_dataset: 32 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=301, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 16 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=(512, 288), num_views=4, seed=302, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 32 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=301, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aabb_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}) + 16 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=302, n_corres=0, manifest_path="${v8_mixed_manifest_root}/val_aaaa_no_zxc.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
 
-batch_size: 8
-accum_iter: 1
+batch_size: 1
+accum_iter: 8
 epochs: 1
 num_workers: 4
 gradient_checkpointing: false

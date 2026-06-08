@@ -62,7 +62,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--test_split", default="Test/v8_4_mixed_aabb_aaaa")
     parser.add_argument("--raw_roots", default=json.dumps(DEFAULT_RAW_ROOTS, sort_keys=True))
-    parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288), metavar=("W", "H"))
+    parser.add_argument("--resolution", type=int, nargs=2, default=(512, 512), metavar=("W", "H"))
+    parser.add_argument(
+        "--resize_mode",
+        default="human3r_demo",
+        help="AvatarReX image preprocessing mode; human3r_demo matches demo.py load_images(size=512).",
+    )
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--num_workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=401)
@@ -101,6 +106,7 @@ def make_dataset(args: argparse.Namespace, subset: str, manifest_path: Path):
         manifest_path=str(manifest_path),
         load_da3_depth=False,
         raw_calibration_root=parse_raw_roots(args.raw_roots),
+        resize_mode=str(args.resize_mode),
     )
     if subset.endswith("aabb"):
         return AvatarReX_AABB(**common)
