@@ -72,10 +72,26 @@ def group_sequences(training_root: Path, group: str) -> list[str]:
     group_dir = training_root / group
     if not group_dir.is_dir():
         raise FileNotFoundError(group_dir)
-    seqs = sorted(path.name for path in group_dir.iterdir() if path.is_dir() and is_sequence_dir(path))
+    seqs = sorted(
+        str(path.relative_to(group_dir))
+        for path in group_dir.rglob("*")
+        if path.is_dir() and is_sequence_dir(path)
+    )
     if not seqs:
         raise ValueError(f"No sequence dirs found under {group_dir}")
     return seqs
+
+
+def sequence_family(seq: str) -> str:
+    """Return the multi-view scene identity for one camera sequence.
+
+    Flat groups such as lbn1/zzr/thuman keep the old behavior: all sequence
+    dirs in the group can be paired. Nested groups such as asit/<scene>/<cam>
+    pair only cameras under the same <scene>.
+    """
+
+    parent = str(Path(seq).parent)
+    return "__flat__" if parent == "." else parent
 
 
 def frame_ids(seq_dir: Path) -> list[int]:
@@ -117,9 +133,12 @@ def split_starts(starts: list[int]) -> dict[str, list[int]]:
     train_cut = int(len(starts) * 0.70)
     val_cut = int(len(starts) * 0.85)
     guard = NUM_VIEWS
+    # Keep the guard band after each previous split. This is enough to avoid
+    # image-frame overlap while preserving validation starts for short clips
+    # such as AIST 3s@15fps (45 output frames).
     train = starts[: max(0, train_cut - guard)]
-    val = starts[min(len(starts), train_cut + guard) : max(train_cut + guard, val_cut - guard)]
-    test = starts[min(len(starts), val_cut + guard) :]
+    val = starts[min(len(starts), train_cut) : max(train_cut, val_cut - guard)]
+    test = starts[min(len(starts), val_cut) :]
     return {"train": train, "val": val, "test": test}
 
 
@@ -215,33 +234,37 @@ def build_aabb_candidates(
         starts_by_split = split_starts(first_starts)
         pair_count = 0
         bucket_counts = defaultdict(int)
-        for seq_a in seqs:
-            for seq_b in seqs:
-                if seq_a == seq_b:
-                    continue
-                angle = pair_angle(group_dir, seq_a, seq_b)
-                if angle < min_angle:
-                    continue
-                bucket = angle_bucket(angle)
-                pair_count += 1
-                bucket_counts[bucket] += 1
-                for split_name, starts in starts_by_split.items():
-                    for start in starts:
-                        if not has_files_for_frames(group_dir, seq_a, (start, start + 1)):
-                            continue
-                        if not has_files_for_frames(group_dir, seq_b, (start + 2, start + 3)):
-                            continue
-                        candidates[split_name].append(
-                            {
-                                "clip_type": "aabb",
-                                "group": group,
-                                "seqA": f"{group}/{seq_a}",
-                                "seqB": f"{group}/{seq_b}",
-                                "start_frame": int(start),
-                                "view_angle_deg": round(float(angle), 6),
-                                "angle_bucket": bucket,
-                            }
-                        )
+        seqs_by_family = defaultdict(list)
+        for seq in seqs:
+            seqs_by_family[sequence_family(seq)].append(seq)
+        for family_seqs in seqs_by_family.values():
+            for seq_a in family_seqs:
+                for seq_b in family_seqs:
+                    if seq_a == seq_b:
+                        continue
+                    angle = pair_angle(group_dir, seq_a, seq_b)
+                    if angle < min_angle:
+                        continue
+                    bucket = angle_bucket(angle)
+                    pair_count += 1
+                    bucket_counts[bucket] += 1
+                    for split_name, starts in starts_by_split.items():
+                        for start in starts:
+                            if not has_files_for_frames(group_dir, seq_a, (start, start + 1)):
+                                continue
+                            if not has_files_for_frames(group_dir, seq_b, (start + 2, start + 3)):
+                                continue
+                            candidates[split_name].append(
+                                {
+                                    "clip_type": "aabb",
+                                    "group": group,
+                                    "seqA": f"{group}/{seq_a}",
+                                    "seqB": f"{group}/{seq_b}",
+                                    "start_frame": int(start),
+                                    "view_angle_deg": round(float(angle), 6),
+                                    "angle_bucket": bucket,
+                                }
+                            )
         meta[group] = {
             "num_sequences": len(seqs),
             "num_ordered_pairs_after_angle_filter": pair_count,
@@ -310,15 +333,19 @@ def build_aabb_sampling_strata(
         seqs = group_sequences(training_root, group)
         starts_by_split = split_starts(numeric_clip_starts(group_dir / seqs[0]))
         pair_buckets = defaultdict(list)
-        for seq_a in seqs:
-            for seq_b in seqs:
-                if seq_a == seq_b:
-                    continue
-                angle = pair_angle(group_dir, seq_a, seq_b)
-                if angle < min_angle:
-                    continue
-                bucket = angle_bucket(angle)
-                pair_buckets[bucket].append((seq_a, seq_b, float(angle)))
+        seqs_by_family = defaultdict(list)
+        for seq in seqs:
+            seqs_by_family[sequence_family(seq)].append(seq)
+        for family_seqs in seqs_by_family.values():
+            for seq_a in family_seqs:
+                for seq_b in family_seqs:
+                    if seq_a == seq_b:
+                        continue
+                    angle = pair_angle(group_dir, seq_a, seq_b)
+                    if angle < min_angle:
+                        continue
+                    bucket = angle_bucket(angle)
+                    pair_buckets[bucket].append((seq_a, seq_b, float(angle)))
 
         for split_name, starts in starts_by_split.items():
             for bucket, pairs in pair_buckets.items():
@@ -335,6 +362,7 @@ def build_aabb_sampling_strata(
 
         meta[group] = {
             "num_sequences": len(seqs),
+            "num_sequence_families": len(seqs_by_family),
             "starts_by_split": {name: len(vals) for name, vals in starts_by_split.items()},
             "pair_angle_bucket_counts": {bucket: len(pairs) for bucket, pairs in sorted(pair_buckets.items())},
             "capacity_upper_bound_by_split": {
