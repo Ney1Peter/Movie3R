@@ -2005,8 +2005,13 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         drift_trans_scale=0.5,
         drift_rot_scale_deg=45.0,
         improvement_margin=0.0,
+        pose_noop_before_view=-1,
+        pose_noop_weight=0.0,
         human_trans_weight=0.0,
         human_trans_delta_weight=0.0,
+        human_trans_supervise_from_view=0,
+        human_trans_noop_before_view=-1,
+        human_trans_noop_weight=0.0,
     ):
         super().__init__(
             translation_weight=translation_weight,
@@ -2022,8 +2027,13 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.drift_trans_scale = float(drift_trans_scale)
         self.drift_rot_scale_deg = float(drift_rot_scale_deg)
         self.improvement_margin = float(improvement_margin)
+        self.pose_noop_before_view = int(pose_noop_before_view)
+        self.pose_noop_weight = float(pose_noop_weight)
         self.human_trans_weight = float(human_trans_weight)
         self.human_trans_delta_weight = float(human_trans_delta_weight)
+        self.human_trans_supervise_from_view = int(human_trans_supervise_from_view)
+        self.human_trans_noop_before_view = int(human_trans_noop_before_view)
+        self.human_trans_noop_weight = float(human_trans_noop_weight)
 
     def get_name(self):
         return "V82PoseRelationLoss"
@@ -2065,12 +2075,14 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         gate_values = []
         delta_norms = []
         residual_terms = []
+        pose_noop_terms = []
         drift_terms = []
         drift_targets = []
         improvement_terms = []
         improvements = []
         human_trans_terms = []
         human_trans_delta_terms = []
+        human_trans_noop_terms = []
         human_trans_errs = []
         raw_human_trans_errs = []
 
@@ -2134,13 +2146,32 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 delta_norms.append(delta_norm)
                 details[f"v82_delta_norm/{view_idx}"] = float(delta_norm)
 
+            delta_applied = pred.get("v8_pose_prompt_delta_applied", None)
+            if delta_applied is not None:
+                delta_applied = delta_applied.float()
+                details[f"v82_delta_applied_norm/{view_idx}"] = float(
+                    delta_applied.detach().norm(dim=-1).mean()
+                )
+                if (
+                    self.pose_noop_weight > 0
+                    and self.pose_noop_before_view >= 0
+                    and view_idx < self.pose_noop_before_view
+                ):
+                    pose_noop_loss = F.smooth_l1_loss(delta_applied, torch.zeros_like(delta_applied))
+                    pose_noop_terms.append(pose_noop_loss)
+                    details[f"v82_pose_noop_loss/{view_idx}"] = float(pose_noop_loss.detach())
+
             gate = pred.get("v8_pose_prompt_gate", None)
             if gate is not None:
                 gate = gate.float()
                 gate_values.append(gate.detach().mean())
                 details[f"v82_gate/{view_idx}"] = float(gate.detach().mean())
 
-            if self.human_trans_weight > 0 and "smpl_transl" in gt and "smpl_transl" in pred:
+            if (
+                (self.human_trans_weight > 0 or self.human_trans_noop_weight > 0)
+                and "smpl_transl" in gt
+                and "smpl_transl" in pred
+            ):
                 pred_human_t = pred["smpl_transl"].float()
                 gt_human_t = gt["smpl_transl"].to(device=pred_human_t.device, dtype=pred_human_t.dtype)
                 num_humans = min(pred_human_t.shape[1], gt_human_t.shape[1])
@@ -2148,8 +2179,6 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 gt_human_t = gt_human_t[:, :num_humans]
                 mask = self._human_trans_mask(gt, pred_human_t)[:, :num_humans]
                 if mask.any():
-                    human_loss = F.smooth_l1_loss(pred_human_t[mask], gt_human_t[mask])
-                    human_trans_terms.append(human_loss)
                     human_err = torch.norm((pred_human_t - gt_human_t).detach(), dim=-1)[mask].mean()
                     human_trans_errs.append(human_err)
                     details[f"v82_human_trans_err/{view_idx}"] = float(human_err)
@@ -2161,6 +2190,25 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                         raw_human_err = torch.norm((raw_human_t - gt_human_t).detach(), dim=-1)[mask].mean()
                         raw_human_trans_errs.append(raw_human_err)
                         details[f"v82_raw_human_trans_err/{view_idx}"] = float(raw_human_err)
+
+                    if self.human_trans_weight > 0 and view_idx >= self.human_trans_supervise_from_view:
+                        human_loss = F.smooth_l1_loss(pred_human_t[mask], gt_human_t[mask])
+                        human_trans_terms.append(human_loss)
+
+                    if (
+                        self.human_trans_noop_weight > 0
+                        and self.human_trans_noop_before_view >= 0
+                        and view_idx < self.human_trans_noop_before_view
+                    ):
+                        applied_delta = pred.get("v8_human_trans_corr_delta_applied", None)
+                        if applied_delta is not None:
+                            applied_delta = applied_delta.float()[:, :num_humans]
+                            noop_loss = F.smooth_l1_loss(applied_delta[mask], torch.zeros_like(applied_delta[mask]))
+                            human_trans_noop_terms.append(noop_loss)
+                            details[f"v82_human_trans_noop_loss/{view_idx}"] = float(noop_loss.detach())
+                            details[f"v82_human_trans_applied_delta_norm/{view_idx}"] = float(
+                                applied_delta.detach().norm(dim=-1)[mask].mean()
+                            )
 
                 human_delta = pred.get("v8_human_trans_corr_delta_raw", None)
                 if human_delta is not None and self.human_trans_delta_weight > 0:
@@ -2179,6 +2227,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             total = total + self.residual_weight * residual_loss
             details["v82_residual_small_loss"] = float(residual_loss.detach())
             details["v82_residual_small_loss_weighted"] = float((self.residual_weight * residual_loss).detach())
+        if pose_noop_terms and self.pose_noop_weight > 0:
+            pose_noop_loss = torch.stack(pose_noop_terms).mean()
+            total = total + self.pose_noop_weight * pose_noop_loss
+            details["v82_pose_noop_loss"] = float(pose_noop_loss.detach())
+            details["v82_pose_noop_loss_weighted"] = float((self.pose_noop_weight * pose_noop_loss).detach())
         if drift_terms and self.drift_weight > 0:
             drift_loss = torch.stack(drift_terms).mean()
             total = total + self.drift_weight * drift_loss
@@ -2200,6 +2253,13 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_human_trans_delta_small_loss"] = float(human_delta_loss.detach())
             details["v82_human_trans_delta_small_loss_weighted"] = float(
                 (self.human_trans_delta_weight * human_delta_loss).detach()
+            )
+        if human_trans_noop_terms and self.human_trans_noop_weight > 0:
+            human_noop_loss = torch.stack(human_trans_noop_terms).mean()
+            total = total + self.human_trans_noop_weight * human_noop_loss
+            details["v82_human_trans_noop_loss"] = float(human_noop_loss.detach())
+            details["v82_human_trans_noop_loss_weighted"] = float(
+                (self.human_trans_noop_weight * human_noop_loss).detach()
             )
 
         if trans_errs:

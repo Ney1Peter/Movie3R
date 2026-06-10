@@ -1,0 +1,51 @@
+# V8.6 follow-up: keep the good shared-gate pose+human correction, but add
+# no-op supervision on the stable A/A side of the AABB clip.
+#
+# Views 0-1 should keep the raw Human3R pose/SMPL translation; views 2-3 still
+# receive GT pose and human-translation supervision. This tests whether the
+# shared correction gate can learn "do not move stable frames" without a hard
+# view-index mask in the model forward.
+defaults:
+  - train_v8_6_joint_gate_pose_human_thuman_overfit
+  - _self_
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/v8_6_joint_gate_pose_human_thuman00_cam10_cam22_178deg_overfit/checkpoint-best.pth
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-4, drift_weight=0.2, improvement_weight=0.1, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, improvement_margin=0.0, pose_noop_before_view=2, pose_noop_weight=2.0, human_trans_weight=5.0, human_trans_delta_weight=1.0e-4, human_trans_supervise_from_view=2, human_trans_noop_before_view=2, human_trans_noop_weight=10.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-4, drift_weight=0.2, improvement_weight=0.1, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, improvement_margin=0.0, pose_noop_before_view=2, pose_noop_weight=2.0, human_trans_weight=5.0, human_trans_delta_weight=1.0e-4, human_trans_supervise_from_view=2, human_trans_noop_before_view=2, human_trans_noop_weight=10.0)
+
+epochs: 30
+
+exp_name: v8_6_joint_gate_pose_human_thuman00_cam10_cam22_178deg_overfit_noop12
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/${exp_name}
+
+step_log_keys:
+  - loss
+  - lr
+  - v82_trans_err
+  - v82_rot_err_deg
+  - v82_raw_trans_err
+  - v82_raw_rot_err_deg
+  - v82_human_trans_err
+  - v82_raw_human_trans_err
+  - v82_human_trans_loss
+  - v82_human_trans_noop_loss
+  - v82_pose_noop_loss
+  - v82_human_trans_delta_small_loss
+  - v82_gate_mean
+  - v82_delta_norm
+epoch_log_keys:
+  - loss
+  - v82_trans_err
+  - v82_rot_err_deg
+  - v82_raw_trans_err
+  - v82_raw_rot_err_deg
+  - v82_human_trans_err
+  - v82_raw_human_trans_err
+  - v82_human_trans_loss
+  - v82_human_trans_noop_loss
+  - v82_pose_noop_loss
+  - v82_human_trans_delta_small_loss
+  - v82_gate_mean
+  - v82_delta_norm
