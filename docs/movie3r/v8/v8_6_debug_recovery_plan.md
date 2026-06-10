@@ -839,3 +839,85 @@ pointcloud metric
 全部统一。
 
 只有这些基础稳定后，再讨论新的 pose correction token 是否有效、是否需要 human residual、是否需要 pointmap residual。
+
+## 2026-06-10: THuman 5-clip loss fix and sufficient overfit
+
+这次修正的问题：
+
+```text
+旧 5-clip 配置虽然 manifest 里有 5 个 clips，
+但 dataset 写成了 1 @ AvatarReX_AABB(...),
+实际每个 epoch 只看 1 个样本。
+```
+
+因此之前的 5-clip 训练不算充分训练。新的配置改成：
+
+```text
+5 @ AvatarReX_AABB(...)
+epochs: 100
+early_stopping_patience: 1000000
+eval_freq: 5
+```
+
+也就是说，每个 epoch 都完整遍历 5 个 clips，并且不再因为单一 val loss 短期抖动提前停止。
+
+loss 权重也做了调整：
+
+```text
+pose translation / rotation loss: 主监督
+human_trans_weight: 10.0
+residual_weight: 1e-5
+human_trans_delta_weight: 1e-5
+drift_weight: 0.05
+improvement_weight: 0.05
+```
+
+设计原因：
+
+- 这次要验证模型是否真的能把 camera pose 和 SMPL translation 修过来，所以主监督必须压在 pose 和 human translation 上。
+- residual small / delta small 只能作为很弱正则，不能把模型压得不敢修。
+- early stopping 暂时不作为主训练终止条件，只保存 best 和 final。
+
+本次训练了两个版本：
+
+| version | idea | config |
+| --- | --- | --- |
+| full | 四帧都允许 correction，由 gate 自己学修不修 | `config/train_v8_6_joint_gate_pose_human_thuman5_aabb_overfit_full_long.yaml` |
+| noop12 | 前两帧加 no-op 约束，主要强制后两帧 correction | `config/train_v8_6_joint_gate_pose_human_thuman5_aabb_overfit_noop12_long.yaml` |
+
+最终 100 epoch 验证结果：
+
+| version | corrected trans | raw trans | corrected rot | raw rot | corrected human trans | raw human trans | gate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| full | 0.0351 m | 0.0808 m | 0.0566 deg | 0.7415 deg | 0.0050 m | 0.1129 m | 0.2169 |
+| noop12 | 0.0324 m | 0.2450 m | 0.0560 deg | 1.1690 deg | 0.1324 m | 0.1800 m | 0.4726 |
+
+关键结论：
+
+```text
+full 版本在 5 clips 上可以把 SMPL translation 从 11.3cm 压到约 0.5cm，
+说明 human translation residual 这条路本身是能学动的。
+```
+
+但 noop12 版本虽然 camera pose 修得很好，human translation 只从 18.0cm 到 13.2cm，说明过强的前两帧 no-op 约束会限制人体分支拟合。后续如果要坚持“正常帧少修、跳变帧多修”，更合理的做法不是硬编码前两帧不修，而是用 AABB/AAAA 混合数据和 gate/漂移监督去学习何时修。
+
+本次 checkpoint：
+
+```text
+output/v8_6_human_correction_thuman_overfit/
+  v8_6_joint_gate_pose_human_thuman5_aabb_overfit_full_long/
+    checkpoint-best.pth
+    checkpoint-final.pth
+  v8_6_joint_gate_pose_human_thuman5_aabb_overfit_noop12_long/
+    checkpoint-best.pth
+    checkpoint-final.pth
+```
+
+下一步判断必须看 viewer：
+
+```text
+raw Human3R baseline 必须来自 demo.py / saved Human3R payload camera；
+不能再用 eval pose dump 里的 raw_c2w_rel 直接替代灰色 raw camera。
+```
+
+否则会再次出现 raw baseline 坐标系看起来错的情况。
