@@ -142,6 +142,8 @@ DEFAULT_CONSOLE_LOG_KEYS = [
     "v7_pose_delta_t_err",
     "v7_pose_delta_r_err_deg",
     "v7_pose_alpha",
+    "v82_pose_head_lora_l2",
+    "v82_human_head_lora_l2",
 ]
 
 DEFAULT_STEP_LOG_KEYS = [
@@ -184,6 +186,8 @@ DEFAULT_STEP_LOG_KEYS = [
     "v7_pose_r_scene",
     "v7_pose_delta_t_norm",
     "v7_pose_delta_r_deg",
+    "v82_pose_head_lora_l2",
+    "v82_human_head_lora_l2",
 ]
 
 

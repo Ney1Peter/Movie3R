@@ -79,6 +79,12 @@ from dust3r.v8_pose_prompt import (
     V8HumanTranslationCorrectionHead,
     make_v8_corr_pos,
 )
+from dust3r.v8_head_lora import (
+    count_lora_parameters,
+    inject_lora_to_linear_modules,
+    lora_parameter_l2,
+    mark_lora_trainable,
+)
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -231,6 +237,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_human_trans_corr_max_delta=1.0,
         v8_human_trans_corr_gate_mode="independent",
         v8_human_trans_corr_apply_from_view=-1,
+        v8_pose_head_lora=False,
+        v8_human_head_lora=False,
+        v8_head_lora_rank=8,
+        v8_head_lora_alpha=8.0,
+        v8_head_lora_dropout=0.0,
         **croco_kwargs,
     ):
         super().__init__()
@@ -295,6 +306,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_human_trans_corr_max_delta = v8_human_trans_corr_max_delta
         self.v8_human_trans_corr_gate_mode = v8_human_trans_corr_gate_mode
         self.v8_human_trans_corr_apply_from_view = v8_human_trans_corr_apply_from_view
+        self.v8_pose_head_lora = v8_pose_head_lora
+        self.v8_human_head_lora = v8_human_head_lora
+        self.v8_head_lora_rank = v8_head_lora_rank
+        self.v8_head_lora_alpha = v8_head_lora_alpha
+        self.v8_head_lora_dropout = v8_head_lora_dropout
         self.croco_kwargs = croco_kwargs
 
 
@@ -660,6 +676,7 @@ class ARCroco3DStereo(CroCoNet):
         )
         for p in self.v8_human_trans_corr_head.parameters():
             p.requires_grad = False
+        self._setup_v8_head_lora(config)
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(
         #     enc_dim=self.enc_embed_dim,
@@ -678,6 +695,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_v7_pose_adapter = False
         self.enable_v8_pose_prompt = False
         self.enable_v8_human_trans_corr = False
+        self.enable_v8_head_lora = False
         self.return_v7_pose_adapter_inputs = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
@@ -852,6 +870,8 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_v8_pose_prompt = False
         if hasattr(self, "enable_v8_human_trans_corr"):
             self.enable_v8_human_trans_corr = False
+        if hasattr(self, "enable_v8_head_lora"):
+            self.enable_v8_head_lora = False
         to_be_frozen = {
             "none": [],
             "mask": [self.mask_token] if hasattr(self, "mask_token") else [],
@@ -1219,6 +1239,49 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_v7_pose_adapter = False
             self.enable_v8_pose_prompt = True
             self.enable_v8_human_trans_corr = self.v8_human_trans_corr
+        elif freeze == "v8_pose_prompt_head_lora":
+            # V8.7: keep the UniCon-style decoder-in correction branch, but
+            # adapt the original pose/human heads only through low-rank LoRA
+            # side paths. The base head weights stay frozen.
+            freeze_all_params(to_be_frozen["encoder_and_decoder_and_head"])
+            freeze_all_params(to_be_frozen["encoder"])
+            freeze_all_params(to_be_frozen["mhmr"])
+            freeze_all_params([self.downstream_head])
+            freeze_all_params([self.masked_smpl_token, self.mhmr_masked_smpl_token])
+            freeze_all_params([
+                self.shot_token_generator,
+                self.layerwise_pose_shot_adapter,
+                self.anchor_pose_adapter,
+                self.anchor_decoder_token_projector,
+                self.anchor_decoder_token_scale,
+                self.anchor_pose_token_attention,
+                self.anchor_pose_token_delta,
+                self.anchor_pose_token_delta_scale,
+                self.v7_pose_adapter,
+                self.v8_human_trans_corr_head,
+            ])
+            train_modules = [self.v8_pose_prompt, self.v8_pose_residual_head]
+            if self.v8_human_trans_corr:
+                train_modules.append(self.v8_human_trans_corr_head)
+            for module in train_modules:
+                for p in module.parameters():
+                    p.requires_grad = True
+            n_pose_lora, n_human_lora = self._mark_v8_head_lora_trainable()
+            self.enable_shot_adaptation = False
+            self.enable_shot_decoder_token = False
+            self.enable_layerwise_pose_shot_adapter = False
+            self.enable_pose_alignment_adapter = False
+            self.enable_pose_translation_adapter = False
+            self.enable_pose_lora = False
+            self.enable_human_lora = False
+            self.enable_world_lora = False
+            self.enable_anchor_pose_adapter = False
+            self.enable_anchor_decoder_tokens = False
+            self.enable_anchor_pose_token_adapter = False
+            self.enable_v7_pose_adapter = False
+            self.enable_v8_pose_prompt = True
+            self.enable_v8_human_trans_corr = self.v8_human_trans_corr
+            self.enable_v8_head_lora = (n_pose_lora + n_human_lora) > 0
         elif freeze == "pose_head_only":
             # V8.1 ablation: train only the original pose head, without adding
             # A_corr_t to the decoder. This checks whether a single-sample
@@ -1374,6 +1437,95 @@ class ARCroco3DStereo(CroCoNet):
         self.head = transpose_to_landscape(
             self.downstream_head, activate=landscape_only
         )
+
+    def _setup_v8_head_lora(self, config):
+        self.v8_pose_head_lora_enabled = bool(getattr(config, "v8_pose_head_lora", False))
+        self.v8_human_head_lora_enabled = bool(getattr(config, "v8_human_head_lora", False))
+        self.v8_head_lora_rank = int(getattr(config, "v8_head_lora_rank", 8))
+        self.v8_head_lora_alpha = float(getattr(config, "v8_head_lora_alpha", 8.0))
+        self.v8_head_lora_dropout = float(getattr(config, "v8_head_lora_dropout", 0.0))
+        self.v8_pose_head_lora_modules = []
+        self.v8_human_head_lora_modules = []
+
+        if self.v8_head_lora_rank <= 0:
+            self.v8_pose_head_lora_enabled = False
+            self.v8_human_head_lora_enabled = False
+            return
+
+        if self.v8_pose_head_lora_enabled and hasattr(self.downstream_head, "pose_head"):
+            self.v8_pose_head_lora_modules = inject_lora_to_linear_modules(
+                self.downstream_head.pose_head,
+                rank=self.v8_head_lora_rank,
+                alpha=self.v8_head_lora_alpha,
+                dropout=self.v8_head_lora_dropout,
+                prefix="downstream_head.pose_head",
+            )
+
+        if self.v8_human_head_lora_enabled:
+            for attr in ("deccam", "decpose", "decshape", "decexpression"):
+                if not hasattr(self.downstream_head, attr):
+                    continue
+                replaced = inject_lora_to_linear_modules(
+                    getattr(self.downstream_head, attr),
+                    rank=self.v8_head_lora_rank,
+                    alpha=self.v8_head_lora_alpha,
+                    dropout=self.v8_head_lora_dropout,
+                    prefix=f"downstream_head.{attr}",
+                )
+                self.v8_human_head_lora_modules.extend(replaced)
+
+    def _mark_v8_head_lora_trainable(self):
+        n_pose = 0
+        n_human = 0
+        if self.v8_pose_head_lora_enabled and hasattr(self.downstream_head, "pose_head"):
+            n_pose = mark_lora_trainable(self.downstream_head.pose_head, trainable=True)
+        if self.v8_human_head_lora_enabled:
+            for attr in ("deccam", "decpose", "decshape", "decexpression"):
+                if hasattr(self.downstream_head, attr):
+                    n_human += mark_lora_trainable(getattr(self.downstream_head, attr), trainable=True)
+        return n_pose, n_human
+
+    def _v8_head_lora_info(self):
+        if not getattr(self, "enable_v8_head_lora", False):
+            return {}
+        info = {}
+        if self.v8_pose_head_lora_enabled and hasattr(self.downstream_head, "pose_head"):
+            pose_l2 = lora_parameter_l2(self.downstream_head.pose_head)
+            if pose_l2 is not None:
+                info["v8_pose_head_lora_l2"] = pose_l2
+        if self.v8_human_head_lora_enabled:
+            human_l2_values = []
+            for attr in ("deccam", "decpose", "decshape", "decexpression"):
+                if not hasattr(self.downstream_head, attr):
+                    continue
+                value = lora_parameter_l2(getattr(self.downstream_head, attr))
+                if value is not None:
+                    human_l2_values.append(value)
+            if human_l2_values:
+                info["v8_human_head_lora_l2"] = torch.stack(human_l2_values).mean()
+        return info
+
+    def _attach_v8_head_lora_info(self, res):
+        info = self._v8_head_lora_info()
+        if not info:
+            return res
+        out = res.copy()
+        out.update(info)
+        return out
+
+    def v8_head_lora_summary(self):
+        summary = {}
+        if hasattr(self.downstream_head, "pose_head"):
+            summary["pose_head"] = count_lora_parameters(self.downstream_head.pose_head)
+        human = {"layers": 0, "lora_params": 0, "trainable_lora_params": 0}
+        for attr in ("deccam", "decpose", "decshape", "decexpression"):
+            if not hasattr(self.downstream_head, attr):
+                continue
+            part = count_lora_parameters(getattr(self.downstream_head, attr))
+            for key in human:
+                human[key] += part[key]
+        summary["human_head"] = human
+        return summary
 
     def _encode_image(self, image, true_shape):
         x, pos = self.patch_embed(image, true_shape=true_shape)
@@ -1686,7 +1838,7 @@ class ARCroco3DStereo(CroCoNet):
     def _downstream_head(self, decout, img_shape, **kwargs):
         B, S, D = decout[-1].shape
         head = getattr(self, f"head")
-        return head(decout, img_shape, **kwargs)
+        return self._attach_v8_head_lora_info(head(decout, img_shape, **kwargs))
 
     def _init_state(self, image_tokens, image_pos):
         """

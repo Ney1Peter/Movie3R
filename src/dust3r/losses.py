@@ -2012,6 +2012,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_trans_supervise_from_view=0,
         human_trans_noop_before_view=-1,
         human_trans_noop_weight=0.0,
+        pose_lora_norm_weight=0.0,
+        human_lora_norm_weight=0.0,
     ):
         super().__init__(
             translation_weight=translation_weight,
@@ -2034,6 +2036,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.human_trans_supervise_from_view = int(human_trans_supervise_from_view)
         self.human_trans_noop_before_view = int(human_trans_noop_before_view)
         self.human_trans_noop_weight = float(human_trans_noop_weight)
+        self.pose_lora_norm_weight = float(pose_lora_norm_weight)
+        self.human_lora_norm_weight = float(human_lora_norm_weight)
 
     def get_name(self):
         return "V82PoseRelationLoss"
@@ -2085,6 +2089,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_trans_noop_terms = []
         human_trans_errs = []
         raw_human_trans_errs = []
+        pose_lora_norm_terms = []
+        human_lora_norm_terms = []
 
         for view_idx, (gt_pose, gt, pred) in enumerate(zip(gt_poses, gts, preds)):
             pred_pose = pred.get("camera_pose", None)
@@ -2166,6 +2172,18 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 gate = gate.float()
                 gate_values.append(gate.detach().mean())
                 details[f"v82_gate/{view_idx}"] = float(gate.detach().mean())
+
+            pose_lora_l2 = pred.get("v8_pose_head_lora_l2", None)
+            if pose_lora_l2 is not None:
+                pose_lora_l2 = pose_lora_l2.float()
+                pose_lora_norm_terms.append(pose_lora_l2)
+                details[f"v82_pose_head_lora_l2/{view_idx}"] = float(pose_lora_l2.detach())
+
+            human_lora_l2 = pred.get("v8_human_head_lora_l2", None)
+            if human_lora_l2 is not None:
+                human_lora_l2 = human_lora_l2.float()
+                human_lora_norm_terms.append(human_lora_l2)
+                details[f"v82_human_head_lora_l2/{view_idx}"] = float(human_lora_l2.detach())
 
             if (
                 (self.human_trans_weight > 0 or self.human_trans_noop_weight > 0)
@@ -2261,6 +2279,22 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_human_trans_noop_loss_weighted"] = float(
                 (self.human_trans_noop_weight * human_noop_loss).detach()
             )
+        if pose_lora_norm_terms:
+            pose_lora_norm = torch.stack(pose_lora_norm_terms).mean()
+            details["v82_pose_head_lora_l2"] = float(pose_lora_norm.detach())
+            if self.pose_lora_norm_weight > 0:
+                total = total + self.pose_lora_norm_weight * pose_lora_norm
+                details["v82_pose_head_lora_l2_weighted"] = float(
+                    (self.pose_lora_norm_weight * pose_lora_norm).detach()
+                )
+        if human_lora_norm_terms:
+            human_lora_norm = torch.stack(human_lora_norm_terms).mean()
+            details["v82_human_head_lora_l2"] = float(human_lora_norm.detach())
+            if self.human_lora_norm_weight > 0:
+                total = total + self.human_lora_norm_weight * human_lora_norm
+                details["v82_human_head_lora_l2_weighted"] = float(
+                    (self.human_lora_norm_weight * human_lora_norm).detach()
+                )
 
         if trans_errs:
             details["v82_trans_err"] = float(torch.stack(trans_errs).mean())

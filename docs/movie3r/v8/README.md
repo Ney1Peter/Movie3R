@@ -58,6 +58,7 @@ scripts/archive_v7/
 
 ```text
 docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
+docs/movie3r/v8/v8_7_head_lora_finetune_plan.md
 docs/movie3r/v8/v8_1_unicon_style_implementation_plan.md
 docs/movie3r/v8/v8_1_token_extraction_validation_plan.md
 docs/movie3r/v8/v8_1_large_scale_training_plan.md
