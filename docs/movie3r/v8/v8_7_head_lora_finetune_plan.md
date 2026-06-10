@@ -728,3 +728,73 @@ LoRA 的额外收益存在，但视觉差距不大。
   不使用 human translation supervision
 再测试 pose-head LoRA 和 pose+human-head LoRA 是否能带来更清晰的收益。
 ```
+
+## 2026-06-10 V8.8 Pose-only Baseline + LoRA 对照
+
+这次回到更干净的 pose-only baseline：
+
+```text
+保留 pose correction token 和 camera pose residual
+关闭 human translation correction
+不使用 human translation loss
+```
+
+测试目标：
+
+```text
+如果没有 human translation correction 分支，
+LoRA 本身是否能进一步提升 pose correction？
+```
+
+注意：指标里的 `AvatarReX_AABB` 是当前 eval label 名字，实际这次仍然使用同一批 5 个 THuman 大角度 AABB clips。
+
+### 配置和输出
+
+| 组别 | 配置 | 输出目录 |
+|---|---|---|
+| A. pose-only baseline | `config/train_v8_8_pose_only_thuman5_aabb_overfit.yaml` | `output/v8_8_pose_only_lora/v8_8_pose_only_thuman5_aabb_overfit_gpu6` |
+| B. pose LoRA | `config/train_v8_8_pose_only_thuman5_pose_lora.yaml` | `output/v8_8_pose_only_lora/v8_8_pose_only_thuman5_pose_lora_gpu7` |
+| C. pose + human LoRA | `config/train_v8_8_pose_only_thuman5_pose_human_lora.yaml` | `output/v8_8_pose_only_lora/v8_8_pose_only_thuman5_pose_human_lora_gpu6` |
+
+三组都训练到 100 epoch，并保存：
+
+```text
+checkpoint-best.pth
+checkpoint-final.pth
+```
+
+### 指标结果
+
+| 组别 | best epoch | best val loss | final val loss | final pose loss | train trans err | raw trans err | train rot err | raw rot err | gate |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| pose-only baseline | 100 | 0.01241 | 0.01241 | 0.00513 | 0.0295m | 0.2441m | 0.0560 deg | 1.2136 deg | 0.470 |
+| pose-only + pose LoRA | 100 | 0.01334 | 0.01334 | 0.00501 | 0.0158m | 0.2359m | 0.0572 deg | 1.1630 deg | 0.452 |
+| pose-only + pose + human LoRA | 90 | 0.01628 | 0.01636 | 0.00507 | 0.0163m | 0.1934m | 0.0560 deg | 1.0805 deg | 0.407 |
+
+### 观察
+
+```text
+1. 三组都能明显降低 raw camera pose 误差，说明 pose-only correction token 本身有效。
+2. pose-only baseline 的整体 val loss 最低。
+3. pose LoRA 的训练平移误差最低，但综合 val loss 没超过 baseline。
+4. pose + human LoRA 在 pose-only 设定下没有带来额外收益，val loss 反而更高。
+```
+
+当前判断：
+
+```text
+在关闭 human translation correction 后，
+LoRA 没有稳定超过 pose-only baseline。
+
+当前主要收益仍来自 correction token + residual head，
+LoRA 暂时只能作为辅助适配项，不能替代核心 correction 分支。
+```
+
+后续如果继续测试 LoRA，建议重点看：
+
+```text
+1. 同一 clip 的 baseline / pose LoRA / pose+human LoRA 可视化对比；
+2. 更大规模 AvatarReX + THuman mixed training；
+3. LoRA rank / learning rate 是否过强；
+4. unseen test 上 LoRA 是否改善泛化，而不是只改善小样本 overfit 指标。
+```
