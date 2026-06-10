@@ -1,0 +1,33 @@
+# V8.6 five-clip overfit, shared-gate pose + human correction with no-op
+# supervision on the stable first two frames.
+#
+# This keeps views 0-1 close to raw Human3R and supervises correction on views
+# 2-3, while still training on all five manifest clips each epoch.
+defaults:
+  - train_v8_6_joint_gate_pose_human_thuman_overfit_noop12
+  - _self_
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/pose_only_thuman00_cam10_cam22_178deg_overfit/checkpoint-best.pth
+v8_6_manifest: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/five_clip_thuman_aabb_manifests/train_aabb_60k.jsonl
+
+train_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=901, n_corres=0, manifest_path="${v8_6_manifest}", load_da3_depth=False, raw_calibration_root=None)
+val_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=902, n_corres=0, manifest_path="${v8_6_manifest}", load_da3_depth=False, raw_calibration_root=None)
+test_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=4, seed=903, n_corres=0, manifest_path="${v8_6_manifest}", load_da3_depth=False, raw_calibration_root=None)
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.05, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, improvement_margin=0.0, pose_noop_before_view=2, pose_noop_weight=5.0, human_trans_weight=10.0, human_trans_delta_weight=1.0e-5, human_trans_supervise_from_view=2, human_trans_noop_before_view=2, human_trans_noop_weight=20.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.05, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, improvement_margin=0.0, pose_noop_before_view=2, pose_noop_weight=5.0, human_trans_weight=10.0, human_trans_delta_weight=1.0e-5, human_trans_supervise_from_view=2, human_trans_noop_before_view=2, human_trans_noop_weight=20.0)
+
+epochs: 100
+early_stopping_patience: 1000000
+eval_freq: 5
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+
+exp_name: v8_6_joint_gate_pose_human_thuman5_aabb_overfit_noop12_long
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_6_human_correction_thuman_overfit/${exp_name}
