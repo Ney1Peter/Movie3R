@@ -685,3 +685,46 @@ sanity check 结果：
 | pose + human LoRA | 2 / 55,352 | 8 / 445,096 | 0 |
 
 `bad trainable = 0` 表示没有误打开原始 Human3R head、encoder、decoder 或 scene head 参数。
+
+## 2026-06-10 小规模结果记录
+
+实验设置：
+
+```text
+数据：同一批 5 个 THuman 大角度 AABB clips
+训练：100 epochs，小规模 overfit 对照
+基础模型：V8.6 full-long pose + human translation correction
+可视化 clip：thuman00/cam00 -> cam11, start=674, 约 162 度
+viewer 坐标：demo/image-only 输入逻辑 + align_corrected_to_raw0
+颜色：GT 红色，Human3R raw 灰色，corrected 黄色
+```
+
+指标结果：
+
+| 版本 | best val loss | final val loss | train camera trans err | train rot err | train human trans err | gate mean |
+|---|---:|---:|---:|---:|---:|---:|
+| V8.6 full-long baseline | 0.023535 | 0.023535 | 0.03583 | 0.0597 deg | 0.00506 | 0.217 |
+| V8.7 pose LoRA | 0.019649 | 0.019649 | 0.01877 | 0.0560 deg | 0.00306 | 0.143 |
+| V8.7 human LoRA | 0.022547 | 0.022633 | 0.03007 | 0.0560 deg | 0.00228 | 0.180 |
+| V8.7 pose + human LoRA | 0.021687 | 0.021687 | 0.01698 | 0.0571 deg | 0.00280 | 0.178 |
+
+观察：
+
+```text
+1. 四组可视化效果整体比较接近，没有出现明显坐标系错误。
+2. pose LoRA 的综合 val loss 最低，是当前最稳的 LoRA 方向。
+3. pose + human LoRA 的 camera translation 数值最低，但综合 loss 不如 pose LoRA。
+4. human LoRA 单独训练主要改善 human translation，对 camera pose 的帮助有限。
+```
+
+当前结论：
+
+```text
+在已经加入 human translation correction supervision 的 V8.6 full-long 基础上，
+LoRA 的额外收益存在，但视觉差距不大。
+下一步需要回到更干净的 pose-only baseline：
+  只保留 pose correction token / pose residual head
+  不启用 human translation correction branch
+  不使用 human translation supervision
+再测试 pose-head LoRA 和 pose+human-head LoRA 是否能带来更清晰的收益。
+```
