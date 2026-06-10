@@ -2005,6 +2005,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         drift_trans_scale=0.5,
         drift_rot_scale_deg=45.0,
         improvement_margin=0.0,
+        human_trans_weight=0.0,
+        human_trans_delta_weight=0.0,
     ):
         super().__init__(
             translation_weight=translation_weight,
@@ -2020,6 +2022,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.drift_trans_scale = float(drift_trans_scale)
         self.drift_rot_scale_deg = float(drift_rot_scale_deg)
         self.improvement_margin = float(improvement_margin)
+        self.human_trans_weight = float(human_trans_weight)
+        self.human_trans_delta_weight = float(human_trans_delta_weight)
 
     def get_name(self):
         return "V82PoseRelationLoss"
@@ -2028,6 +2032,21 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         trans_scale = max(self.drift_trans_scale, 1e-6)
         rot_scale = max(math.radians(self.drift_rot_scale_deg), 1e-6)
         return trans_err / trans_scale + rot_err / rot_scale
+
+    def _human_trans_mask(self, gt, pred_transl):
+        mask = gt.get("smpl_mask", None)
+        if mask is None:
+            return torch.ones(
+                pred_transl.shape[:2],
+                device=pred_transl.device,
+                dtype=torch.bool,
+            )
+        mask = mask.to(device=pred_transl.device, dtype=torch.bool)
+        img_mask = gt.get("img_mask", None)
+        if img_mask is not None:
+            img_mask = img_mask.to(device=pred_transl.device, dtype=torch.bool)
+            mask = mask & img_mask[:, None]
+        return mask
 
     def compute_loss(self, gts, preds, **kw):
         ref = self._first_tensor(gts, preds)
@@ -2050,6 +2069,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         drift_targets = []
         improvement_terms = []
         improvements = []
+        human_trans_terms = []
+        human_trans_delta_terms = []
+        human_trans_errs = []
+        raw_human_trans_errs = []
 
         for view_idx, (gt_pose, gt, pred) in enumerate(zip(gt_poses, gts, preds)):
             pred_pose = pred.get("camera_pose", None)
@@ -2117,6 +2140,36 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 gate_values.append(gate.detach().mean())
                 details[f"v82_gate/{view_idx}"] = float(gate.detach().mean())
 
+            if self.human_trans_weight > 0 and "smpl_transl" in gt and "smpl_transl" in pred:
+                pred_human_t = pred["smpl_transl"].float()
+                gt_human_t = gt["smpl_transl"].to(device=pred_human_t.device, dtype=pred_human_t.dtype)
+                num_humans = min(pred_human_t.shape[1], gt_human_t.shape[1])
+                pred_human_t = pred_human_t[:, :num_humans]
+                gt_human_t = gt_human_t[:, :num_humans]
+                mask = self._human_trans_mask(gt, pred_human_t)[:, :num_humans]
+                if mask.any():
+                    human_loss = F.smooth_l1_loss(pred_human_t[mask], gt_human_t[mask])
+                    human_trans_terms.append(human_loss)
+                    human_err = torch.norm((pred_human_t - gt_human_t).detach(), dim=-1)[mask].mean()
+                    human_trans_errs.append(human_err)
+                    details[f"v82_human_trans_err/{view_idx}"] = float(human_err)
+
+                    raw_human_t = pred.get("v8_human_trans_corr_smpl_transl_raw", None)
+                    if raw_human_t is not None:
+                        raw_human_t = raw_human_t.to(device=pred_human_t.device, dtype=pred_human_t.dtype)
+                        raw_human_t = raw_human_t[:, :num_humans]
+                        raw_human_err = torch.norm((raw_human_t - gt_human_t).detach(), dim=-1)[mask].mean()
+                        raw_human_trans_errs.append(raw_human_err)
+                        details[f"v82_raw_human_trans_err/{view_idx}"] = float(raw_human_err)
+
+                human_delta = pred.get("v8_human_trans_corr_delta_raw", None)
+                if human_delta is not None and self.human_trans_delta_weight > 0:
+                    human_delta = human_delta.float()
+                    human_trans_delta_terms.append(human_delta.pow(2).mean())
+                    details[f"v82_human_trans_delta_norm/{view_idx}"] = float(
+                        human_delta.detach().norm(dim=-1).mean()
+                    )
+
         if pose_losses:
             pose_loss = torch.stack(pose_losses).mean()
             total = total + pose_loss
@@ -2136,6 +2189,18 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             total = total + self.improvement_weight * improvement_loss
             details["v82_improvement_margin_loss"] = float(improvement_loss.detach())
             details["v82_improvement_margin_loss_weighted"] = float((self.improvement_weight * improvement_loss).detach())
+        if human_trans_terms and self.human_trans_weight > 0:
+            human_trans_loss = torch.stack(human_trans_terms).mean()
+            total = total + self.human_trans_weight * human_trans_loss
+            details["v82_human_trans_loss"] = float(human_trans_loss.detach())
+            details["v82_human_trans_loss_weighted"] = float((self.human_trans_weight * human_trans_loss).detach())
+        if human_trans_delta_terms and self.human_trans_delta_weight > 0:
+            human_delta_loss = torch.stack(human_trans_delta_terms).mean()
+            total = total + self.human_trans_delta_weight * human_delta_loss
+            details["v82_human_trans_delta_small_loss"] = float(human_delta_loss.detach())
+            details["v82_human_trans_delta_small_loss_weighted"] = float(
+                (self.human_trans_delta_weight * human_delta_loss).detach()
+            )
 
         if trans_errs:
             details["v82_trans_err"] = float(torch.stack(trans_errs).mean())
@@ -2151,6 +2216,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_drift_target_mean"] = float(torch.stack(drift_targets).mean())
         if improvements:
             details["v82_norm_error_improvement"] = float(torch.stack(improvements).mean())
+        if human_trans_errs:
+            details["v82_human_trans_err"] = float(torch.stack(human_trans_errs).mean())
+        if raw_human_trans_errs:
+            details["v82_raw_human_trans_err"] = float(torch.stack(raw_human_trans_errs).mean())
 
         # Keep the old V8 names in logs so existing parsers can still find the
         # headline metrics while V8.2-specific keys carry the new losses.
@@ -2168,6 +2237,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v8_pose_prompt_gate_mean"] = details["v82_gate_mean"]
         if "v82_delta_norm" in details:
             details["v8_pose_prompt_delta_norm"] = details["v82_delta_norm"]
+        if "v82_human_trans_err" in details:
+            details["v8_human_trans_corr_err"] = details["v82_human_trans_err"]
+        if "v82_raw_human_trans_err" in details:
+            details["v8_raw_human_trans_err"] = details["v82_raw_human_trans_err"]
         details["v82_pose_relation_loss"] = float(total.detach())
         details["v8_pose_prompt_loss"] = float(total.detach())
         return total, details

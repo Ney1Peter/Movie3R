@@ -73,6 +73,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=401)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--name", default=None)
+    parser.add_argument("--human_trans_weight", type=float, default=0.0)
+    parser.add_argument("--human_trans_delta_weight", type=float, default=0.0)
     parser.add_argument(
         "--dump_poses",
         action="store_true",
@@ -115,7 +117,7 @@ def make_dataset(args: argparse.Namespace, subset: str, manifest_path: Path):
     raise ValueError(f"Cannot infer dataset type from subset name: {subset}")
 
 
-def make_criterion(device: torch.device):
+def make_criterion(args: argparse.Namespace, device: torch.device):
     return V82PoseRelationLoss(
         translation_weight=1.0,
         rotation_weight=5.0,
@@ -126,6 +128,8 @@ def make_criterion(device: torch.device):
         drift_trans_scale=0.5,
         drift_rot_scale_deg=45.0,
         improvement_margin=0.0,
+        human_trans_weight=float(args.human_trans_weight),
+        human_trans_delta_weight=float(args.human_trans_delta_weight),
     ).to(device)
 
 
@@ -158,6 +162,10 @@ def compact_details(details: dict) -> dict:
         "v82_norm_error_improvement",
         "v82_residual_small_loss",
         "v82_improvement_margin_loss",
+        "v82_human_trans_err",
+        "v82_raw_human_trans_err",
+        "v82_human_trans_loss",
+        "v82_human_trans_delta_small_loss",
     ]
     out = {}
     for key in keys:
@@ -165,6 +173,11 @@ def compact_details(details: dict) -> dict:
             value = safe_float(details[key])
             if value is not None:
                 out[key] = value
+    for key, value in details.items():
+        if key.startswith(("v82_human_trans_err/", "v82_raw_human_trans_err/", "v82_human_trans_delta_norm/")):
+            value = safe_float(value)
+            if value is not None:
+                out[key.replace("/", "_view")] = value
     if "v82_raw_trans_err" in out and "v82_trans_err" in out:
         out["v82_trans_improvement"] = out["v82_raw_trans_err"] - out["v82_trans_err"]
     if "v82_raw_rot_err_deg" in out and "v82_rot_err_deg" in out:
@@ -368,7 +381,7 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device).float().eval()
-    criterion = make_criterion(device)
+    criterion = make_criterion(args, device)
     smpl_model = SMPLModel(
         device,
         model_args={

@@ -464,3 +464,102 @@ class V82PoseRelationResidualHead(nn.Module):
             gate = torch.ones(delta.shape[0], 1, 1, device=delta.device, dtype=delta.dtype)
         corrected_delta = gate * delta
         return corrected_delta, gate, delta, drift_logit
+
+
+class V8HumanTranslationCorrectionHead(nn.Module):
+    """Explicit sanity-check head for correcting whole-body SMPL translation.
+
+    This is intentionally a small post-human-head residual. It tests whether the
+    refined V8 correction token already contains enough human alignment signal
+    before moving the idea into a fully latent UniCon-style human branch.
+    """
+
+    def __init__(
+        self,
+        dec_dim: int,
+        hidden_dim: Optional[int] = None,
+        gate_bias: float = 0.0,
+        use_gate: bool = True,
+        max_delta: Optional[float] = None,
+        gate_mode: str = "independent",
+    ):
+        super().__init__()
+        self.dec_dim = int(dec_dim)
+        self.use_gate = bool(use_gate)
+        self.max_delta = None if max_delta is None else float(max_delta)
+        self.gate_mode = str(gate_mode)
+        hidden = int(hidden_dim or dec_dim)
+        self.context_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 3),
+            nn.Linear(self.dec_dim * 3, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, self.dec_dim),
+            nn.GELU(),
+        )
+        self.delta_head = nn.Linear(self.dec_dim, 3)
+        self.gate_head = nn.Linear(self.dec_dim, 1)
+        nn.init.zeros_(self.delta_head.weight)
+        nn.init.zeros_(self.delta_head.bias)
+        nn.init.zeros_(self.gate_head.weight)
+        nn.init.constant_(self.gate_head.bias, gate_bias)
+
+    def forward(
+        self,
+        human_tokens: torch.Tensor,
+        corr_tokens: torch.Tensor,
+        pose_token: torch.Tensor,
+        smpl_transl: torch.Tensor,
+        shared_gate: Optional[torch.Tensor] = None,
+        apply_mask: Optional[torch.Tensor] = None,
+    ):
+        if human_tokens is None or human_tokens.numel() == 0:
+            return smpl_transl, None
+        if corr_tokens is None or corr_tokens.numel() == 0:
+            return smpl_transl, None
+        batch_size, num_humans = human_tokens.shape[:2]
+        if smpl_transl.shape[0] != batch_size or smpl_transl.shape[1] == 0:
+            return smpl_transl, None
+
+        num_apply = min(num_humans, smpl_transl.shape[1])
+        human_context = human_tokens[:, :num_apply]
+        corr_context = corr_tokens.mean(dim=1, keepdim=True).expand(-1, num_apply, -1)
+        pose_context = pose_token.mean(dim=1, keepdim=True).expand(-1, num_apply, -1)
+        context = torch.cat([human_context, corr_context, pose_context], dim=-1)
+        hidden = self.context_mlp(context)
+        delta_raw = self.delta_head(hidden)
+        if self.max_delta is not None and self.max_delta > 0:
+            delta = self.max_delta * torch.tanh(delta_raw)
+        else:
+            delta = delta_raw
+        if self.use_gate:
+            learned_gate = torch.sigmoid(self.gate_head(hidden))
+        else:
+            learned_gate = torch.ones_like(delta[..., :1])
+        gate = learned_gate
+        shared_gate_used = None
+        if shared_gate is not None:
+            shared_gate_used = shared_gate.to(device=delta.device, dtype=delta.dtype).reshape(batch_size, -1, 1)
+            if shared_gate_used.shape[1] == 1:
+                shared_gate_used = shared_gate_used.expand(-1, num_apply, -1)
+            else:
+                shared_gate_used = shared_gate_used[:, :num_apply]
+            if self.gate_mode == "shared":
+                gate = shared_gate_used
+            elif self.gate_mode == "product":
+                gate = shared_gate_used * learned_gate
+        if apply_mask is not None:
+            gate = gate * apply_mask.to(device=gate.device, dtype=gate.dtype)
+        delta_applied = gate * delta
+
+        corrected = smpl_transl.clone()
+        corrected[:, :num_apply] = corrected[:, :num_apply] + delta_applied
+        info = {
+            "v8_human_trans_corr_delta_raw": delta_raw,
+            "v8_human_trans_corr_delta_applied": delta_applied,
+            "v8_human_trans_corr_gate": gate,
+            "v8_human_trans_corr_learned_gate": learned_gate,
+            "v8_human_trans_corr_delta_norm": delta_raw.norm(dim=-1),
+        }
+        if shared_gate_used is not None:
+            info["v8_human_trans_corr_shared_gate"] = shared_gate_used
+        return corrected, info

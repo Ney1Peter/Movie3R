@@ -76,6 +76,7 @@ from dust3r.v8_pose_prompt import (
     V81PoseLatentResidualHead,
     V82PoseRelationPrompt,
     V82PoseRelationResidualHead,
+    V8HumanTranslationCorrectionHead,
     make_v8_corr_pos,
 )
 printer = get_logger(__name__, log_level="DEBUG")
@@ -224,6 +225,12 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_use_reliability=True,
         v8_pose_prompt_use_gate=True,
         v8_pose_prompt_image_only=False,
+        v8_human_trans_corr=False,
+        v8_human_trans_corr_gate_bias=0.0,
+        v8_human_trans_corr_use_gate=True,
+        v8_human_trans_corr_max_delta=1.0,
+        v8_human_trans_corr_gate_mode="independent",
+        v8_human_trans_corr_apply_from_view=-1,
         **croco_kwargs,
     ):
         super().__init__()
@@ -282,6 +289,12 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_use_reliability = v8_pose_prompt_use_reliability
         self.v8_pose_prompt_use_gate = v8_pose_prompt_use_gate
         self.v8_pose_prompt_image_only = v8_pose_prompt_image_only
+        self.v8_human_trans_corr = v8_human_trans_corr
+        self.v8_human_trans_corr_gate_bias = v8_human_trans_corr_gate_bias
+        self.v8_human_trans_corr_use_gate = v8_human_trans_corr_use_gate
+        self.v8_human_trans_corr_max_delta = v8_human_trans_corr_max_delta
+        self.v8_human_trans_corr_gate_mode = v8_human_trans_corr_gate_mode
+        self.v8_human_trans_corr_apply_from_view = v8_human_trans_corr_apply_from_view
         self.croco_kwargs = croco_kwargs
 
 
@@ -634,6 +647,19 @@ class ARCroco3DStereo(CroCoNet):
                 gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
                 use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
             )
+        self.v8_human_trans_corr = bool(getattr(config, "v8_human_trans_corr", False))
+        self.v8_human_trans_corr_apply_from_view = int(
+            getattr(config, "v8_human_trans_corr_apply_from_view", -1)
+        )
+        self.v8_human_trans_corr_head = V8HumanTranslationCorrectionHead(
+            dec_dim=self.dec_embed_dim,
+            gate_bias=getattr(config, "v8_human_trans_corr_gate_bias", 0.0),
+            use_gate=getattr(config, "v8_human_trans_corr_use_gate", True),
+            max_delta=getattr(config, "v8_human_trans_corr_max_delta", 1.0),
+            gate_mode=getattr(config, "v8_human_trans_corr_gate_mode", "independent"),
+        )
+        for p in self.v8_human_trans_corr_head.parameters():
+            p.requires_grad = False
         # **========== V6-C 原始代码备份：V6-B 只定义 full-decoder AnchorToken projector/scale ==========**
         # self.anchor_decoder_token_projector = AnchorTokenProjector(
         #     enc_dim=self.enc_embed_dim,
@@ -651,6 +677,7 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_anchor_pose_token_adapter = False
         self.enable_v7_pose_adapter = False
         self.enable_v8_pose_prompt = False
+        self.enable_v8_human_trans_corr = False
         self.return_v7_pose_adapter_inputs = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
@@ -823,6 +850,8 @@ class ARCroco3DStereo(CroCoNet):
         self.freeze = freeze
         if hasattr(self, "enable_v8_pose_prompt"):
             self.enable_v8_pose_prompt = False
+        if hasattr(self, "enable_v8_human_trans_corr"):
+            self.enable_v8_human_trans_corr = False
         to_be_frozen = {
             "none": [],
             "mask": [self.mask_token] if hasattr(self, "mask_token") else [],
@@ -1126,8 +1155,12 @@ class ARCroco3DStereo(CroCoNet):
                 self.anchor_pose_token_delta,
                 self.anchor_pose_token_delta_scale,
                 self.v7_pose_adapter,
+                self.v8_human_trans_corr_head,
             ])
-            for module in [self.v8_pose_prompt, self.v8_pose_residual_head]:
+            train_modules = [self.v8_pose_prompt, self.v8_pose_residual_head]
+            if self.v8_human_trans_corr:
+                train_modules.append(self.v8_human_trans_corr_head)
+            for module in train_modules:
                 for p in module.parameters():
                     p.requires_grad = True
             self.enable_shot_adaptation = False
@@ -1143,6 +1176,7 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_pose_token_adapter = False
             self.enable_v7_pose_adapter = False
             self.enable_v8_pose_prompt = True
+            self.enable_v8_human_trans_corr = self.v8_human_trans_corr
         elif freeze == "v8_pose_prompt_pose_head":
             # V8.1 ablation: match the UniCon3R fine-tuning pattern more
             # closely by training the decoder-in prompt branch plus the
@@ -1163,8 +1197,12 @@ class ARCroco3DStereo(CroCoNet):
                 self.anchor_pose_token_delta,
                 self.anchor_pose_token_delta_scale,
                 self.v7_pose_adapter,
+                self.v8_human_trans_corr_head,
             ])
-            for module in [self.v8_pose_prompt, self.v8_pose_residual_head, self.downstream_head.pose_head]:
+            train_modules = [self.v8_pose_prompt, self.v8_pose_residual_head, self.downstream_head.pose_head]
+            if self.v8_human_trans_corr:
+                train_modules.append(self.v8_human_trans_corr_head)
+            for module in train_modules:
                 for p in module.parameters():
                     p.requires_grad = True
             self.enable_shot_adaptation = False
@@ -1180,6 +1218,7 @@ class ARCroco3DStereo(CroCoNet):
             self.enable_anchor_pose_token_adapter = False
             self.enable_v7_pose_adapter = False
             self.enable_v8_pose_prompt = True
+            self.enable_v8_human_trans_corr = self.v8_human_trans_corr
         elif freeze == "pose_head_only":
             # V8.1 ablation: train only the original pose head, without adding
             # A_corr_t to the decoder. This checks whether a single-sample
@@ -1201,6 +1240,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.v7_pose_adapter,
                 self.v8_pose_prompt,
                 self.v8_pose_residual_head,
+                self.v8_human_trans_corr_head,
             ])
             for p in self.downstream_head.pose_head.parameters():
                 p.requires_grad = True
@@ -2050,6 +2090,43 @@ class ARCroco3DStereo(CroCoNet):
 
         return z_out, img_tokens, smpl_token, q_out
 
+    def _apply_v8_human_trans_corr(
+        self,
+        res,
+        human_token,
+        corr_token,
+        pose_token,
+        view_idx=None,
+        shared_gate=None,
+    ):
+        if not getattr(self, "enable_v8_human_trans_corr", False):
+            return res
+        if human_token is None or corr_token is None or pose_token is None:
+            return res
+        smpl_transl = res.get("smpl_transl", None)
+        if smpl_transl is None:
+            return res
+        apply_mask = None
+        start_view = int(getattr(self, "v8_human_trans_corr_apply_from_view", -1))
+        if start_view >= 0 and view_idx is not None:
+            mask_value = 1.0 if int(view_idx) >= start_view else 0.0
+            apply_mask = smpl_transl.new_full(smpl_transl.shape[:2] + (1,), mask_value)
+        corrected_transl, corr_info = self.v8_human_trans_corr_head(
+            human_tokens=human_token.float(),
+            corr_tokens=corr_token.float(),
+            pose_token=pose_token.float(),
+            smpl_transl=smpl_transl,
+            shared_gate=shared_gate,
+            apply_mask=apply_mask,
+        )
+        if corr_info is None:
+            return res
+        out = res.copy()
+        out["v8_human_trans_corr_smpl_transl_raw"] = smpl_transl.detach()
+        out["smpl_transl"] = corrected_transl
+        out.update(corr_info)
+        return out
+
     def embedd_camera(self, K, n_patch):
         """ Embed viewing directions using fourrier encoding."""
         bs = K.shape[0]
@@ -2608,6 +2685,7 @@ class ARCroco3DStereo(CroCoNet):
             # **========== 原始代码备份：只要启用 Shot Adaptation 就按追加 q_t 切 token ==========**
             # if self.enable_shot_adaptation:
             # **========== 结束 ==========**
+            human_token_for_corr = None
             if n_corr_i > 0 or n_anchor_decoder_i > 0:
                 # **========== V6-C 原始代码备份：V6-B head 前显式 drop decoder 内 AnchorToken ==========**
                 # head_input, smpl_token, q_out = self._make_head_input_from_decoder(
@@ -2623,6 +2701,7 @@ class ARCroco3DStereo(CroCoNet):
                     has_shot=use_shot_decoder_token,
                 )
                 if smpl_token is not None:
+                    human_token_for_corr = smpl_token
                     smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
             elif use_shot_decoder_token:
                 # **========== V6-B 原始代码备份：head slicing 只处理 [pose, image, human, shot] ==========**
@@ -2640,6 +2719,7 @@ class ARCroco3DStereo(CroCoNet):
                         dec[self.dec_depth][:, :-n_humans_i-1].float(),
                     ]
                     smpl_token = dec[self.dec_depth][:, -n_humans_i-1:-1].float()
+                    human_token_for_corr = smpl_token
                     smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
                 else:
                     head_input = [
@@ -2659,6 +2739,7 @@ class ARCroco3DStereo(CroCoNet):
                         dec[self.dec_depth][:, :-n_humans_i].float(),
                     ]
                     smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
+                    human_token_for_corr = smpl_token
                     smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
                 else:
                     head_input = [
@@ -2686,6 +2767,14 @@ class ARCroco3DStereo(CroCoNet):
                 res.update(pose_token_anchor_info)
             if v8_pose_prompt_info is not None:
                 res.update(v8_pose_prompt_info)
+            res = self._apply_v8_human_trans_corr(
+                res,
+                human_token_for_corr,
+                v8_corr_token_for_history,
+                pose_token_for_head,
+                view_idx=i,
+                shared_gate=res.get("v8_pose_prompt_gate", None),
+            )
 
             if getattr(self, "enable_anchor_pose_adapter", False):
                 z_anchor_out = dec[self.dec_depth][:, 0:1].float()
@@ -3322,6 +3411,7 @@ class ARCroco3DStereo(CroCoNet):
             # **========== 原始代码备份：只要启用 Shot Adaptation 就按追加 q_t 切 token ==========**
             # if self.enable_shot_adaptation:
             # **========== 结束 ==========**
+            human_token_for_corr = None
             if n_corr_i > 0 or n_anchor_decoder_i > 0:
                 # **========== V6-C 原始代码备份：V6-B 轻量推理 head 前显式 drop decoder 内 AnchorToken ==========**
                 # head_input, smpl_token, q_out = self._make_head_input_from_decoder(
@@ -3339,6 +3429,7 @@ class ARCroco3DStereo(CroCoNet):
                     has_shot=use_shot_decoder_token,
                 )
                 if smpl_token is not None:
+                    human_token_for_corr = smpl_token
                     smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
                 else:
                     smpl_token_cat = None
@@ -3355,6 +3446,7 @@ class ARCroco3DStereo(CroCoNet):
                         dec[self.dec_depth][:, :-n_humans_i-1].float(),
                     ]
                     smpl_token = dec[self.dec_depth][:, -n_humans_i-1:-1].float()
+                    human_token_for_corr = smpl_token
                     smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
                 else:
                     head_input = [
@@ -3374,6 +3466,7 @@ class ARCroco3DStereo(CroCoNet):
                         dec[self.dec_depth][:, :-n_humans_i].float(),
                     ]
                     smpl_token = dec[self.dec_depth][:, -n_humans_i:].float()
+                    human_token_for_corr = smpl_token
                     smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
                 else:
                     head_input = [
@@ -3398,6 +3491,14 @@ class ARCroco3DStereo(CroCoNet):
                 res.update(pose_token_anchor_info)
             if v8_pose_prompt_info is not None:
                 res.update(v8_pose_prompt_info)
+            res = self._apply_v8_human_trans_corr(
+                res,
+                human_token_for_corr,
+                v8_corr_token_for_history,
+                pose_token_for_head,
+                view_idx=i,
+                shared_gate=res.get("v8_pose_prompt_gate", None),
+            )
 
             # V6.1: real-video inference must explicitly run the same
             # decoder-after AnchorPoseAdapter used by the training path.
