@@ -1,6 +1,14 @@
 # Movie3R V9
 
-V9 starts from the verified V8.9 implicit human-pose correction branch.
+V9 是当前主线，从已经验证的 V8.9 implicit human-pose correction branch 开始。
+
+新对话或新实验请先读：
+
+| 文档 | 用途 |
+|---|---|
+| [AGENT_BRIEFING.md](AGENT_BRIEFING.md) | 给 AI 工具看的接手说明：项目背景、历史尝试、当前状态、下一步 |
+| [METHOD_OVERVIEW.md](METHOD_OVERVIEW.md) | 给我们自己看的通俗技术说明：Human3R、UniCon3R、V9 设计、loss |
+| [GUARDRAILS.md](GUARDRAILS.md) | 易错细节和固定规则：坐标系、dataloader、可视化、训练、commit |
 
 Current base commit:
 
@@ -25,5 +33,11 @@ Human correction is applied before the original Human3R human head.
 GT camera and SMPL are only used for loss, metrics, and visualization overlays.
 ```
 
-The detailed V9 design will be filled in after the next design pass.
+历史 V8 文档已经归档到：
 
+```text
+docs/movie3r/archive_v8/
+```
+
+其中 [v8_9_implicit_human_pose_token.md](../archive_v8/v8_9_implicit_human_pose_token.md)
+是 V9 的直接来源。
