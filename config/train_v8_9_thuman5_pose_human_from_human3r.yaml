@@ -1,0 +1,28 @@
+# V8.9 clean THuman five-clip overfit from original Human3R weights.
+#
+# Purpose:
+# - Re-test the current shared-gate pose + SMPL translation correction method on
+#   the same five THuman AABB clips that previously looked good.
+# - Start from the original Human3R checkpoint, not from any V8 pose-only or
+#   human-correction checkpoint.
+# - Keep the V8.6 full setting: A_corr_t enters the decoder, pose uses latent
+#   residual, and human uses the explicit smpl_transl residual sanity head.
+defaults:
+  - train_v8_6_joint_gate_pose_human_thuman5_aabb_overfit_full_long
+  - _self_
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth
+
+# Give the small five-clip overfit enough room to settle from the original
+# Human3R initialization. Early stopping stays disabled; use best/final metrics.
+epochs: 200
+early_stopping_patience: 1000000
+eval_freq: 5
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+
+exp_name: v8_9_thuman5_pose_human_from_human3r_gpu6
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_thuman5_from_human3r/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_thuman5_from_human3r/${exp_name}
