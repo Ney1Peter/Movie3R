@@ -33,8 +33,8 @@ scripts/archive_v2_v6/
 
 ## 使用方式
 
-这些文档用于追溯和复盘，不应再被理解为当前主线设计。当前调研状态见：
+这些文档用于追溯和复盘，不应再被理解为当前主线设计。当前主线见：
 
 ```text
-docs/movie3r/current_research_context.md
+docs/movie3r/v9/README.md
 ```

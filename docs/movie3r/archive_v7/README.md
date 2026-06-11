@@ -33,11 +33,12 @@ V7 当前先做四件事：
 ## 相关文档
 
 ```text
-docs/movie3r/current_research_context.md
+docs/movie3r/archive_v8/current_research_context.md
 docs/movie3r/archive_v7/online_human_scene_pose_correction_plan.md
 docs/movie3r/archive_v7/human_scene_pose_correction_experiment_log.md
 docs/movie3r/archive_v7/implicit_token_adapter_validation.md
 docs/movie3r/archive_v2_v6/README.md
+docs/movie3r/v9/README.md
 tasklist/TODO.md
 ```
 

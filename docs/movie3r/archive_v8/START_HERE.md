@@ -122,7 +122,7 @@ new-pair viewer:
 大规模训练计划见：
 
 ```text
-docs/movie3r/v8/v8_1_large_scale_training_plan.md
+docs/movie3r/archive_v8/v8_1_large_scale_training_plan.md
 ```
 
 ## 2026-05-31 关键更新：Stage A 10k 已完成
@@ -148,7 +148,7 @@ eval outputs:
 详细训练指标、四组评估指标和下一步 ablation 见：
 
 ```text
-docs/movie3r/v8/v8_1_large_scale_training_plan.md
+docs/movie3r/archive_v8/v8_1_large_scale_training_plan.md
 ```
 
 ## 2026-06-01 关键更新：Prompt-only ablation 已完成
@@ -200,7 +200,7 @@ A_corr_t 进入 decoder
 详细设计见：
 
 ```text
-docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
+docs/movie3r/archive_v8/v8_2_pose_relation_prompt_plan.md
 ```
 
 当前第一版训练前置代码也已加入：
@@ -261,7 +261,7 @@ GT 只用于 loss / evaluation
 详细计划见：
 
 ```text
-docs/movie3r/v8/v8_3_image_only_pose_prompt_plan.md
+docs/movie3r/archive_v8/v8_3_image_only_pose_prompt_plan.md
 ```
 
 ## 当前代码状态
@@ -366,9 +366,9 @@ V8 的第一步不是写新 adapter，而是重新明确问题定义和最小实
 ## 新对话建议先读
 
 ```text
-docs/movie3r/v8/START_HERE.md
-docs/movie3r/v8/README.md
-docs/movie3r/current_research_context.md
+docs/movie3r/archive_v8/START_HERE.md
+docs/movie3r/archive_v8/README.md
+docs/movie3r/archive_v8/current_research_context.md
 docs/movie3r/archive_v7/README.md
 docs/movie3r/archive_v2_v6/README.md
 tasklist/TODO.md

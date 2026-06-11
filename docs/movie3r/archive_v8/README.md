@@ -1,9 +1,11 @@
-# Movie3R V8
+# Movie3R V8 Archive
 
-新对话请先读：
+本目录是 V8 历史归档。当前主线已经切到 [V9](../v9/README.md)，V8 文档只用于复盘 V8.1-V8.9 的实验路径、坐标系问题和最终的 implicit human-pose correction 起点。
+
+如果需要回看 V8 的完整上下文，先读：
 
 ```text
-docs/movie3r/v8/START_HERE.md
+docs/movie3r/archive_v8/START_HERE.md
 ```
 
 ## 阶段定位
@@ -59,13 +61,13 @@ scripts/archive_v7/
 ## 当前 V8 文档
 
 ```text
-docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
-docs/movie3r/v8/v8_9_implicit_human_pose_token.md
-docs/movie3r/v8/v8_7_head_lora_finetune_plan.md
-docs/movie3r/v8/v8_1_unicon_style_implementation_plan.md
-docs/movie3r/v8/v8_1_token_extraction_validation_plan.md
-docs/movie3r/v8/v8_1_large_scale_training_plan.md
-docs/movie3r/v8/report_human3r_unicon3r_pose_prompt_intro.md
+docs/movie3r/archive_v8/v8_2_pose_relation_prompt_plan.md
+docs/movie3r/archive_v8/v8_9_implicit_human_pose_token.md
+docs/movie3r/archive_v8/v8_7_head_lora_finetune_plan.md
+docs/movie3r/archive_v8/v8_1_unicon_style_implementation_plan.md
+docs/movie3r/archive_v8/v8_1_token_extraction_validation_plan.md
+docs/movie3r/archive_v8/v8_1_large_scale_training_plan.md
+docs/movie3r/archive_v8/report_human3r_unicon3r_pose_prompt_intro.md
 ```
 
 ## 历史速览
