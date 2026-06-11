@@ -921,3 +921,101 @@ raw Human3R baseline 必须来自 demo.py / saved Human3R payload camera；
 ```
 
 否则会再次出现 raw baseline 坐标系看起来错的情况。
+
+## 2026-06-11: 当前 V8.6/V8.9 结构澄清
+
+为了避免后续把当前实现误解成“完全 UniCon3R-style human latent correction”，这里明确记录当前真实结构。
+
+当前改动分成两层：
+
+```text
+Human3R tokens
+  + A_corr_t correction token
+  -> decoder
+  -> refined pose token + refined human token + refined A_corr_t
+```
+
+`A_corr_t` 的构造是 UniCon-style 的：
+
+```text
+A_corr_t =
+  current image / pose / human tokens
+  + recurrent state memory
+  + pose memory
+  + previous corr token / delta / gate
+```
+
+它不是手工寻找 pelvis / torso / left foot / right foot，也不是用当前帧 GT 或当前帧 head 输出构造 token；而是构造 relation prompt，让 decoder attention 自己学习当前帧、人体、场景和历史之间哪些信息有用。
+
+pose correction 当前是 latent residual：
+
+```text
+refined A_corr_t
+  -> v8_pose_residual_head
+  -> delta_pose_token + gate
+
+raw pose token + delta_pose_token
+  -> original pose head
+  -> corrected camera pose
+```
+
+human correction 当前不是 latent human residual，而是显式 SMPL translation sanity head：
+
+```text
+original human head
+  -> raw SMPL, including raw smpl_transl
+
+refined A_corr_t + human token + pose token
+  -> v8_human_trans_corr_head
+  -> delta_smpl_transl
+
+raw smpl_transl + delta_smpl_transl
+  -> corrected smpl_transl
+```
+
+因此当前版本可以准确描述为：
+
+```text
+UniCon-style decoder-in correction token
++ pose latent residual
++ explicit SMPL translation residual sanity head
+```
+
+它已经验证了 refined `A_corr_t` 中包含足够的人体对齐信息，可以同时修 camera pose 和 SMPL translation；但它还不是最终理想的 UniCon3R-style human latent correction。后续如果要更贴近 UniCon3R，需要做的是：
+
+```text
+refined human latent + delta_human_latent
+  -> human head
+  -> corrected SMPL
+```
+
+也就是让人体修正在 human head 前发生，而不是像当前版本一样在 human head 后直接改 `smpl_transl`。
+
+### 2026-06-11: V8.9 latent human correction 改动记录
+
+当前已在显式 `smpl_transl` sanity head 之外新增一条隐式 human latent correction 分支：
+
+```text
+refined A_corr_t + refined human token + corrected pose token
+  -> v8_human_latent_corr_head
+  -> delta_human_token + shared gate
+
+raw decoder human token + gate * delta_human_token
+  -> corrected decoder human token
+
+corrected decoder human token + MHM-R prior
+  -> original Human3R human head
+  -> corrected SMPL
+```
+
+这版不再直接写 `smpl_transl`，而是把 correction 前移到 human head 之前。训练时仍然可以用 GT SMPL translation 监督最终输出；推理时不使用 GT。
+
+当前成功的显式版本和新 latent 版本都保持 `apply_from_view=-1`，也就是四帧都允许 correction，由 shared gate 决定修多少。这个设置已经验证了 correction 能力，但还没有严格约束“前两帧不修、后两帧修”。后续需要单独做 no-op/gate 监督实验。
+
+坐标系要求继续沿用已验证正确的 viewer 规范：
+
+```text
+gray raw Human3R / yellow corrected / red GT
+all aligned to the same raw frame-0 world
+GT only for loss, metrics, and red overlay; never for inference input
+```

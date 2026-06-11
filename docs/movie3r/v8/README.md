@@ -20,6 +20,8 @@ V8 需要重新定义 shot-change 场景下的目标、约束和最小实验，�
 
 2026-06-02 更新：V8.2 设计已整理为新的主线文档，并已加入第一版训练前置代码。核心变化是把 `A_corr_t` 定义为 human-centric current-history pose relation prompt，而不是简单的四个固定人体部位 token。它更接近 UniCon3R 的 contact relation prompt：decoder-in relation token + 显式 drift/alignment 监督 + residual pose latent refinement。
 
+2026-06-11 更新：V8.9 当前最佳版本已从显式 `smpl_transl` 诊断分支推进到 implicit human latent correction。`A_corr_t` 仍按 UniCon-style 在 decoder 前由 image / pose / human tokens、state memory、pose memory、上一帧 corr/delta/gate 构造；decoder 后同时产生 pose token residual 和 human token residual。pose residual 加到 pose token 后走原 pose head，human residual 加到 decoder human token 后再走原 Human3R human head。GT camera / SMPL 只用于 loss、metric 和红色 overlay，不参与 inference。
+
 第一阶段建议继续做三件事：
 
 1. 建立低纹理 boundary failure set 和高纹理 stable control set。
@@ -58,6 +60,7 @@ scripts/archive_v7/
 
 ```text
 docs/movie3r/v8/v8_2_pose_relation_prompt_plan.md
+docs/movie3r/v8/v8_9_implicit_human_pose_token.md
 docs/movie3r/v8/v8_7_head_lora_finetune_plan.md
 docs/movie3r/v8/v8_1_unicon_style_implementation_plan.md
 docs/movie3r/v8/v8_1_token_extraction_validation_plan.md

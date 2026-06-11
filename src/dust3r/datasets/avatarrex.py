@@ -119,6 +119,42 @@ def _resize_crop_like_human3r_demo(image, depthmap, mask, intrinsics, resolution
     return image, depthmap, mask, intrinsics
 
 
+def _resize_only_multiple_of_16(image, depthmap, mask, intrinsics, resolution):
+    """Resize the long edge to ``resolution`` without cropping image content.
+
+    The output size is forced to a multiple of 16 by resizing, not by center
+    crop. This keeps full-body AvatarReX frames intact while still satisfying
+    the ViT/decoder patch-size constraints.
+    """
+
+    if not isinstance(image, PIL.Image.Image):
+        image = PIL.Image.fromarray(image)
+    if mask is not None and not isinstance(mask, PIL.Image.Image):
+        mask = PIL.Image.fromarray(mask)
+
+    w0, h0 = image.size
+    size = _human3r_demo_target_size(resolution)
+    scale = float(size) / float(max(w0, h0))
+    w1 = max(16, int(round(w0 * scale / 16.0)) * 16)
+    h1 = max(16, int(round(h0 * scale / 16.0)) * 16)
+    interp = cropping.lanczos if max(w0, h0) > size else cropping.bicubic
+    image = image.resize((w1, h1), interp)
+    if depthmap is not None:
+        depthmap = cv2.resize(depthmap, (w1, h1), interpolation=cv2.INTER_NEAREST)
+    if mask is not None:
+        mask = mask.resize((w1, h1), PIL.Image.NEAREST)
+
+    intrinsics = intrinsics.copy()
+    intrinsics[0, :] *= float(w1) / float(w0)
+    intrinsics[1, :] *= float(h1) / float(h0)
+
+    if mask is None:
+        return image, depthmap, intrinsics
+
+    mask = (np.asarray(mask) > 127).astype(np.float32)
+    return image, depthmap, mask, intrinsics
+
+
 def _avatarrex_has_required_frame_files(split_path, seq_name, frame_idx, require_depth=True):
     frame_str = f"{int(frame_idx):08d}"
     seq_path = _avatarrex_scene_path(split_path, seq_name)
@@ -827,6 +863,13 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             # Unlike AvatarReX, it does not need a separate raw calibration
             # target for V8 pose losses.
             raw_camera_pose = camera_pose
+        if raw_camera_pose is not None:
+            # V8 pose losses use raw_camera_pose as the camera GT. Keep SMPL-X
+            # params in the same raw/world gauge and let SMPLModel project them
+            # with the matching T_w2c. Otherwise camera and human losses silently
+            # supervise two different coordinate systems.
+            smpl_params_are_world = True
+        smpl_gt_camera_pose = raw_camera_pose if raw_camera_pose is not None else camera_pose
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):
@@ -863,6 +906,15 @@ class AvatarReX_AABB(BaseMultiViewDataset):
                 rgb_image, depthmap, intrinsics = _resize_crop_like_human3r_demo(
                     rgb_image, depthmap, None, intrinsics, resolution
                 )
+        elif self.resize_mode in ("resize_only_16", "no_crop", "human3r_no_crop"):
+            if mask_image is not None:
+                rgb_image, depthmap, mask_image, intrinsics = _resize_only_multiple_of_16(
+                    rgb_image, depthmap, mask_image, intrinsics, resolution
+                )
+            else:
+                rgb_image, depthmap, intrinsics = _resize_only_multiple_of_16(
+                    rgb_image, depthmap, None, intrinsics, resolution
+                )
         elif mask_image is not None:
             rgb_image, depthmap, mask_image, intrinsics = \
                 self._crop_resize_if_necessary_mask(
@@ -881,11 +933,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # 预处理脚本保存的 smplx_transl 是 mocap 世界坐标，
         # 但过滤/排序时错误地用 mocap Z (> 0.01) 判断"人在相机前方"。
         # 实际上需要变换到相机坐标系再判断和排序。
-        # camera_pose (c2w) = [R | -R @ (T - person_transl)]，已用 person_transl 调整。
+        # V8 中如果有 raw_camera_pose，则人体 GT 也必须使用 raw camera 系。
         # 逆变换：smpl_cam = R_c2w.T @ (smpl_world - t_c2w)
         # -------------------------------------------------------------------------
-        R_c2w = camera_pose[:3, :3]
-        t_c2w = camera_pose[:3, 3]
+        R_c2w = smpl_gt_camera_pose[:3, :3]
+        t_c2w = smpl_gt_camera_pose[:3, 3]
 
         humans_with_cam_z = []
         for h in annots:
@@ -945,7 +997,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
-            T_w2c=np.linalg.inv(camera_pose).astype(np.float32),
+            T_w2c=np.linalg.inv(smpl_gt_camera_pose).astype(np.float32),
             human_params_are_world=np.array(smpl_params_are_world, dtype=np.bool_),
             **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,
@@ -1276,6 +1328,15 @@ class AvatarReX_Video(BaseMultiViewDataset):
                 rgb_image, depthmap, intrinsics = _resize_crop_like_human3r_demo(
                     rgb_image, depthmap, None, intrinsics, resolution
                 )
+        elif self.resize_mode in ("resize_only_16", "no_crop", "human3r_no_crop"):
+            if mask_image is not None:
+                rgb_image, depthmap, mask_image, intrinsics = _resize_only_multiple_of_16(
+                    rgb_image, depthmap, mask_image, intrinsics, resolution
+                )
+            else:
+                rgb_image, depthmap, intrinsics = _resize_only_multiple_of_16(
+                    rgb_image, depthmap, None, intrinsics, resolution
+                )
         elif mask_image is not None:
             rgb_image, depthmap, mask_image, intrinsics = \
                 self._crop_resize_if_necessary_mask(
@@ -1290,9 +1351,9 @@ class AvatarReX_Video(BaseMultiViewDataset):
                 )
 
         # SMPL 整理
-        # smplx_transl 坐标系修复：变换到相机坐标系后再判断和排序
-        R_c2w = camera_pose[:3, :3]
-        t_c2w = camera_pose[:3, 3]
+        # smplx_transl 坐标系修复：变换到和 camera GT 一致的相机系后再判断和排序
+        R_c2w = smpl_gt_camera_pose[:3, :3]
+        t_c2w = smpl_gt_camera_pose[:3, 3]
 
         humans_with_cam_z = []
         for h in annots:
@@ -1347,7 +1408,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
             msk=False if mask_image is None else mask_image,
             depthmap=depthmap,
             camera_pose=camera_pose,
-            T_w2c=np.linalg.inv(camera_pose).astype(np.float32),
+            T_w2c=np.linalg.inv(smpl_gt_camera_pose).astype(np.float32),
             human_params_are_world=np.array(smpl_params_are_world, dtype=np.bool_),
             **({} if raw_camera_pose is None else {"raw_camera_pose": raw_camera_pose}),
             camera_intrinsics=intrinsics,

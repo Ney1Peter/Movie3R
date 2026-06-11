@@ -2202,6 +2202,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     details[f"v82_human_trans_err/{view_idx}"] = float(human_err)
 
                     raw_human_t = pred.get("v8_human_trans_corr_smpl_transl_raw", None)
+                    if raw_human_t is None:
+                        raw_human_t = pred.get("v8_human_latent_corr_smpl_transl_raw", None)
                     if raw_human_t is not None:
                         raw_human_t = raw_human_t.to(device=pred_human_t.device, dtype=pred_human_t.dtype)
                         raw_human_t = raw_human_t[:, :num_humans]
@@ -2219,6 +2221,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                         and view_idx < self.human_trans_noop_before_view
                     ):
                         applied_delta = pred.get("v8_human_trans_corr_delta_applied", None)
+                        if applied_delta is None:
+                            applied_delta = pred.get("v8_human_latent_corr_delta_applied", None)
                         if applied_delta is not None:
                             applied_delta = applied_delta.float()[:, :num_humans]
                             noop_loss = F.smooth_l1_loss(applied_delta[mask], torch.zeros_like(applied_delta[mask]))
@@ -2229,12 +2233,18 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                             )
 
                 human_delta = pred.get("v8_human_trans_corr_delta_raw", None)
+                if human_delta is None:
+                    human_delta = pred.get("v8_human_latent_corr_delta_raw", None)
                 if human_delta is not None and self.human_trans_delta_weight > 0:
                     human_delta = human_delta.float()
                     human_trans_delta_terms.append(human_delta.pow(2).mean())
                     details[f"v82_human_trans_delta_norm/{view_idx}"] = float(
                         human_delta.detach().norm(dim=-1).mean()
                     )
+                    if "v8_human_latent_corr_delta_raw" in pred:
+                        details[f"v82_human_latent_delta_norm/{view_idx}"] = float(
+                            human_delta.detach().norm(dim=-1).mean()
+                        )
 
         if pose_losses:
             pose_loss = torch.stack(pose_losses).mean()

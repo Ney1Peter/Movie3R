@@ -1278,7 +1278,7 @@ class SceneHumanViewer:
                     flat_shading=False,
                     wireframe=False,
                     opacity=mesh_opacity,
-                    color=(100, 100, 100),
+                    color=(255, 40, 40),
                 )
                 self.gt_mesh_handles.append(mesh_handle)
                 self.gt_mesh_step_mapping.append(step)

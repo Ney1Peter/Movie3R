@@ -1,0 +1,28 @@
+# V8.9 clean AvatarReX five-clip overfit from original Human3R weights.
+#
+# Purpose:
+# - Compare against the successful THuman five-clip overfit.
+# - Use the same shared-gate pose + SMPL translation correction architecture.
+# - Start from the original Human3R checkpoint, not from the THuman overfit.
+# - Keep AvatarReX no-crop resize-only input so the full body/scene remains visible.
+defaults:
+  - train_v8_9_avatarrex_lbn1_single_aabb_no_crop_from_human3r
+  - _self_
+
+v8_9_avatarrex5_manifest: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex5_from_human3r/five_clip_avatarrex_aabb_manifests/train_aabb_60k.jsonl
+
+train_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=901, n_corres=0, manifest_path="${v8_9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=902, n_corres=0, manifest_path="${v8_9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=903, n_corres=0, manifest_path="${v8_9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+epochs: 200
+early_stopping_patience: 1000000
+eval_freq: 5
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+
+exp_name: v8_9_avatarrex5_pose_human_from_human3r_gpu6
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex5_from_human3r/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex5_from_human3r/${exp_name}

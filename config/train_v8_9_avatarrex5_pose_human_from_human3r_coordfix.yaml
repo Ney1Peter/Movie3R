@@ -1,0 +1,12 @@
+# V8.9 AvatarReX five-clip overfit after unifying human GT with raw camera GT.
+#
+# This keeps the same model/loss/training setup as
+# train_v8_9_avatarrex5_pose_human_from_human3r, but writes to a new output
+# directory so the old run with the wrong human GT gauge is not overwritten.
+defaults:
+  - train_v8_9_avatarrex5_pose_human_from_human3r
+  - _self_
+
+exp_name: v8_9_avatarrex5_pose_human_from_human3r_coordfix_gpu6
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex5_from_human3r_coordfix/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex5_from_human3r_coordfix/${exp_name}

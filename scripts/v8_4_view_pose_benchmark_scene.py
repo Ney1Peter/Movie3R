@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pickle
 import sys
 import time
 from pathlib import Path
@@ -130,6 +131,11 @@ def parse_args() -> argparse.Namespace:
         help="Use corrected SMPL meshes as the viewer's main human meshes.",
     )
     parser.add_argument(
+        "--show_gt_smpl_overlay",
+        action="store_true",
+        help="Overlay GT SMPL meshes in the same viewer coordinate system as the GT camera overlay.",
+    )
+    parser.add_argument(
         "--use_pose_dump_external_raw0",
         action="store_true",
         help=(
@@ -231,6 +237,14 @@ def clone_outputs_with_pose(outputs: dict, pose_key: str) -> dict:
         cloned = dict(pred)
         if pose_key != "camera_pose":
             if pose_key not in pred:
+                if pose_key == "v8_raw_camera_pose" and "camera_pose" in pred:
+                    print(
+                        "Model output has no v8_raw_camera_pose; "
+                        "using camera_pose as the raw Human3R pose."
+                    )
+                    cloned["camera_pose"] = pred["camera_pose"]
+                    preds.append(cloned)
+                    continue
                 raise KeyError(f"Model output does not contain {pose_key}; cannot build raw Human3R viewer payload.")
             cloned["camera_pose"] = pred[pose_key]
         preds.append(cloned)
@@ -521,6 +535,106 @@ def transform_smpl_verts(verts_list: list[np.ndarray], transform: np.ndarray) ->
     return out
 
 
+def load_gt_smpl_verts_for_record(
+    args: argparse.Namespace,
+    record: dict,
+    gt_cam_dict: dict[str, np.ndarray],
+    num_frames: int,
+) -> list[np.ndarray]:
+    """Load official GT SMPL-X world meshes and align them to the viewer frame.
+
+    The camera overlay may be anchored to a saved Human3R raw frame-0 camera.
+    Therefore GT meshes are first generated in the dataset/raw world frame, then
+    transformed by the same frame-0 alignment used by the red GT cameras.
+    """
+    one_record_manifest = args.case_root / case_name(record) / "one_record_manifest_for_gt_smpl.jsonl"
+    write_one_record_manifest(one_record_manifest, record)
+    dataset = make_single_record_dataset(args, record, one_record_manifest)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=False)
+    batch = next(iter(loader))
+    if "raw_camera_pose" not in batch[0]:
+        raise KeyError("GT SMPL overlay needs raw_camera_pose in the dataloader batch.")
+    original_gt0 = batch[0]["raw_camera_pose"][0].detach().cpu().numpy().astype(np.float32)
+    viewer_gt0 = cam_pose(gt_cam_dict, 0)
+    world_to_viewer = viewer_gt0 @ np.linalg.inv(original_gt0)
+
+    sample = dataset.samples[0]
+    split = "Training" if str(record.get("benchmark_subset", "")).startswith("train_sanity") else args.test_split
+    split_path = Path(args.data_root) / split
+    clip_type = str(record.get("clip_type", "")).lower()
+    if clip_type == "aaaa" or len(sample) == 2:
+        seq_name, start_frame = sample
+        view_specs = [(seq_name, int(start_frame) + i) for i in range(num_frames)]
+    else:
+        seq_a, seq_b, start_frame = sample
+        start_frame = int(start_frame)
+        view_specs = [
+            (seq_a, start_frame),
+            (seq_a, start_frame + 1),
+            (seq_b, start_frame + 2),
+            (seq_b, start_frame + 3),
+        ][:num_frames]
+
+    smpl_model = SMPLModel(
+        torch.device(args.device),
+        model_args={"patch_size": 16, "mhmr_img_res": 896, "bb_patch_size": 14},
+    )
+    gt_verts = []
+    with torch.no_grad():
+        for seq_name, frame_idx in view_specs:
+            smpl_path = split_path / seq_name / "smpl" / f"{int(frame_idx):08d}.pkl"
+            with smpl_path.open("rb") as f:
+                annots = pickle.load(f)
+            if isinstance(annots, dict):
+                annots = [annots]
+            frame_verts = []
+            for human in annots:
+                shape_np = np.asarray(human.get("smplx_shape", np.zeros(11, dtype=np.float32)), dtype=np.float32).reshape(1, -1)
+                body = np.asarray(human.get("smplx_body_pose", np.zeros((21, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 21 * 3)
+                out = smpl_model.smplx_neutral_11(
+                    global_orient=torch.as_tensor(
+                        np.asarray(human.get("smplx_root_pose", np.zeros(3, dtype=np.float32)), dtype=np.float32).reshape(1, 3),
+                        device=args.device,
+                    ),
+                    body_pose=torch.as_tensor(body, device=args.device),
+                    jaw_pose=torch.as_tensor(
+                        np.asarray(human.get("smplx_jaw_pose", np.zeros((1, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 3),
+                        device=args.device,
+                    ),
+                    leye_pose=torch.as_tensor(
+                        np.asarray(human.get("smplx_leye_pose", np.zeros((1, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 3),
+                        device=args.device,
+                    ),
+                    reye_pose=torch.as_tensor(
+                        np.asarray(human.get("smplx_reye_pose", np.zeros((1, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 3),
+                        device=args.device,
+                    ),
+                    left_hand_pose=torch.as_tensor(
+                        np.asarray(human.get("smplx_left_hand_pose", np.zeros((15, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 15 * 3),
+                        device=args.device,
+                    ),
+                    right_hand_pose=torch.as_tensor(
+                        np.asarray(human.get("smplx_right_hand_pose", np.zeros((15, 3), dtype=np.float32)), dtype=np.float32).reshape(1, 15 * 3),
+                        device=args.device,
+                    ),
+                    betas=torch.as_tensor(shape_np[:, :11], device=args.device),
+                    transl=torch.as_tensor(
+                        np.asarray(human.get("smplx_transl", np.zeros(3, dtype=np.float32)), dtype=np.float32).reshape(1, 3),
+                        device=args.device,
+                    ),
+                    expression=smpl_model.smplx_neutral_11.expression.repeat(1, 1),
+                )
+                frame_verts.append(out.vertices[0].detach().cpu().numpy().astype(np.float32))
+            if frame_verts:
+                verts = np.stack(frame_verts, axis=0).astype(np.float32)
+                verts = transform_points_array(verts, world_to_viewer)
+            else:
+                verts = np.empty((0, 0, 3), dtype=np.float32)
+            gt_verts.append(verts)
+    print("GT SMPL overlay: official SMPL-X world meshes aligned by GT frame-0 camera.")
+    return gt_verts
+
+
 def transform_payload_between_camera_tracks(
     pts3ds: list[np.ndarray],
     verts: list[np.ndarray],
@@ -729,9 +843,12 @@ def main() -> None:
         gt_cam_dict = load_gt_aligned_cam_dict(record, args.eval_dir, raw_cam_dir, num_frames)
     record = update_record_metrics_from_cam_dicts(record, raw_cam_dict, corrected_cam_dict, gt_cam_dict)
     record.update(load_viewer_forward_metrics(case_dir))
+    gt_smpl_verts = None
+    if args.show_gt_smpl_overlay:
+        gt_smpl_verts = load_gt_smpl_verts_for_record(args, record, gt_cam_dict, num_frames)
 
     print("Launching full SceneHumanViewer.")
-    print("Color legend: GT=red, Human3R raw=gray, corrected=yellow.")
+    print("Color legend: GT camera/body=red, Human3R raw=gray, corrected=yellow.")
     print(f"Open http://127.0.0.1:{args.port} after forwarding this port.")
     viewer = SceneHumanViewer(
         pts3ds,
@@ -742,11 +859,13 @@ def main() -> None:
         faces,
         smpl_ids,
         msks,
+        gt_smpl_verts=gt_smpl_verts,
         device=args.device,
         port=args.port,
         edge_color_list=[None] * len(pts3ds),
         show_camera=False,
         show_gt_camera=False,
+        show_gt_smpl=args.show_gt_smpl_overlay,
         vis_threshold=args.vis_threshold,
         msk_threshold=args.msk_threshold,
         mask_morph=args.mask_morph,

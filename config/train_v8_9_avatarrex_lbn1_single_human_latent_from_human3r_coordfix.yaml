@@ -1,0 +1,53 @@
+# V8.9 AvatarReX single-clip overfit with implicit human latent correction.
+#
+# This is the one-clip smoke test for the latent human-token branch. It keeps
+# the same no-crop AvatarReX input and original Human3R initialization as the
+# explicit SMPL-translation sanity test, but moves human correction before the
+# Human3R human head.
+defaults:
+  - train_v8_9_avatarrex_lbn1_single_aabb_no_crop_from_human3r
+  - _self_
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_variant='relation_v8_2',
+  v8_pose_prompt_num_heads=8, v8_pose_prompt_dropout=0.0,
+  v8_pose_prompt_gate_bias=0.0,
+  v8_pose_prompt_use_history=True,
+  v8_pose_prompt_use_pose_memory=True,
+  v8_pose_prompt_use_reliability=True,
+  v8_pose_prompt_use_gate=True,
+  v8_pose_prompt_image_only=True,
+  v8_human_trans_corr=False,
+  v8_human_trans_corr_gate_bias=0.0,
+  v8_human_trans_corr_use_gate=True,
+  v8_human_trans_corr_gate_mode='shared',
+  v8_human_trans_corr_max_delta=3.0,
+  v8_human_trans_corr_apply_from_view=-1,
+  v8_human_latent_corr=True,
+  v8_human_latent_corr_gate_bias=0.0,
+  v8_human_latent_corr_use_gate=True,
+  v8_human_latent_corr_gate_mode='shared',
+  v8_human_latent_corr_max_delta=1.0,
+  v8_human_latent_corr_apply_from_view=-1))
+
+epochs: 120
+eval_freq: 5
+early_stopping_patience: 1000000
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+
+exp_name: v8_9_avatarrex_lbn1_single_human_latent_from_human3r_coordfix_gpu7
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex_single_clip_no_crop_latent/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex_single_clip_no_crop_latent/${exp_name}

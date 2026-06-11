@@ -1,0 +1,16 @@
+# V8.9 clean AvatarReX single-clip overfit from original Human3R weights.
+#
+# Difference from train_v8_9_avatarrex_lbn1_single_aabb_no_crop:
+# - Initialize from the original Human3R checkpoint, not a previous V8 overfit
+#   checkpoint.
+# - Keep the same shared-gate pose + human translation correction architecture.
+# - Keep the no-crop resize-only dataloader path.
+defaults:
+  - train_v8_9_avatarrex_lbn1_single_aabb_no_crop
+  - _self_
+
+pretrained: /data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth
+
+exp_name: v8_9_avatarrex_lbn1_single_aabb_no_crop_from_human3r_gpu6
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex_single_clip_no_crop/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v8_9_avatarrex_single_clip_no_crop/${exp_name}
