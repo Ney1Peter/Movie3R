@@ -1,0 +1,29 @@
+# V9 AvatarReX five-clip ablation A: implicit correction baseline.
+#
+# Train only the UniCon-style correction branch:
+# - A_corr_t prompt builder
+# - pose-token residual/gate head
+# - human-token latent residual head
+#
+# No hard frame mask: learned gate decides whether each frame needs correction.
+defaults:
+  - train_v8_9_avatarrex5_pose_human_latent_from_human3r_coordfix
+  - _self_
+
+v9_avatarrex5_manifest: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_avatarrex5_train_aabb_5.jsonl
+
+train_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=901, n_corres=0, manifest_path="${v9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+val_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=902, n_corres=0, manifest_path="${v9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+test_dataset: 5 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=903, n_corres=0, manifest_path="${v9_avatarrex5_manifest}", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots})
+
+epochs: 200
+eval_freq: 5
+early_stopping_patience: 1000000
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+
+exp_name: v9_avatarrex5_implicit_baseline
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_lora_ablation/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_lora_ablation/${exp_name}
