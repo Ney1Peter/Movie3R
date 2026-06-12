@@ -1,0 +1,5 @@
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman00", "seqA": "thuman00/cam10", "seqB": "thuman00/cam22", "start_frame": 471, "view_angle_deg": 178.812813}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman02", "seqA": "thuman02/cam11", "seqB": "thuman02/cam00", "start_frame": 390, "view_angle_deg": 162.609478}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman02", "seqA": "thuman02/cam16", "seqB": "thuman02/cam03", "start_frame": 892, "view_angle_deg": 162.521785}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman00", "seqA": "thuman00/cam19", "seqB": "thuman00/cam06", "start_frame": 110, "view_angle_deg": 163.592204}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman00", "seqA": "thuman00/cam10", "seqB": "thuman00/cam23", "start_frame": 236, "view_angle_deg": 166.050049}
