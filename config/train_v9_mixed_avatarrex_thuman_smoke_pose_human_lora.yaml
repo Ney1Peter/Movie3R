@@ -1,0 +1,55 @@
+# V9 mixed-resolution smoke test.
+#
+# AvatarReX and THuman keep their own resize_only_16 output shapes:
+# - AvatarReX: 368x512
+# - THuman: 512x448
+#
+# The train loop consumes one batch from each source, accumulates weighted
+# gradients, and performs one optimizer step. No padding/cropping is introduced.
+defaults:
+  - train_v9_large_avatarrex30k_pose_human_lora_bs10
+  - _self_
+
+thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_large_thuman00_02_manifests
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.6
+    batch_size: 2
+    num_workers: 2
+    dataset: >-
+      4 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4101, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 4 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4102, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.4
+    batch_size: 2
+    num_workers: 2
+    dataset: >-
+      4 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4201, n_corres=0, manifest_path="${thuman_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 4 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4202, n_corres=0, manifest_path="${thuman_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+train_mixed_epoch_steps: 2
+batch_size: 2
+num_workers: 2
+accum_iter: 1
+epochs: 1
+eval_freq: 0
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: false
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+
+test_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4301, n_corres=0, manifest_path="${v9_large_manifest_root}/test_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=4302, n_corres=0, manifest_path="${thuman_manifest_root}/test_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+exp_name: v9_mixed_avatarrex_thuman_smoke_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/tmp/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/tmp/${exp_name}

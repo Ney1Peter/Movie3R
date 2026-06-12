@@ -276,6 +276,88 @@ def _make_compact_record(source, keys):
     return record
 
 
+def _to_plain_config(value):
+    if OmegaConf.is_config(value):
+        return OmegaConf.to_container(value, resolve=True)
+    return value
+
+
+def _train_source_entries(args):
+    entries = getattr(args, "train_datasets", None)
+    if not entries:
+        return []
+
+    parsed = []
+    for idx, entry in enumerate(entries):
+        entry = _to_plain_config(entry)
+        if isinstance(entry, str):
+            dataset_expr = entry
+            name = dataset_expr.split("(")[0].strip()
+            weight = 1.0
+            batch_size = int(args.batch_size)
+            num_workers = int(args.num_workers)
+        else:
+            dataset_expr = entry["dataset"]
+            name = entry.get("name") or dataset_expr.split("(")[0].strip()
+            weight = float(entry.get("weight", 1.0))
+            batch_size = int(entry.get("batch_size", args.batch_size))
+            num_workers = int(entry.get("num_workers", args.num_workers))
+        parsed.append(
+            {
+                "idx": idx,
+                "name": str(name),
+                "dataset": str(dataset_expr),
+                "weight": weight,
+                "batch_size": batch_size,
+                "num_workers": num_workers,
+            }
+        )
+    return parsed
+
+
+def _named_dataset_entries(value):
+    if not value:
+        return []
+    value = _to_plain_config(value)
+    if isinstance(value, str):
+        return [
+            {
+                "name": dataset.split("(")[0].strip(),
+                "dataset": dataset.strip(),
+            }
+            for dataset in value.split("+")
+            if dataset.strip()
+        ]
+
+    parsed = []
+    for entry in value:
+        entry = _to_plain_config(entry)
+        if isinstance(entry, str):
+            parsed.append({"name": entry.split("(")[0].strip(), "dataset": entry.strip()})
+        else:
+            dataset_expr = entry["dataset"]
+            parsed.append(
+                {
+                    "name": str(entry.get("name") or dataset_expr.split("(")[0].strip()),
+                    "dataset": str(dataset_expr),
+                }
+            )
+    return parsed
+
+
+def _set_loader_epoch(data_loader, epoch):
+    if hasattr(data_loader, "dataset") and hasattr(data_loader.dataset, "set_epoch"):
+        data_loader.dataset.set_epoch(epoch)
+    if hasattr(data_loader, "batch_sampler") and hasattr(data_loader.batch_sampler, "set_epoch"):
+        data_loader.batch_sampler.set_epoch(epoch)
+    if (
+        hasattr(data_loader, "batch_sampler")
+        and hasattr(data_loader.batch_sampler, "batch_sampler")
+        and hasattr(data_loader.batch_sampler.batch_sampler, "set_epoch")
+    ):
+        data_loader.batch_sampler.batch_sampler.set_epoch(epoch)
+
+
 def train(args):
     """
     训练总入口。
@@ -346,29 +428,56 @@ def train(args):
     # args.train_dataset 是一个字符串表达式，例如：
     # "800 @ AvatarReX_Video(...) + 800 @ AvatarReX_AABB(...)"。
     # get_data_loader 内部会 eval 这个字符串并构造真正的 PyTorch Dataset。
-    printer.info("Building train dataset %s", args.train_dataset)
-    #  dataset and loader
-    data_loader_train = build_dataset(
-        args.train_dataset,
-        args.batch_size,
-        args.num_workers,
-        accelerator=accelerator,
-        test=False,
-        fixed_length=args.fixed_length
-    )
+    train_loader_sources = None
+    train_source_configs = _train_source_entries(args)
+    if train_source_configs:
+        if int(args.accum_iter) != 1:
+            raise ValueError("train_datasets mixed-resolution mode requires accum_iter=1")
+        train_loader_sources = []
+        for source in train_source_configs:
+            printer.info(
+                "Building train source %s weight=%s batch_size=%s dataset=%s",
+                source["name"],
+                source["weight"],
+                source["batch_size"],
+                source["dataset"],
+            )
+            loader = build_dataset(
+                source["dataset"],
+                source["batch_size"],
+                source["num_workers"],
+                accelerator=accelerator,
+                test=False,
+                fixed_length=args.fixed_length,
+            )
+            source = dict(source)
+            source["loader"] = loader
+            train_loader_sources.append(source)
+        data_loader_train = None
+    else:
+        printer.info("Building train dataset %s", args.train_dataset)
+        #  dataset and loader
+        data_loader_train = build_dataset(
+            args.train_dataset,
+            args.batch_size,
+            args.num_workers,
+            accelerator=accelerator,
+            test=False,
+            fixed_length=args.fixed_length
+        )
     # test/val dataset 允许用 "+" 拼多个数据集，这里拆开后分别构建 loader，
     # 方便后续分别统计每个数据集的 loss。
     printer.info("Building test dataset %s", args.test_dataset)
     data_loader_test = {
-        dataset.split("(")[0]: build_dataset(
-            dataset,
+        entry["name"]: build_dataset(
+            entry["dataset"],
             args.batch_size,
             args.num_workers,
             accelerator=accelerator,
             test=True,
             fixed_length=True
         )
-        for dataset in args.test_dataset.split("+")
+        for entry in _named_dataset_entries(args.test_dataset)
     }
 
     # validation dataset
@@ -376,15 +485,15 @@ def train(args):
     if hasattr(args, 'val_dataset') and args.val_dataset:
         printer.info("Building val dataset %s", args.val_dataset)
         data_loader_val = {
-            dataset.split("(")[0]: build_dataset(
-                dataset,
+            entry["name"]: build_dataset(
+                entry["dataset"],
                 args.batch_size,
                 args.num_workers,
                 accelerator=accelerator,
                 test=True,
                 fixed_length=True
             )
-            for dataset in args.val_dataset.split("+")
+            for entry in _named_dataset_entries(args.val_dataset)
         }
 
     # model
@@ -493,9 +602,19 @@ def train(args):
     # - 包装 optimizer
     # - 包装 train dataloader，使每个 rank 拿到自己的数据切片
     accelerator.even_batches = False
-    optimizer, model, data_loader_train = accelerator.prepare(
-        optimizer, model, data_loader_train
-    )
+    if train_loader_sources is None:
+        optimizer, model, data_loader_train = accelerator.prepare(
+            optimizer, model, data_loader_train
+        )
+    else:
+        prepared = accelerator.prepare(
+            optimizer,
+            model,
+            *[source["loader"] for source in train_loader_sources],
+        )
+        optimizer, model = prepared[:2]
+        for source, loader in zip(train_loader_sources, prepared[2:]):
+            source["loader"] = loader
 
     def write_log_stats(epoch, train_stats, test_stats, val_stats=None):
         # 只在主进程写 JSON 日志，避免多卡同时写同一个 log.txt。
@@ -626,13 +745,15 @@ def train(args):
                 )
                 test_stats[test_name] = stats
 
-                # Save best based on val loss if available, else test loss
-                monitor_loss = None
-                if val_stats and val_name in val_stats:
-                    monitor_loss = val_stats[val_name]["loss_med"]
-                else:
-                    monitor_loss = stats["loss_med"]
-
+            # Save best based on the mean val loss if available, else mean test loss.
+            monitor_stats = val_stats if val_stats else test_stats
+            monitor_losses = [
+                stats["loss_med"]
+                for stats in monitor_stats.values()
+                if "loss_med" in stats
+            ]
+            if monitor_losses:
+                monitor_loss = float(sum(monitor_losses) / len(monitor_losses))
                 if monitor_loss < best_so_far:
                     best_so_far = monitor_loss
                     new_best = True
@@ -665,18 +786,32 @@ def train(args):
 
         # Train
         # 真正的一轮训练在 train_one_epoch 里完成。
-        train_stats = train_one_epoch(
-            model,
-            train_criterion,
-            data_loader_train,
-            optimizer,
-            accelerator,
-            epoch,
-            loss_scaler,
-            log_writer=log_writer,
-            args=args,
-            smpl_model=smpl_model,
-        )
+        if train_loader_sources is None:
+            train_stats = train_one_epoch(
+                model,
+                train_criterion,
+                data_loader_train,
+                optimizer,
+                accelerator,
+                epoch,
+                loss_scaler,
+                log_writer=log_writer,
+                args=args,
+                smpl_model=smpl_model,
+            )
+        else:
+            train_stats = train_one_epoch_mixed_resolution(
+                model,
+                train_criterion,
+                train_loader_sources,
+                optimizer,
+                accelerator,
+                epoch,
+                loss_scaler,
+                log_writer=log_writer,
+                args=args,
+                smpl_model=smpl_model,
+            )
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -725,6 +860,184 @@ def build_dataset(dataset, batch_size, num_workers, accelerator, test=False, fix
         fixed_length=fixed_length
     )
     return loader
+
+
+def train_one_epoch_mixed_resolution(
+    model: torch.nn.Module,
+    criterion: torch.nn.Module,
+    train_loader_sources,
+    optimizer,
+    accelerator: Accelerator,
+    epoch: int,
+    loss_scaler,
+    args,
+    log_writer=None,
+    smpl_model: SMPLModel = None,
+):
+    """Train one epoch with resolution-aware source batches.
+
+    Each optimizer update consumes one batch from every configured source.
+    This keeps different H/W tensors out of the same PyTorch batch while still
+    optimizing one weighted multi-dataset objective.
+    """
+
+    assert torch.backends.cuda.matmul.allow_tf32 == True
+
+    model.train(True)
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    metric_logger.add_meter("lr", misc.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    metric_logger.display_keys = _get_list_arg(args, "console_log_keys", DEFAULT_CONSOLE_LOG_KEYS)
+    header = "Epoch: [{}]".format(epoch)
+
+    if log_writer is not None:
+        printer.info("log_dir: {}".format(log_writer.log_dir))
+
+    for source in train_loader_sources:
+        _set_loader_epoch(source["loader"], epoch)
+        source["iterator"] = iter(source["loader"])
+        source["cycles"] = 0
+
+    if not train_loader_sources:
+        raise ValueError("train_one_epoch_mixed_resolution requires at least one train source")
+
+    default_steps = min(len(source["loader"]) for source in train_loader_sources)
+    epoch_steps = int(getattr(args, "train_mixed_epoch_steps", 0) or default_steps)
+    if epoch_steps <= 0:
+        raise ValueError("mixed-resolution epoch has zero steps")
+
+    optimizer.zero_grad()
+
+    for data_iter_step in metric_logger.log_every(
+        range(epoch_steps), args.print_freq, accelerator, header
+    ):
+        iter_start_time = time.time()
+        epoch_f = epoch + data_iter_step / epoch_steps
+        step = int(epoch_f * epoch_steps)
+        misc.adjust_learning_rate(optimizer, epoch_f, args)
+
+        total_loss_value = 0.0
+        step_source = {"lr": optimizer.param_groups[0]["lr"]}
+        last_source_idx = len(train_loader_sources) - 1
+
+        with accelerator.accumulate(model):
+            for source_idx, source in enumerate(train_loader_sources):
+                try:
+                    batch = next(source["iterator"])
+                except StopIteration:
+                    source["cycles"] += 1
+                    _set_loader_epoch(source["loader"], epoch + 1000 * source["cycles"])
+                    source["iterator"] = iter(source["loader"])
+                    batch = next(source["iterator"])
+
+                if args.long_context:
+                    raise NotImplementedError("Long context is not supported")
+
+                result = loss_of_one_batch(
+                    batch,
+                    model,
+                    criterion,
+                    accelerator,
+                    symmetrize_batch=False,
+                    use_amp=bool(args.amp),
+                    smpl_model=smpl_model,
+                )
+                loss, loss_details = result["loss"]
+                loss_value = float(loss)
+                if not math.isfinite(loss_value):
+                    print(
+                        f"Loss is {loss_value}, stopping training, source={source['name']}, "
+                        f"loss details: {loss_details}"
+                    )
+                    sys.exit(1)
+                if result.get("already_backprop", False):
+                    raise NotImplementedError("mixed-resolution mode does not support already_backprop losses")
+
+                weight = float(source["weight"])
+                weighted_loss = loss * weight
+                update_grad = source_idx == last_source_idx
+                loss_scaler(
+                    weighted_loss,
+                    optimizer,
+                    parameters=model.parameters(),
+                    update_grad=update_grad,
+                    clip_grad=1.0 if update_grad else None,
+                )
+
+                source_name = source["name"]
+                total_loss_value += weight * loss_value
+                source_summary = summarize_loss_details(loss_details)
+                metric_logger.update(**{f"{source_name}_loss": loss_value})
+                metric_logger.update(**{f"{source_name}_{k}": v for k, v in source_summary.items()})
+                step_source[f"{source_name}_loss"] = loss_value
+                step_source.update({f"{source_name}_{k}": v for k, v in source_summary.items()})
+
+                del loss, weighted_loss, result, batch
+
+        optimizer.zero_grad()
+
+        lr = optimizer.param_groups[0]["lr"]
+        metric_logger.update(epoch=epoch_f)
+        metric_logger.update(lr=lr)
+        metric_logger.update(step=step)
+        metric_logger.update(loss=total_loss_value)
+        step_source["loss"] = total_loss_value
+
+        structured_log_freq = int(getattr(args, "structured_log_freq", args.print_freq))
+        if structured_log_freq > 0 and (data_iter_step + 1) % structured_log_freq == 0:
+            if accelerator.is_main_process:
+                elapsed = time.time() - iter_start_time
+                global_batch_size = sum(int(source["batch_size"]) for source in train_loader_sources)
+                global_batch_size *= int(accelerator.num_processes)
+                step_record = {
+                    "phase": "train_mixed_resolution",
+                    "epoch": float(epoch_f),
+                    "epoch_int": int(epoch),
+                    "iter": int(data_iter_step),
+                    "step": int(step),
+                    "global_batch_size": global_batch_size,
+                    "source_names": [source["name"] for source in train_loader_sources],
+                    "iter_time_sec": elapsed,
+                    "samples_per_sec": global_batch_size / elapsed if elapsed > 0 else 0.0,
+                }
+                if torch.cuda.is_available():
+                    step_record["max_mem_mb"] = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+                step_record.update(
+                    _make_compact_record(
+                        step_source,
+                        list(step_source.keys()),
+                    )
+                )
+                _write_jsonl(os.path.join(args.output_dir, "train_steps.jsonl"), step_record)
+
+        if (data_iter_step + 1) % args.print_freq == 0:
+            loss_value_reduce = accelerator.gather(
+                torch.tensor(total_loss_value).to(accelerator.device)
+            ).mean()
+            if log_writer is not None:
+                log_writer.add_scalar("train_loss", loss_value_reduce, step)
+                log_writer.add_scalar("train_lr", lr, step)
+                for name, val in step_source.items():
+                    value = _safe_float(val)
+                    if value is not None:
+                        log_writer.add_scalar("train_mixed/" + name, value, step)
+
+        save_every = int(float(args.save_freq) * epoch_steps) if args.save_freq else 0
+        if save_every > 0 and data_iter_step % save_every == 0 and data_iter_step not in (0, epoch_steps - 1):
+            print("saving at step", data_iter_step)
+            misc.save_model(
+                accelerator=accelerator,
+                args=args,
+                model_without_ddp=model,
+                optimizer=optimizer,
+                loss_scaler=loss_scaler,
+                epoch=epoch - 1,
+                fname="last",
+                best_so_far=float("inf"),
+            )
+
+    metric_logger.synchronize_between_processes(accelerator)
+    printer.info("Averaged stats: %s", metric_logger)
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
 def train_one_epoch(
