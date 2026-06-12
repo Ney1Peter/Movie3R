@@ -54,6 +54,9 @@ def get_data_loader(
     # pytorch dataset
     if isinstance(dataset, str):
         dataset = eval(dataset)
+    worker_kwargs = {}
+    if num_workers and num_workers > 0:
+        worker_kwargs = dict(persistent_workers=True, prefetch_factor=2)
 
     try:
         sampler = dataset.make_sampler(
@@ -70,6 +73,7 @@ def get_data_loader(
             batch_sampler=sampler,
             num_workers=num_workers,
             pin_memory=pin_mem,
+            **worker_kwargs,
         )
 
     except (AttributeError, NotImplementedError):
@@ -82,6 +86,7 @@ def get_data_loader(
             num_workers=num_workers,
             pin_memory=pin_mem,
             drop_last=drop_last,
+            **worker_kwargs,
         )
 
     return data_loader

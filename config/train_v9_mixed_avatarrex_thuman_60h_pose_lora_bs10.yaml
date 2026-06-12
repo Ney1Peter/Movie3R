@@ -1,0 +1,93 @@
+# V9 formal mixed AvatarReX + THuman run: implicit correction + pose-head LoRA.
+#
+# Goal:
+# - About 60 hours on one L20 GPU, based on the current mixed-resolution timing.
+# - Use a medium, clean dataset and train it sufficiently instead of making the
+#   dataset too large and under-training it.
+# - Keep AvatarReX and THuman in separate source batches so resize_only_16 can
+#   preserve each dataset's native aspect ratio without padding/cropping.
+#
+# Data:
+# - AvatarReX train: lbn1 + zzr only, 8k AABB + 2k AAAA unique clips.
+# - THuman train: thuman00 + thuman02, 8k AABB + 2k AAAA unique clips.
+# - zxc is held out and evaluated after training, not used here.
+defaults:
+  - train_v9_avatarrex5_implicit_pose_lora
+  - _self_
+
+v9_60h_avatarrex_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_avatarrex_lbn1_zzr_10k_manifests
+v9_60h_thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_thuman00_02_10k_manifests
+v9_zxc_test_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_zxc_heldout_test_manifests
+avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc'}"
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.6
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      8000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6101, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 2000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6102, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.4
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      8000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6201, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 2000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6202, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+train_mixed_epoch_steps: 100
+batch_size: 10
+num_workers: 4
+accum_iter: 1
+epochs: 72
+warmup_epochs: 4
+eval_freq: 6
+
+lr: 2.0e-4
+min_lr: 1.0e-6
+gradient_checkpointing: true
+
+val_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      200 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6301, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/val_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_aaaa
+    dataset: >-
+      50 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6302, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/val_aaaa_1k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      200 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6303, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/val_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aaaa
+    dataset: >-
+      50 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6304, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/val_aaaa_1k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+test_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      400 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6401, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/test_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_aaaa
+    dataset: >-
+      100 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6402, n_corres=0, manifest_path="${v9_60h_avatarrex_manifest_root}/test_aaaa_1k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      400 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6403, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/test_aabb_2k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aaaa
+    dataset: >-
+      100 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=6404, n_corres=0, manifest_path="${v9_60h_thuman_manifest_root}/test_aaaa_1k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+# Overwrite checkpoint-last every eval interval so a 60h run can resume after
+# interruption without keeping many intermediate checkpoints.
+save_freq: 6
+keep_freq: 0
+early_stopping_patience: 1000000
+save_last_checkpoint: true
+save_final_checkpoint: true
+print_freq: 50
+structured_log_freq: 20
+print_img_freq: 1000000
+save_code: false
+
+exp_name: v9_mixed_60h_pose_lora_bs10
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_mixed_60h/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_mixed_60h/${exp_name}

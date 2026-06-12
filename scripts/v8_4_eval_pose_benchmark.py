@@ -3,7 +3,9 @@
 
 This reuses the training criterion so benchmark numbers match the training
 logs: corrected pose error, raw pose error, drift/gate loss, residual norm, and
-improvement margin are computed with V82PoseRelationLoss.
+improvement margin are computed with V82PoseRelationLoss. It also reports
+Human3R-style SMPL metrics such as Metric-MPJPE, MPJPE, PA-MPJPE, RootError,
+and PVE from the predicted SMPL parameters.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import roma
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
@@ -30,6 +33,7 @@ from dust3r.inference import loss_of_one_batch
 from dust3r.losses import V82PoseRelationLoss
 from dust3r.model import ARCroco3DStereo
 from dust3r.smpl_model import SMPLModel
+from dust3r.utils import SMPL_Layer
 from dust3r.utils.camera import pose_encoding_to_camera
 from dust3r.utils.device import todevice
 from dust3r.utils.geometry import inv
@@ -244,6 +248,167 @@ def stack_optional_field(preds: list[dict], key: str, batch_size: int, device: t
     return torch.stack(fields, dim=1)
 
 
+def stack_view(items: list[dict], key: str) -> torch.Tensor:
+    value = torch.stack([item[key] for item in items], dim=0)
+    return value.view(-1, *value.shape[2:])
+
+
+def make_eval_smpl_layers(device: torch.device) -> torch.nn.ModuleDict:
+    layers = torch.nn.ModuleDict(
+        {
+            "neutral_10": SMPL_Layer(
+                type="smplx",
+                gender="neutral",
+                num_betas=10,
+                kid=False,
+                person_center="head",
+            ),
+            "neutral_11": SMPL_Layer(
+                type="smplx",
+                gender="neutral",
+                num_betas=11,
+                kid=False,
+                person_center="head",
+            ),
+        }
+    )
+    return layers.to(device).eval()
+
+
+def batch_compute_similarity_transform_torch(source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    """Human3R-style batched Procrustes alignment from source points to target."""
+    source_t = source.permute(0, 2, 1)
+    target_t = target.permute(0, 2, 1)
+
+    mu_source = source_t.mean(dim=-1, keepdim=True)
+    mu_target = target_t.mean(dim=-1, keepdim=True)
+    centered_source = source_t - mu_source
+    centered_target = target_t - mu_target
+
+    var_source = torch.sum(centered_source**2, dim=(1, 2)).clamp_min(1e-8)
+    covariance = centered_source.bmm(centered_target.permute(0, 2, 1))
+
+    u, singular_values, v = torch.svd(covariance)
+    z = torch.eye(u.shape[1], device=source.device, dtype=source.dtype).unsqueeze(0).repeat(u.shape[0], 1, 1)
+    z[:, -1, -1] *= torch.sign(torch.det(u.bmm(v.permute(0, 2, 1)))).clamp(min=-1.0, max=1.0)
+
+    rotation = v.bmm(z.bmm(u.permute(0, 2, 1)))
+    scale = torch.stack([torch.trace(mat) for mat in rotation.bmm(covariance)]) / var_source
+    translation = mu_target - scale[:, None, None] * rotation.bmm(mu_source)
+
+    aligned = scale[:, None, None] * rotation.bmm(source_t) + translation
+    return aligned.permute(0, 2, 1)
+
+
+def mean_point_error_mm(pred: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
+    return torch.linalg.norm(pred - gt, dim=-1).mean() * 1000.0
+
+
+def compute_smpl_benchmark_metrics(
+    batch: list[dict],
+    preds: list[dict],
+    smpl_layers: torch.nn.ModuleDict,
+) -> dict:
+    required_gt = {"smpl_mask", "smpl_j3d", "smpl_v3d", "camera_intrinsics"}
+    required_pred = {"smpl_rotmat", "smpl_shape", "smpl_transl", "smpl_expression"}
+    if not all(required_gt.issubset(view.keys()) for view in batch):
+        return {}
+    if not all(required_pred.issubset(pred.keys()) for pred in preds):
+        return {}
+
+    pred_rotmat = stack_view(preds, "smpl_rotmat")
+    pred_shape = stack_view(preds, "smpl_shape")
+    pred_transl = stack_view(preds, "smpl_transl")
+    pred_expression = stack_view(preds, "smpl_expression")
+    intrinsics = stack_view(batch, "camera_intrinsics")
+    gt_j3d_all = stack_view(batch, "smpl_j3d")
+    gt_v3d_all = stack_view(batch, "smpl_v3d")
+
+    num_humans = min(
+        stack_view(batch, "smpl_mask").shape[1],
+        pred_rotmat.shape[1],
+        pred_shape.shape[1],
+        pred_transl.shape[1],
+        pred_expression.shape[1],
+        gt_j3d_all.shape[1],
+        gt_v3d_all.shape[1],
+    )
+    smpl_mask = stack_view(batch, "smpl_mask").bool()[:, :num_humans]
+    pred_rotmat = pred_rotmat[:, :num_humans]
+    pred_shape = pred_shape[:, :num_humans]
+    pred_transl = pred_transl[:, :num_humans]
+    pred_expression = pred_expression[:, :num_humans]
+    gt_j3d_all = gt_j3d_all[:, :num_humans]
+    gt_v3d_all = gt_v3d_all[:, :num_humans]
+
+    img_mask = stack_view(batch, "img_mask").bool() if "img_mask" in batch[0] else None
+    if img_mask is not None:
+        smpl_mask = smpl_mask & img_mask[:, None]
+    if int(smpl_mask.sum()) == 0:
+        return {}
+    view_indices = torch.where(smpl_mask)[0]
+
+    shape_dim = int(pred_shape.shape[-1])
+    layer_key = f"neutral_{shape_dim}"
+    if layer_key not in smpl_layers:
+        return {}
+    layer = smpl_layers[layer_key]
+
+    pred_rotvec = roma.rotmat_to_rotvec(pred_rotmat[smpl_mask])
+    smpl_out = layer(
+        pred_rotvec,
+        pred_shape[smpl_mask],
+        pred_transl[smpl_mask],
+        None,
+        None,
+        K=intrinsics[view_indices],
+        expression=pred_expression[smpl_mask],
+    )
+    if "smpl_j3d" not in smpl_out or "smpl_v3d" not in smpl_out:
+        return {}
+
+    pred_j3d = smpl_out["smpl_j3d"].float()
+    pred_v3d = smpl_out["smpl_v3d"].float()
+    gt_j3d = gt_j3d_all[smpl_mask].to(device=pred_j3d.device, dtype=pred_j3d.dtype)
+    gt_v3d = gt_v3d_all[smpl_mask].to(device=pred_v3d.device, dtype=pred_v3d.dtype)
+
+    joint_count = min(pred_j3d.shape[1], gt_j3d.shape[1])
+    vert_count = min(pred_v3d.shape[1], gt_v3d.shape[1])
+    pred_j3d = pred_j3d[:, :joint_count]
+    gt_j3d = gt_j3d[:, :joint_count]
+    pred_v3d = pred_v3d[:, :vert_count]
+    gt_v3d = gt_v3d[:, :vert_count]
+
+    pelvis_idxs = [1, 2] if joint_count > 2 else [0]
+    pred_pelvis = pred_j3d[:, pelvis_idxs].mean(dim=1, keepdim=True)
+    gt_pelvis = gt_j3d[:, pelvis_idxs].mean(dim=1, keepdim=True)
+
+    pred_j3d_centered = pred_j3d - pred_pelvis
+    gt_j3d_centered = gt_j3d - gt_pelvis
+    pred_v3d_centered = pred_v3d - pred_pelvis
+    gt_v3d_centered = gt_v3d - gt_pelvis
+
+    pa_pred_j3d = batch_compute_similarity_transform_torch(pred_j3d_centered, gt_j3d_centered)
+    pa_pred_v3d = batch_compute_similarity_transform_torch(pred_v3d_centered, gt_v3d_centered)
+
+    metrics = {
+        "v82_metric_mpjpe_mm": mean_point_error_mm(pred_j3d, gt_j3d),
+        "v82_mpjpe_mm": mean_point_error_mm(pred_j3d_centered, gt_j3d_centered),
+        "v82_pa_mpjpe_mm": mean_point_error_mm(pa_pred_j3d, gt_j3d_centered),
+        "v82_root_error_mm": mean_point_error_mm(pred_pelvis, gt_pelvis),
+        "v82_metric_pve_mm": mean_point_error_mm(pred_v3d, gt_v3d),
+        "v82_pve_mm": mean_point_error_mm(pred_v3d_centered, gt_v3d_centered),
+        "v82_pa_pve_mm": mean_point_error_mm(pa_pred_v3d, gt_v3d_centered),
+        "v82_smpl_metric_count": torch.as_tensor(float(pred_j3d.shape[0]), device=pred_j3d.device),
+    }
+    out = {}
+    for key, value in metrics.items():
+        value = safe_float(value)
+        if value is not None:
+            out[key] = value
+    return out
+
+
 def dump_pose_matrices(
     output_dir: Path,
     subset: str,
@@ -340,6 +505,7 @@ def eval_subset(args, model, criterion, smpl_model, device, subset: str, output_
             pose_paths = dump_pose_matrices(output_dir, subset, batch_records, batch, result["pred"])
         loss, details = result["loss"]
         compact = compact_details(details)
+        compact.update(compute_smpl_benchmark_metrics(batch, result["pred"], smpl_model.eval_smpl_layers))
         loss_value = safe_float(loss)
         if loss_value is not None:
             compact["loss"] = loss_value
@@ -390,6 +556,7 @@ def main() -> None:
             "bb_patch_size": model.bb_patch_size,
         },
     )
+    smpl_model.eval_smpl_layers = make_eval_smpl_layers(device)
 
     all_rows = []
     summary = {
