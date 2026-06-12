@@ -55,6 +55,13 @@ def _load_depthmap_meters(depth_path, image_shape):
     return depthmap
 
 
+def _binary_mask_hw(mask):
+    mask = np.asarray(mask)
+    if mask.ndim == 3:
+        mask = mask[..., 0]
+    return (mask > 127).astype(np.float32)
+
+
 def _human3r_demo_target_size(resolution):
     if isinstance(resolution, int):
         return int(resolution)
@@ -115,7 +122,7 @@ def _resize_crop_like_human3r_demo(image, depthmap, mask, intrinsics, resolution
     image, depthmap, mask, intrinsics = cropping.crop_image_depthmap_mask(
         image, depthmap, mask, intrinsics, crop_bbox
     )
-    mask = (np.asarray(mask) > 127).astype(np.float32)
+    mask = _binary_mask_hw(mask)
     return image, depthmap, mask, intrinsics
 
 
@@ -151,7 +158,7 @@ def _resize_only_multiple_of_16(image, depthmap, mask, intrinsics, resolution):
     if mask is None:
         return image, depthmap, intrinsics
 
-    mask = (np.asarray(mask) > 127).astype(np.float32)
+    mask = _binary_mask_hw(mask)
     return image, depthmap, mask, intrinsics
 
 
@@ -431,6 +438,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         load_da3_depth=True,
         raw_calibration_root=None,
         resize_mode="dataset_crop",
+        max_humans=10,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_AABB requires ROOT"
@@ -438,7 +446,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.split = split
         self.is_metric = True
         self.max_interval = 1           # AABB 固定间隔1
-        self.max_humans = 10
+        self.max_humans = int(max_humans)
         self.anchor_cache_root = anchor_cache_root
         self.anchor_cache_only = anchor_cache_only
         self.anchor_top_k = anchor_top_k
@@ -1047,6 +1055,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         load_da3_depth=True,
         raw_calibration_root=None,
         resize_mode="dataset_crop",
+        max_humans=10,
         **kwargs,
     ):
         assert ROOT is not None, "AvatarReX_Video requires ROOT"
@@ -1054,7 +1063,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.split = split
         self.is_metric = True
         self.max_interval = 4
-        self.max_humans = 10
+        self.max_humans = int(max_humans)
         self.anchor_top_k = anchor_top_k
         manifest_samples = _avatarrex_read_video_manifest(manifest_path)
         if fixed_samples is not None and manifest_samples is not None:
@@ -1286,6 +1295,10 @@ class AvatarReX_Video(BaseMultiViewDataset):
             # Unlike AvatarReX, it does not need a separate raw calibration
             # target for V8 pose losses.
             raw_camera_pose = camera_pose
+        if raw_camera_pose is not None:
+            # Keep Video/AAAA supervision in the same raw/world gauge as AABB.
+            smpl_params_are_world = True
+        smpl_gt_camera_pose = raw_camera_pose if raw_camera_pose is not None else camera_pose
 
         # **========== 原始代码：直接按 float 米单位读取，导致旧 uint16 毫米数据被 >200 阈值清零 ==========**
         # if osp.exists(depth_path):

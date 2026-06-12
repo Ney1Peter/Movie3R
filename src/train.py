@@ -65,7 +65,9 @@ from accelerate.logging import get_logger
 from datetime import timedelta
 import torch.multiprocessing
 
-torch.multiprocessing.set_sharing_strategy("file_system")
+torch.multiprocessing.set_sharing_strategy(
+    os.environ.get("TORCH_MP_SHARING_STRATEGY", "file_system")
+)
 
 printer = get_logger(__name__, log_level="DEBUG")
 
