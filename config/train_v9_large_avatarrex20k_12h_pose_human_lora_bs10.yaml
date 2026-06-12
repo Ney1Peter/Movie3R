@@ -1,0 +1,14 @@
+# V9 overnight AvatarReX run: implicit correction + pose/human-head LoRA.
+#
+# Direct comparison to train_v9_large_avatarrex20k_12h_pose_lora_bs10.
+defaults:
+  - train_v9_large_avatarrex30k_pose_human_lora_bs10
+  - _self_
+
+train_dataset: 16000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=1101, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1) + 4000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=1102, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+epochs: 4
+
+exp_name: v9_large_avatarrex20k_12h_pose_human_lora_bs10
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_large_avatarrex20k_12h/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_large_avatarrex20k_12h/${exp_name}

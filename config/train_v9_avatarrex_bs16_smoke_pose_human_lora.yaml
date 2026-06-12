@@ -1,0 +1,21 @@
+# Temporary smoke test for real batch-size 16. No eval, no checkpoint.
+defaults:
+  - train_v9_avatarrex10k_e10_pose_human_lora_bs16
+  - _self_
+
+train_dataset: 32 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=3101, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1) + 16 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=3102, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+epochs: 1
+batch_size: 16
+num_workers: 4
+eval_freq: 0
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: false
+print_freq: 1
+structured_log_freq: 1
+
+exp_name: v9_avatarrex_bs16_smoke_pose_human
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/tmp/v9_avatarrex_bs16_smoke_pose_human/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/tmp/v9_avatarrex_bs16_smoke_pose_human
