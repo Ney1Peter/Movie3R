@@ -82,6 +82,7 @@ V8.9：implicit human latent correction。
 3. 坐标系是第一优先级。AvatarReX / THUman / viewer / Human3R raw output 必须使用同一套规则，否则 loss 很低也可能可视化完全错误。
 4. 新训练必须从原版 Human3R checkpoint 初始化，除非明确做 continuation。不要从某个旧 V8/V9 实验权重继续训练后再声称是新方法能力。
 5. 推理过程不能依赖 GT。可以保存 raw/corrected/GT 三套结果用于对比，但 GT 只能在 loss、metric、viewer overlay 中出现。
+6. 如果快速运动人物被错误拉回历史位置，优先考虑 Trophies-style human-aware attention：保留原图给 human branch，看 scene/camera/memory 时对人体 patch 降权；不要简单把人从输入图像里抹掉。
 
 ## 当前数据状态和建议
 

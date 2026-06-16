@@ -257,3 +257,28 @@ gate mean                  0.339
 4. 加 AAAA 正常连续样本，训练 gate 不要乱修。
 5. 做 LoRA ablation：只训 correction branch、加 pose head LoRA、加 human head LoRA、pose+human LoRA。
 6. 指标对齐 Human3R 论文里的 MPJPE / PA-MPJPE，同时保留我们自己的 camera trans/rot 和 human trans error。
+
+### 9.1 备选方向：human-aware mask / static scene attention
+
+Trophies 提供了一个值得后续借鉴的点：在估计静态场景和 camera pose 时，动态人体区域可能会污染时序几何理解。尤其是人物快速移动、人物占画面较大、背景纹理较弱时，模型可能把真实人体运动误判成相机或场景漂移，然后把人错误地拉回历史位置。
+
+当前不要直接把人从输入图像中抹掉。原因是 V9 仍然依赖 Human3R 的统一前馈结构，human head 需要完整看到人体来输出 SMPL / SMPL-X；如果把人体区域变黑或变灰，可能会伤害人体重建和 human latent correction。
+
+更合理的后续方案是保留原图，但利用 person mask 做 patch-level 的 human-aware attention：
+
+```text
+原始 RGB image tokens
+  -> human branch / human head: 正常看人体区域
+  -> scene / camera / memory branch: 对人体 patch 降权
+  -> A_corr,t: 同时接收 human context 和 background/static context
+```
+
+实现上可以先做轻量实验：
+
+1. dataloader 将已有 `mask/{frame}.png` 转成 patch-level human mask。
+2. 在 `V82PoseRelationPrompt` 里额外构造 `background_context`，只聚合非人体 patch 或对人体 patch 降权。
+3. camera pose residual head 更偏向使用 background/static context。
+4. human latent correction head 仍然使用 human token，不屏蔽人体。
+5. 加入快速移动 AAAA/AABB 样本，让 gate 学会区分“背景稳定但人真实移动”和“镜头跳变导致人/场景错位”。
+
+这个方向暂时只作为备选，不进入当前 120h 训练。只有当后续发现 V9 在快速运动人物上持续过度拉回、或者 camera/scene 明显被人体动态干扰时，再考虑加入。
