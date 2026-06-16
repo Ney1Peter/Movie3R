@@ -132,7 +132,10 @@ def split_starts(starts: list[int]) -> dict[str, list[int]]:
         return {"train": [], "val": [], "test": []}
     train_cut = int(len(starts) * 0.70)
     val_cut = int(len(starts) * 0.85)
-    guard = NUM_VIEWS
+    # AABB clips use ``start``/``start+1`` from seqA and ``start+2``/``start+3``
+    # from seqB. A single NUM_VIEWS guard on start indices can still overlap
+    # image frames between the tail of train AABB and the head of val AAAA.
+    guard = NUM_VIEWS * 2
     # Keep the guard band after each previous split. This is enough to avoid
     # image-frame overlap while preserving validation starts for short clips
     # such as AIST 3s@15fps (45 output frames).

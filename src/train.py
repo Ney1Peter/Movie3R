@@ -72,6 +72,66 @@ torch.multiprocessing.set_sharing_strategy(
 printer = get_logger(__name__, log_level="DEBUG")
 
 
+def warmup_cuda_cache(args, device, accelerator: Accelerator | None = None, tag: str = "train") -> None:
+    """Reserve CUDA cache for this process without keeping a live tensor.
+
+    This is intentionally different from a persistent dummy tensor: the tensor is
+    deleted immediately, so PyTorch can reuse the cached blocks for real
+    activations later in the step. It changes CUDA allocator behavior only, not
+    the model forward/backward results.
+    """
+
+    target_mb = int(getattr(args, "cuda_cache_reserve_mb", 0) or 0)
+    if target_mb <= 0 or not torch.cuda.is_available() or getattr(device, "type", None) != "cuda":
+        return
+
+    safety_mb = int(getattr(args, "cuda_cache_reserve_safety_mb", 4096) or 0)
+    chunk_mb = max(64, int(getattr(args, "cuda_cache_reserve_chunk_mb", 512) or 512))
+    total_mb = torch.cuda.get_device_properties(device).total_memory // (1024 * 1024)
+    target_mb = min(target_mb, max(0, total_mb - safety_mb))
+    if target_mb <= 0:
+        return
+
+    before_mb = torch.cuda.memory_reserved(device) // (1024 * 1024)
+    need_mb = max(0, target_mb - before_mb)
+    if need_mb <= 0:
+        return
+
+    chunks = []
+    reserved_mb = before_mb
+    try:
+        while need_mb > 0:
+            this_mb = min(chunk_mb, need_mb)
+            numel = max(1, int(this_mb * 1024 * 1024 // 2))
+            chunks.append(torch.empty(numel, dtype=torch.float16, device=device))
+            need_mb -= this_mb
+            reserved_mb = torch.cuda.memory_reserved(device) // (1024 * 1024)
+    except RuntimeError as exc:
+        if "out of memory" not in str(exc).lower():
+            raise
+        reserved_mb = torch.cuda.memory_reserved(device) // (1024 * 1024)
+        if accelerator is None or accelerator.is_main_process:
+            printer.warning(
+                "CUDA cache warmup stopped early for %s: target=%dMB reserved=%dMB",
+                tag,
+                target_mb,
+                reserved_mb,
+            )
+    finally:
+        del chunks
+        torch.cuda.synchronize(device)
+
+    after_mb = torch.cuda.memory_reserved(device) // (1024 * 1024)
+    if accelerator is None or accelerator.is_main_process:
+        printer.info(
+            "CUDA cache warmup for %s: target=%dMB before=%dMB after=%dMB",
+            tag,
+            target_mb,
+            before_mb,
+            after_mb,
+        )
+
+
 def setup_for_distributed(accelerator: Accelerator):
     """
     This function disables printing when not in master process
@@ -905,6 +965,8 @@ def train_one_epoch_mixed_resolution(
     if epoch_steps <= 0:
         raise ValueError("mixed-resolution epoch has zero steps")
 
+    warmup_cuda_cache(args, accelerator.device, accelerator, tag=f"mixed_epoch_{epoch}")
+
     optimizer.zero_grad()
 
     for data_iter_step in metric_logger.log_every(
@@ -1001,6 +1063,7 @@ def train_one_epoch_mixed_resolution(
                 }
                 if torch.cuda.is_available():
                     step_record["max_mem_mb"] = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+                    step_record["reserved_mem_mb"] = torch.cuda.memory_reserved() / (1024.0 * 1024.0)
                 step_record.update(
                     _make_compact_record(
                         step_source,
