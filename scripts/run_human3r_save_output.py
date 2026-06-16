@@ -28,6 +28,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--render", action="store_true")
     parser.add_argument("--render_video", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument(
+        "--strict_original_human3r",
+        action="store_true",
+        help="Disable all Movie3R pose/human adaptation branches after loading the checkpoint.",
+    )
     return parser.parse_args()
 
 
@@ -60,6 +65,29 @@ def main() -> None:
         raise FileNotFoundError(args.seq_path)
 
     model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device)
+    if args.strict_original_human3r:
+        disabled_flags = [
+            "enable_shot_adaptation",
+            "enable_shot_decoder_token",
+            "enable_anchor_pose_adapter",
+            "enable_anchor_decoder_tokens",
+            "enable_anchor_pose_token_adapter",
+            "enable_v7_pose_adapter",
+            "enable_v8_pose_prompt",
+            "enable_v8_human_trans_corr",
+            "enable_v8_human_latent_corr",
+            "enable_v8_head_lora",
+            "enable_layerwise_pose_shot_adapter",
+            "enable_pose_alignment_adapter",
+            "enable_pose_translation_adapter",
+            "enable_pose_lora",
+            "enable_human_lora",
+            "enable_world_lora",
+        ]
+        for name in disabled_flags:
+            if hasattr(model, name):
+                setattr(model, name, False)
+        print("Strict original Human3R mode: disabled Movie3R adaptation branches.")
     model.eval()
     img_res = getattr(model, "mhmr_img_res", None)
     views = prepare_input(
@@ -96,6 +124,7 @@ def main() -> None:
         "num_frames": int(len(img_paths)),
         "subsample": int(args.subsample),
         "saved_output": True,
+        "strict_original_human3r": bool(args.strict_original_human3r),
     }
     with open(args.output_dir / "human3r_save_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, sort_keys=True)

@@ -44,6 +44,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--downsample_factor", type=int, default=1)
     parser.add_argument("--smpl_downsample", type=int, default=1)
     parser.add_argument("--camera_downsample", type=int, default=1)
+    parser.add_argument(
+        "--gt_scale_mode",
+        choices=("none", "raw_baseline"),
+        default="none",
+        help="Optionally scale ASIT GT relative translations into the Human3R viewer gauge.",
+    )
     return parser.parse_args()
 
 
@@ -72,7 +78,12 @@ def poses_to_cam_dict(poses: np.ndarray, intrinsics_ref_dir: Path) -> dict[str, 
     }
 
 
-def load_asit_gt_viewer_cam_dict(meta_path: Path, raw_output_dir: Path, num_frames: int) -> dict[str, np.ndarray]:
+def load_asit_gt_viewer_cam_dict(
+    meta_path: Path,
+    raw_output_dir: Path,
+    num_frames: int,
+    gt_scale_mode: str,
+) -> dict[str, np.ndarray]:
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     rgb_paths = [Path(p) for p in meta["rgb_paths"][:num_frames]]
     if len(rgb_paths) != num_frames:
@@ -88,6 +99,17 @@ def load_asit_gt_viewer_cam_dict(meta_path: Path, raw_output_dir: Path, num_fram
     raw_cam_dict = load_cam_dict(raw_output_dir, num_frames)
     raw0 = cam_pose(raw_cam_dict, 0)
     gt_rel = np.einsum("ij,njk->nik", np.linalg.inv(gt_poses[0]), gt_poses)
+    if gt_scale_mode == "raw_baseline":
+        raw_poses = np.stack([cam_pose(raw_cam_dict, i) for i in range(num_frames)], axis=0)
+        raw_rel = np.einsum("ij,njk->nik", np.linalg.inv(raw_poses[0]), raw_poses)
+        idx = int(np.argmax(np.linalg.norm(gt_rel[1:, :3, 3], axis=1)) + 1)
+        gt_norm = float(np.linalg.norm(gt_rel[idx, :3, 3]))
+        raw_norm = float(np.linalg.norm(raw_rel[idx, :3, 3]))
+        if gt_norm > 1e-8 and raw_norm > 1e-8:
+            scale = raw_norm / gt_norm
+            gt_rel = gt_rel.copy()
+            gt_rel[:, :3, 3] *= scale
+            print(f"Scaled ASIT GT translations by raw baseline: idx={idx}, scale={scale:.8f}")
     gt_viewer = np.einsum("ij,njk->nik", raw0, gt_rel).astype(np.float32)
     return poses_to_cam_dict(gt_viewer, raw_output_dir)
 
@@ -127,7 +149,9 @@ def main() -> None:
     )
     output_cam_dict = load_cam_dict(args.output_dir, num_frames)
     raw_cam_dict = load_cam_dict(args.raw_output_dir, num_frames)
-    gt_cam_dict = load_asit_gt_viewer_cam_dict(args.meta_json, args.raw_output_dir, num_frames)
+    gt_cam_dict = load_asit_gt_viewer_cam_dict(
+        args.meta_json, args.raw_output_dir, num_frames, args.gt_scale_mode
+    )
 
     print("Color legend: GT camera=red, original Human3R raw=gray, current output=yellow.")
     print(f"Open http://127.0.0.1:{args.viewer_port} after forwarding this port.")
