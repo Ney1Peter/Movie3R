@@ -1,0 +1,15 @@
+# V9 60h follow-up A: H3 gate/deadzone with slightly stronger improvement.
+#
+# Same data/model/schedule as the formal 60h pose+human LoRA run. This keeps
+# H3's stable gate target and weak human delta regularization, but increases
+# improvement pressure from 0.05 to 0.075.
+defaults:
+  - train_v9_mixed_avatarrex_thuman_60h_pose_human_lora_bs10
+  - _self_
+
+exp_name: v9_60h_h3_imp075_pose_human_lora_bs10
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_loss_followup/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_loss_followup/${exp_name}
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.075, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.075, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)

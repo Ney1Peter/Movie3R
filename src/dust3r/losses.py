@@ -2014,6 +2014,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_trans_supervise_from_view=0,
         human_trans_noop_before_view=-1,
         human_trans_noop_weight=0.0,
+        human_cam_ref_weight=0.0,
+        human_pairwise_ref_weight=0.0,
         pose_lora_norm_weight=0.0,
         human_lora_norm_weight=0.0,
     ):
@@ -2040,6 +2042,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.human_trans_supervise_from_view = int(human_trans_supervise_from_view)
         self.human_trans_noop_before_view = int(human_trans_noop_before_view)
         self.human_trans_noop_weight = float(human_trans_noop_weight)
+        self.human_cam_ref_weight = float(human_cam_ref_weight)
+        self.human_pairwise_ref_weight = float(human_pairwise_ref_weight)
         self.pose_lora_norm_weight = float(pose_lora_norm_weight)
         self.human_lora_norm_weight = float(human_lora_norm_weight)
 
@@ -2071,6 +2075,12 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             mask = mask & img_mask[:, None]
         return mask
 
+    def _human_in_reference_camera(self, pose_enc, human_transl):
+        cam = pose_encoding_to_camera(pose_enc)
+        rot = cam[:, :3, :3]
+        trans = cam[:, :3, 3]
+        return torch.matmul(rot[:, None], human_transl[..., None]).squeeze(-1) + trans[:, None]
+
     def compute_loss(self, gts, preds, **kw):
         ref = self._first_tensor(gts, preds)
         if ref is None:
@@ -2096,6 +2106,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_trans_terms = []
         human_trans_delta_terms = []
         human_trans_noop_terms = []
+        human_cam_ref_terms = []
+        human_pairwise_entries = []
         human_trans_errs = []
         raw_human_trans_errs = []
         pose_lora_norm_terms = []
@@ -2195,7 +2207,12 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 details[f"v82_human_head_lora_l2/{view_idx}"] = float(human_lora_l2.detach())
 
             if (
-                (self.human_trans_weight > 0 or self.human_trans_noop_weight > 0)
+                (
+                    self.human_trans_weight > 0
+                    or self.human_trans_noop_weight > 0
+                    or self.human_cam_ref_weight > 0
+                    or self.human_pairwise_ref_weight > 0
+                )
                 and "smpl_transl" in gt
                 and "smpl_transl" in pred
             ):
@@ -2223,6 +2240,16 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     if self.human_trans_weight > 0 and view_idx >= self.human_trans_supervise_from_view:
                         human_loss = F.smooth_l1_loss(pred_human_t[mask], gt_human_t[mask])
                         human_trans_terms.append(human_loss)
+
+                    if self.human_cam_ref_weight > 0 or self.human_pairwise_ref_weight > 0:
+                        pred_ref_t = self._human_in_reference_camera(pred_pose, pred_human_t)
+                        gt_ref_t = self._human_in_reference_camera(gt_pose, gt_human_t)
+                        ref_err = torch.norm((pred_ref_t - gt_ref_t).detach(), dim=-1)[mask].mean()
+                        details[f"v82_human_cam_ref_err/{view_idx}"] = float(ref_err)
+                        if self.human_cam_ref_weight > 0:
+                            human_cam_ref_terms.append(F.smooth_l1_loss(pred_ref_t[mask], gt_ref_t[mask]))
+                        if self.human_pairwise_ref_weight > 0:
+                            human_pairwise_entries.append((pred_ref_t, gt_ref_t, mask))
 
                     if (
                         self.human_trans_noop_weight > 0
@@ -2284,6 +2311,33 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             total = total + self.human_trans_weight * human_trans_loss
             details["v82_human_trans_loss"] = float(human_trans_loss.detach())
             details["v82_human_trans_loss_weighted"] = float((self.human_trans_weight * human_trans_loss).detach())
+        if human_cam_ref_terms and self.human_cam_ref_weight > 0:
+            human_cam_ref_loss = torch.stack(human_cam_ref_terms).mean()
+            total = total + self.human_cam_ref_weight * human_cam_ref_loss
+            details["v82_human_cam_ref_loss"] = float(human_cam_ref_loss.detach())
+            details["v82_human_cam_ref_loss_weighted"] = float(
+                (self.human_cam_ref_weight * human_cam_ref_loss).detach()
+            )
+        if len(human_pairwise_entries) > 1 and self.human_pairwise_ref_weight > 0:
+            pairwise_terms = []
+            for i in range(len(human_pairwise_entries)):
+                pred_i, gt_i, mask_i = human_pairwise_entries[i]
+                for j in range(i + 1, len(human_pairwise_entries)):
+                    pred_j, gt_j, mask_j = human_pairwise_entries[j]
+                    num_humans = min(pred_i.shape[1], pred_j.shape[1])
+                    pair_mask = mask_i[:, :num_humans] & mask_j[:, :num_humans]
+                    if not pair_mask.any():
+                        continue
+                    pred_delta = pred_j[:, :num_humans] - pred_i[:, :num_humans]
+                    gt_delta = gt_j[:, :num_humans] - gt_i[:, :num_humans]
+                    pairwise_terms.append(F.smooth_l1_loss(pred_delta[pair_mask], gt_delta[pair_mask]))
+            if pairwise_terms:
+                pairwise_loss = torch.stack(pairwise_terms).mean()
+                total = total + self.human_pairwise_ref_weight * pairwise_loss
+                details["v82_human_pairwise_ref_loss"] = float(pairwise_loss.detach())
+                details["v82_human_pairwise_ref_loss_weighted"] = float(
+                    (self.human_pairwise_ref_weight * pairwise_loss).detach()
+                )
         if human_trans_delta_terms and self.human_trans_delta_weight > 0:
             human_delta_loss = torch.stack(human_trans_delta_terms).mean()
             total = total + self.human_trans_delta_weight * human_delta_loss

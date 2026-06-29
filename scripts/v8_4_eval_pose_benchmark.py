@@ -89,6 +89,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--drift_target_scale", type=float, default=1.0)
     parser.add_argument("--human_trans_weight", type=float, default=0.0)
     parser.add_argument("--human_trans_delta_weight", type=float, default=0.0)
+    parser.add_argument("--human_cam_ref_weight", type=float, default=0.0)
+    parser.add_argument("--human_pairwise_ref_weight", type=float, default=0.0)
     parser.add_argument(
         "--dump_poses",
         action="store_true",
@@ -146,6 +148,8 @@ def make_criterion(args: argparse.Namespace, device: torch.device):
         improvement_margin=float(args.improvement_margin),
         human_trans_weight=float(args.human_trans_weight),
         human_trans_delta_weight=float(args.human_trans_delta_weight),
+        human_cam_ref_weight=float(args.human_cam_ref_weight),
+        human_pairwise_ref_weight=float(args.human_pairwise_ref_weight),
     ).to(device)
 
 
