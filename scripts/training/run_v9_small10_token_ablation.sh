@@ -11,6 +11,8 @@ declare -A CONFIGS=(
   [v9_small10_ablate_no_alignment]="train_v9_small10_ablate_no_alignment"
   [v9_small10_ablate_no_momentum]="train_v9_small10_ablate_no_momentum"
   [v9_small10_ablate_learned_pooling]="train_v9_small10_ablate_learned_pooling"
+  [v9_small10_ablate_global_weighted]="train_v9_small10_ablate_global_weighted"
+  [v9_small10_ablate_all_concat]="train_v9_small10_ablate_all_concat"
 )
 
 declare -A GPUS=(
@@ -20,6 +22,8 @@ declare -A GPUS=(
   [v9_small10_ablate_no_alignment]=2
   [v9_small10_ablate_no_momentum]=3
   [v9_small10_ablate_learned_pooling]=3
+  [v9_small10_ablate_global_weighted]=4
+  [v9_small10_ablate_all_concat]=4
 )
 
 ORDER=(
@@ -29,6 +33,8 @@ ORDER=(
   v9_small10_ablate_no_alignment
   v9_small10_ablate_no_momentum
   v9_small10_ablate_learned_pooling
+  v9_small10_ablate_global_weighted
+  v9_small10_ablate_all_concat
 )
 
 mkdir -p "${MPL_DIR}" "${ROOT}/output/v9_small10_token_ablation"
@@ -61,6 +67,8 @@ Monitor:
   tmux capture-pane -pt v9_small10_ablate_no_alignment -S -80
   tmux capture-pane -pt v9_small10_ablate_no_momentum -S -80
   tmux capture-pane -pt v9_small10_ablate_learned_pooling -S -80
+  tmux capture-pane -pt v9_small10_ablate_global_weighted -S -80
+  tmux capture-pane -pt v9_small10_ablate_all_concat -S -80
   nvidia-smi
 EOF
 }

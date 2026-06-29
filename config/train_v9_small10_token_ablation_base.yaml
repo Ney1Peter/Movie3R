@@ -12,7 +12,7 @@
 #
 # Ablation knobs:
 # - v9_token_ablation: all / single_token / no_semantic / no_alignment / no_momentum
-# - v9_corr_pooling: mean / learned_attention
+# - v9_corr_pooling: mean / learned_attention / global_weighted / concat_mlp
 defaults:
   - train_v9_small10_pose_human_lora_baseline
   - _self_

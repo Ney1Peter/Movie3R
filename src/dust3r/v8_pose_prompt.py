@@ -489,19 +489,33 @@ class V82PoseRelationResidualHead(nn.Module):
         self.dec_dim = int(dec_dim)
         self.use_gate = bool(use_gate)
         self.pooling = str(pooling or "mean").lower()
-        valid_pooling = {"mean", "attention", "learned_attention"}
+        valid_pooling = {"mean", "attention", "learned_attention", "global_weighted", "concat_mlp"}
         if self.pooling not in valid_pooling:
             raise ValueError(
                 f"Unsupported V82PoseRelationResidualHead pooling={self.pooling!r}; "
                 f"expected one of {sorted(valid_pooling)}"
             )
         hidden = int(hidden_dim or dec_dim)
+        self.max_corr_tokens = 4
         self.pool_score = nn.Sequential(
             nn.LayerNorm(self.dec_dim),
             nn.Linear(self.dec_dim, 1),
         )
         nn.init.zeros_(self.pool_score[-1].weight)
         nn.init.zeros_(self.pool_score[-1].bias)
+        if self.pooling == "global_weighted":
+            self.global_pool_logits = nn.Parameter(torch.zeros(1, self.max_corr_tokens, 1))
+        else:
+            self.register_parameter("global_pool_logits", None)
+        if self.pooling == "concat_mlp":
+            self.concat_pool = nn.Sequential(
+                nn.LayerNorm(self.dec_dim * self.max_corr_tokens),
+                nn.Linear(self.dec_dim * self.max_corr_tokens, hidden),
+                nn.GELU(),
+                nn.Linear(hidden, self.dec_dim),
+            )
+        else:
+            self.concat_pool = None
         self.delta_head = nn.Sequential(
             nn.LayerNorm(self.dec_dim),
             nn.Linear(self.dec_dim, hidden),
@@ -519,9 +533,37 @@ class V82PoseRelationResidualHead(nn.Module):
         nn.init.zeros_(self.drift_head[-1].weight)
         nn.init.constant_(self.drift_head[-1].bias, gate_bias)
 
+    def _pad_corr_tokens(self, corr_tokens: torch.Tensor):
+        num_tokens = corr_tokens.shape[1]
+        if num_tokens > self.max_corr_tokens:
+            raise ValueError(
+                f"concat/global weighted pooling supports at most {self.max_corr_tokens} corr tokens, "
+                f"got {num_tokens}"
+            )
+        if num_tokens == self.max_corr_tokens:
+            return corr_tokens
+        pad = corr_tokens.new_zeros(corr_tokens.shape[0], self.max_corr_tokens - num_tokens, self.dec_dim)
+        return torch.cat([corr_tokens, pad], dim=1)
+
     def _pool_corr_tokens(self, refined_corr_tokens: torch.Tensor):
         if self.pooling == "mean":
             return refined_corr_tokens.mean(dim=1)
+        if self.pooling == "global_weighted":
+            num_tokens = refined_corr_tokens.shape[1]
+            if num_tokens > self.max_corr_tokens:
+                raise ValueError(
+                    f"global_weighted pooling supports at most {self.max_corr_tokens} corr tokens, "
+                    f"got {num_tokens}"
+                )
+            logits = self.global_pool_logits[:, :num_tokens].to(
+                device=refined_corr_tokens.device,
+                dtype=refined_corr_tokens.dtype,
+            )
+            weights = torch.softmax(logits, dim=1)
+            return (weights * refined_corr_tokens).sum(dim=1)
+        if self.pooling == "concat_mlp":
+            padded = self._pad_corr_tokens(refined_corr_tokens)
+            return self.concat_pool(padded.flatten(start_dim=1))
         weights = torch.softmax(self.pool_score(refined_corr_tokens), dim=1)
         return (weights * refined_corr_tokens).sum(dim=1)
 
@@ -661,19 +703,33 @@ class V8HumanLatentResidualHead(nn.Module):
         self.max_delta = None if max_delta is None else float(max_delta)
         self.gate_mode = str(gate_mode)
         self.corr_pooling = str(corr_pooling or "mean").lower()
-        valid_pooling = {"mean", "attention", "learned_attention"}
+        valid_pooling = {"mean", "attention", "learned_attention", "global_weighted", "concat_mlp"}
         if self.corr_pooling not in valid_pooling:
             raise ValueError(
                 f"Unsupported V8HumanLatentResidualHead corr_pooling={self.corr_pooling!r}; "
                 f"expected one of {sorted(valid_pooling)}"
             )
         hidden = int(hidden_dim or dec_dim)
+        self.max_corr_tokens = 4
         self.corr_pool_score = nn.Sequential(
             nn.LayerNorm(self.dec_dim),
             nn.Linear(self.dec_dim, 1),
         )
         nn.init.zeros_(self.corr_pool_score[-1].weight)
         nn.init.zeros_(self.corr_pool_score[-1].bias)
+        if self.corr_pooling == "global_weighted":
+            self.global_corr_pool_logits = nn.Parameter(torch.zeros(1, self.max_corr_tokens, 1))
+        else:
+            self.register_parameter("global_corr_pool_logits", None)
+        if self.corr_pooling == "concat_mlp":
+            self.concat_corr_pool = nn.Sequential(
+                nn.LayerNorm(self.dec_dim * self.max_corr_tokens),
+                nn.Linear(self.dec_dim * self.max_corr_tokens, hidden),
+                nn.GELU(),
+                nn.Linear(hidden, self.dec_dim),
+            )
+        else:
+            self.concat_corr_pool = None
         self.context_mlp = nn.Sequential(
             nn.LayerNorm(self.dec_dim * 3),
             nn.Linear(self.dec_dim * 3, hidden),
@@ -688,9 +744,37 @@ class V8HumanLatentResidualHead(nn.Module):
         nn.init.zeros_(self.gate_head.weight)
         nn.init.constant_(self.gate_head.bias, gate_bias)
 
+    def _pad_corr_tokens(self, corr_tokens: torch.Tensor):
+        num_tokens = corr_tokens.shape[1]
+        if num_tokens > self.max_corr_tokens:
+            raise ValueError(
+                f"concat/global weighted pooling supports at most {self.max_corr_tokens} corr tokens, "
+                f"got {num_tokens}"
+            )
+        if num_tokens == self.max_corr_tokens:
+            return corr_tokens
+        pad = corr_tokens.new_zeros(corr_tokens.shape[0], self.max_corr_tokens - num_tokens, self.dec_dim)
+        return torch.cat([corr_tokens, pad], dim=1)
+
     def _pool_corr_tokens(self, corr_tokens: torch.Tensor):
         if self.corr_pooling == "mean":
             return corr_tokens.mean(dim=1, keepdim=True)
+        if self.corr_pooling == "global_weighted":
+            num_tokens = corr_tokens.shape[1]
+            if num_tokens > self.max_corr_tokens:
+                raise ValueError(
+                    f"global_weighted pooling supports at most {self.max_corr_tokens} corr tokens, "
+                    f"got {num_tokens}"
+                )
+            logits = self.global_corr_pool_logits[:, :num_tokens].to(
+                device=corr_tokens.device,
+                dtype=corr_tokens.dtype,
+            )
+            weights = torch.softmax(logits, dim=1)
+            return (weights * corr_tokens).sum(dim=1, keepdim=True)
+        if self.corr_pooling == "concat_mlp":
+            padded = self._pad_corr_tokens(corr_tokens)
+            return self.concat_corr_pool(padded.flatten(start_dim=1)).unsqueeze(1)
         weights = torch.softmax(self.corr_pool_score(corr_tokens), dim=1)
         return (weights * corr_tokens).sum(dim=1, keepdim=True)
 
