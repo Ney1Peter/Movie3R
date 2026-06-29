@@ -264,12 +264,25 @@ class V82PoseRelationPrompt(nn.Module):
         use_pose_memory: bool = True,
         use_reliability: bool = True,
         use_human_alignment: bool = False,
+        token_ablation: str = "all",
     ):
         super().__init__()
         self.enc_dim = int(enc_dim)
         self.dec_dim = int(dec_dim)
         self.use_human_alignment = bool(use_human_alignment)
-        self.num_corr_tokens = 4 if self.use_human_alignment else 3
+        self.token_ablation = str(token_ablation or "all").lower()
+        valid_ablations = {"all", "single_token", "no_semantic", "no_alignment", "no_momentum"}
+        if self.token_ablation not in valid_ablations:
+            raise ValueError(
+                f"Unsupported V82PoseRelationPrompt token_ablation={self.token_ablation!r}; "
+                f"expected one of {sorted(valid_ablations)}"
+            )
+        if self.token_ablation == "single_token":
+            self.num_corr_tokens = 1
+        else:
+            self.num_corr_tokens = 3 - int(self.token_ablation in {"no_semantic", "no_alignment", "no_momentum"})
+            if self.use_human_alignment:
+                self.num_corr_tokens += 1
         self.memory_dim = int(memory_dim or dec_dim * 2)
         self.use_history = bool(use_history)
         self.use_pose_memory = bool(use_pose_memory)
@@ -282,7 +295,7 @@ class V82PoseRelationPrompt(nn.Module):
 
         self.relation_query = nn.Parameter(torch.randn(1, 1, self.dec_dim) * 0.02)
         self.no_history_token = nn.Parameter(torch.zeros(1, 1, self.dec_dim))
-        self.token_type_embed = nn.Parameter(torch.randn(1, self.num_corr_tokens, self.dec_dim) * 0.02)
+        self.token_type_embed = nn.Parameter(torch.randn(1, 4, self.dec_dim) * 0.02)
 
         self.current_norm = nn.LayerNorm(self.dec_dim)
         self.memory_norm = nn.LayerNorm(self.dec_dim)
@@ -323,6 +336,13 @@ class V82PoseRelationPrompt(nn.Module):
         self.human_alignment_mlp = nn.Sequential(
             nn.LayerNorm(self.dec_dim * 4),
             nn.Linear(self.dec_dim * 4, self.dec_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_dim, self.dec_dim),
+        )
+        single_token_dim = self.dec_dim * (4 if self.use_human_alignment else 3)
+        self.single_token_mlp = nn.Sequential(
+            nn.LayerNorm(single_token_dim),
+            nn.Linear(single_token_dim, self.dec_dim),
             nn.GELU(),
             nn.Linear(self.dec_dim, self.dec_dim),
         )
@@ -412,11 +432,14 @@ class V82PoseRelationPrompt(nn.Module):
         else:
             momentum_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
-        corr_token_parts = [
-            semantic_token + self.token_type_embed[:, 0:1],
-            alignment_token + self.token_type_embed[:, 1:2],
-            momentum_token + self.token_type_embed[:, 2:3],
-        ]
+        corr_token_parts = []
+        single_token_parts = [semantic_token, alignment_token, momentum_token]
+        if self.token_ablation not in {"single_token", "no_semantic"}:
+            corr_token_parts.append(semantic_token + self.token_type_embed[:, 0:1])
+        if self.token_ablation not in {"single_token", "no_alignment"}:
+            corr_token_parts.append(alignment_token + self.token_type_embed[:, 1:2])
+        if self.token_ablation not in {"single_token", "no_momentum"}:
+            corr_token_parts.append(momentum_token + self.token_type_embed[:, 2:3])
         if self.use_human_alignment:
             if _has_aligned_batch(human_tokens, batch_size):
                 current_human = self.human_proj(human_tokens).mean(dim=1, keepdim=True)
@@ -430,7 +453,13 @@ class V82PoseRelationPrompt(nn.Module):
             human_alignment_token = self.human_alignment_mlp(
                 torch.cat([current_human, prev_human, human_delta_latent, memory_token], dim=-1)
             )
-            corr_token_parts.append(human_alignment_token + self.token_type_embed[:, 3:4])
+            single_token_parts.append(human_alignment_token)
+            if self.token_ablation != "single_token":
+                corr_token_parts.append(human_alignment_token + self.token_type_embed[:, 3:4])
+
+        if self.token_ablation == "single_token":
+            fused_token = self.single_token_mlp(torch.cat(single_token_parts, dim=-1))
+            corr_token_parts = [fused_token + self.token_type_embed[:, 0:1]]
 
         corr_tokens = torch.cat(corr_token_parts, dim=1)
         corr_tokens = self.out_norm(corr_tokens)
@@ -454,11 +483,25 @@ class V82PoseRelationResidualHead(nn.Module):
         hidden_dim: Optional[int] = None,
         gate_bias: float = 0.0,
         use_gate: bool = True,
+        pooling: str = "mean",
     ):
         super().__init__()
         self.dec_dim = int(dec_dim)
         self.use_gate = bool(use_gate)
+        self.pooling = str(pooling or "mean").lower()
+        valid_pooling = {"mean", "attention", "learned_attention"}
+        if self.pooling not in valid_pooling:
+            raise ValueError(
+                f"Unsupported V82PoseRelationResidualHead pooling={self.pooling!r}; "
+                f"expected one of {sorted(valid_pooling)}"
+            )
         hidden = int(hidden_dim or dec_dim)
+        self.pool_score = nn.Sequential(
+            nn.LayerNorm(self.dec_dim),
+            nn.Linear(self.dec_dim, 1),
+        )
+        nn.init.zeros_(self.pool_score[-1].weight)
+        nn.init.zeros_(self.pool_score[-1].bias)
         self.delta_head = nn.Sequential(
             nn.LayerNorm(self.dec_dim),
             nn.Linear(self.dec_dim, hidden),
@@ -476,8 +519,14 @@ class V82PoseRelationResidualHead(nn.Module):
         nn.init.zeros_(self.drift_head[-1].weight)
         nn.init.constant_(self.drift_head[-1].bias, gate_bias)
 
+    def _pool_corr_tokens(self, refined_corr_tokens: torch.Tensor):
+        if self.pooling == "mean":
+            return refined_corr_tokens.mean(dim=1)
+        weights = torch.softmax(self.pool_score(refined_corr_tokens), dim=1)
+        return (weights * refined_corr_tokens).sum(dim=1)
+
     def forward(self, refined_corr_tokens: torch.Tensor):
-        pooled = refined_corr_tokens.mean(dim=1)
+        pooled = self._pool_corr_tokens(refined_corr_tokens)
         delta = self.delta_head(pooled).unsqueeze(1)
         drift_logit = self.drift_head(pooled).unsqueeze(1)
         if self.use_gate:
@@ -604,13 +653,27 @@ class V8HumanLatentResidualHead(nn.Module):
         use_gate: bool = True,
         max_delta: Optional[float] = None,
         gate_mode: str = "shared",
+        corr_pooling: str = "mean",
     ):
         super().__init__()
         self.dec_dim = int(dec_dim)
         self.use_gate = bool(use_gate)
         self.max_delta = None if max_delta is None else float(max_delta)
         self.gate_mode = str(gate_mode)
+        self.corr_pooling = str(corr_pooling or "mean").lower()
+        valid_pooling = {"mean", "attention", "learned_attention"}
+        if self.corr_pooling not in valid_pooling:
+            raise ValueError(
+                f"Unsupported V8HumanLatentResidualHead corr_pooling={self.corr_pooling!r}; "
+                f"expected one of {sorted(valid_pooling)}"
+            )
         hidden = int(hidden_dim or dec_dim)
+        self.corr_pool_score = nn.Sequential(
+            nn.LayerNorm(self.dec_dim),
+            nn.Linear(self.dec_dim, 1),
+        )
+        nn.init.zeros_(self.corr_pool_score[-1].weight)
+        nn.init.zeros_(self.corr_pool_score[-1].bias)
         self.context_mlp = nn.Sequential(
             nn.LayerNorm(self.dec_dim * 3),
             nn.Linear(self.dec_dim * 3, hidden),
@@ -624,6 +687,12 @@ class V8HumanLatentResidualHead(nn.Module):
         nn.init.zeros_(self.delta_head.bias)
         nn.init.zeros_(self.gate_head.weight)
         nn.init.constant_(self.gate_head.bias, gate_bias)
+
+    def _pool_corr_tokens(self, corr_tokens: torch.Tensor):
+        if self.corr_pooling == "mean":
+            return corr_tokens.mean(dim=1, keepdim=True)
+        weights = torch.softmax(self.corr_pool_score(corr_tokens), dim=1)
+        return (weights * corr_tokens).sum(dim=1, keepdim=True)
 
     def forward(
         self,
@@ -639,7 +708,7 @@ class V8HumanLatentResidualHead(nn.Module):
             return human_tokens, None
 
         batch_size, num_humans = human_tokens.shape[:2]
-        corr_context = corr_tokens.mean(dim=1, keepdim=True).expand(-1, num_humans, -1)
+        corr_context = self._pool_corr_tokens(corr_tokens).expand(-1, num_humans, -1)
         pose_context = pose_token.mean(dim=1, keepdim=True).expand(-1, num_humans, -1)
         context = torch.cat([human_tokens, corr_context, pose_context], dim=-1)
         hidden = self.context_mlp(context)

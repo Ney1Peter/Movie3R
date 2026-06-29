@@ -1,0 +1,7 @@
+defaults:
+  - train_v9_small10_token_ablation_base
+  - _self_
+
+v9_token_ablation: single_token
+v9_corr_pooling: mean
+exp_name: v9_small10_ablate_single_token

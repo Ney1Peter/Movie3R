@@ -233,6 +233,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_use_gate=True,
         v8_pose_prompt_image_only=False,
         v8_pose_prompt_use_human_alignment=False,
+        v8_pose_prompt_token_ablation="all",
+        v8_pose_prompt_pooling="mean",
         v8_human_trans_corr=False,
         v8_human_trans_corr_gate_bias=0.0,
         v8_human_trans_corr_use_gate=True,
@@ -308,6 +310,9 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_use_reliability = v8_pose_prompt_use_reliability
         self.v8_pose_prompt_use_gate = v8_pose_prompt_use_gate
         self.v8_pose_prompt_image_only = v8_pose_prompt_image_only
+        self.v8_pose_prompt_use_human_alignment = v8_pose_prompt_use_human_alignment
+        self.v8_pose_prompt_token_ablation = v8_pose_prompt_token_ablation
+        self.v8_pose_prompt_pooling = v8_pose_prompt_pooling
         self.v8_human_trans_corr = v8_human_trans_corr
         self.v8_human_trans_corr_gate_bias = v8_human_trans_corr_gate_bias
         self.v8_human_trans_corr_use_gate = v8_human_trans_corr_use_gate
@@ -655,11 +660,13 @@ class ARCroco3DStereo(CroCoNet):
                 use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
                 use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
                 use_human_alignment=getattr(config, "v8_pose_prompt_use_human_alignment", False),
+                token_ablation=getattr(config, "v8_pose_prompt_token_ablation", "all"),
             )
             self.v8_pose_residual_head = V82PoseRelationResidualHead(
                 dec_dim=self.dec_embed_dim,
                 gate_bias=getattr(config, "v8_pose_prompt_gate_bias", 0.0),
                 use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
+                pooling=getattr(config, "v8_pose_prompt_pooling", "mean"),
             )
         else:
             self.v8_pose_prompt = V81PoseCorrectionPrompt(
@@ -699,6 +706,7 @@ class ARCroco3DStereo(CroCoNet):
             use_gate=getattr(config, "v8_human_latent_corr_use_gate", True),
             max_delta=getattr(config, "v8_human_latent_corr_max_delta", 1.0),
             gate_mode=getattr(config, "v8_human_latent_corr_gate_mode", "shared"),
+            corr_pooling=getattr(config, "v8_pose_prompt_pooling", "mean"),
         )
         for p in self.v8_human_trans_corr_head.parameters():
             p.requires_grad = False
