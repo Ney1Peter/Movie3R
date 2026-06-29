@@ -1,0 +1,7 @@
+{"angle_bucket": "030_060", "clip_type": "aabb", "group": "zzr", "seqA": "zzr/22053923", "seqB": "zzr/22070935", "start_frame": 625, "view_angle_deg": 49.38181}
+{"angle_bucket": "060_090", "clip_type": "aabb", "group": "lbn2", "seqA": "lbn2/22053923", "seqB": "lbn2/22010714", "start_frame": 1151, "view_angle_deg": 89.991868}
+{"angle_bucket": "090_120", "clip_type": "aabb", "group": "lbn1", "seqA": "lbn1/22139907", "seqB": "lbn1/22070928", "start_frame": 1007, "view_angle_deg": 95.079903}
+{"angle_bucket": "090_120", "clip_type": "aabb", "group": "zzr", "seqA": "zzr/22139907", "seqB": "zzr/22010714", "start_frame": 1079, "view_angle_deg": 112.679321}
+{"angle_bucket": "120_150", "clip_type": "aabb", "group": "zzr", "seqA": "zzr/22053903", "seqB": "zzr/22070932", "start_frame": 329, "view_angle_deg": 146.352886}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "lbn1", "seqA": "lbn1/22053912", "seqB": "lbn1/22053908", "start_frame": 695, "view_angle_deg": 161.723645}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "lbn2", "seqA": "lbn2/22053923", "seqB": "lbn2/22010710", "start_frame": 183, "view_angle_deg": 176.900745}

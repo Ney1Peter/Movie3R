@@ -619,7 +619,11 @@ class AvatarReX_AABB(BaseMultiViewDataset):
     def _normalize_fixed_samples(fixed_samples):
         if fixed_samples is None:
             return None
-        if isinstance(fixed_samples, tuple) and len(fixed_samples) == 3:
+        if (
+            isinstance(fixed_samples, tuple)
+            and len(fixed_samples) == 3
+            and not isinstance(fixed_samples[0], (list, tuple, dict))
+        ):
             fixed_samples = [fixed_samples]
 
         normalized = []
@@ -1205,7 +1209,11 @@ class AvatarReX_Video(BaseMultiViewDataset):
     def _normalize_fixed_samples(fixed_samples):
         if fixed_samples is None:
             return None
-        if isinstance(fixed_samples, tuple) and len(fixed_samples) == 2:
+        if (
+            isinstance(fixed_samples, tuple)
+            and len(fixed_samples) == 2
+            and not isinstance(fixed_samples[0], (list, tuple, dict))
+        ):
             fixed_samples = [fixed_samples]
 
         normalized = []

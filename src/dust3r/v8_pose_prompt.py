@@ -263,11 +263,13 @@ class V82PoseRelationPrompt(nn.Module):
         use_history: bool = True,
         use_pose_memory: bool = True,
         use_reliability: bool = True,
+        use_human_alignment: bool = False,
     ):
         super().__init__()
         self.enc_dim = int(enc_dim)
         self.dec_dim = int(dec_dim)
-        self.num_corr_tokens = 3
+        self.use_human_alignment = bool(use_human_alignment)
+        self.num_corr_tokens = 4 if self.use_human_alignment else 3
         self.memory_dim = int(memory_dim or dec_dim * 2)
         self.use_history = bool(use_history)
         self.use_pose_memory = bool(use_pose_memory)
@@ -318,6 +320,12 @@ class V82PoseRelationPrompt(nn.Module):
             nn.GELU(),
             nn.Linear(self.dec_dim, self.dec_dim),
         )
+        self.human_alignment_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 4),
+            nn.Linear(self.dec_dim * 4, self.dec_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_dim, self.dec_dim),
+        )
         self.out_norm = nn.LayerNorm(self.dec_dim)
 
     def _mean_or_zero(self, tokens: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
@@ -348,6 +356,7 @@ class V82PoseRelationPrompt(nn.Module):
         pose_memory: Optional[torch.Tensor] = None,
         prev_corr_token: Optional[torch.Tensor] = None,
         prev_pose_token: Optional[torch.Tensor] = None,
+        prev_human_token: Optional[torch.Tensor] = None,
         prev_delta_token: Optional[torch.Tensor] = None,
         prev_gate: Optional[torch.Tensor] = None,
         return_attention: bool = False,
@@ -403,14 +412,27 @@ class V82PoseRelationPrompt(nn.Module):
         else:
             momentum_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
-        corr_tokens = torch.cat(
-            [
-                semantic_token + self.token_type_embed[:, 0:1],
-                alignment_token + self.token_type_embed[:, 1:2],
-                momentum_token + self.token_type_embed[:, 2:3],
-            ],
-            dim=1,
-        )
+        corr_token_parts = [
+            semantic_token + self.token_type_embed[:, 0:1],
+            alignment_token + self.token_type_embed[:, 1:2],
+            momentum_token + self.token_type_embed[:, 2:3],
+        ]
+        if self.use_human_alignment:
+            if _has_aligned_batch(human_tokens, batch_size):
+                current_human = self.human_proj(human_tokens).mean(dim=1, keepdim=True)
+            else:
+                current_human = pose_token.new_zeros(batch_size, 1, self.dec_dim)
+            if self.use_history and _has_aligned_batch(prev_human_token, batch_size):
+                prev_human = self.human_proj(prev_human_token).mean(dim=1, keepdim=True)
+            else:
+                prev_human = current_human
+            human_delta_latent = current_human - prev_human
+            human_alignment_token = self.human_alignment_mlp(
+                torch.cat([current_human, prev_human, human_delta_latent, memory_token], dim=-1)
+            )
+            corr_token_parts.append(human_alignment_token + self.token_type_embed[:, 3:4])
+
+        corr_tokens = torch.cat(corr_token_parts, dim=1)
         corr_tokens = self.out_norm(corr_tokens)
 
         return V81PosePromptOutput(

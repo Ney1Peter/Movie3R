@@ -1,0 +1,64 @@
+# @package _global_
+# Auto-generated V9 small10 sweep config: t3_c2_product_human_gate
+# Token/head: C2 + product human gate
+defaults:
+  - /train_v9_small10_pose_human_lora_baseline
+  - _self_
+
+exp_name: v9_sweep_t3_c2_product_human_gate
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_loss_gate_token_sweep/train/t3_c2_product_human_gate/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_loss_gate_token_sweep/train/t3_c2_product_human_gate
+
+epochs: 100
+eval_freq: 10
+early_stopping_patience: 30
+save_freq: 10
+keep_freq: 0
+save_last_checkpoint: true
+save_final_checkpoint: false
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+save_code: false
+cuda_cache_reserve_mb: 0
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-05, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-05, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_variant='relation_v8_2',
+  v8_pose_prompt_num_heads=8, v8_pose_prompt_dropout=0.0,
+  v8_pose_prompt_gate_bias=0.0,
+  v8_pose_prompt_use_history=True,
+  v8_pose_prompt_use_pose_memory=True,
+  v8_pose_prompt_use_reliability=True,
+  v8_pose_prompt_use_gate=True,
+  v8_pose_prompt_image_only=True,
+  v8_pose_prompt_use_human_alignment=False,
+  v8_human_trans_corr=False,
+  v8_human_trans_corr_gate_bias=0.0,
+  v8_human_trans_corr_use_gate=True,
+  v8_human_trans_corr_gate_mode='shared',
+  v8_human_trans_corr_max_delta=3.0,
+  v8_human_trans_corr_apply_from_view=-1,
+  v8_human_latent_corr=True,
+  v8_human_latent_corr_gate_bias=0.0,
+  v8_human_latent_corr_use_gate=True,
+  v8_human_latent_corr_gate_mode='product',
+  v8_human_latent_corr_max_delta=1.0,
+  v8_human_latent_corr_apply_from_view=-1,
+  v8_pose_head_lora=True,
+  v8_human_head_lora=True,
+  v8_head_lora_rank=8,
+  v8_head_lora_alpha=8.0,
+  v8_head_lora_dropout=0.0))

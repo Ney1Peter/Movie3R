@@ -2004,6 +2004,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         pose_key="camera_pose",
         drift_trans_scale=0.5,
         drift_rot_scale_deg=45.0,
+        drift_target_deadzone=0.0,
+        drift_target_scale=1.0,
         improvement_margin=0.0,
         pose_noop_before_view=-1,
         pose_noop_weight=0.0,
@@ -2028,6 +2030,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.improvement_weight = float(improvement_weight)
         self.drift_trans_scale = float(drift_trans_scale)
         self.drift_rot_scale_deg = float(drift_rot_scale_deg)
+        self.drift_target_deadzone = float(drift_target_deadzone)
+        self.drift_target_scale = float(drift_target_scale)
         self.improvement_margin = float(improvement_margin)
         self.pose_noop_before_view = int(pose_noop_before_view)
         self.pose_noop_weight = float(pose_noop_weight)
@@ -2046,6 +2050,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         trans_scale = max(self.drift_trans_scale, 1e-6)
         rot_scale = max(math.radians(self.drift_rot_scale_deg), 1e-6)
         return trans_err / trans_scale + rot_err / rot_scale
+
+    def _drift_target(self, raw_norm_err):
+        target_scale = max(self.drift_target_scale, 1e-6)
+        target = (raw_norm_err - self.drift_target_deadzone) / target_scale
+        return target.clamp(0.0, 1.0)
 
     def _human_trans_mask(self, gt, pred_transl):
         mask = gt.get("smpl_mask", None)
@@ -2133,7 +2142,7 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     improvements.append((raw_norm_err - corrected_norm_err).mean())
 
                 if self.drift_weight > 0:
-                    drift_target = raw_norm_err.clamp(0.0, 1.0).detach().reshape(-1, 1, 1)
+                    drift_target = self._drift_target(raw_norm_err).detach().reshape(-1, 1, 1)
                     drift_targets.append(drift_target.mean())
                     drift_logit = pred.get("v8_pose_prompt_drift_logit", None)
                     gate = pred.get("v8_pose_prompt_gate", None)

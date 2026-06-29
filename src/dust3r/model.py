@@ -232,6 +232,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_use_reliability=True,
         v8_pose_prompt_use_gate=True,
         v8_pose_prompt_image_only=False,
+        v8_pose_prompt_use_human_alignment=False,
         v8_human_trans_corr=False,
         v8_human_trans_corr_gate_bias=0.0,
         v8_human_trans_corr_use_gate=True,
@@ -653,6 +654,7 @@ class ARCroco3DStereo(CroCoNet):
                 use_history=getattr(config, "v8_pose_prompt_use_history", True),
                 use_pose_memory=getattr(config, "v8_pose_prompt_use_pose_memory", True),
                 use_reliability=getattr(config, "v8_pose_prompt_use_reliability", True),
+                use_human_alignment=getattr(config, "v8_pose_prompt_use_human_alignment", False),
             )
             self.v8_pose_residual_head = V82PoseRelationResidualHead(
                 dec_dim=self.dec_embed_dim,
@@ -2749,6 +2751,7 @@ class ARCroco3DStereo(CroCoNet):
         ress = []
         v8_prev_corr_token = None
         v8_prev_pose_token = None
+        v8_prev_human_token = None
         v8_prev_delta_token = None
         v8_prev_gate = None
         for i in range(len(views)):
@@ -2820,6 +2823,7 @@ class ARCroco3DStereo(CroCoNet):
                     pose_memory=mem,
                     prev_corr_token=v8_prev_corr_token,
                     prev_pose_token=v8_prev_pose_token,
+                    prev_human_token=v8_prev_human_token,
                     prev_delta_token=v8_prev_delta_token,
                     prev_gate=v8_prev_gate,
                 )
@@ -3196,6 +3200,12 @@ class ARCroco3DStereo(CroCoNet):
                     update_mask=update_mask,
                     reset_mask=reset_mask,
                 )
+                v8_prev_human_token = self._blend_v8_prompt_history(
+                    v8_prev_human_token,
+                    smpl_feat_i,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
                 v8_prev_delta_token = self._blend_v8_prompt_history(
                     v8_prev_delta_token,
                     v8_delta_for_history,
@@ -3356,6 +3366,7 @@ class ARCroco3DStereo(CroCoNet):
         )
         v8_prev_corr_token = None
         v8_prev_pose_token = None
+        v8_prev_human_token = None
         v8_prev_delta_token = None
         v8_prev_gate = None
         for i, _view in enumerate(views):
@@ -3522,6 +3533,7 @@ class ARCroco3DStereo(CroCoNet):
                     pose_memory=mem,
                     prev_corr_token=v8_prev_corr_token,
                     prev_pose_token=v8_prev_pose_token,
+                    prev_human_token=v8_prev_human_token,
                     prev_delta_token=v8_prev_delta_token,
                     prev_gate=v8_prev_gate,
                 )
@@ -3989,6 +4001,12 @@ class ARCroco3DStereo(CroCoNet):
                 v8_prev_pose_token = self._blend_v8_prompt_history(
                     v8_prev_pose_token,
                     pose_token_for_head,
+                    update_mask=update_mask,
+                    reset_mask=reset_mask,
+                )
+                v8_prev_human_token = self._blend_v8_prompt_history(
+                    v8_prev_human_token,
+                    smpl_feat_i,
                     update_mask=update_mask,
                     reset_mask=reset_mask,
                 )

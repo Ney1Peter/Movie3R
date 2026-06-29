@@ -77,6 +77,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=401)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--name", default=None)
+    parser.add_argument("--translation_weight", type=float, default=1.0)
+    parser.add_argument("--rotation_weight", type=float, default=5.0)
+    parser.add_argument("--residual_weight", type=float, default=1.0e-4)
+    parser.add_argument("--drift_weight", type=float, default=0.2)
+    parser.add_argument("--improvement_weight", type=float, default=0.1)
+    parser.add_argument("--improvement_margin", type=float, default=0.0)
+    parser.add_argument("--drift_trans_scale", type=float, default=0.5)
+    parser.add_argument("--drift_rot_scale_deg", type=float, default=45.0)
+    parser.add_argument("--drift_target_deadzone", type=float, default=0.0)
+    parser.add_argument("--drift_target_scale", type=float, default=1.0)
     parser.add_argument("--human_trans_weight", type=float, default=0.0)
     parser.add_argument("--human_trans_delta_weight", type=float, default=0.0)
     parser.add_argument(
@@ -123,15 +133,17 @@ def make_dataset(args: argparse.Namespace, subset: str, manifest_path: Path):
 
 def make_criterion(args: argparse.Namespace, device: torch.device):
     return V82PoseRelationLoss(
-        translation_weight=1.0,
-        rotation_weight=5.0,
-        residual_weight=1.0e-4,
-        drift_weight=0.2,
-        improvement_weight=0.1,
+        translation_weight=float(args.translation_weight),
+        rotation_weight=float(args.rotation_weight),
+        residual_weight=float(args.residual_weight),
+        drift_weight=float(args.drift_weight),
+        improvement_weight=float(args.improvement_weight),
         pose_key="raw_camera_pose",
-        drift_trans_scale=0.5,
-        drift_rot_scale_deg=45.0,
-        improvement_margin=0.0,
+        drift_trans_scale=float(args.drift_trans_scale),
+        drift_rot_scale_deg=float(args.drift_rot_scale_deg),
+        drift_target_deadzone=float(args.drift_target_deadzone),
+        drift_target_scale=float(args.drift_target_scale),
+        improvement_margin=float(args.improvement_margin),
         human_trans_weight=float(args.human_trans_weight),
         human_trans_delta_weight=float(args.human_trans_delta_weight),
     ).to(device)

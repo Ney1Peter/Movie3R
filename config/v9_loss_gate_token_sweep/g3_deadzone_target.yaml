@@ -1,0 +1,26 @@
+# @package _global_
+# Auto-generated V9 small10 sweep config: g3_deadzone_target
+# Gate: deadzone/stretch drift target
+defaults:
+  - /train_v9_small10_pose_human_lora_baseline
+  - _self_
+
+exp_name: v9_sweep_g3_deadzone_target
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_loss_gate_token_sweep/train/g3_deadzone_target/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_loss_gate_token_sweep/train/g3_deadzone_target
+
+epochs: 100
+eval_freq: 10
+early_stopping_patience: 30
+save_freq: 10
+keep_freq: 0
+save_last_checkpoint: true
+save_final_checkpoint: false
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+save_code: false
+cuda_cache_reserve_mb: 0
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.05, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.0, human_trans_weight=10.0, human_trans_delta_weight=1e-05, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.05, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.0, human_trans_weight=10.0, human_trans_delta_weight=1e-05, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
