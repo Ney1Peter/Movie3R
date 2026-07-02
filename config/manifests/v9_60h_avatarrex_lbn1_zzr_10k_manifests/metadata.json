@@ -1,0 +1,379 @@
+{
+  "aaaa_group_metadata": {
+    "lbn1": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22010710": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22010714": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22010716": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053903": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053907": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053908": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053912": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053917": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053923": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053925": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22053926": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22070928": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22070932": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22070935": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        },
+        "22139907": {
+          "test": 285,
+          "train": 1324,
+          "val": 281
+        }
+      }
+    },
+    "zzr": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22010710": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22010714": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22010716": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053903": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053907": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053908": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053912": {
+          "test": 300,
+          "train": 1391,
+          "val": 295
+        },
+        "22053917": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053923": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053925": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22053926": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22070928": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22070932": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22070935": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        },
+        "22139907": {
+          "test": 300,
+          "train": 1394,
+          "val": 296
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "lbn1": {
+      "capacity_upper_bound_by_split": {
+        "test": 60420,
+        "train": 280688,
+        "val": 59572
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "030_060": 38,
+        "060_090": 54,
+        "090_120": 38,
+        "120_150": 38,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 285,
+        "train": 1324,
+        "val": 281
+      }
+    },
+    "zzr": {
+      "capacity_upper_bound_by_split": {
+        "test": 63600,
+        "train": 295528,
+        "val": 62752
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "030_060": 38,
+        "060_090": 54,
+        "090_120": 38,
+        "120_150": 38,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 300,
+        "train": 1394,
+        "val": 296
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 9360,
+      "train": 43485,
+      "val": 9231
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 124020,
+      "train": 576216,
+      "val": 122324
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "lbn1",
+    "zzr"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 100
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 100
+      },
+      "group_counts": {
+        "lbn1": 50,
+        "zzr": 50
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 100,
+      "num_unique_clip_keys": 100,
+      "num_unique_images": 390,
+      "start_max": 1995,
+      "start_min": 1619
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "030_060": 80,
+        "060_090": 80,
+        "090_120": 80,
+        "120_150": 80,
+        "150_180": 80
+      },
+      "angle_max": 176.900745,
+      "angle_min": 30.513299,
+      "clip_type_counts": {
+        "aabb": 400
+      },
+      "group_counts": {
+        "lbn1": 200,
+        "zzr": 200
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 400,
+      "num_unique_clip_keys": 400,
+      "num_unique_images": 1491,
+      "start_max": 1997,
+      "start_min": 1613
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 2000
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 2000
+      },
+      "group_counts": {
+        "lbn1": 1000,
+        "zzr": 1000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "num_unique_images": 7428,
+      "start_max": 1390,
+      "start_min": 2
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {
+        "030_060": 1600,
+        "060_090": 1600,
+        "090_120": 1600,
+        "120_150": 1600,
+        "150_180": 1600
+      },
+      "angle_max": 176.900745,
+      "angle_min": 30.513299,
+      "clip_type_counts": {
+        "aabb": 8000
+      },
+      "group_counts": {
+        "lbn1": 4000,
+        "zzr": 4000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 8000,
+      "num_unique_clip_keys": 8000,
+      "num_unique_images": 22770,
+      "start_max": 1393,
+      "start_min": 0
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 50
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 50
+      },
+      "group_counts": {
+        "lbn1": 25,
+        "zzr": 25
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 50,
+      "num_unique_clip_keys": 50,
+      "num_unique_images": 200,
+      "start_max": 1684,
+      "start_min": 1330
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "030_060": 40,
+        "060_090": 40,
+        "090_120": 40,
+        "120_150": 40,
+        "150_180": 40
+      },
+      "angle_max": 176.900745,
+      "angle_min": 30.513299,
+      "clip_type_counts": {
+        "aabb": 200
+      },
+      "group_counts": {
+        "lbn1": 100,
+        "zzr": 100
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 766,
+      "start_max": 1692,
+      "start_min": 1328
+    }
+  },
+  "min_aabb_angle": 30.0,
+  "num_views": 4,
+  "seed": 20260612,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training"
+}

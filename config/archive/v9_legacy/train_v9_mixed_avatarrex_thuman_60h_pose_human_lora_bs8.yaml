@@ -14,7 +14,7 @@ defaults:
   - train_v9_large_avatarrex30k_pose_human_lora_bs10
   - _self_
 
-thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_large_thuman00_02_manifests
+thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_large_thuman00_02_manifests
 
 train_datasets:
   - name: avatarrex

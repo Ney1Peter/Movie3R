@@ -1,0 +1,234 @@
+{
+  "aaaa_group_metadata": {
+    "zxc": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22010710": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22010714": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22010716": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053903": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053907": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053908": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053912": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053917": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053923": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053925": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22053926": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22070928": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22070932": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22070935": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        },
+        "22139907": {
+          "test": 270,
+          "train": 1254,
+          "val": 266
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "zxc": {
+      "capacity_upper_bound_by_split": {
+        "test": 56160,
+        "train": 260832,
+        "val": 55328
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "030_060": 32,
+        "060_090": 56,
+        "090_120": 40,
+        "120_150": 36,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 270,
+        "train": 1254,
+        "val": 266
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 4320,
+      "train": 20064,
+      "val": 4256
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 56160,
+      "train": 260832,
+      "val": 55328
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "zxc"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 250
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 250
+      },
+      "group_counts": {
+        "zxc": 250
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 250,
+      "num_unique_clip_keys": 250,
+      "num_unique_images": 884,
+      "start_max": 1796,
+      "start_min": 1528
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "030_060": 200,
+        "060_090": 200,
+        "090_120": 200,
+        "120_150": 200,
+        "150_180": 200
+      },
+      "angle_max": 174.449979,
+      "angle_min": 38.186606,
+      "clip_type_counts": {
+        "aabb": 1000
+      },
+      "group_counts": {
+        "zxc": 1000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 1000,
+      "num_unique_clip_keys": 1000,
+      "num_unique_images": 2680,
+      "start_max": 1797,
+      "start_min": 1528
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    }
+  },
+  "min_aabb_angle": 30.0,
+  "num_views": 4,
+  "seed": 20260612,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training"
+}

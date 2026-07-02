@@ -12,7 +12,7 @@ defaults:
   - train_v9_avatarrex5_implicit_pose_lora
   - _self_
 
-v9_large_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_large_avatarrex_lbn1_zzr_30k_manifests
+v9_large_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_large_avatarrex_lbn1_zzr_30k_manifests
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr'}"
 
 train_dataset: 24000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=1101, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1) + 6000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=1102, n_corres=0, manifest_path="${v9_large_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)

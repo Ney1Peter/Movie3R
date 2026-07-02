@@ -10,7 +10,7 @@ defaults:
   - train_v9_mixed_avatarrex_thuman_60h_pose_human_lora_bs10
   - _self_
 
-smoke_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_baseline_4source_smoke_manifests
+smoke_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_baseline_4source_smoke_manifests
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','lbn2':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn2','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc'}"
 
 train_datasets:

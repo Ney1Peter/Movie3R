@@ -15,9 +15,9 @@ defaults:
   - train_v9_avatarrex5_implicit_pose_lora
   - _self_
 
-v9_60h_avatarrex_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_avatarrex_lbn1_zzr_10k_manifests
-v9_60h_thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_60h_thuman00_02_10k_manifests
-v9_zxc_test_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_zxc_heldout_test_manifests
+v9_60h_avatarrex_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_60h_avatarrex_lbn1_zzr_10k_manifests
+v9_60h_thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_60h_thuman00_02_10k_manifests
+v9_zxc_test_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_zxc_heldout_test_manifests
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc'}"
 
 train_datasets:

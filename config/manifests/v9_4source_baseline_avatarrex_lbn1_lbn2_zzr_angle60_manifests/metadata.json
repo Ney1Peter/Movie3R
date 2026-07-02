@@ -1,0 +1,486 @@
+{
+  "aaaa_group_metadata": {
+    "lbn1": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22010710": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22010714": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22010716": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053903": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053907": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053908": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053912": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053917": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053923": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053925": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22053926": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22070928": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22070932": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22070935": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        },
+        "22139907": {
+          "test": 285,
+          "train": 1320,
+          "val": 277
+        }
+      }
+    },
+    "lbn2": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22010710": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22010714": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22010716": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053903": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053907": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053908": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053912": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053917": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053923": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053925": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22053926": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22070928": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22070932": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22070935": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        },
+        "22139907": {
+          "test": 281,
+          "train": 1299,
+          "val": 272
+        }
+      }
+    },
+    "zzr": {
+      "num_sequences": 16,
+      "sequences": {
+        "22010708": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22010710": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22010714": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22010716": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053903": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053907": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053908": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053912": {
+          "test": 300,
+          "train": 1387,
+          "val": 291
+        },
+        "22053917": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053923": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053925": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22053926": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22070928": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22070932": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22070935": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        },
+        "22139907": {
+          "test": 300,
+          "train": 1390,
+          "val": 292
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "lbn1": {
+      "capacity_upper_bound_by_split": {
+        "test": 49590,
+        "train": 229680,
+        "val": 48198
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "060_090": 54,
+        "090_120": 38,
+        "120_150": 38,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 285,
+        "train": 1320,
+        "val": 277
+      }
+    },
+    "lbn2": {
+      "capacity_upper_bound_by_split": {
+        "test": 48894,
+        "train": 226026,
+        "val": 47328
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "060_090": 54,
+        "090_120": 38,
+        "120_150": 38,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 281,
+        "train": 1299,
+        "val": 272
+      }
+    },
+    "zzr": {
+      "capacity_upper_bound_by_split": {
+        "test": 52200,
+        "train": 241860,
+        "val": 50808
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "060_090": 54,
+        "090_120": 38,
+        "120_150": 38,
+        "150_180": 44
+      },
+      "starts_by_split": {
+        "test": 300,
+        "train": 1390,
+        "val": 292
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 13856,
+      "train": 64141,
+      "val": 13455
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 150684,
+      "train": 697566,
+      "val": 146334
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "lbn1",
+    "lbn2",
+    "zzr"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "lbn1": 67,
+        "lbn2": 67,
+        "zzr": 66
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 775,
+      "start_max": 1994,
+      "start_min": 1587
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 200,
+        "090_120": 200,
+        "120_150": 200,
+        "150_180": 200
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.442099,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "lbn1": 268,
+        "lbn2": 268,
+        "zzr": 264
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2835,
+      "start_max": 1996,
+      "start_min": 1587
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 2000
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 2000
+      },
+      "group_counts": {
+        "lbn1": 667,
+        "lbn2": 667,
+        "zzr": 666
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "num_unique_images": 7613,
+      "start_max": 1388,
+      "start_min": 1
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 2000,
+        "090_120": 2000,
+        "120_150": 2000,
+        "150_180": 2000
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.442099,
+      "clip_type_counts": {
+        "aabb": 8000
+      },
+      "group_counts": {
+        "lbn1": 2668,
+        "lbn2": 2668,
+        "zzr": 2664
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 8000,
+      "num_unique_clip_keys": 8000,
+      "num_unique_images": 25363,
+      "start_max": 1389,
+      "start_min": 0
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "lbn1": 67,
+        "lbn2": 67,
+        "zzr": 66
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 792,
+      "start_max": 1688,
+      "start_min": 1307
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 200,
+        "090_120": 200,
+        "120_150": 200,
+        "150_180": 200
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.442099,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "lbn1": 268,
+        "lbn2": 268,
+        "zzr": 264
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2868,
+      "start_max": 1689,
+      "start_min": 1308
+    }
+  },
+  "min_aabb_angle": 60.0,
+  "num_views": 4,
+  "seed": 20260604,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training"
+}

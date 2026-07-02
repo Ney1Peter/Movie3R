@@ -1,0 +1,718 @@
+{
+  "aaaa_group_metadata": {
+    "200001": {
+      "num_sequences": 16,
+      "sequences": {
+        "22236222": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22236229": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22236234": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22236235": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22236236": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327073": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327084": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327091": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327102": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327107": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327109": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327111": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327113": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327116": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327117": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        },
+        "22327118": {
+          "test": 69,
+          "train": 309,
+          "val": 60
+        }
+      }
+    },
+    "200002": {
+      "num_sequences": 16,
+      "sequences": {
+        "22236222": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22236229": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22236234": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22236235": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22236236": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327073": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327084": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327091": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327102": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327107": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327109": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327111": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327113": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327116": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327117": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        },
+        "22327118": {
+          "test": 68,
+          "train": 308,
+          "val": 60
+        }
+      }
+    },
+    "200003": {
+      "num_sequences": 16,
+      "sequences": {
+        "22236222": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22236229": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22236234": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22236235": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22236236": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327073": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327084": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327091": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327102": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327107": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327109": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327111": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327113": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327116": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327117": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        },
+        "22327118": {
+          "test": 67,
+          "train": 303,
+          "val": 59
+        }
+      }
+    },
+    "200004": {
+      "num_sequences": 16,
+      "sequences": {
+        "22236222": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22236229": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22236234": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22236235": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22236236": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327073": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327084": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327091": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327102": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327107": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327109": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327111": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327113": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327116": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327117": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        },
+        "22327118": {
+          "test": 66,
+          "train": 297,
+          "val": 57
+        }
+      }
+    },
+    "200005": {
+      "num_sequences": 16,
+      "sequences": {
+        "22236222": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22236229": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22236234": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22236235": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22236236": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327073": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327084": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327091": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327102": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327107": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327109": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327111": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327113": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327116": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327117": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        },
+        "22327118": {
+          "test": 67,
+          "train": 302,
+          "val": 59
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "200001": {
+      "capacity_upper_bound_by_split": {
+        "test": 16560,
+        "train": 74160,
+        "val": 14400
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "015_030": 32,
+        "030_060": 32,
+        "060_090": 64,
+        "090_120": 32,
+        "120_150": 80
+      },
+      "starts_by_split": {
+        "test": 69,
+        "train": 309,
+        "val": 60
+      }
+    },
+    "200002": {
+      "capacity_upper_bound_by_split": {
+        "test": 16320,
+        "train": 73920,
+        "val": 14400
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "015_030": 32,
+        "030_060": 32,
+        "060_090": 64,
+        "090_120": 32,
+        "120_150": 80
+      },
+      "starts_by_split": {
+        "test": 68,
+        "train": 308,
+        "val": 60
+      }
+    },
+    "200003": {
+      "capacity_upper_bound_by_split": {
+        "test": 16080,
+        "train": 72720,
+        "val": 14160
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "015_030": 32,
+        "030_060": 32,
+        "060_090": 64,
+        "090_120": 32,
+        "120_150": 80
+      },
+      "starts_by_split": {
+        "test": 67,
+        "train": 303,
+        "val": 59
+      }
+    },
+    "200004": {
+      "capacity_upper_bound_by_split": {
+        "test": 15840,
+        "train": 71280,
+        "val": 13680
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "015_030": 32,
+        "030_060": 32,
+        "060_090": 64,
+        "090_120": 32,
+        "120_150": 80
+      },
+      "starts_by_split": {
+        "test": 66,
+        "train": 297,
+        "val": 57
+      }
+    },
+    "200005": {
+      "capacity_upper_bound_by_split": {
+        "test": 16080,
+        "train": 72480,
+        "val": 14160
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 16,
+      "pair_angle_bucket_counts": {
+        "015_030": 32,
+        "030_060": 32,
+        "060_090": 64,
+        "090_120": 32,
+        "120_150": 80
+      },
+      "starts_by_split": {
+        "test": 67,
+        "train": 302,
+        "val": 59
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 5392,
+      "train": 24304,
+      "val": 4720
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 80880,
+      "train": 364560,
+      "val": 70800
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "200001",
+    "200002",
+    "200003",
+    "200004",
+    "200005"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "200001": 40,
+        "200002": 40,
+        "200003": 40,
+        "200004": 40,
+        "200005": 40
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 756,
+      "start_max": 453,
+      "start_min": 370
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "015_030": 160,
+        "030_060": 160,
+        "060_090": 160,
+        "090_120": 160,
+        "120_150": 160
+      },
+      "angle_max": 146.039476,
+      "angle_min": 20.433214,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "200001": 160,
+        "200002": 160,
+        "200003": 160,
+        "200004": 160,
+        "200005": 160
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2420,
+      "start_max": 452,
+      "start_min": 370
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 2000
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 2000
+      },
+      "group_counts": {
+        "200001": 400,
+        "200002": 400,
+        "200003": 400,
+        "200004": 400,
+        "200005": 400
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "num_unique_images": 7060,
+      "start_max": 308,
+      "start_min": 0
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {
+        "015_030": 1600,
+        "030_060": 1600,
+        "060_090": 1600,
+        "090_120": 1600,
+        "120_150": 1600
+      },
+      "angle_max": 146.039476,
+      "angle_min": 20.433214,
+      "clip_type_counts": {
+        "aabb": 8000
+      },
+      "group_counts": {
+        "200001": 1600,
+        "200002": 1600,
+        "200003": 1600,
+        "200004": 1600,
+        "200005": 1600
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 8000,
+      "num_unique_clip_keys": 8000,
+      "num_unique_images": 17893,
+      "start_max": 308,
+      "start_min": 0
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "200001": 40,
+        "200002": 40,
+        "200003": 40,
+        "200004": 40,
+        "200005": 40
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 751,
+      "start_max": 376,
+      "start_min": 307
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "015_030": 160,
+        "030_060": 160,
+        "060_090": 160,
+        "090_120": 160,
+        "120_150": 160
+      },
+      "angle_max": 146.039476,
+      "angle_min": 20.433214,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "200001": 160,
+        "200002": 160,
+        "200003": 160,
+        "200004": 160,
+        "200005": 160
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2372,
+      "start_max": 376,
+      "start_min": 305
+    }
+  },
+  "min_aabb_angle": 15.0,
+  "num_views": 4,
+  "seed": 20260604,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training/mvhuman"
+}

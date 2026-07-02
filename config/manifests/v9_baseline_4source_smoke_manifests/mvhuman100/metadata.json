@@ -1,0 +1,32 @@
+{
+  "aaaa": [
+    {
+      "angle_bucket": "same_camera",
+      "clip_type": "aaaa",
+      "group": "100001",
+      "seq": "100001/CC32871A004",
+      "start_frame": 92,
+      "view_angle_deg": 0.0
+    }
+  ],
+  "aabb": [
+    {
+      "angle_bucket": "150_180",
+      "clip_type": "aabb",
+      "group": "100001",
+      "seqA": "100001/CC32871A051",
+      "seqB": "100001/CC32871A040",
+      "start_frame": 122,
+      "view_angle_deg": 171.418544
+    },
+    {
+      "angle_bucket": "150_180",
+      "clip_type": "aabb",
+      "group": "100002",
+      "seqA": "100002/CC32871A051",
+      "seqB": "100002/CC32871A040",
+      "start_frame": 119,
+      "view_angle_deg": 171.418544
+    }
+  ]
+}

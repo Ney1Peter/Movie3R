@@ -1,0 +1,1510 @@
+{
+  "aaaa_group_metadata": {
+    "100001": {
+      "num_sequences": 48,
+      "sequences": {
+        "CC32871A004": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A005": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A006": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A008": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A009": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A010": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A012": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A013": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A014": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A015": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A016": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A017": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A018": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A019": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A020": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A021": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A022": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A023": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A027": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A029": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A030": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A031": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A032": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A033": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A034": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A035": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A036": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A037": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A038": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A039": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A040": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A041": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A042": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A043": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A044": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A046": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A047": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A048": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A049": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A050": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A051": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A052": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A055": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A056": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A057": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A058": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A059": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        },
+        "CC32871A060": {
+          "test": 56,
+          "train": 249,
+          "val": 47
+        }
+      }
+    },
+    "100002": {
+      "num_sequences": 48,
+      "sequences": {
+        "CC32871A004": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A005": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A006": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A008": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A009": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A010": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A012": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A013": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A014": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A015": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A016": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A017": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A018": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A019": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A020": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A021": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A022": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A023": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A027": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A029": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A030": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A031": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A032": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A033": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A034": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A035": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A036": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A037": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A038": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A039": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A040": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A041": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A042": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A043": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A044": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A046": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A047": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A048": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A049": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A050": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A051": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A052": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A055": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A056": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A057": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A058": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A059": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        },
+        "CC32871A060": {
+          "test": 54,
+          "train": 242,
+          "val": 46
+        }
+      }
+    },
+    "100003": {
+      "num_sequences": 48,
+      "sequences": {
+        "CC32871A004": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A005": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A006": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A008": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A009": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A010": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A012": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A013": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A014": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A015": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A016": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A017": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A018": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A019": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A020": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A021": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A022": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A023": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A027": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A029": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A030": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A031": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A032": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A033": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A034": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A035": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A036": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A037": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A038": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A039": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A040": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A041": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A042": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A043": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A044": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A046": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A047": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A048": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A049": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A050": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A051": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A052": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A055": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A056": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A057": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A058": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A059": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        },
+        "CC32871A060": {
+          "test": 55,
+          "train": 246,
+          "val": 46
+        }
+      }
+    },
+    "100004": {
+      "num_sequences": 48,
+      "sequences": {
+        "CC32871A004": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A005": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A006": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A008": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A009": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A010": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A012": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A013": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A014": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A015": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A016": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A017": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A018": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A019": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A020": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A021": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A022": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A023": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A027": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A029": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A030": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A031": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A032": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A033": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A034": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A035": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A036": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A037": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A038": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A039": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A040": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A041": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A042": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A043": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A044": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A046": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A047": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A048": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A049": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A050": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A051": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A052": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A055": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A056": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A057": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A058": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A059": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        },
+        "CC32871A060": {
+          "test": 57,
+          "train": 255,
+          "val": 49
+        }
+      }
+    },
+    "100005": {
+      "num_sequences": 48,
+      "sequences": {
+        "CC32871A004": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A005": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A006": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A008": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A009": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A010": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A012": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A013": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A014": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A015": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A016": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A017": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A018": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A019": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A020": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A021": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A022": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A023": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A027": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A029": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A030": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A031": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A032": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A033": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A034": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A035": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A036": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A037": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A038": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A039": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A040": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A041": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A042": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A043": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A044": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A046": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A047": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A048": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A049": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A050": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A051": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A052": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A055": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A056": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A057": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A058": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A059": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        },
+        "CC32871A060": {
+          "test": 59,
+          "train": 264,
+          "val": 50
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "100001": {
+      "capacity_upper_bound_by_split": {
+        "test": 86464,
+        "train": 384456,
+        "val": 72568
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 48,
+      "pair_angle_bucket_counts": {
+        "060_090": 490,
+        "090_120": 424,
+        "120_150": 526,
+        "150_180": 104
+      },
+      "starts_by_split": {
+        "test": 56,
+        "train": 249,
+        "val": 47
+      }
+    },
+    "100002": {
+      "capacity_upper_bound_by_split": {
+        "test": 83376,
+        "train": 373648,
+        "val": 71024
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 48,
+      "pair_angle_bucket_counts": {
+        "060_090": 490,
+        "090_120": 424,
+        "120_150": 526,
+        "150_180": 104
+      },
+      "starts_by_split": {
+        "test": 54,
+        "train": 242,
+        "val": 46
+      }
+    },
+    "100003": {
+      "capacity_upper_bound_by_split": {
+        "test": 84920,
+        "train": 379824,
+        "val": 71024
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 48,
+      "pair_angle_bucket_counts": {
+        "060_090": 490,
+        "090_120": 424,
+        "120_150": 526,
+        "150_180": 104
+      },
+      "starts_by_split": {
+        "test": 55,
+        "train": 246,
+        "val": 46
+      }
+    },
+    "100004": {
+      "capacity_upper_bound_by_split": {
+        "test": 88008,
+        "train": 393720,
+        "val": 75656
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 48,
+      "pair_angle_bucket_counts": {
+        "060_090": 490,
+        "090_120": 424,
+        "120_150": 526,
+        "150_180": 104
+      },
+      "starts_by_split": {
+        "test": 57,
+        "train": 255,
+        "val": 49
+      }
+    },
+    "100005": {
+      "capacity_upper_bound_by_split": {
+        "test": 91096,
+        "train": 407616,
+        "val": 77200
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 48,
+      "pair_angle_bucket_counts": {
+        "060_090": 490,
+        "090_120": 424,
+        "120_150": 526,
+        "150_180": 104
+      },
+      "starts_by_split": {
+        "test": 59,
+        "train": 264,
+        "val": 50
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 13488,
+      "train": 60288,
+      "val": 11424
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 433864,
+      "train": 1939264,
+      "val": 367472
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "100001",
+    "100002",
+    "100003",
+    "100004",
+    "100005"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "100001": 40,
+        "100002": 40,
+        "100003": 40,
+        "100004": 40,
+        "100005": 40
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 790,
+      "start_max": 386,
+      "start_min": 305
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 200,
+        "090_120": 200,
+        "120_150": 200,
+        "150_180": 200
+      },
+      "angle_max": 171.418544,
+      "angle_min": 60.05892,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "100001": 160,
+        "100002": 160,
+        "100003": 160,
+        "100004": 160,
+        "100005": 160
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2833,
+      "start_max": 388,
+      "start_min": 304
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 2000
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 2000
+      },
+      "group_counts": {
+        "100001": 400,
+        "100002": 400,
+        "100003": 400,
+        "100004": 400,
+        "100005": 400
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "num_unique_images": 7566,
+      "start_max": 263,
+      "start_min": 0
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 2000,
+        "090_120": 2000,
+        "120_150": 2000,
+        "150_180": 2000
+      },
+      "angle_max": 171.418544,
+      "angle_min": 60.039793,
+      "clip_type_counts": {
+        "aabb": 8000
+      },
+      "group_counts": {
+        "100001": 1600,
+        "100002": 1600,
+        "100003": 1600,
+        "100004": 1600,
+        "100005": 1600
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 8000,
+      "num_unique_clip_keys": 8000,
+      "num_unique_images": 24711,
+      "start_max": 263,
+      "start_min": 0
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {
+        "same_camera": 200
+      },
+      "angle_max": 0.0,
+      "angle_min": 0.0,
+      "clip_type_counts": {
+        "aaaa": 200
+      },
+      "group_counts": {
+        "100001": 40,
+        "100002": 40,
+        "100003": 40,
+        "100004": 40,
+        "100005": 40
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 200,
+      "num_unique_clip_keys": 200,
+      "num_unique_images": 776,
+      "start_max": 320,
+      "start_min": 251
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 200,
+        "090_120": 200,
+        "120_150": 200,
+        "150_180": 200
+      },
+      "angle_max": 171.418544,
+      "angle_min": 60.505466,
+      "clip_type_counts": {
+        "aabb": 800
+      },
+      "group_counts": {
+        "100001": 160,
+        "100002": 160,
+        "100003": 160,
+        "100004": 160,
+        "100005": 160
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 800,
+      "num_unique_clip_keys": 800,
+      "num_unique_images": 2811,
+      "start_max": 321,
+      "start_min": 250
+    }
+  },
+  "min_aabb_angle": 60.0,
+  "num_views": 4,
+  "seed": 20260604,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training/mvhuman"
+}

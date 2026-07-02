@@ -12,10 +12,10 @@ defaults:
 
 pretrained: /data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth
 
-v9_4source_avatarrex_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests
-v9_4source_thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_baseline_thuman00_02_angle60_manifests
-v9_4source_mvhuman100_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_baseline_mvhuman100_angle60_manifests
-v9_4source_mvhuman200_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_baseline_mvhuman200_angle60_manifests
+v9_4source_avatarrex_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests
+v9_4source_thuman_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_thuman00_02_angle60_manifests
+v9_4source_mvhuman100_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman100_angle60_manifests
+v9_4source_mvhuman200_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman200_angle60_manifests
 avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','lbn2':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn2','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc'}"
 
 train_datasets:
