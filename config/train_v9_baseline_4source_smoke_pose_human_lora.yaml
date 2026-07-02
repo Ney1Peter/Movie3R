@@ -1,0 +1,101 @@
+# V9 four-source smoke overfit.
+#
+# Purpose:
+# - Verify that AvatarReX, THuman, MVHuman100 and MVHuman200 can train together
+#   through resolution-aware source batches.
+# - Keep the current standard V9 architecture: three relation correct tokens,
+#   decoder-in correction, mean pooling, pose/human latent heads, shared gate.
+# - Use tiny manifests only; this is a plumbing/overfit test, not a formal run.
+defaults:
+  - train_v9_mixed_avatarrex_thuman_60h_pose_human_lora_bs10
+  - _self_
+
+smoke_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_baseline_4source_smoke_manifests
+avatarrex_raw_roots: "{'lbn1':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn1','lbn2':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/lbn2','zzr':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zzr','zxc':'/data/wangzheng/iJCV-CODE/data/AvatarReX_raw_meta/zxc'}"
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.30
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7101, n_corres=0, manifest_path="${smoke_manifest_root}/avatarrex/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7102, n_corres=0, manifest_path="${smoke_manifest_root}/avatarrex/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7201, n_corres=0, manifest_path="${smoke_manifest_root}/thuman/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7202, n_corres=0, manifest_path="${smoke_manifest_root}/thuman/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100
+    weight: 0.30
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7301, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman100/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7302, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman100/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200
+    weight: 0.15
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7401, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman200/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7402, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman200/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_mixed_epoch_steps: 3
+batch_size: 1
+num_workers: 0
+accum_iter: 1
+epochs: 30
+warmup_epochs: 2
+eval_freq: 5
+
+lr: 2.0e-4
+min_lr: 1.0e-6
+gradient_checkpointing: true
+
+val_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7501, n_corres=0, manifest_path="${smoke_manifest_root}/avatarrex/val_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7502, n_corres=0, manifest_path="${smoke_manifest_root}/thuman/val_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7503, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman100/val_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7504, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman200/val_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+test_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7601, n_corres=0, manifest_path="${smoke_manifest_root}/avatarrex/test_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7602, n_corres=0, manifest_path="${smoke_manifest_root}/thuman/test_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7603, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman100/test_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=7604, n_corres=0, manifest_path="${smoke_manifest_root}/mvhuman200/test_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+
+save_freq: 5
+keep_freq: 0
+early_stopping_patience: 1000000
+save_last_checkpoint: true
+save_final_checkpoint: true
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+save_code: false
+
+exp_name: v9_baseline_4source_smoke_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_baseline_4source_smoke/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_baseline_4source_smoke/${exp_name}
