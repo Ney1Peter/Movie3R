@@ -121,7 +121,7 @@ early_stopping_patience: 50
 save_last_checkpoint: true
 save_final_checkpoint: true
 print_freq: 40
-structured_log_freq: 10
+structured_log_freq: 1
 print_img_freq: 1000000
 save_code: false
 console_log_keys: [lr, loss, avatarrex_loss, thuman_loss, mvhuman100_loss, mvhuman200_loss]
