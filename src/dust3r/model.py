@@ -235,6 +235,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_use_human_alignment=False,
         v8_pose_prompt_token_ablation="all",
         v8_pose_prompt_pooling="mean",
+        v8_human_latent_corr_pooling=None,
         v8_human_trans_corr=False,
         v8_human_trans_corr_gate_bias=0.0,
         v8_human_trans_corr_use_gate=True,
@@ -313,6 +314,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_use_human_alignment = v8_pose_prompt_use_human_alignment
         self.v8_pose_prompt_token_ablation = v8_pose_prompt_token_ablation
         self.v8_pose_prompt_pooling = v8_pose_prompt_pooling
+        self.v8_human_latent_corr_pooling = (
+            v8_pose_prompt_pooling
+            if v8_human_latent_corr_pooling is None
+            else v8_human_latent_corr_pooling
+        )
         self.v8_human_trans_corr = v8_human_trans_corr
         self.v8_human_trans_corr_gate_bias = v8_human_trans_corr_gate_bias
         self.v8_human_trans_corr_use_gate = v8_human_trans_corr_use_gate
@@ -706,7 +712,11 @@ class ARCroco3DStereo(CroCoNet):
             use_gate=getattr(config, "v8_human_latent_corr_use_gate", True),
             max_delta=getattr(config, "v8_human_latent_corr_max_delta", 1.0),
             gate_mode=getattr(config, "v8_human_latent_corr_gate_mode", "shared"),
-            corr_pooling=getattr(config, "v8_pose_prompt_pooling", "mean"),
+            corr_pooling=getattr(
+                config,
+                "v8_human_latent_corr_pooling",
+                getattr(config, "v8_pose_prompt_pooling", "mean"),
+            ),
         )
         for p in self.v8_human_trans_corr_head.parameters():
             p.requires_grad = False
