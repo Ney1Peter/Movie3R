@@ -875,6 +875,23 @@ class ARCroco3DStereo(CroCoNet):
             for key, value in ckpt.items():
                 if key.startswith("dec_blocks"):
                     new_ckpt[key.replace("dec_blocks", "dec_blocks_state")] = value
+        # V9 checkpoints before the optional human-alignment token stored only
+        # three correction-token type embeddings. Current code keeps a fourth
+        # slot for that optional token; pad old checkpoints without changing the
+        # first three embeddings used by the 120h pose-human-lora model.
+        token_type_key = "v8_pose_prompt.token_type_embed"
+        if token_type_key in new_ckpt and token_type_key in self.state_dict():
+            src = new_ckpt[token_type_key]
+            dst = self.state_dict()[token_type_key]
+            if (
+                src.ndim == dst.ndim == 3
+                and src.shape[0] == dst.shape[0]
+                and src.shape[2] == dst.shape[2]
+                and src.shape[1] < dst.shape[1]
+            ):
+                padded = dst.detach().clone()
+                padded[:, : src.shape[1]] = src
+                new_ckpt[token_type_key] = padded
         try:
             return super().load_state_dict(new_ckpt, **kw)
         except:

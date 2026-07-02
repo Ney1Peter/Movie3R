@@ -6,6 +6,7 @@ import torch
 import numpy as np
 import smplx
 from smplx.joint_names import JOINT_NAMES
+from smplx.lbs import vertices2joints, vertices2landmarks
 from dust3r.utils.geometry import (
     perspective_projection, 
     resize_camera_intrinsics,
@@ -21,6 +22,33 @@ src_dir = os.path.dirname(current_dir)
 SMPLX_DIR = os.path.join(src_dir, 'models')
 MEAN_PARAMS = os.path.join(src_dir, 'models', 'smpl_mean_params.npz')
 SMPLX2SMPL = os.path.join(src_dir, 'models', 'smplx', 'smplx2smpl.pkl')
+
+BODY25_TO_SMPLX_JOINTS = {
+    1: JOINT_NAMES.index("neck"),
+    2: JOINT_NAMES.index("right_shoulder"),
+    3: JOINT_NAMES.index("right_elbow"),
+    4: JOINT_NAMES.index("right_wrist"),
+    5: JOINT_NAMES.index("left_shoulder"),
+    6: JOINT_NAMES.index("left_elbow"),
+    7: JOINT_NAMES.index("left_wrist"),
+    8: JOINT_NAMES.index("pelvis"),
+    9: JOINT_NAMES.index("right_hip"),
+    10: JOINT_NAMES.index("right_knee"),
+    11: JOINT_NAMES.index("right_ankle"),
+    12: JOINT_NAMES.index("left_hip"),
+    13: JOINT_NAMES.index("left_knee"),
+    14: JOINT_NAMES.index("left_ankle"),
+    15: JOINT_NAMES.index("right_eye"),
+    16: JOINT_NAMES.index("left_eye"),
+    17: JOINT_NAMES.index("right_ear"),
+    18: JOINT_NAMES.index("left_ear"),
+    19: JOINT_NAMES.index("left_big_toe"),
+    20: JOINT_NAMES.index("left_small_toe"),
+    21: JOINT_NAMES.index("left_heel"),
+    22: JOINT_NAMES.index("right_big_toe"),
+    23: JOINT_NAMES.index("right_small_toe"),
+    24: JOINT_NAMES.index("right_heel"),
+}
 
 class SMPLModel(object):
     def __init__(self, device, model_args={}, eval_args={}):
@@ -134,6 +162,12 @@ class SMPLModel(object):
             verts = self.smplx2smpl @ verts
         jts = self.j_regressor @ verts
 
+        if "smplx_world_scale" in smpl_dict:
+            world_scale = smpl_dict["smplx_world_scale"][smpl_mask].reshape(-1, 1, 1)
+            world_scale = world_scale.to(device=verts.device, dtype=verts.dtype)
+            verts = verts * world_scale
+            jts = jts * world_scale
+
         return verts, jts
 
     def update_smpl_gt(self, views):
@@ -182,6 +216,12 @@ class SMPLModel(object):
         )
         verts, jts = out.vertices.reshape(nhv, -1, 3), out.joints.reshape(nhv, -1, 3)
 
+        if "smplx_world_scale" in smpl_dict:
+            world_scale = smpl_dict["smplx_world_scale"][smpl_mask].reshape(-1, 1, 1)
+            world_scale = world_scale.to(device=verts.device, dtype=verts.dtype)
+            verts = verts * world_scale
+            jts = jts * world_scale
+
         human_params_are_world = None
         if "human_params_are_world" in views[0]:
             human_params_are_world = torch.stack(
@@ -218,6 +258,98 @@ class SMPLModel(object):
                 jts_cam[smpl_world_selected] = torch.einsum(
                     "bij,bnj->bni", R, jts[smpl_world_selected]
                 ) + t[:, None, :]
+
+        if "smplx_has_precomputed_mesh" in smpl_dict and "smplx_mesh_world" in smpl_dict:
+            precomputed_mesh = smpl_dict["smplx_has_precomputed_mesh"][smpl_mask].reshape(-1) > 0.5
+            if precomputed_mesh.any():
+                mesh_world = smpl_dict["smplx_mesh_world"][smpl_mask].to(
+                    device=verts_cam.device, dtype=verts_cam.dtype
+                )
+                mesh_cam = mesh_world
+                if (
+                    smpl_world_selected is not None
+                    and T_w2c_selected is not None
+                    and smpl_world_selected.any()
+                ):
+                    mesh_cam = mesh_world.clone()
+                    T_mesh = T_w2c_selected[smpl_world_selected].to(
+                        device=verts_cam.device, dtype=verts_cam.dtype
+                    )
+                    R = T_mesh[:, :3, :3]
+                    t = T_mesh[:, :3, 3]
+                    mesh_cam[smpl_world_selected] = torch.einsum(
+                        "bij,bvj->bvi", R, mesh_world[smpl_world_selected]
+                    ) + t[:, None, :]
+
+                verts_cam[precomputed_mesh] = mesh_cam[precomputed_mesh]
+
+                mesh_joints = vertices2joints(self.smplx_neutral_11.J_regressor, mesh_cam)
+                mesh_joints = self.smplx_neutral_11.vertex_joint_selector(mesh_cam, mesh_joints)
+                lmk_faces_idx = self.smplx_neutral_11.lmk_faces_idx.unsqueeze(0).expand(
+                    mesh_cam.shape[0], -1
+                ).contiguous()
+                lmk_bary_coords = self.smplx_neutral_11.lmk_bary_coords.unsqueeze(0).expand(
+                    mesh_cam.shape[0], -1, -1
+                ).contiguous()
+                mesh_landmarks = vertices2landmarks(
+                    mesh_cam,
+                    self.smplx_neutral_11.faces_tensor,
+                    lmk_faces_idx,
+                    lmk_bary_coords,
+                )
+                mesh_joints = torch.cat([mesh_joints, mesh_landmarks], dim=1)
+                mesh_joints = mesh_joints.to(device=jts_cam.device, dtype=jts_cam.dtype)
+                if mesh_joints.shape[1] == jts_cam.shape[1]:
+                    jts_cam[precomputed_mesh] = mesh_joints[precomputed_mesh]
+
+        if "smplx_has_precomputed_keypoints" in smpl_dict:
+            precomputed = smpl_dict["smplx_has_precomputed_keypoints"][smpl_mask].reshape(-1) > 0.5
+            if precomputed.any():
+                body25 = smpl_dict["smplx_body25_world"][smpl_mask].to(
+                    device=jts_cam.device, dtype=jts_cam.dtype
+                )
+                body25_mask = smpl_dict["smplx_body25_mask"][smpl_mask].to(
+                    device=jts_cam.device
+                ) > 0.5
+                head = smpl_dict["smplx_head_world"][smpl_mask].to(
+                    device=jts_cam.device, dtype=jts_cam.dtype
+                )
+                pelvis = smpl_dict["smplx_pelvis_world"][smpl_mask].to(
+                    device=jts_cam.device, dtype=jts_cam.dtype
+                )
+
+                body25_cam, head_cam, pelvis_cam = body25, head, pelvis
+                if (
+                    smpl_world_selected is not None
+                    and T_w2c_selected is not None
+                    and smpl_world_selected.any()
+                ):
+                    body25_cam = body25.clone()
+                    head_cam = head.clone()
+                    pelvis_cam = pelvis.clone()
+                    T_pre = T_w2c_selected[smpl_world_selected].to(
+                        device=jts_cam.device, dtype=jts_cam.dtype
+                    )
+                    R = T_pre[:, :3, :3]
+                    t = T_pre[:, :3, 3]
+                    body25_cam[smpl_world_selected] = torch.einsum(
+                        "bij,bkj->bki", R, body25[smpl_world_selected]
+                    ) + t[:, None, :]
+                    head_cam[smpl_world_selected] = torch.einsum(
+                        "bij,bj->bi", R, head[smpl_world_selected]
+                    ) + t
+                    pelvis_cam[smpl_world_selected] = torch.einsum(
+                        "bij,bj->bi", R, pelvis[smpl_world_selected]
+                    ) + t
+
+                head_idx = JOINT_NAMES.index(self.person_center)
+                pelvis_idx = JOINT_NAMES.index("pelvis")
+                jts_cam[precomputed, head_idx] = head_cam[precomputed]
+                jts_cam[precomputed, pelvis_idx] = pelvis_cam[precomputed]
+                for body25_idx, smplx_idx in BODY25_TO_SMPLX_JOINTS.items():
+                    valid = precomputed & body25_mask[:, body25_idx]
+                    if valid.any():
+                        jts_cam[valid, smplx_idx] = body25_cam[valid, body25_idx]
 
         j2d = perspective_projection(jts_cam, K[idx_h[0]])
         v2d = perspective_projection(verts_cam, K[idx_h[0]])

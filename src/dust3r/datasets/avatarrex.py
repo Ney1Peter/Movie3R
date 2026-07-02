@@ -186,8 +186,36 @@ def _avatarrex_scene_path(split_path, seq_name):
     return osp.join(split_path, *str(seq_name).split("/"))
 
 
+def _avatarrex_is_world_smpl_sequence(seq_name):
+    prefix = str(seq_name).split("/", 1)[0].lower()
+    return prefix.startswith("thuman") or prefix.startswith("mvhuman")
+
+
 def _avatarrex_is_thuman_sequence(seq_name):
-    return str(seq_name).split("/", 1)[0].startswith("thuman")
+    return _avatarrex_is_world_smpl_sequence(seq_name)
+
+
+_AVATARREX_OPTIONAL_SMPL_KEY2SHAPE = {
+    "smplx_mesh_world": (10475, 3),
+    "smplx_has_precomputed_mesh": (),
+}
+
+
+def _avatarrex_smpl_key_shapes_for_humans(base_key2shape, humans):
+    key2shape = dict(base_key2shape)
+    if humans:
+        for key, shape in _AVATARREX_OPTIONAL_SMPL_KEY2SHAPE.items():
+            if any(key in human for human in humans):
+                key2shape[key] = shape
+    return key2shape
+
+
+def _avatarrex_has_world_smpl_annotations(annots):
+    return any(
+        float(human.get("smplx_has_precomputed_keypoints", 0.0)) > 0.5
+        or float(human.get("smplx_has_precomputed_mesh", 0.0)) > 0.5
+        for human in annots
+    )
 
 
 def _avatarrex_is_sequence_dir(path):
@@ -204,21 +232,28 @@ def _avatarrex_discover_sequences(split_path):
     Supports both layouts:
       split/22010708/{rgb,cam,smpl}
       split/lbn1/22010708/{rgb,cam,smpl}
+      split/mvhuman/100001/CC32871A004/{rgb,cam,smpl}
     """
     direct = []
-    grouped = []
     for name in sorted(os.listdir(split_path)):
         path = osp.join(split_path, name)
         if not osp.isdir(path):
             continue
         if _avatarrex_is_sequence_dir(path):
             direct.append(name)
+    if direct:
+        return direct
+
+    grouped = []
+    for dirpath, dirnames, _ in os.walk(split_path):
+        dirnames.sort()
+        if not _avatarrex_is_sequence_dir(dirpath):
             continue
-        for child in sorted(os.listdir(path)):
-            child_path = osp.join(path, child)
-            if osp.isdir(child_path) and _avatarrex_is_sequence_dir(child_path):
-                grouped.append(f"{name}/{child}")
-    return direct if direct else grouped
+        rel = osp.relpath(dirpath, split_path)
+        if rel != ".":
+            grouped.append(rel.replace(os.sep, "/"))
+        dirnames[:] = []
+    return sorted(grouped)
 
 
 def _avatarrex_frame_ids(split_path, seq_name):
@@ -435,6 +470,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         max_view_angle_deg=None,
         max_samples=None,
         pair_strategy="all",
+        pair_scope="all",
         load_da3_depth=True,
         raw_calibration_root=None,
         resize_mode="dataset_crop",
@@ -462,6 +498,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         self.max_view_angle_deg = max_view_angle_deg
         self.max_samples = None if max_samples is None else int(max_samples)
         self.pair_strategy = str(pair_strategy)
+        self.pair_scope = str(pair_scope)
         self.load_da3_depth = bool(load_da3_depth)
         self.raw_calibration_root = raw_calibration_root
         self.raw_calibration = _load_avatarrex_raw_calibration(raw_calibration_root)
@@ -478,6 +515,12 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             "smplx_right_hand_pose": (15, 3),
             "smplx_shape": (11,),
             "smplx_transl": (3,),
+            "smplx_world_scale": (),
+            "smplx_body25_world": (25, 3),
+            "smplx_body25_mask": (25,),
+            "smplx_head_world": (3,),
+            "smplx_pelvis_world": (3,),
+            "smplx_has_precomputed_keypoints": (),
             "smplx_gender_id": (),
         }
 
@@ -554,6 +597,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # t ∈ [0, num_frames-4]（需要 t, t+1, t+2, t+3 均有效）
         if self.fixed_samples:
             self.samples = list(self.fixed_samples)
+            self._validate_pair_scope_for_samples(self.samples)
             print(f"  AvatarReX_AABB manifest/fixed samples: {len(self.samples):,}")
         else:
             self.samples = []
@@ -561,6 +605,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
                 for j, seqB in enumerate(self.scenes):
                     if i == j:
                         continue  # 跳过同一相机
+                    if not self._pair_scope_allows(seqA, seqB):
+                        continue
                     # **========== 原始代码：样本保存从 0 开始的位置索引 ==========**
                     # for t in range(self.num_frames - 3):
                     #     self.samples.append((seqA, seqB, t))
@@ -572,6 +618,8 @@ class AvatarReX_AABB(BaseMultiViewDataset):
 
             print(f"  AvatarReX_AABB: {len(self.samples):,} candidate samples "
                   f"from {len(self.scenes)} sequence folders")
+            if self.pair_scope != "all":
+                print(f"  AvatarReX_AABB pair_scope: {self.pair_scope}")
 
         # **========== 原始代码：索引阶段不检查文件完整性，缺帧会在 DataLoader 读图时报错 ==========**
         # self.samples 保持上方构建结果，不做文件存在性过滤。
@@ -636,6 +684,26 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             seq_a, seq_b, start_frame = sample
             normalized.append((str(seq_a), str(seq_b), int(start_frame)))
         return tuple(normalized)
+
+    def _pair_scope_allows(self, seq_a, seq_b):
+        if self.pair_scope == "all":
+            return True
+        if self.pair_scope == "same_parent":
+            return osp.dirname(str(seq_a)) == osp.dirname(str(seq_b))
+        raise ValueError(f"Unsupported AvatarReX_AABB pair_scope: {self.pair_scope}")
+
+    def _validate_pair_scope_for_samples(self, samples):
+        if self.pair_scope == "all":
+            return
+        bad = [
+            sample for sample in samples
+            if not self._pair_scope_allows(sample[0], sample[1])
+        ]
+        if bad:
+            raise ValueError(
+                f"AvatarReX_AABB pair_scope={self.pair_scope!r} rejects "
+                f"{len(bad)} manifest/fixed samples, examples: {bad[:5]}"
+            )
 
     def _pair_angle_deg(self, split_path, seqA_name, seqB_name):
         key = (seqA_name, seqB_name)
@@ -869,7 +937,10 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
-        smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
+        smpl_params_are_world = (
+            _avatarrex_is_thuman_sequence(seq_name)
+            or _avatarrex_has_world_smpl_annotations(annots)
+        )
         if raw_camera_pose is None and smpl_params_are_world:
             # THUman stores the official c2w camera directly in cam/*.npz.
             # Unlike AvatarReX, it does not need a separate raw calibration
@@ -975,13 +1046,15 @@ class AvatarReX_AABB(BaseMultiViewDataset):
             smpl_mask[:len(humans)] = True
 
         smpl_dict = {}
-        for k, shape in self.smpl_key2shape.items():
+        smpl_key2shape = _avatarrex_smpl_key_shapes_for_humans(self.smpl_key2shape, humans)
+        for k, shape in smpl_key2shape.items():
             smpl_dict[k] = np.zeros(
                 (self.max_humans, *shape), dtype=np.float32
             )
             if len(humans) > 0:
                 for h in range(len(humans)):
-                    val = humans[h].get(k, np.zeros(shape))
+                    default_val = np.ones(shape, dtype=np.float32) if k == "smplx_world_scale" else np.zeros(shape)
+                    val = humans[h].get(k, default_val)
                     if isinstance(val, np.ndarray):
                         val = val.astype(np.float32)
                         # 预处理脚本保存时将多维数组展平，加载时需reshape回原始形状
@@ -1090,6 +1163,12 @@ class AvatarReX_Video(BaseMultiViewDataset):
             "smplx_right_hand_pose": (15, 3),
             "smplx_shape": (11,),
             "smplx_transl": (3,),
+            "smplx_world_scale": (),
+            "smplx_body25_world": (25, 3),
+            "smplx_body25_mask": (25,),
+            "smplx_head_world": (3,),
+            "smplx_pelvis_world": (3,),
+            "smplx_has_precomputed_keypoints": (),
             "smplx_gender_id": (),
         }
 
@@ -1292,12 +1371,20 @@ class AvatarReX_Video(BaseMultiViewDataset):
 
         rgb_image = imread_cv2(rgb_path)
 
+        annots = []
+        if osp.isfile(smpl_path):
+            with open(smpl_path, "rb") as f:
+                annots = pickle.load(f)
+
         # Camera params
         cam = np.load(cam_path)
         camera_pose = cam["pose"].astype(np.float32)
         intrinsics = cam["intrinsics"].astype(np.float32)
         raw_camera_pose = _raw_calibration_c2w(self.raw_calibration, seq_name)
-        smpl_params_are_world = _avatarrex_is_thuman_sequence(seq_name)
+        smpl_params_are_world = (
+            _avatarrex_is_thuman_sequence(seq_name)
+            or _avatarrex_has_world_smpl_annotations(annots)
+        )
         if raw_camera_pose is None and smpl_params_are_world:
             # THUman stores the official c2w camera directly in cam/*.npz.
             # Unlike AvatarReX, it does not need a separate raw calibration
@@ -1332,12 +1419,6 @@ class AvatarReX_Video(BaseMultiViewDataset):
             mask_image = imread_cv2(mask_path)
         else:
             mask_image = None
-
-        # SMPL
-        annots = []
-        if osp.isfile(smpl_path):
-            with open(smpl_path, "rb") as f:
-                annots = pickle.load(f)
 
         # Crop/resize
         if self.resize_mode in ("human3r_demo", "demo"):
@@ -1398,13 +1479,15 @@ class AvatarReX_Video(BaseMultiViewDataset):
             smpl_mask[:len(humans)] = True
 
         smpl_dict = {}
-        for k, shape in self.smpl_key2shape.items():
+        smpl_key2shape = _avatarrex_smpl_key_shapes_for_humans(self.smpl_key2shape, humans)
+        for k, shape in smpl_key2shape.items():
             smpl_dict[k] = np.zeros(
                 (self.max_humans, *shape), dtype=np.float32
             )
             if len(humans) > 0:
                 for h in range(len(humans)):
-                    val = humans[h].get(k, np.zeros(shape))
+                    default_val = np.ones(shape, dtype=np.float32) if k == "smplx_world_scale" else np.zeros(shape)
+                    val = humans[h].get(k, default_val)
                     if isinstance(val, np.ndarray):
                         val = val.astype(np.float32)
                         if len(shape) > 1:
