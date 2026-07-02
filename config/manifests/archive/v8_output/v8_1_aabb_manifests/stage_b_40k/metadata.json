@@ -1,0 +1,216 @@
+{
+  "candidate_counts": {
+    "test_in": 97110,
+    "test_new": 347608,
+    "train": 452480,
+    "val_in": 97110
+  },
+  "group_metadata": {
+    "lbn1": {
+      "pairs": 174,
+      "sequences": [
+        "22010708",
+        "22010710",
+        "22010714",
+        "22010716",
+        "22053903",
+        "22053907",
+        "22053908",
+        "22053912",
+        "22053917",
+        "22053923",
+        "22053925",
+        "22053926",
+        "22070928",
+        "22070932",
+        "22070935",
+        "22139907"
+      ],
+      "windows": {
+        "test_in": [
+          1613,
+          1897
+        ],
+        "test_new": [
+          0,
+          1897
+        ],
+        "train": [
+          0,
+          1327
+        ],
+        "val_in": [
+          1328,
+          1612
+        ]
+      }
+    },
+    "zxc": {
+      "pairs": 176,
+      "sequences": [
+        "22010708",
+        "22010710",
+        "22010714",
+        "22010716",
+        "22053903",
+        "22053907",
+        "22053908",
+        "22053912",
+        "22053917",
+        "22053923",
+        "22053925",
+        "22053926",
+        "22070928",
+        "22070932",
+        "22070935",
+        "22139907"
+      ],
+      "windows": {
+        "test_in": [
+          1528,
+          1797
+        ],
+        "test_new": [
+          0,
+          1797
+        ],
+        "train": [
+          0,
+          1257
+        ],
+        "val_in": [
+          1258,
+          1527
+        ]
+      }
+    },
+    "zzr": {
+      "pairs": 174,
+      "sequences": [
+        "22010708",
+        "22010710",
+        "22010714",
+        "22010716",
+        "22053903",
+        "22053907",
+        "22053908",
+        "22053912",
+        "22053917",
+        "22053923",
+        "22053925",
+        "22053926",
+        "22070928",
+        "22070932",
+        "22070935",
+        "22139907"
+      ],
+      "windows": {
+        "test_in": [
+          1698,
+          1997
+        ],
+        "test_new": [
+          0,
+          1997
+        ],
+        "train": [
+          0,
+          1397
+        ],
+        "val_in": [
+          1398,
+          1697
+        ]
+      }
+    }
+  },
+  "manifests": {
+    "stage_b_test_in_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 500,
+        "090_120": 500,
+        "120_150": 500,
+        "150_180": 500
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.086532,
+      "group_counts": {
+        "lbn1": 1000,
+        "zxc": 1000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_ordered_pairs": 348,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "start_max": 1897,
+      "start_min": 1528
+    },
+    "stage_b_test_new_zzr_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 500,
+        "090_120": 500,
+        "120_150": 500,
+        "150_180": 500
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.442099,
+      "group_counts": {
+        "zzr": 2000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_ordered_pairs": 174,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "start_max": 1997,
+      "start_min": 0
+    },
+    "stage_b_train_40k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 10000,
+        "090_120": 10000,
+        "120_150": 10000,
+        "150_180": 10000
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.086532,
+      "group_counts": {
+        "lbn1": 20000,
+        "zxc": 20000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_ordered_pairs": 350,
+      "num_records": 40000,
+      "num_unique_clip_keys": 40000,
+      "start_max": 1327,
+      "start_min": 0
+    },
+    "stage_b_val_in_2k.jsonl": {
+      "angle_bucket_counts": {
+        "060_090": 500,
+        "090_120": 500,
+        "120_150": 500,
+        "150_180": 500
+      },
+      "angle_max": 176.900745,
+      "angle_min": 60.086532,
+      "group_counts": {
+        "lbn1": 1000,
+        "zxc": 1000
+      },
+      "has_duplicate_clip_keys": false,
+      "num_ordered_pairs": 349,
+      "num_records": 2000,
+      "num_unique_clip_keys": 2000,
+      "start_max": 1612,
+      "start_min": 1258
+    }
+  },
+  "min_angle": 60.0,
+  "seed": 20260601,
+  "test_new_group": "zzr",
+  "train_groups": [
+    "lbn1",
+    "zxc"
+  ],
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training"
+}

@@ -1,0 +1,71 @@
+{
+  "source": "output/v8_4_mixed_aabb_aaaa_manifests",
+  "keep_groups": [
+    "lbn1",
+    "thuman00",
+    "thuman02",
+    "zzr"
+  ],
+  "files": {
+    "train_aabb_no_zxc.jsonl": {
+      "in": 60000,
+      "out": 48000,
+      "groups": {
+        "lbn1": 12000,
+        "zzr": 12000,
+        "thuman02": 12000,
+        "thuman00": 12000
+      }
+    },
+    "train_aaaa_no_zxc.jsonl": {
+      "in": 20000,
+      "out": 16000,
+      "groups": {
+        "zzr": 4000,
+        "lbn1": 4000,
+        "thuman00": 4000,
+        "thuman02": 4000
+      }
+    },
+    "val_aabb_no_zxc.jsonl": {
+      "in": 2000,
+      "out": 1602,
+      "groups": {
+        "lbn1": 402,
+        "thuman02": 402,
+        "zzr": 396,
+        "thuman00": 402
+      }
+    },
+    "val_aaaa_no_zxc.jsonl": {
+      "in": 1000,
+      "out": 800,
+      "groups": {
+        "lbn1": 200,
+        "thuman02": 200,
+        "thuman00": 200,
+        "zzr": 200
+      }
+    },
+    "test_aabb_no_zxc.jsonl": {
+      "in": 2000,
+      "out": 1602,
+      "groups": {
+        "lbn1": 402,
+        "thuman00": 402,
+        "zzr": 396,
+        "thuman02": 402
+      }
+    },
+    "test_aaaa_no_zxc.jsonl": {
+      "in": 1000,
+      "out": 800,
+      "groups": {
+        "thuman00": 200,
+        "zzr": 200,
+        "thuman02": 200,
+        "lbn1": 200
+      }
+    }
+  }
+}

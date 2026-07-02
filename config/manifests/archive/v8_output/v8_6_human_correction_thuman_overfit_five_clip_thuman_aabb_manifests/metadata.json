@@ -1,0 +1,407 @@
+{
+  "aaaa_group_metadata": {
+    "thuman00": {
+      "num_sequences": 24,
+      "sequences": {
+        "cam00": {
+          "test": 349,
+          "train": 1624,
+          "val": 345
+        },
+        "cam01": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam02": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam03": {
+          "test": 358,
+          "train": 1665,
+          "val": 354
+        },
+        "cam04": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam05": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam06": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam07": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam08": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam09": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam10": {
+          "test": 349,
+          "train": 1624,
+          "val": 345
+        },
+        "cam11": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam12": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam13": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam14": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam15": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam16": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam17": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam18": {
+          "test": 365,
+          "train": 1699,
+          "val": 361
+        },
+        "cam19": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam20": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam21": {
+          "test": 375,
+          "train": 1743,
+          "val": 371
+        },
+        "cam22": {
+          "test": 349,
+          "train": 1624,
+          "val": 345
+        },
+        "cam23": {
+          "test": 349,
+          "train": 1624,
+          "val": 345
+        }
+      }
+    },
+    "thuman02": {
+      "num_sequences": 24,
+      "sequences": {
+        "cam00": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam01": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam02": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam03": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam04": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam05": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam06": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam07": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam08": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam09": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam10": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam11": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam12": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam13": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam14": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam15": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam16": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam17": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam18": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam19": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam20": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam21": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam22": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        },
+        "cam23": {
+          "test": 467,
+          "train": 2170,
+          "val": 462
+        }
+      }
+    }
+  },
+  "aabb_group_metadata": {
+    "thuman00": {
+      "capacity_upper_bound_by_split": {
+        "test": 65612,
+        "train": 305312,
+        "val": 64860
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 24,
+      "pair_angle_bucket_counts": {
+        "120_150": 96,
+        "150_180": 92
+      },
+      "starts_by_split": {
+        "test": 349,
+        "train": 1624,
+        "val": 345
+      }
+    },
+    "thuman02": {
+      "capacity_upper_bound_by_split": {
+        "test": 88730,
+        "train": 412300,
+        "val": 87780
+      },
+      "num_sequence_families": 1,
+      "num_sequences": 24,
+      "pair_angle_bucket_counts": {
+        "120_150": 102,
+        "150_180": 88
+      },
+      "starts_by_split": {
+        "test": 467,
+        "train": 2170,
+        "val": 462
+      }
+    }
+  },
+  "candidate_counts": {
+    "aaaa": {
+      "test": 20027,
+      "train": 93094,
+      "val": 19811
+    },
+    "aabb_capacity_upper_bound": {
+      "test": 154342,
+      "train": 717612,
+      "val": 152640
+    }
+  },
+  "frame_overlap": {
+    "train_test": 0,
+    "train_val": 0,
+    "val_test": 0
+  },
+  "groups": [
+    "thuman00",
+    "thuman02"
+  ],
+  "manifests": {
+    "test_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "test_aabb_2k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "train_aaaa_20k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "train_aabb_60k.jsonl": {
+      "angle_bucket_counts": {
+        "120_150": 3,
+        "150_180": 2
+      },
+      "angle_max": 173.822519,
+      "angle_min": 134.734281,
+      "clip_type_counts": {
+        "aabb": 5
+      },
+      "group_counts": {
+        "thuman00": 3,
+        "thuman02": 2
+      },
+      "has_duplicate_clip_keys": false,
+      "num_records": 5,
+      "num_unique_clip_keys": 5,
+      "num_unique_images": 20,
+      "start_max": 1295,
+      "start_min": 467
+    },
+    "val_aaaa_1k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    },
+    "val_aabb_2k.jsonl": {
+      "angle_bucket_counts": {},
+      "angle_max": null,
+      "angle_min": null,
+      "clip_type_counts": {},
+      "group_counts": {},
+      "has_duplicate_clip_keys": false,
+      "num_records": 0,
+      "num_unique_clip_keys": 0,
+      "num_unique_images": 0,
+      "start_max": null,
+      "start_min": null
+    }
+  },
+  "min_aabb_angle": 120.0,
+  "num_views": 4,
+  "seed": 20260604,
+  "test_root": "/data/wangzheng/iJCV-CODE/data/Test/v8_4_mixed_aabb_aaaa",
+  "test_symlinks": null,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Training"
+}

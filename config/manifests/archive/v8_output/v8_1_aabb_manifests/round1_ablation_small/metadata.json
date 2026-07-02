@@ -1,0 +1,65 @@
+{
+  "groups": [
+    "lbn1",
+    "zxc",
+    "zzr"
+  ],
+  "manifests": {
+    "round1_test.jsonl": {
+      "angle_bucket_counts": {
+        "120_150": 30,
+        "150_180": 30
+      },
+      "angle_max": 177.502547,
+      "angle_min": 123.933207,
+      "group_counts": {
+        "lbn1": 20,
+        "zxc": 20,
+        "zzr": 20
+      },
+      "has_reused_frames": false,
+      "num_clips": 60,
+      "num_used_frames": 240
+    },
+    "round1_train.jsonl": {
+      "angle_bucket_counts": {
+        "120_150": 120,
+        "150_180": 120
+      },
+      "angle_max": 177.502547,
+      "angle_min": 123.933207,
+      "group_counts": {
+        "lbn1": 80,
+        "zxc": 80,
+        "zzr": 80
+      },
+      "has_reused_frames": false,
+      "num_clips": 240,
+      "num_used_frames": 960
+    },
+    "round1_val.jsonl": {
+      "angle_bucket_counts": {
+        "120_150": 30,
+        "150_180": 30
+      },
+      "angle_max": 177.502547,
+      "angle_min": 123.933207,
+      "group_counts": {
+        "lbn1": 20,
+        "zxc": 20,
+        "zzr": 20
+      },
+      "has_reused_frames": false,
+      "num_clips": 60,
+      "num_used_frames": 240
+    }
+  },
+  "min_angle": 120.0,
+  "raw_roots": {
+    "lbn1": "/data/wangzheng/iJCV-CODE/data/avatarrex_lbn1",
+    "zxc": "/data/wangzheng/iJCV-CODE/data/avatarrex_zxc",
+    "zzr": "/data/wangzheng/iJCV-CODE/data/avatarrex_zzr"
+  },
+  "seed": 20260602,
+  "training_root": "/data/wangzheng/iJCV-CODE/data/Avatarrex_output/Training"
+}
