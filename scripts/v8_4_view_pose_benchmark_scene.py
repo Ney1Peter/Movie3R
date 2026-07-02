@@ -159,6 +159,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def parse_raw_roots(text: str):
+    if text is None or str(text).strip().lower() in {"", "none", "null"}:
+        return None
     value = json.loads(text) if text.strip().startswith("{") else text
     if isinstance(value, dict):
         return {str(k): str(v) for k, v in value.items()}
@@ -173,7 +175,12 @@ def write_one_record_manifest(path: Path, record: dict) -> None:
 
 def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_path: Path):
     subset = str(record.get("benchmark_subset", "test_aabb"))
-    split = "Training" if subset.startswith("train_sanity") else args.test_split
+    group = str(record.get("group", ""))
+    is_mvhuman = group.isdigit() or str(record.get("seqA", "")).split("/", 1)[0].isdigit()
+    if is_mvhuman:
+        split = "Training/mvhuman" if subset.startswith("train_sanity") else args.test_split
+    else:
+        split = "Training" if subset.startswith("train_sanity") else args.test_split
     common = dict(
         allow_repeat=True,
         split=split,
@@ -187,9 +194,12 @@ def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_
         load_da3_depth=False,
         raw_calibration_root=parse_raw_roots(args.raw_roots),
         resize_mode=str(args.resize_mode),
+        max_humans=1,
     )
     if str(record.get("clip_type", "")).lower() == "aaaa" or subset.endswith("aaaa"):
         return AvatarReX_Video(**common)
+    if is_mvhuman:
+        common["pair_scope"] = "same_parent"
     return AvatarReX_AABB(**common)
 
 
@@ -574,6 +584,12 @@ def load_gt_smpl_verts_for_record(
             (seq_b, start_frame + 2),
             (seq_b, start_frame + 3),
         ][:num_frames]
+
+    group = str(record.get("group", ""))
+    is_mvhuman = group.isdigit() or str(record.get("seqA", "")).split("/", 1)[0].isdigit()
+    if is_mvhuman and split == "Training":
+        split = "Training/mvhuman"
+        split_path = Path(args.data_root) / split
 
     smpl_model = SMPLModel(
         torch.device(args.device),

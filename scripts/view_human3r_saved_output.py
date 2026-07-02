@@ -5,12 +5,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
 import roma
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+for path in (str(REPO_ROOT), str(SRC_ROOT)):
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 from dust3r.utils.geometry import depthmap_to_absolute_camera_coordinates, geotrf
 from dust3r.utils.smpl_layer import SMPL_Layer
@@ -21,6 +28,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output_dir", type=Path, required=True, help="Saved Human3R output directory.")
     parser.add_argument("--raw_output_dir", type=Path, default=None, help="Optional raw output directory to show raw cameras as gray GT cameras.")
+    parser.add_argument(
+        "--align_raw_to_output0",
+        action="store_true",
+        help="Rigidly align raw_output_dir cameras to output_dir by matching frame-0 camera pose.",
+    )
     parser.add_argument("--num_frames", type=int, default=None)
     parser.add_argument("--source_video", type=Path, default=None, help="Optional source mp4 used to infer frame count.")
     parser.add_argument("--viewer_port", type=int, default=8080)
@@ -70,6 +82,27 @@ def load_cam_dict(output_dir: Path, num_frames: int) -> dict:
         "R": np.asarray(R, dtype=np.float32),
         "t": np.asarray(t, dtype=np.float32),
     }
+
+
+def _cam_pose(cam_dict: dict, idx: int) -> np.ndarray:
+    pose = np.eye(4, dtype=np.float32)
+    pose[:3, :3] = cam_dict["R"][idx]
+    pose[:3, 3] = cam_dict["t"][idx]
+    return pose
+
+
+def align_cam_dict_to_reference(cam_dict: dict, ref_cam_dict: dict) -> dict:
+    """Map cam_dict world coordinates into ref_cam_dict's frame-0 world gauge."""
+    transform = _cam_pose(ref_cam_dict, 0) @ np.linalg.inv(_cam_pose(cam_dict, 0))
+    aligned_R, aligned_t = [], []
+    for idx in range(len(cam_dict["R"])):
+        pose = transform @ _cam_pose(cam_dict, idx)
+        aligned_R.append(pose[:3, :3].astype(np.float32))
+        aligned_t.append(pose[:3, 3].astype(np.float32))
+    out = dict(cam_dict)
+    out["R"] = np.asarray(aligned_R, dtype=np.float32)
+    out["t"] = np.asarray(aligned_t, dtype=np.float32)
+    return out
 
 
 def load_viewer_payload(output_dir: Path, num_frames: int, device: str):
@@ -176,6 +209,9 @@ def main() -> None:
     show_gt_camera = False
     if args.raw_output_dir is not None:
         gt_cam_dict = load_cam_dict(args.raw_output_dir, num_frames)
+        if args.align_raw_to_output0:
+            gt_cam_dict = align_cam_dict_to_reference(gt_cam_dict, cam_dict)
+            print("Raw cameras aligned to output frame-0 world gauge.")
         show_gt_camera = True
         print(f"Raw cameras loaded as gray GT camera frustums from {args.raw_output_dir}")
 
