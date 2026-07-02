@@ -1032,6 +1032,8 @@ def train_one_epoch_mixed_resolution(
                 metric_logger.update(**{f"{source_name}_{k}": v for k, v in source_summary.items()})
                 step_source[f"{source_name}_loss"] = loss_value
                 step_source.update({f"{source_name}_{k}": v for k, v in source_summary.items()})
+                source_details = _make_compact_record(loss_details, list(loss_details.keys()))
+                step_source.update({f"{source_name}_{k}": v for k, v in source_details.items()})
 
                 del loss, weighted_loss, result, batch
 
