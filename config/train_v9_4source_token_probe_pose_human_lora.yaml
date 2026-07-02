@@ -1,0 +1,143 @@
+# V9 four-source quick correct-token probe.
+#
+# Purpose:
+# - Fast overfit-style experiments for correct-token construction changes.
+# - Keep the current standard model/loss/data-loader path, but use tiny fixed
+#   manifests from AvatarReX, THuman, MVHuman100 and MVHuman200.
+# - Include both AABB and AAAA clips: AABB checks correction capacity, AAAA
+#   checks whether the learned gate/token over-corrects continuous clips.
+# - Expose token/pooling knobs so derived configs can change one variable only.
+defaults:
+  - train_v9_4source_angle60_baseline_pose_human_lora_bs10
+  - _self_
+
+v9_probe_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_token_probe
+v9_token_ablation: all
+v9_pose_corr_pooling: mean
+v9_human_corr_pooling: mean
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_variant='relation_v8_2',
+  v8_pose_prompt_num_heads=8, v8_pose_prompt_dropout=0.0,
+  v8_pose_prompt_gate_bias=0.0,
+  v8_pose_prompt_use_history=True,
+  v8_pose_prompt_use_pose_memory=True,
+  v8_pose_prompt_use_reliability=True,
+  v8_pose_prompt_use_gate=True,
+  v8_pose_prompt_image_only=True,
+  v8_pose_prompt_token_ablation='${v9_token_ablation}',
+  v8_pose_prompt_pooling='${v9_pose_corr_pooling}',
+  v8_human_trans_corr=False,
+  v8_human_trans_corr_gate_bias=0.0,
+  v8_human_trans_corr_use_gate=True,
+  v8_human_trans_corr_gate_mode='shared',
+  v8_human_trans_corr_max_delta=3.0,
+  v8_human_trans_corr_apply_from_view=-1,
+  v8_human_latent_corr=True,
+  v8_human_latent_corr_gate_bias=0.0,
+  v8_human_latent_corr_use_gate=True,
+  v8_human_latent_corr_gate_mode='shared',
+  v8_human_latent_corr_max_delta=1.0,
+  v8_human_latent_corr_apply_from_view=-1,
+  v8_human_latent_corr_pooling='${v9_human_corr_pooling}',
+  v8_pose_head_lora=True,
+  v8_human_head_lora=True,
+  v8_head_lora_rank=8,
+  v8_head_lora_alpha=8.0,
+  v8_head_lora_dropout=0.0))
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.30
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9101, n_corres=0, manifest_path="${v9_probe_manifest_root}/avatarrex/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9102, n_corres=0, manifest_path="${v9_probe_manifest_root}/avatarrex/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9201, n_corres=0, manifest_path="${v9_probe_manifest_root}/thuman/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9202, n_corres=0, manifest_path="${v9_probe_manifest_root}/thuman/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9301, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman100/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9302, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman100/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200
+    weight: 0.20
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9401, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman200/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9402, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman200/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_mixed_epoch_steps: 3
+batch_size: 1
+num_workers: 0
+accum_iter: 1
+epochs: 20
+warmup_epochs: 1
+eval_freq: 10
+
+gradient_checkpointing: false
+cuda_cache_reserve_mb: 0
+cuda_cache_reserve_safety_mb: 0
+cuda_cache_reserve_chunk_mb: 512
+
+val_dataset:
+  - name: avatarrex_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9501, n_corres=0, manifest_path="${v9_probe_manifest_root}/avatarrex/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_aaaa
+    dataset: >-
+      1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9502, n_corres=0, manifest_path="${v9_probe_manifest_root}/avatarrex/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9503, n_corres=0, manifest_path="${v9_probe_manifest_root}/thuman/train_aabb.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_aaaa
+    dataset: >-
+      1 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9504, n_corres=0, manifest_path="${v9_probe_manifest_root}/thuman/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9505, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman100/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman100_aaaa
+    dataset: >-
+      1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9506, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman100/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_aabb
+    dataset: >-
+      2 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9507, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman200/train_aabb.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_aaaa
+    dataset: >-
+      1 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=9508, n_corres=0, manifest_path="${v9_probe_manifest_root}/mvhuman200/train_aaaa.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+test_dataset: ${val_dataset}
+
+save_freq: 10
+keep_freq: 0
+early_stopping_patience: 1000000
+save_last_checkpoint: true
+save_final_checkpoint: true
+print_freq: 1
+structured_log_freq: 1
+print_img_freq: 1000000
+save_code: false
+console_log_keys: [lr, loss, avatarrex_loss, thuman_loss, mvhuman100_loss, mvhuman200_loss]
+
+exp_name: v9_4source_token_probe_${v9_token_ablation}_pose_${v9_pose_corr_pooling}_human_${v9_human_corr_pooling}
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}

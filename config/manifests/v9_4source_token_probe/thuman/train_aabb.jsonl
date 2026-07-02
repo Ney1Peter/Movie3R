@@ -1,0 +1,2 @@
+{"angle_bucket": "120_150", "clip_type": "aabb", "group": "thuman00", "seqA": "thuman00/cam23", "seqB": "thuman00/cam14", "start_frame": 1453, "view_angle_deg": 136.180613}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "thuman00", "seqA": "thuman00/cam07", "seqB": "thuman00/cam19", "start_frame": 829, "view_angle_deg": 177.566752}

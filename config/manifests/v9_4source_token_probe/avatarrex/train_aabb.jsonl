@@ -1,0 +1,2 @@
+{"angle_bucket": "120_150", "clip_type": "aabb", "group": "lbn1", "seqA": "lbn1/22053926", "seqB": "lbn1/22010716", "start_frame": 1192, "view_angle_deg": 132.853287}
+{"angle_bucket": "150_180", "clip_type": "aabb", "group": "lbn2", "seqA": "lbn2/22053907", "seqB": "lbn2/22070928", "start_frame": 1021, "view_angle_deg": 176.630065}
