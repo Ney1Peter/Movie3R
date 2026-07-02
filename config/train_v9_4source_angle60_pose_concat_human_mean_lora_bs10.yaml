@@ -1,0 +1,53 @@
+# V9 four-source angle>=60 pooling ablation.
+#
+# Difference from train_v9_4source_angle60_baseline_pose_human_lora_bs10:
+# - Pose residual head pools refined correct tokens with concat_mlp.
+# - Human latent correction head keeps mean pooling.
+# Everything else, including data, loss, schedule, LoRA rank, and original
+# Human3R initialization, is kept identical for a clean comparison.
+defaults:
+  - train_v9_4source_angle60_baseline_pose_human_lora_bs10
+  - _self_
+
+model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
+  state_size=768, state_pe='2d', pos_embed='RoPE100',
+  rgb_head=True, pose_head=True, msk_head=True, patch_embed_cls='ManyAR_PatchEmbed', img_size=(512,
+  512), head_type='dpt', output_mode='pts3d+pose+smpl', depth_mode=('exp', -inf, inf),
+  conf_mode=('exp', 1, inf), pose_mode=('exp', -inf, inf), enc_embed_dim=1024, enc_depth=24,
+  enc_num_heads=16, dec_embed_dim=768, dec_depth=12, dec_num_heads=12, landscape_only=False,
+  backbone='dinov2_vitl14', mhmr_img_res=896, lora_rank=64, shot_loss_weight=0.0,
+  shot_q0_loss_weight=0.0, shot_scale_init=0.0, shot_noop_loss_weight=0.0,
+  pose_delta_t_max=0.5, pose_align_delta_t_max=0.25, pose_align_delta_q_max=0.05,
+  shot_pointmap_keep_loss_weight=0.0, shot_pose_residual_loss_weight=0.0,
+  shot_pose_layers='none', layerwise_pose_shot_scale_init=0.0,
+  v8_pose_prompt_variant='relation_v8_2',
+  v8_pose_prompt_num_heads=8, v8_pose_prompt_dropout=0.0,
+  v8_pose_prompt_gate_bias=0.0,
+  v8_pose_prompt_use_history=True,
+  v8_pose_prompt_use_pose_memory=True,
+  v8_pose_prompt_use_reliability=True,
+  v8_pose_prompt_use_gate=True,
+  v8_pose_prompt_image_only=True,
+  v8_pose_prompt_pooling='concat_mlp',
+  v8_human_trans_corr=False,
+  v8_human_trans_corr_gate_bias=0.0,
+  v8_human_trans_corr_use_gate=True,
+  v8_human_trans_corr_gate_mode='shared',
+  v8_human_trans_corr_max_delta=3.0,
+  v8_human_trans_corr_apply_from_view=-1,
+  v8_human_latent_corr=True,
+  v8_human_latent_corr_gate_bias=0.0,
+  v8_human_latent_corr_use_gate=True,
+  v8_human_latent_corr_gate_mode='shared',
+  v8_human_latent_corr_max_delta=1.0,
+  v8_human_latent_corr_apply_from_view=-1,
+  v8_human_latent_corr_pooling='mean',
+  v8_pose_head_lora=True,
+  v8_human_head_lora=True,
+  v8_head_lora_rank=8,
+  v8_head_lora_alpha=8.0,
+  v8_head_lora_dropout=0.0))
+
+exp_name: v9_4source_angle60_pose_concat_human_mean_lora_bs10
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_angle60_pooling_ablation/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_angle60_pooling_ablation/${exp_name}
