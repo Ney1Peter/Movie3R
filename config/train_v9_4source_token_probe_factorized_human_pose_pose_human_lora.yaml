@@ -1,0 +1,24 @@
+# V9 four-source quick probe: factorized human-then-pose correction.
+#
+# Same tiny four-source setup as the baseline token probe:
+# AvatarReX + THuman + MVHuman100 + MVHuman200, with both AABB and AAAA clips.
+# This keeps the baseline semantic/alignment/momentum correct tokens and mean
+# pooling, but first applies the human latent correction, then conditions pose
+# correction on that corrected human anchor.
+defaults:
+  - train_v9_4source_token_probe_pose_human_lora
+  - _self_
+
+v9_token_ablation: all
+v9_pose_corr_pooling: mean
+v9_human_corr_pooling: mean
+v9_factorized_human_pose_corr: true
+v9_factorized_human_stopgrad_for_pose: true
+
+epochs: 60
+save_freq: 20
+eval_freq: 10
+
+exp_name: v9_4source_token_probe_factorized_human_pose_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}
