@@ -4,6 +4,18 @@
 
 这份文档用于简单记录最近围绕 V9 baseline 做过的模型和 loss 改进探索。重点不是完整复现实验，而是说明：我们为什么改、改了什么、效果如何、下一步建议是什么。
 
+## 0. 指标口径
+
+本文的指标优先使用已经做过的较大训练结果；如果某个消融只做过小规模 probe，就使用小 probe 指标。不同规模的数据分布和样本量不同，所以不要把“大训练”和“小 probe”的绝对 loss 直接横向比较，主要看同一张表内的相对变化。
+
+主要指标含义：
+
+- `AABB avg loss`：跨视角 / 跨镜头跳变序列上的平均 correction loss，越低越好。
+- `AAAA avg loss`：连续同视角稳定序列上的平均 loss，越低说明越不容易误修。
+- `AABB pose loss`：AABB 上 camera pose correction 的 loss，越低越好。
+- `AABB human trans loss`：AABB 上人体 translation correction 的 loss，越低越好。
+- `Cam Trans / Cam Rot`：旧 benchmark 中的 camera 平移 / 旋转误差，越低越好。
+
 ## 1. 当前 Baseline
 
 当前比较稳定的 baseline 是 V9 的标准 human-pose correction 版本：
@@ -19,11 +31,12 @@
 
 这个版本的特点是比较稳。它不一定在每一个 AABB case 上纠正最强，但 AAAA 连续序列不容易被过度纠正，因此整体作为 baseline 是合理的。
 
-小 probe 最终结果大致为：
+已有指标：
 
-| Variant | AABB avg loss ↓ | AAAA avg loss ↓ | AABB pose loss ↓ | AABB human trans ↓ |
-|---|---:|---:|---:|---:|
-| baseline | 0.0813 | 0.0154 | 0.0451 | 0.000274 |
+| Variant | 规模 | Epoch | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 备注 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline all-mean | 4source 大训练，running latest | 143 | 1.3738 | 0.4377 | 1.3532 | 5.42e-04 | 正式 baseline 大训练还在跑，使用 2026-07-06 最新日志 |
+| baseline all-mean | 4source 小 probe | 63 | 0.0813 | 0.0154 | 0.0451 | 2.74e-04 | 用于和 token / body-part 小消融同口径比较 |
 
 结论：baseline 目前是最稳的默认版本。
 
@@ -36,6 +49,44 @@
 - 去掉 momentum token。
 - 把多个 token 提前压成 single token。
 - 使用 mean pooling、concat MLP、learnable pooling 等不同汇聚方式。
+
+### 2.1 三个 token 是否都需要
+
+4source 小 probe 指标：
+
+| Variant | 规模 | Epoch | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline all-mean | 4source 小 probe | 63 | 0.0813 | 0.0154 | 0.0451 | 2.74e-04 | 当前小 probe baseline，稳定性最好 |
+| no semantic | 4source 小 probe | 60 | 0.1071 | 0.0343 | 0.0185 | 0.0013 | pose 变低，但整体和 human 明显变差 |
+| no alignment | 4source 小 probe | 60 | 0.1021 | 0.0385 | 0.0185 | 0.0011 | 去掉对齐信息后 AAAA 误修更明显 |
+| no momentum | 4source 小 probe | 60 | 0.0924 | 0.0305 | 0.0120 | 7.57e-04 | AABB pose 低，但整体稳定性不如 baseline |
+
+早期 token 模块消融旧 benchmark 指标：
+
+| Variant | Cam Trans ↓ | Cam Rot ↓ | 观察 |
+|---|---:|---:|---|
+| all_mean | 0.1543 m | 3.86 deg | 完整 baseline |
+| no semantic | 0.5447 m | 7.51 deg | 明显变差 |
+| no alignment | 0.1215 m | 2.64 deg | 单例旋转好，但不能证明全局最好 |
+| no momentum | 0.0968 m | 4.45 deg | 单例平移好，但旋转差 |
+| single_token | 0.1758 m | 5.16 deg | 信息压缩太早 |
+| learned_pooling | 0.4015 m | 6.08 deg | 小数据下不稳定 |
+
+### 2.2 pooling / contact-style 融合方式
+
+较大 4source 训练中，目前只对 `pose concat-MLP + human mean` 做了正式对照，训练仍在进行中：
+
+| Variant | 规模 | Epoch | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline all-mean | 4source 大训练，running latest | 143 | 1.3738 | 0.4377 | 1.3532 | 5.42e-04 | 稳定下降中 |
+| pose concat-MLP + human mean | 4source 大训练，running latest | 132 | 1.2377 | 0.6100 | 1.2204 | 5.72e-04 | AABB 略低，但 AAAA 更差，当前还不能说明优于 baseline |
+
+早期 `benchmark_mixed_small18` pooling 指标：
+
+| Variant | AABB cam 降低量 ↑ | AABB gain ↑ | AABB human 降低量 ↑ | AAAA gate ↓ | Loss ↓ |
+|---|---:|---:|---:|---:|---:|
+| global_weighted | 0.177 m | 0.177 m | 0.151 m | 0.147 | 1.412 |
+| all_concat / contact-style | 0.213 m | 0.213 m | 0.181 m | 0.055 | 0.892 |
 
 总体观察：
 
@@ -56,6 +107,28 @@
 - semantic + alignment + human。
 - human alignment token。
 - 单序列过拟合测试。
+
+4source 小 probe 指标：
+
+| Variant | 规模 | Epoch | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline all-mean | 4source 小 probe | 63 | 0.0813 | 0.0154 | 0.0451 | 2.74e-04 | 最稳 |
+| human-only | 4source 小 probe | 60 | 0.1113 | 0.0405 | 0.0194 | 0.0018 | 只看人体不稳定，容易误修 |
+| human + semantic | 4source 小 probe | 60 | 0.1026 | 0.0307 | 0.0180 | 7.00e-04 | 比 human-only 好，但仍不如 baseline |
+| semantic + alignment + human | 4source 小 probe | 60 | 0.1067 | 0.0251 | 0.0142 | 7.71e-04 | 主观看起来不错，但客观整体没有超过 baseline |
+| human alignment | 4source 小 probe | 60 | 0.1001 | 0.0329 | 0.0137 | 9.33e-04 | AABB pose 好，但 human / AAAA 变差 |
+| human pose alignment | 4source 小 probe | 60 | 0.1090 | 0.0284 | 0.0165 | 0.0010 | 仍没有稳定超过 baseline |
+
+单序列过拟合指标：
+
+| Variant | 规模 | Epoch | Avg loss ↓ | Pose loss ↓ | Human trans ↓ | Drift loss ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline all-mean | single-seq overfit | 120 | 0.0529 | 0.0058 | 2.83e-06 | 0.0657 | 能拟合，但不是最低 |
+| pose concat-MLP + human mean | single-seq overfit | 120 | 0.0246 | 0.0049 | 2.82e-06 | 0.0330 | 单序列拟合更强 |
+| human-only | single-seq overfit | 120 | 0.0447 | 0.0061 | 1.87e-06 | 0.2020 | 能拟合，但 drift/gate 不稳 |
+| semantic + alignment + human | single-seq overfit | 120 | 0.0553 | 0.0066 | 2.61e-06 | 0.1465 | 单序列也没有明显优势 |
+| pelvis / hip / feet anchor | single-seq overfit | 120 | 0.0364 | 0.0049 | 2.04e-06 | 0.0296 | 单序列上有效，但多 source 不稳定 |
+| human ref pairwise | single-seq overfit | 120 | 0.0267 | 0.0049 | 2.25e-06 | 0.1076 | 局部拟合好，但泛化风险待验证 |
 
 观察：
 
@@ -78,13 +151,21 @@
 
 小 probe 结果：
 
-| Variant | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 观察 |
-|---|---:|---:|---:|---:|---|
-| baseline | 0.0813 | 0.0154 | 0.0451 | 0.000274 | 最稳 |
-| body_part_shared_w2 | 0.1010 | 0.0325 | 0.0138 | 0.000659 | pose 变好，但整体变差 |
-| body_part_human_w2 | 0.0898 | 0.0350 | 0.0119 | 0.000384 | body-part 里较好，但 AAAA 伤得明显 |
-| body_part_human_w0.5 | 0.0928 | 0.0353 | 0.0148 | 0.000271 | 降权后没有解决 AAAA 问题 |
-| body_part_aux_only | 0.1002 | 0.0311 | 0.0125 | 0.000683 | 辅助-only 也没有超过 baseline |
+| Variant | 规模 | Epoch | AABB avg ↓ | AAAA avg ↓ | AABB pose ↓ | AABB human ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| baseline | 4source 小 probe | 63 | 0.0813 | 0.0154 | 0.0451 | 2.74e-04 | 最稳 |
+| body_part_shared_w2 | 4source 小 probe | 60 | 0.1010 | 0.0325 | 0.0138 | 6.59e-04 | pose 变好，但整体变差 |
+| body_part_human_w2 | 4source 小 probe | 60 | 0.0898 | 0.0350 | 0.0119 | 3.84e-04 | body-part 里较好，但 AAAA 伤得明显 |
+| body_part_human_w0.5 | 4source 小 probe | 60 | 0.0928 | 0.0353 | 0.0148 | 2.71e-04 | 降权后没有解决 AAAA 问题 |
+| body_part_aux_only | 4source 小 probe | 60 | 0.1002 | 0.0311 | 0.0125 | 6.83e-04 | 辅助-only 也没有超过 baseline |
+| pelvis / hip / feet anchor | 4source 小 probe | 60 | 0.1014 | 0.0423 | 0.0125 | 6.74e-04 | 单序列指标好，多 source 上过度纠正更明显 |
+
+MVHuman 单序列 body-part 过拟合指标：
+
+| Variant | 规模 | Epoch | Avg loss ↓ | Pose loss ↓ | Human trans ↓ | Drift loss ↓ | 观察 |
+|---|---|---:|---:|---:|---:|---:|---|
+| body_part_human_only | single-seq overfit | 30 | 0.0830 | 0.0066 | 1.77e-06 | 0.6469 | 训练不够充分，drift/gate 明显不稳 |
+| body_part_residual | single-seq overfit | 120 | 0.0280 | 0.0050 | 2.29e-06 | 0.0271 | 单序列可以拟合得很好 |
 
 关键现象：
 
@@ -97,6 +178,16 @@
 ## 5. Loss / Gate 方向
 
 目前最大问题不是模型没有纠正能力，而是纠正力度和触发条件不够稳。
+
+已有指标侧面说明了这个问题：
+
+| 实验 | 规模 | 指标现象 | 说明 |
+|---|---|---|---|
+| baseline 小 probe | 4source 小 probe | AABB `0.0813`，AAAA `0.0154` | 整体最稳，连续序列不容易被误修 |
+| body_part_human_w2 | 4source 小 probe | AABB pose `0.0119`，但 AAAA `0.0350` | 修正能力增强，但不该修时也会修 |
+| body_part_aux_only | 4source 小 probe | AABB pose `0.0125`，AAAA `0.0311` | 即使 body-part 只辅助，也仍会带来过度纠正 |
+| all_concat / contact-style | 旧 small18 benchmark | AAAA gate `0.055`，loss `0.892` | 早期指标显示 gate 更克制，但大训练仍需确认 |
+| pose concat-MLP + human mean | 4source 大训练，running latest | AABB `1.2377`，AAAA `0.6100` | 大训练当前 AABB 略好，但 AAAA 更差 |
 
 已有观察：
 
