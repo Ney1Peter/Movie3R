@@ -55,6 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--test_split", default="Test/v8_4_mixed_aabb_aaaa")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 512), metavar=("W", "H"))
+    parser.add_argument("--num_views", type=int, default=4)
     parser.add_argument("--resize_mode", default="resize_only_16")
     parser.add_argument("--raw_roots", default="null")
     parser.add_argument("--overwrite", action="store_true")
@@ -277,6 +278,7 @@ def main() -> None:
         data_root=args.data_root,
         test_split=args.test_split,
         resolution=tuple(args.resolution),
+        num_views=int(args.num_views),
         resize_mode=args.resize_mode,
         raw_roots=args.raw_roots,
     )

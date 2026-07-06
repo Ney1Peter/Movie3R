@@ -296,6 +296,8 @@ class V82PoseRelationPrompt(nn.Module):
             "human_semantic",
             "human_pose_alignment",
             "semantic_alignment_human",
+            "human_anchor_single",
+            "human_anchor_multi",
         }
         if self.token_ablation not in valid_ablations:
             raise ValueError(
@@ -312,8 +314,10 @@ class V82PoseRelationPrompt(nn.Module):
             raise ValueError(
                 f"V82PoseRelationPrompt token_ablation={self.token_ablation!r} requires use_human_alignment=True"
             )
-        if self.token_ablation in {"single_token", "human_only"}:
+        if self.token_ablation in {"single_token", "human_only", "human_anchor_single"}:
             self.num_corr_tokens = 1
+        elif self.token_ablation == "human_anchor_multi":
+            self.num_corr_tokens = 4
         elif self.token_ablation in {"human_semantic", "human_pose_alignment"}:
             self.num_corr_tokens = 2
         elif self.token_ablation == "semantic_alignment_human":
@@ -383,6 +387,19 @@ class V82PoseRelationPrompt(nn.Module):
         self.body_part_mlp = nn.Sequential(
             nn.LayerNorm(self.dec_dim * 4),
             nn.Linear(self.dec_dim * 4, self.dec_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_dim, self.dec_dim),
+        )
+        self.human_anchor_single_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 4),
+            nn.Linear(self.dec_dim * 4, self.dec_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_dim, self.dec_dim),
+        )
+        self.human_anchor_type_embed = nn.Parameter(torch.randn(1, 4, self.dec_dim) * 0.02)
+        self.human_anchor_multi_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 5),
+            nn.Linear(self.dec_dim * 5, self.dec_dim),
             nn.GELU(),
             nn.Linear(self.dec_dim, self.dec_dim),
         )
@@ -484,23 +501,13 @@ class V82PoseRelationPrompt(nn.Module):
         else:
             momentum_token = pose_token.new_zeros(batch_size, 1, self.dec_dim)
 
-        corr_token_parts = []
-        single_token_parts = [semantic_token, alignment_token, momentum_token]
-        body_part_token = None
-        if self.token_ablation not in {"single_token", "no_semantic", "human_only", "human_pose_alignment"}:
-            corr_token_parts.append(semantic_token + self.token_type_embed[:, 0:1])
-        if self.token_ablation not in {"single_token", "no_alignment", "human_only", "human_semantic"}:
-            corr_token_parts.append(alignment_token + self.token_type_embed[:, 1:2])
-        if self.token_ablation not in {
-            "single_token",
-            "no_momentum",
-            "human_only",
-            "human_semantic",
-            "human_pose_alignment",
-            "semantic_alignment_human",
-        }:
-            corr_token_parts.append(momentum_token + self.token_type_embed[:, 2:3])
-        if self.use_human_alignment:
+        needs_human_context = (
+            self.use_human_alignment
+            or self.use_body_part_token
+            or self.token_ablation in {"human_anchor_single", "human_anchor_multi"}
+        )
+        current_human = prev_human = human_delta_latent = None
+        if needs_human_context:
             if _has_aligned_batch(human_tokens, batch_size):
                 current_human = self.human_proj(human_tokens).mean(dim=1, keepdim=True)
             else:
@@ -510,6 +517,39 @@ class V82PoseRelationPrompt(nn.Module):
             else:
                 prev_human = current_human
             human_delta_latent = current_human - prev_human
+
+        corr_token_parts = []
+        single_token_parts = [semantic_token, alignment_token, momentum_token]
+        body_part_token = None
+        if self.token_ablation == "human_anchor_single":
+            human_anchor_token = self.human_anchor_single_mlp(
+                torch.cat([current_human, prev_human, human_delta_latent, memory_token], dim=-1)
+            )
+            corr_token_parts = [human_anchor_token + self.token_type_embed[:, 0:1]]
+        elif self.token_ablation == "human_anchor_multi":
+            base = torch.cat([current_human, prev_human, human_delta_latent, memory_token], dim=-1)
+            base = base.expand(-1, 4, -1)
+            anchor_type = self.human_anchor_type_embed.expand(batch_size, -1, -1).to(
+                device=base.device,
+                dtype=base.dtype,
+            )
+            human_anchor_tokens = self.human_anchor_multi_mlp(torch.cat([base, anchor_type], dim=-1))
+            corr_token_parts = [human_anchor_tokens + self.token_type_embed[:, :4]]
+        else:
+            if self.token_ablation not in {"single_token", "no_semantic", "human_only", "human_pose_alignment"}:
+                corr_token_parts.append(semantic_token + self.token_type_embed[:, 0:1])
+            if self.token_ablation not in {"single_token", "no_alignment", "human_only", "human_semantic"}:
+                corr_token_parts.append(alignment_token + self.token_type_embed[:, 1:2])
+            if self.token_ablation not in {
+                "single_token",
+                "no_momentum",
+                "human_only",
+                "human_semantic",
+                "human_pose_alignment",
+                "semantic_alignment_human",
+            }:
+                corr_token_parts.append(momentum_token + self.token_type_embed[:, 2:3])
+        if self.use_human_alignment and self.token_ablation not in {"human_anchor_single", "human_anchor_multi"}:
             human_alignment_token = self.human_alignment_mlp(
                 torch.cat([current_human, prev_human, human_delta_latent, memory_token], dim=-1)
             )
@@ -517,16 +557,10 @@ class V82PoseRelationPrompt(nn.Module):
             if self.token_ablation != "single_token":
                 corr_token_parts.append(human_alignment_token + self.token_type_embed[:, 3:4])
 
-        if self.use_body_part_token:
-            if _has_aligned_batch(human_tokens, batch_size):
-                current_body = self.human_proj(human_tokens).mean(dim=1, keepdim=True)
-            else:
-                current_body = pose_token.new_zeros(batch_size, 1, self.dec_dim)
-            if self.use_history and _has_aligned_batch(prev_human_token, batch_size):
-                prev_body = self.human_proj(prev_human_token).mean(dim=1, keepdim=True)
-            else:
-                prev_body = current_body
-            body_delta_latent = current_body - prev_body
+        if self.use_body_part_token and self.token_ablation not in {"human_anchor_single", "human_anchor_multi"}:
+            current_body = current_human
+            prev_body = prev_human
+            body_delta_latent = human_delta_latent
             # Lightweight body-part cue: current human prompt, previous human
             # memory, their latent displacement, and semantic scene context.
             body_part_token = self.body_part_mlp(

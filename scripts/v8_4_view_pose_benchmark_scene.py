@@ -190,7 +190,7 @@ def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_
         ROOT=str(args.data_root),
         aug_crop=0,
         resolution=tuple(args.resolution),
-        num_views=4,
+        num_views=int(getattr(args, "num_views", 4)),
         seed=401,
         n_corres=0,
         manifest_path=str(manifest_path),

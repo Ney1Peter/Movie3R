@@ -54,16 +54,21 @@ class SMPLModel(object):
     def __init__(self, device, model_args={}, eval_args={}):
         self.device = device
         self.person_center = 'head'
+        self.fast_gt = os.environ.get("MOVIE3R_FAST_SMPL_GT", "").lower() in {"1", "true", "yes"}
         
         self.patch_size = model_args.get('patch_size', 16)
         self.mhmr_img_res = model_args.get('mhmr_img_res', 896)
         self.bb_patch_size = model_args.get('bb_patch_size', 14)
 
         # Parametric 3D human models
-        self.smplx_neutral_11 = smplx.create(
-            SMPLX_DIR, 'smplx', gender='neutral', use_pca=False, flat_hand_mean=True, num_betas=11).to(self.device)
-        self.smplx_neutral_10 = smplx.create(
-            SMPLX_DIR, 'smplx', gender='neutral', use_pca=False, flat_hand_mean=True, num_betas=10).to(self.device)
+        if self.fast_gt:
+            self.smplx_neutral_11 = None
+            self.smplx_neutral_10 = None
+        else:
+            self.smplx_neutral_11 = smplx.create(
+                SMPLX_DIR, 'smplx', gender='neutral', use_pca=False, flat_hand_mean=True, num_betas=11).to(self.device)
+            self.smplx_neutral_10 = smplx.create(
+                SMPLX_DIR, 'smplx', gender='neutral', use_pca=False, flat_hand_mean=True, num_betas=10).to(self.device)
         
         # Evaluation
         self.use_fake_K = eval_args.get('use_fake_K', False)
@@ -170,7 +175,200 @@ class SMPLModel(object):
 
         return verts, jts
 
+    def update_smpl_gt_fast(self, views):
+        target = {}
+        batch_size = views[0]["img"].shape[0]
+
+        smpl_keys = [k for k in views[0].keys() if 'smpl' in k]
+        smpl_dict = {
+            k: (stacked := torch.stack(
+                [view.pop(k) for view in views], dim=0)).view(-1, *stacked.shape[2:])
+            for k in smpl_keys
+        }
+        smpl_mask = smpl_dict['smpl_mask']
+        idx_h = torch.where(smpl_mask)
+        K = torch.stack([view['camera_intrinsics'] for view in views], dim=0)
+        K = K.view(-1, *K.shape[2:])
+        nhv = int(smpl_mask.sum())
+        if nhv == 0:
+            target['has_smpl'] = False
+            return target
+
+        imgs = torch.stack([view["img"] for view in views], dim=0)
+        imgs = imgs.view(-1, *imgs.shape[2:])
+        K_mhmr = resize_camera_intrinsics(K, *imgs.shape[2:], self.mhmr_img_res)
+        imgs_mhmr = pad_image(imgs, self.mhmr_img_res)
+
+        human_params_are_world = None
+        if "human_params_are_world" in views[0]:
+            human_params_are_world = torch.stack(
+                [view["human_params_are_world"] for view in views], dim=0
+            ).view(-1).bool()
+
+        T_w2c = None
+        if "T_w2c" in views[0]:
+            T_w2c = torch.stack([view["T_w2c"] for view in views], dim=0)
+            T_w2c = T_w2c.view(-1, *T_w2c.shape[2:])
+
+        transl = smpl_dict["smplx_transl"][smpl_mask]
+        head = transl.clone()
+        pelvis = transl.clone()
+
+        precomputed = None
+        if "smplx_has_precomputed_keypoints" in smpl_dict:
+            precomputed = smpl_dict["smplx_has_precomputed_keypoints"][smpl_mask].reshape(-1) > 0.5
+
+        if "smplx_head_world" in smpl_dict:
+            head_src = smpl_dict["smplx_head_world"][smpl_mask].to(
+                device=head.device, dtype=head.dtype
+            )
+            if precomputed is not None:
+                head[precomputed] = head_src[precomputed]
+            else:
+                head = head_src
+        if "smplx_pelvis_world" in smpl_dict:
+            pelvis_src = smpl_dict["smplx_pelvis_world"][smpl_mask].to(
+                device=pelvis.device, dtype=pelvis.dtype
+            )
+            if precomputed is not None:
+                pelvis[precomputed] = pelvis_src[precomputed]
+            else:
+                pelvis = pelvis_src
+
+        smpl_world_selected = None
+        T_w2c_selected = None
+        if human_params_are_world is not None and T_w2c is not None:
+            smpl_world_selected = human_params_are_world[idx_h[0]]
+            T_w2c_selected = T_w2c[idx_h[0]]
+
+        def world_to_cam(points):
+            if (
+                smpl_world_selected is None
+                or T_w2c_selected is None
+                or not smpl_world_selected.any()
+            ):
+                return points
+            out = points.clone()
+            T_sel = T_w2c_selected[smpl_world_selected].to(
+                device=points.device, dtype=points.dtype
+            )
+            R = T_sel[:, :3, :3]
+            t = T_sel[:, :3, 3]
+            if points.ndim == 2:
+                out[smpl_world_selected] = torch.einsum(
+                    "bij,bj->bi", R, points[smpl_world_selected]
+                ) + t
+            else:
+                out[smpl_world_selected] = torch.einsum(
+                    "bij,bnj->bni", R, points[smpl_world_selected]
+                ) + t[:, None, :]
+            return out
+
+        head = world_to_cam(head)
+        pelvis = world_to_cam(pelvis)
+
+        num_joints = len(JOINT_NAMES)
+        jts_cam = transl.new_zeros(nhv, num_joints, 3)
+        head_idx = JOINT_NAMES.index(self.person_center)
+        pelvis_idx = JOINT_NAMES.index("pelvis")
+        jts_cam[:, head_idx] = head
+        jts_cam[:, pelvis_idx] = pelvis
+
+        if precomputed is not None and "smplx_body25_world" in smpl_dict:
+            body25 = smpl_dict["smplx_body25_world"][smpl_mask].to(
+                device=jts_cam.device, dtype=jts_cam.dtype
+            )
+            body25 = world_to_cam(body25)
+            body25_mask = smpl_dict.get("smplx_body25_mask", None)
+            if body25_mask is not None:
+                body25_mask = body25_mask[smpl_mask].to(device=jts_cam.device) > 0.5
+            for body25_idx, smplx_idx in BODY25_TO_SMPLX_JOINTS.items():
+                valid = precomputed
+                if body25_mask is not None:
+                    valid = valid & body25_mask[:, body25_idx]
+                if valid.any():
+                    jts_cam[valid, smplx_idx] = body25[valid, body25_idx]
+
+        target['smpl_transl'] = head
+        target['smpl_transl_pelvis'] = pelvis
+        target['smpl_j3d'] = jts_cam
+        target['smpl_j2d'] = perspective_projection(jts_cam, K[idx_h[0]])
+
+        rot_keys = [
+            'smplx_root_pose',
+            'smplx_body_pose',
+            'smplx_left_hand_pose',
+            'smplx_right_hand_pose',
+            'smplx_jaw_pose',
+        ]
+        if all(k in smpl_dict for k in rot_keys):
+            target['smpl_rotvec'] = torch.cat([smpl_dict[k] for k in rot_keys], 2)[smpl_mask]
+            if (
+                smpl_world_selected is not None
+                and T_w2c_selected is not None
+                and smpl_world_selected.any()
+            ):
+                root_world_rot = target['smpl_rotvec'][smpl_world_selected, 0]
+                root_world_mat = roma.rotvec_to_rotmat(root_world_rot)
+                R_w2c = T_w2c_selected[smpl_world_selected, :3, :3].to(
+                    device=root_world_mat.device, dtype=root_world_mat.dtype
+                )
+                root_cam_rot = roma.rotmat_to_rotvec(R_w2c @ root_world_mat)
+                target['smpl_rotvec'][smpl_world_selected, 0] = root_cam_rot.to(
+                    dtype=target['smpl_rotvec'].dtype
+                )
+            target['smpl_rotmat'] = roma.rotvec_to_rotmat(target['smpl_rotvec'])
+        if 'smplx_shape' in smpl_dict:
+            target['smpl_shape'] = smpl_dict['smplx_shape'][smpl_mask]
+
+        true_shapes = torch.stack([view["true_shape"] for view in views], dim=0)
+        if len(torch.unique(true_shapes, dim=0)) != 1:
+            raise NotImplementedError
+
+        pk = target['smpl_transl'].unsqueeze(1)
+        pk_loc = perspective_projection(pk, K[idx_h[0]]).squeeze(1)
+        n_patch_16, pk_idx_16 = get_patch_uv(true_shapes[0][0], self.patch_size, pk_loc)
+        target['smpl_uv_16'] = pk_idx_16[:, [1, 0]]
+
+        pk_loc_mhmr = perspective_projection(pk, K_mhmr[idx_h[0]]).squeeze(1)
+        n_patch_14, pk_idx_14 = get_patch_uv(self.mhmr_img_res, self.bb_patch_size, pk_loc_mhmr)
+        smpl_mask_14, visible_humans_14, scores_14 = get_score(n_patch_14, pk_idx_14, smpl_mask.clone())
+        target['smpl_uv'] = pk_idx_14[:, [1, 0]]
+
+        _target = {}
+        num_view = len(views)
+        max_humans = smpl_mask_14.shape[1]
+        idx_vis = torch.where(visible_humans_14)[0]
+
+        for k, v in target.items():
+            full_out = torch.zeros(
+                num_view * batch_size, max_humans, *v.shape[1:],
+                device=v.device, dtype=v.dtype,
+            )
+            full_out[smpl_mask_14] = v[idx_vis]
+            _target[k] = full_out.chunk(num_view, dim=0)
+
+        _target['smpl_scores'] = scores_14.chunk(num_view, dim=0)
+        _target['smpl_mask'] = smpl_mask_14.chunk(num_view, dim=0)
+        _target['K_mhmr'] = K_mhmr.chunk(num_view, dim=0)
+        _target['img_mhmr'] = imgs_mhmr.chunk(num_view, dim=0)
+
+        if "msk" in views[0]:
+            msks = torch.stack([view["msk"] for view in views], dim=0)
+            msks = msks.view(-1, *msks.shape[2:])
+            msks_mhmr = pad_image(msks, self.mhmr_img_res, pad_value=0.0)
+            msks_mhmr = (msks_mhmr > 0.1).float()
+            _target['msk_mhmr'] = msks_mhmr.chunk(num_view, dim=0)
+
+        for i, v in enumerate(zip(*_target.values())):
+            views[i].update(dict(zip(_target.keys(), v)))
+
+        torch.cuda.empty_cache()
+
     def update_smpl_gt(self, views):
+        if self.fast_gt:
+            return self.update_smpl_gt_fast(views)
+
         target = {}
 
         batch_size = views[0]["img"].shape[0]
