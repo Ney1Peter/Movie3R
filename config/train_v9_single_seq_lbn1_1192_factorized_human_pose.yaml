@@ -1,0 +1,16 @@
+# V9 single-sequence overfit: factorized human-then-pose correction.
+#
+# Same sequence and schedule as train_v9_single_seq_lbn1_1192_baseline_all_mean.
+# This keeps the baseline three correct tokens, but first applies the human
+# latent correction and then appends the corrected human anchor as an extra
+# condition for the pose residual head.
+defaults:
+  - train_v9_single_seq_lbn1_1192_baseline_all_mean
+  - _self_
+
+v9_factorized_human_pose_corr: true
+v9_factorized_human_stopgrad_for_pose: true
+
+exp_name: v9_single_seq_lbn1_1192_factorized_human_pose
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_single_seq_overfit/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_single_seq_overfit/${exp_name}

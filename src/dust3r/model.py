@@ -251,6 +251,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_pose_prompt_token_ablation="all",
         v8_pose_prompt_pooling="mean",
         v8_pose_prompt_use_decoder_token=True,
+        v8_factorized_human_pose_corr=False,
+        v8_factorized_human_stopgrad_for_pose=True,
         v8_human_latent_corr_pooling=None,
         v8_human_trans_corr=False,
         v8_human_trans_corr_gate_bias=0.0,
@@ -335,6 +337,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_pose_prompt_token_ablation = v8_pose_prompt_token_ablation
         self.v8_pose_prompt_pooling = v8_pose_prompt_pooling
         self.v8_pose_prompt_use_decoder_token = v8_pose_prompt_use_decoder_token
+        self.v8_factorized_human_pose_corr = v8_factorized_human_pose_corr
+        self.v8_factorized_human_stopgrad_for_pose = v8_factorized_human_stopgrad_for_pose
         self.v8_human_latent_corr_pooling = (
             v8_pose_prompt_pooling
             if v8_human_latent_corr_pooling is None
@@ -691,6 +695,10 @@ class ARCroco3DStereo(CroCoNet):
         self.v8_pose_prompt_variant = str(getattr(config, "v8_pose_prompt_variant", "v8_1"))
         self.v8_pose_prompt_image_only = bool(getattr(config, "v8_pose_prompt_image_only", False))
         self.v8_pose_prompt_use_decoder_token = bool(getattr(config, "v8_pose_prompt_use_decoder_token", True))
+        self.v8_factorized_human_pose_corr = bool(getattr(config, "v8_factorized_human_pose_corr", False))
+        self.v8_factorized_human_stopgrad_for_pose = bool(
+            getattr(config, "v8_factorized_human_stopgrad_for_pose", True)
+        )
         self.v8_pose_prompt_body_part_token_target = str(
             getattr(config, "v8_pose_prompt_body_part_token_target", "shared") or "shared"
         ).lower()
@@ -732,6 +740,12 @@ class ARCroco3DStereo(CroCoNet):
                 gate_bias=getattr(config, "v8_pose_prompt_gate_bias", -4.0),
                 use_gate=getattr(config, "v8_pose_prompt_use_gate", True),
             )
+        self.v8_factorized_pose_anchor_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_embed_dim * 4),
+            nn.Linear(self.dec_embed_dim * 4, self.dec_embed_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_embed_dim, self.dec_embed_dim),
+        )
         self.v8_human_trans_corr = bool(getattr(config, "v8_human_trans_corr", False))
         self.v8_human_trans_corr_apply_from_view = int(
             getattr(config, "v8_human_trans_corr_apply_from_view", -1)
@@ -1065,6 +1079,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.downstream_head.pose_head,
                 self.v8_pose_prompt,
                 self.v8_pose_residual_head,
+                self.v8_factorized_pose_anchor_mlp,
                 self.v8_human_trans_corr_head,
                 self.v8_human_latent_corr_head,
             ],
@@ -1114,6 +1129,7 @@ class ARCroco3DStereo(CroCoNet):
                 self.downstream_head.decexpression,
                 self.v8_pose_prompt,
                 self.v8_pose_residual_head,
+                self.v8_factorized_pose_anchor_mlp,
                 self.v8_human_trans_corr_head,
                 self.v8_human_latent_corr_head,
             ]
@@ -1302,6 +1318,8 @@ class ARCroco3DStereo(CroCoNet):
                 self.v8_human_latent_corr_head,
             ])
             train_modules = [self.v8_pose_residual_head]
+            if self.v8_factorized_human_pose_corr:
+                train_modules.append(self.v8_factorized_pose_anchor_mlp)
             if self.v8_pose_prompt_use_decoder_token or self.v8_body_part_residual:
                 train_modules.append(self.v8_pose_prompt)
             if self.v8_human_trans_corr:
@@ -1353,6 +1371,8 @@ class ARCroco3DStereo(CroCoNet):
                 self.v8_human_latent_corr_head,
             ])
             train_modules = [self.v8_pose_residual_head, self.downstream_head.pose_head]
+            if self.v8_factorized_human_pose_corr:
+                train_modules.append(self.v8_factorized_pose_anchor_mlp)
             if self.v8_pose_prompt_use_decoder_token or self.v8_body_part_residual:
                 train_modules.append(self.v8_pose_prompt)
             if self.v8_human_trans_corr:
@@ -1403,6 +1423,8 @@ class ARCroco3DStereo(CroCoNet):
                 self.v8_human_latent_corr_head,
             ])
             train_modules = [self.v8_pose_residual_head]
+            if self.v8_factorized_human_pose_corr:
+                train_modules.append(self.v8_factorized_pose_anchor_mlp)
             if self.v8_pose_prompt_use_decoder_token or self.v8_body_part_residual:
                 train_modules.append(self.v8_pose_prompt)
             if self.v8_human_trans_corr:
@@ -2251,6 +2273,52 @@ class ARCroco3DStereo(CroCoNet):
 
         return torch.cat([pose_token, img_token, human_token], dim=1)
 
+    def _v8_decoder_human_tokens(self, dec_tokens, n_humans, n_corr=0, n_anchor=0, has_shot=False):
+        if int(n_humans) <= 0:
+            return None
+        layout = self._decoder_token_layout(dec_tokens, n_humans, n_corr, n_anchor, has_shot)
+        return dec_tokens[:, layout["human_start"]:layout["human_end"]]
+
+    def _v8_factorized_pose_corr_tokens(
+        self,
+        corr_tokens,
+        raw_human_tokens,
+        corrected_human_tokens,
+        raw_pose_token,
+    ):
+        if not getattr(self, "v8_factorized_human_pose_corr", False):
+            return corr_tokens, None
+        if corr_tokens is None or raw_human_tokens is None or corrected_human_tokens is None:
+            return corr_tokens, None
+        if raw_pose_token is None or raw_human_tokens.numel() == 0:
+            return corr_tokens, None
+
+        raw_anchor = raw_human_tokens.mean(dim=1, keepdim=True)
+        corrected_anchor = corrected_human_tokens.mean(dim=1, keepdim=True)
+        anchor_delta = corrected_anchor - raw_anchor
+        if getattr(self, "v8_factorized_human_stopgrad_for_pose", True):
+            raw_anchor = raw_anchor.detach()
+            corrected_anchor = corrected_anchor.detach()
+            anchor_delta = anchor_delta.detach()
+        anchor_input = torch.cat(
+            [
+                raw_anchor.float(),
+                corrected_anchor.float(),
+                anchor_delta.float(),
+                raw_pose_token.float(),
+            ],
+            dim=-1,
+        )
+        pose_anchor = self.v8_factorized_pose_anchor_mlp(anchor_input).to(
+            device=corr_tokens.device,
+            dtype=corr_tokens.dtype,
+        )
+        info = {
+            "v8_factorized_pose_anchor_token": pose_anchor,
+            "v8_factorized_human_anchor_delta_norm": anchor_delta.detach().norm(dim=-1),
+        }
+        return torch.cat([corr_tokens, pose_anchor], dim=1), info
+
     def _camera_pose_from_pose_token(self, pose_token):
         if pose_token is None or not hasattr(self.downstream_head, "pose_head"):
             return None
@@ -3067,6 +3135,9 @@ class ARCroco3DStereo(CroCoNet):
             v8_body_part_info = None
             v8_corr_token_for_history = None
             v8_human_corr_token_for_head = None
+            v8_factorized_human_token_for_head = None
+            v8_factorized_human_info = None
+            v8_factorized_pose_info = None
             v8_delta_for_history = None
             v8_gate_for_history = None
             if getattr(self, "enable_v8_pose_prompt", False) and (n_corr_i > 0 or not use_v8_prompt_decoder_token):
@@ -3090,6 +3161,35 @@ class ARCroco3DStereo(CroCoNet):
                 v8_human_corr_token_for_head = self._v8_human_corr_tokens(v8_corr_token, v8_prompt_out)
                 v8_pose_corr_token_for_head = self._v8_pose_corr_tokens(v8_corr_token)
                 v8_body_part_corr_token_for_head = self._v8_body_part_corr_tokens(v8_corr_token, v8_prompt_out)
+                if (
+                    getattr(self, "v8_factorized_human_pose_corr", False)
+                    and getattr(self, "enable_v8_human_latent_corr", False)
+                ):
+                    raw_decoder_human_token = self._v8_decoder_human_tokens(
+                        dec[-1],
+                        n_humans_i,
+                        n_corr=n_corr_i,
+                        n_anchor=n_anchor_decoder_i,
+                        has_shot=use_shot_decoder_token,
+                    )
+                    if raw_decoder_human_token is not None:
+                        v8_factorized_human_token_for_head, v8_factorized_human_info = (
+                            self._apply_v8_human_latent_corr(
+                                raw_decoder_human_token.float(),
+                                v8_human_corr_token_for_head,
+                                pose_token_for_head,
+                                view_idx=i,
+                                shared_gate=None,
+                            )
+                        )
+                        v8_pose_corr_token_for_head, v8_factorized_pose_info = (
+                            self._v8_factorized_pose_corr_tokens(
+                                v8_pose_corr_token_for_head,
+                                raw_decoder_human_token.float(),
+                                v8_factorized_human_token_for_head,
+                                pose_token_for_head,
+                            )
+                        )
                 v8_head_out = self.v8_pose_residual_head(v8_pose_corr_token_for_head)
                 if len(v8_head_out) == 4:
                     v8_delta_applied, v8_gate, v8_delta_raw, v8_drift_logit = v8_head_out
@@ -3109,6 +3209,8 @@ class ARCroco3DStereo(CroCoNet):
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                if v8_factorized_pose_info is not None:
+                    v8_pose_prompt_info.update(v8_factorized_pose_info)
                 if v8_drift_logit is not None:
                     v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
@@ -3210,13 +3312,20 @@ class ARCroco3DStereo(CroCoNet):
                     )
                     if raw_human_smpl_for_info is not None:
                         raw_human_transl_for_info = raw_human_smpl_for_info.get("smpl_transl", None)
-                    smpl_token, human_latent_info = self._apply_v8_human_latent_corr(
-                        raw_human_token_for_head,
-                        v8_human_corr_token_for_head,
-                        pose_token_for_head,
-                        view_idx=i,
-                        shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
-                    )
+                    if v8_factorized_human_token_for_head is not None:
+                        smpl_token = v8_factorized_human_token_for_head.to(
+                            device=raw_human_token_for_head.device,
+                            dtype=raw_human_token_for_head.dtype,
+                        )
+                        human_latent_info = v8_factorized_human_info
+                    else:
+                        smpl_token, human_latent_info = self._apply_v8_human_latent_corr(
+                            raw_human_token_for_head,
+                            v8_human_corr_token_for_head,
+                            pose_token_for_head,
+                            view_idx=i,
+                            shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
+                        )
                     human_token_for_corr = smpl_token
                 smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
 
@@ -3829,6 +3938,9 @@ class ARCroco3DStereo(CroCoNet):
             v8_body_part_info = None
             v8_corr_token_for_history = None
             v8_human_corr_token_for_head = None
+            v8_factorized_human_token_for_head = None
+            v8_factorized_human_info = None
+            v8_factorized_pose_info = None
             v8_delta_for_history = None
             v8_gate_for_history = None
             if getattr(self, "enable_v8_pose_prompt", False) and (n_corr_i > 0 or not use_v8_prompt_decoder_token):
@@ -3852,6 +3964,35 @@ class ARCroco3DStereo(CroCoNet):
                 v8_human_corr_token_for_head = self._v8_human_corr_tokens(v8_corr_token, v8_prompt_out)
                 v8_pose_corr_token_for_head = self._v8_pose_corr_tokens(v8_corr_token)
                 v8_body_part_corr_token_for_head = self._v8_body_part_corr_tokens(v8_corr_token, v8_prompt_out)
+                if (
+                    getattr(self, "v8_factorized_human_pose_corr", False)
+                    and getattr(self, "enable_v8_human_latent_corr", False)
+                ):
+                    raw_decoder_human_token = self._v8_decoder_human_tokens(
+                        dec[-1],
+                        n_humans_i,
+                        n_corr=n_corr_i,
+                        n_anchor=n_anchor_decoder_i,
+                        has_shot=use_shot_decoder_token,
+                    )
+                    if raw_decoder_human_token is not None:
+                        v8_factorized_human_token_for_head, v8_factorized_human_info = (
+                            self._apply_v8_human_latent_corr(
+                                raw_decoder_human_token.float(),
+                                v8_human_corr_token_for_head,
+                                pose_token_for_head,
+                                view_idx=i,
+                                shared_gate=None,
+                            )
+                        )
+                        v8_pose_corr_token_for_head, v8_factorized_pose_info = (
+                            self._v8_factorized_pose_corr_tokens(
+                                v8_pose_corr_token_for_head,
+                                raw_decoder_human_token.float(),
+                                v8_factorized_human_token_for_head,
+                                pose_token_for_head,
+                            )
+                        )
                 v8_head_out = self.v8_pose_residual_head(v8_pose_corr_token_for_head)
                 if len(v8_head_out) == 4:
                     v8_delta_applied, v8_gate, v8_delta_raw, v8_drift_logit = v8_head_out
@@ -3871,6 +4012,8 @@ class ARCroco3DStereo(CroCoNet):
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                if v8_factorized_pose_info is not None:
+                    v8_pose_prompt_info.update(v8_factorized_pose_info)
                 if v8_drift_logit is not None:
                     v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
@@ -3988,13 +4131,20 @@ class ARCroco3DStereo(CroCoNet):
                     )
                     if raw_human_smpl_for_info is not None:
                         raw_human_transl_for_info = raw_human_smpl_for_info.get("smpl_transl", None)
-                    smpl_token, human_latent_info = self._apply_v8_human_latent_corr(
-                        raw_human_token_for_head,
-                        v8_human_corr_token_for_head,
-                        pose_token_for_head,
-                        view_idx=i,
-                        shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
-                    )
+                    if v8_factorized_human_token_for_head is not None:
+                        smpl_token = v8_factorized_human_token_for_head.to(
+                            device=raw_human_token_for_head.device,
+                            dtype=raw_human_token_for_head.dtype,
+                        )
+                        human_latent_info = v8_factorized_human_info
+                    else:
+                        smpl_token, human_latent_info = self._apply_v8_human_latent_corr(
+                            raw_human_token_for_head,
+                            v8_human_corr_token_for_head,
+                            pose_token_for_head,
+                            view_idx=i,
+                            shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
+                        )
                     human_token_for_corr = smpl_token
                 smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
             if (

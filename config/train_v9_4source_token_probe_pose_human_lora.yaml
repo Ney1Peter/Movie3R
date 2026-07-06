@@ -19,6 +19,8 @@ v9_probe_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4s
 v9_token_ablation: all
 v9_pose_corr_pooling: mean
 v9_human_corr_pooling: mean
+v9_factorized_human_pose_corr: false
+v9_factorized_human_stopgrad_for_pose: true
 
 model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   state_size=768, state_pe='2d', pos_embed='RoPE100',
@@ -39,6 +41,8 @@ model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   v8_pose_prompt_use_reliability=True,
   v8_pose_prompt_use_gate=True,
   v8_pose_prompt_image_only=True,
+  v8_factorized_human_pose_corr=${v9_factorized_human_pose_corr},
+  v8_factorized_human_stopgrad_for_pose=${v9_factorized_human_stopgrad_for_pose},
   v8_pose_prompt_token_ablation='${v9_token_ablation}',
   v8_pose_prompt_pooling='${v9_pose_corr_pooling}',
   v8_human_trans_corr=False,
