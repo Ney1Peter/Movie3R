@@ -91,6 +91,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--human_trans_delta_weight", type=float, default=0.0)
     parser.add_argument("--human_cam_ref_weight", type=float, default=0.0)
     parser.add_argument("--human_pairwise_ref_weight", type=float, default=0.0)
+    parser.add_argument("--human_anchor_weight", type=float, default=0.0)
+    parser.add_argument("--human_anchor_joint_indices", default="0,1,2,3,6,9,12,15")
     parser.add_argument(
         "--dump_poses",
         action="store_true",
@@ -150,6 +152,8 @@ def make_criterion(args: argparse.Namespace, device: torch.device):
         human_trans_delta_weight=float(args.human_trans_delta_weight),
         human_cam_ref_weight=float(args.human_cam_ref_weight),
         human_pairwise_ref_weight=float(args.human_pairwise_ref_weight),
+        human_anchor_weight=float(args.human_anchor_weight),
+        human_anchor_joint_indices=str(args.human_anchor_joint_indices),
     ).to(device)
 
 
@@ -186,6 +190,10 @@ def compact_details(details: dict) -> dict:
         "v82_raw_human_trans_err",
         "v82_human_trans_loss",
         "v82_human_trans_delta_small_loss",
+        "v82_human_cam_ref_loss",
+        "v82_human_pairwise_ref_loss",
+        "v82_human_anchor_loss",
+        "v82_human_anchor_err",
     ]
     out = {}
     for key in keys:

@@ -21,6 +21,7 @@ class V81PosePromptOutput:
     history_token: torch.Tensor
     camera_motion_token: torch.Tensor
     reliability_token: torch.Tensor
+    body_part_token: Optional[torch.Tensor] = None
     body_attention: Optional[torch.Tensor] = None
 
 
@@ -264,24 +265,64 @@ class V82PoseRelationPrompt(nn.Module):
         use_pose_memory: bool = True,
         use_reliability: bool = True,
         use_human_alignment: bool = False,
+        use_body_part_token: bool = False,
+        body_part_token_target: str = "shared",
         token_ablation: str = "all",
     ):
         super().__init__()
         self.enc_dim = int(enc_dim)
         self.dec_dim = int(dec_dim)
         self.use_human_alignment = bool(use_human_alignment)
+        self.use_body_part_token = bool(use_body_part_token)
+        self.body_part_token_target = str(body_part_token_target or "shared").lower()
+        if self.body_part_token_target not in {"shared", "human_only", "aux_only"}:
+            raise ValueError(
+                f"Unsupported V82PoseRelationPrompt body_part_token_target={self.body_part_token_target!r}; "
+                "expected 'shared', 'human_only', or 'aux_only'"
+            )
+        if self.use_human_alignment and self.use_body_part_token:
+            raise ValueError(
+                "use_human_alignment and use_body_part_token currently share the fourth "
+                "correction-token slot; enable only one of them."
+            )
         self.token_ablation = str(token_ablation or "all").lower()
-        valid_ablations = {"all", "single_token", "no_semantic", "no_alignment", "no_momentum"}
+        valid_ablations = {
+            "all",
+            "single_token",
+            "no_semantic",
+            "no_alignment",
+            "no_momentum",
+            "human_only",
+            "human_semantic",
+            "human_pose_alignment",
+            "semantic_alignment_human",
+        }
         if self.token_ablation not in valid_ablations:
             raise ValueError(
                 f"Unsupported V82PoseRelationPrompt token_ablation={self.token_ablation!r}; "
                 f"expected one of {sorted(valid_ablations)}"
             )
-        if self.token_ablation == "single_token":
+        human_required_ablations = {
+            "human_only",
+            "human_semantic",
+            "human_pose_alignment",
+            "semantic_alignment_human",
+        }
+        if self.token_ablation in human_required_ablations and not self.use_human_alignment:
+            raise ValueError(
+                f"V82PoseRelationPrompt token_ablation={self.token_ablation!r} requires use_human_alignment=True"
+            )
+        if self.token_ablation in {"single_token", "human_only"}:
             self.num_corr_tokens = 1
+        elif self.token_ablation in {"human_semantic", "human_pose_alignment"}:
+            self.num_corr_tokens = 2
+        elif self.token_ablation == "semantic_alignment_human":
+            self.num_corr_tokens = 3
         else:
             self.num_corr_tokens = 3 - int(self.token_ablation in {"no_semantic", "no_alignment", "no_momentum"})
             if self.use_human_alignment:
+                self.num_corr_tokens += 1
+            if self.use_body_part_token and self.body_part_token_target in {"shared", "aux_only"}:
                 self.num_corr_tokens += 1
         self.memory_dim = int(memory_dim or dec_dim * 2)
         self.use_history = bool(use_history)
@@ -339,7 +380,18 @@ class V82PoseRelationPrompt(nn.Module):
             nn.GELU(),
             nn.Linear(self.dec_dim, self.dec_dim),
         )
-        single_token_dim = self.dec_dim * (4 if self.use_human_alignment else 3)
+        self.body_part_mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 4),
+            nn.Linear(self.dec_dim * 4, self.dec_dim),
+            nn.GELU(),
+            nn.Linear(self.dec_dim, self.dec_dim),
+        )
+        single_token_count = (
+            3
+            + int(self.use_human_alignment)
+            + int(self.use_body_part_token and self.body_part_token_target in {"shared", "aux_only"})
+        )
+        single_token_dim = self.dec_dim * single_token_count
         self.single_token_mlp = nn.Sequential(
             nn.LayerNorm(single_token_dim),
             nn.Linear(single_token_dim, self.dec_dim),
@@ -434,11 +486,19 @@ class V82PoseRelationPrompt(nn.Module):
 
         corr_token_parts = []
         single_token_parts = [semantic_token, alignment_token, momentum_token]
-        if self.token_ablation not in {"single_token", "no_semantic"}:
+        body_part_token = None
+        if self.token_ablation not in {"single_token", "no_semantic", "human_only", "human_pose_alignment"}:
             corr_token_parts.append(semantic_token + self.token_type_embed[:, 0:1])
-        if self.token_ablation not in {"single_token", "no_alignment"}:
+        if self.token_ablation not in {"single_token", "no_alignment", "human_only", "human_semantic"}:
             corr_token_parts.append(alignment_token + self.token_type_embed[:, 1:2])
-        if self.token_ablation not in {"single_token", "no_momentum"}:
+        if self.token_ablation not in {
+            "single_token",
+            "no_momentum",
+            "human_only",
+            "human_semantic",
+            "human_pose_alignment",
+            "semantic_alignment_human",
+        }:
             corr_token_parts.append(momentum_token + self.token_type_embed[:, 2:3])
         if self.use_human_alignment:
             if _has_aligned_batch(human_tokens, batch_size):
@@ -457,9 +517,35 @@ class V82PoseRelationPrompt(nn.Module):
             if self.token_ablation != "single_token":
                 corr_token_parts.append(human_alignment_token + self.token_type_embed[:, 3:4])
 
+        if self.use_body_part_token:
+            if _has_aligned_batch(human_tokens, batch_size):
+                current_body = self.human_proj(human_tokens).mean(dim=1, keepdim=True)
+            else:
+                current_body = pose_token.new_zeros(batch_size, 1, self.dec_dim)
+            if self.use_history and _has_aligned_batch(prev_human_token, batch_size):
+                prev_body = self.human_proj(prev_human_token).mean(dim=1, keepdim=True)
+            else:
+                prev_body = current_body
+            body_delta_latent = current_body - prev_body
+            # Lightweight body-part cue: current human prompt, previous human
+            # memory, their latent displacement, and semantic scene context.
+            body_part_token = self.body_part_mlp(
+                torch.cat([current_body, prev_body, body_delta_latent, semantic_token], dim=-1)
+            )
+            if self.body_part_token_target == "human_only":
+                body_part_token = self.out_norm(body_part_token + self.token_type_embed[:, 3:4])
+            else:
+                single_token_parts.append(body_part_token)
+            if self.token_ablation != "single_token" and self.body_part_token_target in {"shared", "aux_only"}:
+                corr_token_parts.append(body_part_token + self.token_type_embed[:, 3:4])
+
         if self.token_ablation == "single_token":
             fused_token = self.single_token_mlp(torch.cat(single_token_parts, dim=-1))
             corr_token_parts = [fused_token + self.token_type_embed[:, 0:1]]
+        elif self.token_ablation == "human_only":
+            if not self.use_human_alignment:
+                raise RuntimeError("human_only token ablation reached without a human alignment token")
+            corr_token_parts = [human_alignment_token + self.token_type_embed[:, 3:4]]
 
         corr_tokens = torch.cat(corr_token_parts, dim=1)
         corr_tokens = self.out_norm(corr_tokens)
@@ -470,6 +556,7 @@ class V82PoseRelationPrompt(nn.Module):
             history_token=momentum_token,
             camera_motion_token=alignment_token,
             reliability_token=semantic_token,
+            body_part_token=body_part_token,
             body_attention=current_attn if return_attention else None,
         )
 
@@ -833,3 +920,46 @@ class V8HumanLatentResidualHead(nn.Module):
         if shared_gate_used is not None:
             info["v8_human_latent_corr_shared_gate"] = shared_gate_used
         return corrected, info
+
+
+class V8BodyPartResidualHead(nn.Module):
+    """Auxiliary head that asks the refined body token to predict part deltas.
+
+    The head does not edit SMPL parameters directly. Its output is supervised by
+    loss only, so it encourages the body-part correction token to encode where
+    stable body anchors should move while keeping inference feed-forward.
+    """
+
+    def __init__(
+        self,
+        dec_dim: int,
+        num_parts: int,
+        hidden_dim: Optional[int] = None,
+        use_last_token: bool = True,
+    ):
+        super().__init__()
+        self.dec_dim = int(dec_dim)
+        self.num_parts = int(num_parts)
+        self.use_last_token = bool(use_last_token)
+        hidden = int(hidden_dim or dec_dim)
+        self.delta_head = nn.Sequential(
+            nn.LayerNorm(self.dec_dim),
+            nn.Linear(self.dec_dim, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, self.num_parts * 3),
+        )
+        nn.init.zeros_(self.delta_head[-1].weight)
+        nn.init.zeros_(self.delta_head[-1].bias)
+
+    def forward(self, refined_corr_tokens: torch.Tensor):
+        if refined_corr_tokens is None or refined_corr_tokens.numel() == 0:
+            return None
+        if self.use_last_token:
+            token = refined_corr_tokens[:, -1]
+        else:
+            token = refined_corr_tokens.mean(dim=1)
+        delta = self.delta_head(token).view(token.shape[0], 1, self.num_parts, 3)
+        return {
+            "v8_body_part_delta_raw": delta,
+            "v8_body_part_delta_norm": delta.detach().norm(dim=-1).mean(dim=(-1, -2)),
+        }
