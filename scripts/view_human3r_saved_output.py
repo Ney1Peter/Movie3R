@@ -108,6 +108,8 @@ def align_cam_dict_to_reference(cam_dict: dict, ref_cam_dict: dict) -> dict:
 def load_viewer_payload(output_dir: Path, num_frames: int, device: str):
     pts3ds, colors, confs, msks = [], [], [], []
     smpl_shapes, smpl_rotvecs, smpl_transls, smpl_exprs, poses, intrinsics, smpl_ids = [], [], [], [], [], [], []
+    cached_verts_world, cached_faces = [], None
+    has_cached_verts = True
 
     for i in range(num_frames):
         cam = np.load(output_dir / "camera" / f"{i:06d}.npz")
@@ -132,6 +134,12 @@ def load_viewer_payload(output_dir: Path, num_frames: int, device: str):
         if smpl_expr is not None:
             smpl_expr = smpl_expr.astype(np.float32)
         smpl_id = smpl["smpl_id"] if "smpl_id" in smpl.files else np.arange(smpl_shape.shape[0], dtype=np.int64)
+        if "verts_world" in smpl.files and "faces" in smpl.files:
+            cached_verts_world.append(smpl["verts_world"].astype(np.float32))
+            if cached_faces is None:
+                cached_faces = smpl["faces"].astype(np.int32)
+        else:
+            has_cached_verts = False
 
         pts3ds.append(pc_world[None].astype(np.float32))
         colors.append(color[None].astype(np.float32))
@@ -144,6 +152,9 @@ def load_viewer_payload(output_dir: Path, num_frames: int, device: str):
         poses.append(pose)
         intrinsics.append(K)
         smpl_ids.append(smpl_id)
+
+    if has_cached_verts and cached_faces is not None and len(cached_verts_world) == num_frames:
+        return pts3ds, colors, confs, cached_verts_world, cached_faces, smpl_ids, msks
 
     beta_dim = next((s.shape[-1] for s in smpl_shapes if s.shape[0] > 0), 10)
     smpl_layer = SMPL_Layer(type="smplx", gender="neutral", num_betas=beta_dim, kid=False, person_center="head").to(device)

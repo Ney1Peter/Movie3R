@@ -12,11 +12,17 @@ import torchvision.transforms as tvf
 
 def get_ray_map(c2w1, c2w2, intrinsics, h, w):
     c2w = np.linalg.inv(c2w1) @ c2w2
-    i, j = np.meshgrid(np.arange(w), np.arange(h), indexing="xy")
+    dtype = np.result_type(c2w.dtype, intrinsics.dtype, np.float32)
+    i, j = np.meshgrid(
+        np.arange(w, dtype=dtype),
+        np.arange(h, dtype=dtype),
+        indexing="xy",
+    )
     grid = np.stack([i, j, np.ones_like(i)], axis=-1)
     ro = c2w[:3, 3]
-    rd = np.linalg.inv(intrinsics) @ grid.reshape(-1, 3).T
-    rd = (c2w @ np.vstack([rd, np.ones_like(rd[0])])).T[:, :3].reshape(h, w, 3)
+    rd = grid.reshape(-1, 3) @ np.linalg.inv(intrinsics).T
+    rd = rd @ c2w[:3, :3].T + ro
+    rd = rd.reshape(h, w, 3)
     rd = rd / np.linalg.norm(rd, axis=-1, keepdims=True)
     ro = np.broadcast_to(ro, (h, w, 3))
     ray_map = np.concatenate([ro, rd], axis=-1)

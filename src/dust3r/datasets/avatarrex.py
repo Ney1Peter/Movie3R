@@ -40,6 +40,18 @@ def _empty_depthmap(image_shape):
     return np.zeros((h, w), dtype=np.float32)
 
 
+def _load_rgb_image(path):
+    # cv2.imread can be unexpectedly slow on some large PNGs in these datasets.
+    # PIL preserves RGB ordering here and keeps the geometry path unchanged.
+    with PIL.Image.open(path) as img:
+        return np.asarray(img.convert("RGB"))
+
+
+def _load_mask_image(path):
+    with PIL.Image.open(path) as img:
+        return np.asarray(img.convert("L"))
+
+
 def _load_depthmap_meters(depth_path, image_shape):
     """Load DA3 depth as float32 meters, supporting legacy uint16 millimeters."""
     if not osp.exists(depth_path):
@@ -391,6 +403,24 @@ def _avatarrex_read_video_manifest(manifest_path):
             raise ValueError(f"Invalid AvatarReX Video manifest record: {record}")
         samples.append((str(seq_name), int(start_frame)))
     return tuple(samples)
+
+
+def _avatarrex_read_pattern_manifest(manifest_path):
+    if manifest_path is None:
+        return None
+    records = []
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        text = f.read().strip()
+    if not text:
+        return tuple()
+    if text[0] == "[":
+        records.extend(json.loads(text))
+    else:
+        for line in text.splitlines():
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return tuple(AvatarReX_Pattern.normalize_record(record) for record in records)
 
 
 def _empty_anchor_info(top_k=16):
@@ -930,7 +960,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         cam_path = osp.join(seq_path, "cam", f"{frame_str}.npz")
         depth_path = osp.join(seq_path, "depth", f"{frame_str}.npy")
 
-        rgb_image = imread_cv2(rgb_path)
+        rgb_image = _load_rgb_image(rgb_path)
 
         # Camera params
         cam = np.load(cam_path)
@@ -975,7 +1005,7 @@ class AvatarReX_AABB(BaseMultiViewDataset):
         # Mask（可能不存在）
         mask_path = osp.join(seq_path, "mask", f"{frame_str}.png")
         if osp.exists(mask_path):
-            mask_image = imread_cv2(mask_path)
+            mask_image = _load_mask_image(mask_path)
         else:
             mask_image = None
 
@@ -1148,6 +1178,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         self.fixed_samples = self._normalize_fixed_samples(
             fixed_samples if fixed_samples is not None else manifest_samples
         )
+
         self.manifest_path = manifest_path
         self.load_da3_depth = bool(load_da3_depth)
         self.raw_calibration_root = raw_calibration_root
@@ -1369,7 +1400,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         depth_path = osp.join(seq_path, "depth", f"{frame_str}.npy")
         smpl_path = osp.join(seq_path, "smpl", f"{frame_str}.pkl")
 
-        rgb_image = imread_cv2(rgb_path)
+        rgb_image = _load_rgb_image(rgb_path)
 
         annots = []
         if osp.isfile(smpl_path):
@@ -1416,7 +1447,7 @@ class AvatarReX_Video(BaseMultiViewDataset):
         # Mask
         mask_path = osp.join(seq_path, "mask", f"{frame_str}.png")
         if osp.exists(mask_path):
-            mask_image = imread_cv2(mask_path)
+            mask_image = _load_mask_image(mask_path)
         else:
             mask_image = None
 
@@ -1533,3 +1564,196 @@ class AvatarReX_Video(BaseMultiViewDataset):
             smpl_mask=smpl_mask,
             **smpl_dict,
         )
+
+
+class AvatarReX_Pattern(AvatarReX_Video):
+    """Explicit shot-pattern dataset.
+
+    Each manifest record directly specifies the source sequence, frame id and
+    shot label for every view. This keeps AABB/AAAA loaders unchanged while
+    allowing explicit multi-shot overfit probes such as ABAB/ABBA and longer
+    12-frame sequences.
+    """
+
+    def __init__(
+        self,
+        *args,
+        split="Training",
+        ROOT=None,
+        num_views=4,
+        resolution=(512, 288),
+        transform=ImgNorm,
+        aug_crop=16,
+        allow_repeat=False,
+        seed=None,
+        anchor_top_k=16,
+        fixed_samples=None,
+        manifest_path=None,
+        load_da3_depth=True,
+        raw_calibration_root=None,
+        resize_mode="dataset_crop",
+        max_humans=10,
+        **kwargs,
+    ):
+        manifest_samples = _avatarrex_read_pattern_manifest(manifest_path)
+        if fixed_samples is not None and manifest_samples is not None:
+            raise ValueError("Use either fixed_samples or manifest_path, not both.")
+        self.pattern_manifest_path = manifest_path
+        self.pattern_records = tuple(
+            self.normalize_record(record)
+            for record in (fixed_samples if fixed_samples is not None else manifest_samples or ())
+        )
+        for record in self.pattern_records:
+            if len(record["seqs"]) != int(num_views):
+                raise ValueError(
+                    f"AvatarReX_Pattern record length {len(record['seqs'])} "
+                    f"does not match num_views={num_views}: {record}"
+                )
+        super().__init__(
+            *args,
+            split=split,
+            ROOT=ROOT,
+            num_views=num_views,
+            resolution=resolution,
+            transform=transform,
+            aug_crop=aug_crop,
+            allow_repeat=allow_repeat,
+            seed=seed,
+            anchor_top_k=anchor_top_k,
+            fixed_samples=None,
+            manifest_path=None,
+            load_da3_depth=load_da3_depth,
+            raw_calibration_root=raw_calibration_root,
+            resize_mode=resize_mode,
+            max_humans=max_humans,
+            **kwargs,
+        )
+
+    @staticmethod
+    def normalize_record(record):
+        if not isinstance(record, dict):
+            raise ValueError(f"Invalid AvatarReX_Pattern record: {record!r}")
+        views = record.get("views")
+        if views is not None:
+            seqs = [view["seq"] for view in views]
+            frames = [view["frame"] for view in views]
+            shot_labels = [view.get("shot_label", 0) for view in views]
+        else:
+            seqs = record.get("seqs")
+            frames = record.get("frames")
+            shot_labels = record.get("shot_labels")
+        if seqs is None or frames is None:
+            raise ValueError(f"AvatarReX_Pattern record requires seqs/frames: {record}")
+        if len(seqs) != len(frames) or not seqs:
+            raise ValueError(f"AvatarReX_Pattern record requires a non-empty seq/frame pair list: {record}")
+        if shot_labels is None:
+            shot_labels = [0]
+            for i in range(1, len(seqs)):
+                shot_labels.append(0 if str(seqs[i]) == str(seqs[i - 1]) else 1)
+        if len(shot_labels) != len(seqs):
+            raise ValueError(f"AvatarReX_Pattern shot_labels must match seq length: {record}")
+
+        transition_angles = record.get("transition_angles_deg")
+        if transition_angles is None:
+            transition_angles = [0.0] * len(seqs)
+        if len(transition_angles) != len(seqs):
+            raise ValueError(f"AvatarReX_Pattern transition_angles_deg must match seq length: {record}")
+
+        return {
+            "clip_type": str(record.get("clip_type", record.get("pattern", "pattern"))).lower(),
+            "group": str(record.get("group", "")),
+            "seqs": [str(seq) for seq in seqs],
+            "frames": [int(frame) for frame in frames],
+            "shot_labels": [int(label) for label in shot_labels],
+            "transition_angles_deg": [float(angle) for angle in transition_angles],
+            "view_angle_deg": float(record.get("view_angle_deg", max(map(float, transition_angles)))),
+            "angle_bucket": str(record.get("angle_bucket", "pattern")),
+            "pattern_id": str(record.get("pattern_id", "")),
+        }
+
+    def _load_index(self):
+        seq_dir = osp.join(self.ROOT, self.split)
+        if not osp.exists(seq_dir):
+            raise FileNotFoundError(f"AvatarReX data not found at {seq_dir}")
+
+        self.scenes = _avatarrex_discover_sequences(seq_dir)
+        if not self.scenes:
+            raise FileNotFoundError(f"No AvatarReX sequence directories found under {seq_dir}")
+        self.seq_cams = {s: [0] for s in self.scenes}
+        self.scene_frame_ids = {s: _avatarrex_frame_ids(seq_dir, s) for s in self.scenes}
+        self.scene_frame_to_pos = {
+            s: {frame_id: pos for pos, frame_id in enumerate(ids)}
+            for s, ids in self.scene_frame_ids.items()
+        }
+        sample_seq = self.scenes[0]
+        self.frame_ids = self.scene_frame_ids[sample_seq]
+        self.num_frames = len(self.frame_ids)
+        self.seq_frames = {s: len(ids) for s, ids in self.scene_frame_ids.items()}
+
+        self.samples = list(self.pattern_records)
+        before_file_filter = len(self.samples)
+        self.samples = [
+            record for record in self.samples
+            if self._pattern_has_required_files(seq_dir, record)
+        ]
+        skipped = before_file_filter - len(self.samples)
+        print(
+            f"  AvatarReX_Pattern: {len(self.samples):,}/{before_file_filter:,} "
+            f"valid explicit pattern samples"
+        )
+        if skipped:
+            print(f"  AvatarReX_Pattern skipped incomplete samples: {skipped:,}")
+        if not self.samples:
+            raise ValueError(f"AvatarReX_Pattern has no valid samples from {self.pattern_manifest_path}")
+
+    def _pattern_has_required_files(self, split_path, record):
+        for seq_name, frame_idx in zip(record["seqs"], record["frames"]):
+            if not _avatarrex_has_required_frame_files(
+                split_path, seq_name, int(frame_idx), require_depth=self.load_da3_depth
+            ):
+                return False
+        return True
+
+    def get_sample_metadata(self, idx):
+        record = self.samples[idx]
+        return {
+            "clip_type": record["clip_type"],
+            "group": record["group"],
+            "seqs": list(record["seqs"]),
+            "frames": list(record["frames"]),
+            "shot_labels": list(record["shot_labels"]),
+            "transition_angles_deg": list(record["transition_angles_deg"]),
+            "view_angle_deg": float(record["view_angle_deg"]),
+            "pattern_id": record["pattern_id"],
+        }
+
+    def _get_views(self, idx, resolution, rng, num_views):
+        record = self.samples[idx]
+        assert len(record["seqs"]) == num_views, (
+            f"AvatarReX_Pattern record has {len(record['seqs'])} views, expected {num_views}"
+        )
+        split_path = osp.join(self.ROOT, self.split)
+        is_video_clip = all(int(label) == 0 for label in record["shot_labels"])
+
+        views = []
+        for v, (seq_name, frame_idx, shot_label) in enumerate(
+            zip(record["seqs"], record["frames"], record["shot_labels"])
+        ):
+            view = self._load_view(
+                split_path,
+                seq_name,
+                0,
+                int(frame_idx),
+                resolution,
+                rng,
+                v,
+                int(shot_label),
+            )
+            view.update(_empty_anchor_info(self.anchor_top_k))
+            view["dataset"] = "AvatarReX_Pattern"
+            view["is_video"] = is_video_clip
+            view["aabb_view_angle_deg"] = np.array(
+                record["transition_angles_deg"][v], dtype=np.float32
+            )
+            views.append(view)
+        return views

@@ -39,7 +39,7 @@ for path in (str(REPO_ROOT), str(SRC_ROOT)):
 
 from add_ckpt_path import add_path_to_dust3r
 from demo import prepare_input, prepare_output
-from dust3r.datasets.avatarrex import AvatarReX_AABB, AvatarReX_Video
+from dust3r.datasets.avatarrex import AvatarReX_AABB, AvatarReX_Pattern, AvatarReX_Video
 from dust3r.inference import inference_recurrent_lighter
 from dust3r.inference import loss_of_one_batch
 from dust3r.model import ARCroco3DStereo
@@ -176,11 +176,14 @@ def write_one_record_manifest(path: Path, record: dict) -> None:
 def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_path: Path):
     subset = str(record.get("benchmark_subset", "test_aabb"))
     group = str(record.get("group", ""))
-    is_mvhuman = group.isdigit() or str(record.get("seqA", "")).split("/", 1)[0].isdigit()
+    pattern_seqs = record.get("seqs", None)
+    is_pattern = pattern_seqs is not None and record.get("frames", None) is not None
+    first_seq = str(pattern_seqs[0]) if is_pattern and pattern_seqs else str(record.get("seqA", ""))
+    is_mvhuman = group.isdigit() or first_seq.split("/", 1)[0].isdigit()
     if is_mvhuman:
-        split = "Training/mvhuman" if subset.startswith("train_sanity") else args.test_split
+        split = "Training/mvhuman" if is_pattern or subset.startswith("train_sanity") else args.test_split
     else:
-        split = "Training" if subset.startswith("train_sanity") else args.test_split
+        split = "Training" if is_pattern or subset.startswith("train_sanity") else args.test_split
     common = dict(
         allow_repeat=True,
         split=split,
@@ -196,6 +199,8 @@ def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_
         resize_mode=str(args.resize_mode),
         max_humans=1,
     )
+    if is_pattern:
+        return AvatarReX_Pattern(**common)
     if str(record.get("clip_type", "")).lower() == "aaaa" or subset.endswith("aaaa"):
         return AvatarReX_Video(**common)
     if is_mvhuman:
@@ -204,7 +209,13 @@ def make_single_record_dataset(args: argparse.Namespace, record: dict, manifest_
 
 
 def load_manifest(path: Path) -> list[dict]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    text = path.read_text(encoding="utf-8").strip()
+    if not text:
+        return []
+    if text[0] == "[":
+        data = json.loads(text)
+    else:
+        data = [json.loads(line) for line in text.splitlines() if line.strip()]
     if not isinstance(data, list):
         raise ValueError(f"Expected a list manifest: {path}")
     return data
@@ -235,6 +246,8 @@ def override_record_metrics_from_eval(record: dict, eval_dir: Path) -> dict:
 
 def case_name(record: dict) -> str:
     clip_type = str(record.get("clip_type", "clip")).lower()
+    if record.get("pattern_id"):
+        return f"{clip_type}_{record['pattern_id']}_{record.get('angle_bucket', 'pattern')}"
     index = int(record.get("benchmark_index", -1))
     group = str(record.get("group", "group"))
     bucket = str(record.get("angle_bucket", "same"))
