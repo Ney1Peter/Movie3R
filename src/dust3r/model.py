@@ -25,7 +25,7 @@ from dust3r.utils.misc import (
     transpose_to_landscape,
 )
 from dust3r.heads import head_factory
-from dust3r.utils.camera import PoseEncoder, pose_encoding_to_camera
+from dust3r.utils.camera import PoseEncoder, camera_to_pose_encoding, pose_encoding_to_camera
 from dust3r.patch_embed import get_patch_embed
 import dust3r.utils.path_to_croco  # noqa: F401
 from models.croco import CroCoNet, CrocoConfig  # noqa
@@ -45,7 +45,7 @@ from accelerate.logging import get_logger
 from dust3r.smpl_model import nms, apply_threshold
 from einops import rearrange
 
-from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters, geotrf
+from dust3r.utils.geometry import inverse_perspective_projection, get_camera_parameters, geotrf, inv
 from dust3r.utils.image import unpad_uv, log_optimal_transport
 from mhmr.blocks import Dinov2Backbone, FourierPositionEncoding, TransformerDecoder
 # **========== 原始代码 (Residual Adapter) ==========**
@@ -257,6 +257,9 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v9_pre_decoder_change_gate_bias=2.0,
         v9_pre_decoder_change_gate_force_first_noop=True,
         v9_pre_decoder_change_gate_teacher_forcing=False,
+        v9_pre_decoder_teacher_pose_key="raw_camera_pose",
+        v9_pre_decoder_teacher_trans_threshold=0.05,
+        v9_pre_decoder_teacher_rot_threshold_deg=3.0,
         v8_factorized_human_pose_corr=False,
         v8_factorized_human_stopgrad_for_pose=True,
         v8_human_latent_corr_pooling=None,
@@ -348,6 +351,9 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v9_pre_decoder_change_gate_bias = v9_pre_decoder_change_gate_bias
         self.v9_pre_decoder_change_gate_force_first_noop = v9_pre_decoder_change_gate_force_first_noop
         self.v9_pre_decoder_change_gate_teacher_forcing = v9_pre_decoder_change_gate_teacher_forcing
+        self.v9_pre_decoder_teacher_pose_key = v9_pre_decoder_teacher_pose_key
+        self.v9_pre_decoder_teacher_trans_threshold = v9_pre_decoder_teacher_trans_threshold
+        self.v9_pre_decoder_teacher_rot_threshold_deg = v9_pre_decoder_teacher_rot_threshold_deg
         self.v8_factorized_human_pose_corr = v8_factorized_human_pose_corr
         self.v8_factorized_human_stopgrad_for_pose = v8_factorized_human_stopgrad_for_pose
         self.v8_human_latent_corr_pooling = (
@@ -717,6 +723,15 @@ class ARCroco3DStereo(CroCoNet):
         )
         self.v9_pre_decoder_change_gate_teacher_forcing = bool(
             getattr(config, "v9_pre_decoder_change_gate_teacher_forcing", False)
+        )
+        self.v9_pre_decoder_teacher_pose_key = str(
+            getattr(config, "v9_pre_decoder_teacher_pose_key", "raw_camera_pose")
+        )
+        self.v9_pre_decoder_teacher_trans_threshold = float(
+            getattr(config, "v9_pre_decoder_teacher_trans_threshold", 0.05)
+        )
+        self.v9_pre_decoder_teacher_rot_threshold_deg = float(
+            getattr(config, "v9_pre_decoder_teacher_rot_threshold_deg", 3.0)
         )
         self.v8_factorized_human_pose_corr = bool(getattr(config, "v8_factorized_human_pose_corr", False))
         self.v8_factorized_human_stopgrad_for_pose = bool(
@@ -2255,6 +2270,63 @@ class ARCroco3DStereo(CroCoNet):
             out = out * (1 - reset_mask)
         return out
 
+    def _v9_pre_decoder_teacher_gate_from_gt(self, views, view_idx, ref_tensor):
+        if (
+            not bool(getattr(self, "v9_pre_decoder_change_gate_teacher_forcing", False))
+            or not self.training
+            or ref_tensor is None
+        ):
+            return None
+        batch_size = ref_tensor.shape[0]
+        if int(view_idx) <= 0:
+            return ref_tensor.new_zeros((batch_size, 1))
+
+        pose_key = str(getattr(self, "v9_pre_decoder_teacher_pose_key", "raw_camera_pose"))
+        if not views or pose_key not in views[0]:
+            pose_key = "camera_pose"
+        if (
+            pose_key not in views[0]
+            or pose_key not in views[int(view_idx) - 1]
+            or pose_key not in views[int(view_idx)]
+        ):
+            return None
+
+        with torch.no_grad():
+            first_pose = views[0][pose_key].to(device=ref_tensor.device, dtype=ref_tensor.dtype)
+            prev_pose = views[int(view_idx) - 1][pose_key].to(
+                device=ref_tensor.device,
+                dtype=ref_tensor.dtype,
+            )
+            curr_pose = views[int(view_idx)][pose_key].to(
+                device=ref_tensor.device,
+                dtype=ref_tensor.dtype,
+            )
+            if first_pose.ndim == 2:
+                first_pose = first_pose.unsqueeze(0)
+            if prev_pose.ndim == 2:
+                prev_pose = prev_pose.unsqueeze(0)
+            if curr_pose.ndim == 2:
+                curr_pose = curr_pose.unsqueeze(0)
+
+            in_first = inv(first_pose)
+            prev_enc = camera_to_pose_encoding(torch.matmul(in_first, prev_pose))
+            curr_enc = camera_to_pose_encoding(torch.matmul(in_first, curr_pose))
+            trans_err = torch.linalg.norm(curr_enc[:, :3] - prev_enc[:, :3], dim=-1)
+            prev_q = F.normalize(prev_enc[:, 3:], dim=-1, eps=1e-7)
+            curr_q = F.normalize(curr_enc[:, 3:], dim=-1, eps=1e-7)
+            quat_dot = (prev_q * curr_q).sum(dim=-1).abs().clamp(max=1.0 - 1e-7)
+            rot_err = 2.0 * torch.acos(quat_dot)
+            rot_threshold = (
+                float(getattr(self, "v9_pre_decoder_teacher_rot_threshold_deg", 3.0))
+                * torch.pi
+                / 180.0
+            )
+            target = (
+                (trans_err > float(getattr(self, "v9_pre_decoder_teacher_trans_threshold", 0.05)))
+                | (rot_err > rot_threshold)
+            ).to(dtype=ref_tensor.dtype)
+        return target.reshape(batch_size, 1)
+
     def _route_v9_corr_tokens_pre_decoder(
         self,
         corr_tokens,
@@ -2308,6 +2380,9 @@ class ARCroco3DStereo(CroCoNet):
             "v9_pre_decoder_change_logit": change_logit,
             "v9_pre_decoder_effective_gate": effective_gate,
             "v9_pre_decoder_route_gate": route_gate,
+            "v9_pre_decoder_teacher_gate": (
+                route_gate if use_teacher_gate else effective_gate.new_full(effective_gate.shape, -1.0)
+            ),
             "v9_pre_decoder_teacher_forcing": effective_gate.new_full(
                 effective_gate.shape,
                 1.0 if use_teacher_gate else 0.0,
@@ -3198,6 +3273,9 @@ class ARCroco3DStereo(CroCoNet):
                     prev_delta_token=v8_prev_delta_token,
                     prev_gate=v8_prev_gate,
                 )
+                v9_teacher_gate = self._v9_pre_decoder_teacher_gate_from_gt(
+                    views, i, pose_feat_i
+                )
                 f_corr, pos_corr, n_corr_i, v9_pre_decoder_info = (
                     self._route_v9_corr_tokens_pre_decoder(
                         v8_prompt_out.corr_tokens,
@@ -3209,7 +3287,7 @@ class ARCroco3DStereo(CroCoNet):
                         v8_prev_pose_token,
                         v8_prev_human_token,
                         i,
-                        teacher_gate=views[i].get("shot_label", None),
+                        teacher_gate=v9_teacher_gate,
                     )
                 )
             f_anchor, pos_anchor, n_anchor_i, anchor_decoder_info, anchor_mask_i = self._build_anchor_decoder_tokens(
