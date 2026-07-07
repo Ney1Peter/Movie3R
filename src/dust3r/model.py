@@ -4341,25 +4341,30 @@ class ARCroco3DStereo(CroCoNet):
             # updating the state and memory
             img_mask = view["img_mask"]
             update = view.get("update", None)
-            if update is not None:
-                update_mask = (
-                    img_mask & update
-                )  # if don't update, then whatever img_mask
-            else:
-                update_mask = img_mask
-            update_mask = update_mask[:, None, None].float()
+            def _make_update_mask(update_key):
+                update_value = view.get(update_key, update)
+                if update_value is not None:
+                    mask = img_mask & update_value
+                else:
+                    mask = img_mask
+                return mask[:, None, None].float()
+
+            update_mask = _make_update_mask("update")
+            update_mask_state_base = _make_update_mask("update_state")
+            update_mask_mem = _make_update_mask("update_mem")
+            update_mask_history = _make_update_mask("update_v8_history")
 
             if use_ttt3r and i != 0 and not reset_mask:
                 cross_attn_states = rearrange(torch.cat(cross_attn_states, dim=0), 'l h nstate nimg -> 1 nstate nimg (l h)').mean(dim=(-1, -2))
-                update_mask_state = update_mask * torch.sigmoid(cross_attn_states)[..., None]
+                update_mask_state = update_mask_state_base * torch.sigmoid(cross_attn_states)[..., None]
             else:
-                update_mask_state = update_mask
+                update_mask_state = update_mask_state_base
 
             state_feat = new_state_feat * update_mask_state + state_feat * (
                 1 - update_mask_state
             )  # update global state
-            mem = new_mem * update_mask + mem * (
-                1 - update_mask
+            mem = new_mem * update_mask_mem + mem * (
+                1 - update_mask_mem
             )  # then update local state
             reset_mask = view["reset"]
             if reset_mask is not None:
@@ -4372,31 +4377,31 @@ class ARCroco3DStereo(CroCoNet):
                 v8_prev_corr_token = self._blend_v8_prompt_history(
                     v8_prev_corr_token,
                     v8_corr_token_for_history,
-                    update_mask=update_mask,
+                    update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
                 v8_prev_pose_token = self._blend_v8_prompt_history(
                     v8_prev_pose_token,
                     pose_token_for_head,
-                    update_mask=update_mask,
+                    update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
                 v8_prev_human_token = self._blend_v8_prompt_history(
                     v8_prev_human_token,
                     smpl_feat_i,
-                    update_mask=update_mask,
+                    update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
                 v8_prev_delta_token = self._blend_v8_prompt_history(
                     v8_prev_delta_token,
                     v8_delta_for_history,
-                    update_mask=update_mask,
+                    update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
                 v8_prev_gate = self._blend_v8_prompt_history(
                     v8_prev_gate,
                     v8_gate_for_history,
-                    update_mask=update_mask,
+                    update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
             if ret_state:

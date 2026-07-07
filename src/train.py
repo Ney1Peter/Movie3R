@@ -342,6 +342,40 @@ def _to_plain_config(value):
     return value
 
 
+def _monitor_weight_for_name(name: str, weights_cfg) -> float:
+    """Return a validation monitor weight for an exact dataset or source prefix."""
+    weights = _to_plain_config(weights_cfg)
+    if not weights:
+        return 1.0
+    if not isinstance(weights, dict):
+        raise TypeError("val_monitor_weights must be a mapping from dataset/source name to weight")
+    if name in weights:
+        return float(weights[name])
+    for key, value in weights.items():
+        key = str(key)
+        if name == key or name.startswith(key + "_"):
+            return float(value)
+    return 1.0
+
+
+def _compute_monitor_loss(monitor_stats: dict, args) -> float | None:
+    """Compute the best-checkpoint/early-stop monitor from val/test stats."""
+    weighted_sum = 0.0
+    total_weight = 0.0
+    weights_cfg = getattr(args, "val_monitor_weights", None)
+    for name, stats in monitor_stats.items():
+        if "loss_med" not in stats:
+            continue
+        weight = _monitor_weight_for_name(str(name), weights_cfg)
+        if weight <= 0:
+            continue
+        weighted_sum += float(weight) * float(stats["loss_med"])
+        total_weight += float(weight)
+    if total_weight <= 0:
+        return None
+    return weighted_sum / total_weight
+
+
 def _train_source_entries(args):
     entries = getattr(args, "train_datasets", None)
     if not entries:
@@ -805,15 +839,10 @@ def train(args):
                 )
                 test_stats[test_name] = stats
 
-            # Save best based on the mean val loss if available, else mean test loss.
+            # Save best based on a configurable val monitor if available, else test.
             monitor_stats = val_stats if val_stats else test_stats
-            monitor_losses = [
-                stats["loss_med"]
-                for stats in monitor_stats.values()
-                if "loss_med" in stats
-            ]
-            if monitor_losses:
-                monitor_loss = float(sum(monitor_losses) / len(monitor_losses))
+            monitor_loss = _compute_monitor_loss(monitor_stats, args)
+            if monitor_loss is not None:
                 if monitor_loss < best_so_far:
                     best_so_far = monitor_loss
                     new_best = True

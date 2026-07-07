@@ -1,0 +1,15 @@
+# V9 four-source quick probe: factorized human-then-pose with human world-anchor loss.
+#
+# Same data/schedule as the factorized 60ep probe. The extra supervision is
+# sequence-length agnostic: head/pelvis/torso/feet anchors are compared in the
+# shared frame-0 world coordinate system, and pairwise deltas follow GT deltas.
+defaults:
+  - train_v9_4source_token_probe_factorized_human_pose_pose_human_lora
+  - _self_
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, human_world_anchor_weight=2.0, human_world_anchor_pairwise_weight=2.0, human_world_anchor_joint_indices='0,3,6,9,10,11,15', pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, human_world_anchor_weight=2.0, human_world_anchor_pairwise_weight=2.0, human_world_anchor_joint_indices='0,3,6,9,10,11,15', pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+
+exp_name: v9_4source_token_probe_factorized_world_anchor_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}

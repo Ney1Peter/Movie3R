@@ -2018,6 +2018,9 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_pairwise_ref_weight=0.0,
         human_anchor_weight=0.0,
         human_anchor_joint_indices=(0, 1, 2, 3, 6, 9, 12, 15),
+        human_world_anchor_weight=0.0,
+        human_world_anchor_pairwise_weight=0.0,
+        human_world_anchor_joint_indices=(0, 3, 6, 9, 10, 11, 15),
         body_part_residual_weight=0.0,
         body_part_joint_indices=(0, 1, 2, 10, 11),
         pose_lora_norm_weight=0.0,
@@ -2051,6 +2054,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.human_anchor_weight = float(human_anchor_weight)
         self.human_anchor_joint_indices = self._parse_human_anchor_joint_indices(
             human_anchor_joint_indices
+        )
+        self.human_world_anchor_weight = float(human_world_anchor_weight)
+        self.human_world_anchor_pairwise_weight = float(human_world_anchor_pairwise_weight)
+        self.human_world_anchor_joint_indices = self._parse_human_anchor_joint_indices(
+            human_world_anchor_joint_indices
         )
         self.body_part_residual_weight = float(body_part_residual_weight)
         self.body_part_joint_indices = self._parse_human_anchor_joint_indices(
@@ -2172,6 +2180,71 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         loss = F.smooth_l1_loss(pred_anchor, gt_anchor)
         err = torch.linalg.norm((pred_anchor - gt_anchor).detach(), dim=-1).mean()
         return loss, err
+
+    def _human_world_anchor_points(self, gt_pose, gt, pred, mask, num_humans):
+        required_pred = {"camera_pose", "smpl_rotmat", "smpl_shape", "smpl_transl", "smpl_expression"}
+        required_gt = {"smpl_j3d", "camera_intrinsics"}
+        if not required_pred.issubset(pred.keys()) or not required_gt.issubset(gt.keys()):
+            return None
+        if not self.human_world_anchor_joint_indices:
+            return None
+
+        pred_pose = pred["camera_pose"].float()
+        gt_pose = gt_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
+        pred_cam = pose_encoding_to_camera(pred_pose)
+        gt_cam = pose_encoding_to_camera(gt_pose)
+
+        pred_rotmat = pred["smpl_rotmat"].float()[:, :num_humans]
+        pred_shape = pred["smpl_shape"].float()[:, :num_humans]
+        pred_transl = pred["smpl_transl"].float()[:, :num_humans]
+        pred_expression = pred["smpl_expression"].float()[:, :num_humans]
+        gt_j3d = gt["smpl_j3d"].to(device=pred_transl.device, dtype=pred_transl.dtype)[:, :num_humans]
+        intrinsics = gt["camera_intrinsics"].to(device=pred_transl.device, dtype=pred_transl.dtype)
+
+        mask = mask.to(device=pred_transl.device, dtype=torch.bool)[:, :num_humans]
+        if not mask.any():
+            return None
+
+        shape_dim = int(pred_shape.shape[-1])
+        layer = self._get_human_anchor_smpl_layer(shape_dim, pred_transl.device)
+        if layer is None:
+            return None
+
+        batch_idx, human_idx = torch.where(mask)
+        pred_rotvec = roma.rotmat_to_rotvec(pred_rotmat[mask])
+        smpl_out = layer(
+            pred_rotvec,
+            pred_shape[mask],
+            pred_transl[mask],
+            None,
+            None,
+            K=intrinsics[batch_idx],
+            expression=pred_expression[mask],
+        )
+        pred_j3d = smpl_out.get("smpl_j3d", None)
+        if pred_j3d is None:
+            return None
+
+        joint_count = min(pred_j3d.shape[1], gt_j3d.shape[2])
+        joint_indices = [
+            idx for idx in self.human_world_anchor_joint_indices if 0 <= int(idx) < joint_count
+        ]
+        if not joint_indices:
+            return None
+        joint_indices = torch.as_tensor(joint_indices, device=pred_j3d.device, dtype=torch.long)
+
+        pred_anchor_cam = pred_j3d[:, :joint_count].index_select(1, joint_indices)
+        gt_anchor_cam = gt_j3d[mask][:, :joint_count].index_select(1, joint_indices)
+        pred_anchor_world = geotrf(pred_cam[batch_idx], pred_anchor_cam)
+        gt_anchor_world = geotrf(gt_cam[batch_idx], gt_anchor_cam)
+
+        batch_size = int(mask.shape[0])
+        joint_num = int(joint_indices.numel())
+        pred_world = pred_transl.new_zeros((batch_size, num_humans, joint_num, 3))
+        gt_world = pred_transl.new_zeros((batch_size, num_humans, joint_num, 3))
+        pred_world[batch_idx, human_idx] = pred_anchor_world
+        gt_world[batch_idx, human_idx] = gt_anchor_world
+        return pred_world, gt_world, mask
 
     def _body_part_residual_loss(self, gt, pred):
         required_pred = {
@@ -2296,6 +2369,9 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_pairwise_entries = []
         human_anchor_terms = []
         human_anchor_errs = []
+        human_world_anchor_entries = []
+        human_world_anchor_terms = []
+        human_world_anchor_errs = []
         body_part_residual_terms = []
         body_part_raw_errs = []
         body_part_corrected_errs = []
@@ -2453,6 +2529,30 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                             if anchor_err is not None:
                                 details[f"v82_human_anchor_err/{view_idx}"] = float(anchor_err.detach())
 
+                    if self.human_world_anchor_weight > 0 or self.human_world_anchor_pairwise_weight > 0:
+                        world_anchor = self._human_world_anchor_points(
+                            gt_pose, gt, pred, mask, num_humans
+                        )
+                        if world_anchor is not None:
+                            pred_world, gt_world, world_mask = world_anchor
+                            human_world_anchor_entries.append((pred_world, gt_world, world_mask))
+                            if self.human_world_anchor_weight > 0:
+                                anchor_loss = F.smooth_l1_loss(
+                                    pred_world[world_mask], gt_world[world_mask]
+                                )
+                                anchor_err = torch.linalg.norm(
+                                    (pred_world[world_mask] - gt_world[world_mask]).detach(),
+                                    dim=-1,
+                                ).mean()
+                                human_world_anchor_terms.append(anchor_loss)
+                                human_world_anchor_errs.append(anchor_err)
+                                details[f"v82_human_world_anchor_loss/{view_idx}"] = float(
+                                    anchor_loss.detach()
+                                )
+                                details[f"v82_human_world_anchor_err/{view_idx}"] = float(
+                                    anchor_err.detach()
+                                )
+
                     if (
                         self.human_trans_noop_weight > 0
                         and self.human_trans_noop_before_view >= 0
@@ -2560,6 +2660,51 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_human_anchor_loss_weighted"] = float(
                 (self.human_anchor_weight * anchor_loss).detach()
             )
+        if human_world_anchor_terms and self.human_world_anchor_weight > 0:
+            world_anchor_loss = torch.stack(human_world_anchor_terms).mean()
+            total = total + self.human_world_anchor_weight * world_anchor_loss
+            details["v82_human_world_anchor_loss"] = float(world_anchor_loss.detach())
+            details["v82_human_world_anchor_loss_weighted"] = float(
+                (self.human_world_anchor_weight * world_anchor_loss).detach()
+            )
+        if (
+            len(human_world_anchor_entries) > 1
+            and self.human_world_anchor_pairwise_weight > 0
+        ):
+            pairwise_terms = []
+            pairwise_errs = []
+            for i in range(len(human_world_anchor_entries)):
+                pred_i, gt_i, mask_i = human_world_anchor_entries[i]
+                for j in range(i + 1, len(human_world_anchor_entries)):
+                    pred_j, gt_j, mask_j = human_world_anchor_entries[j]
+                    num_humans = min(pred_i.shape[1], pred_j.shape[1])
+                    num_joints = min(pred_i.shape[2], pred_j.shape[2])
+                    pair_mask = mask_i[:, :num_humans] & mask_j[:, :num_humans]
+                    if not pair_mask.any():
+                        continue
+                    pred_delta = (
+                        pred_j[:, :num_humans, :num_joints]
+                        - pred_i[:, :num_humans, :num_joints]
+                    )
+                    gt_delta = (
+                        gt_j[:, :num_humans, :num_joints]
+                        - gt_i[:, :num_humans, :num_joints]
+                    )
+                    pairwise_terms.append(F.smooth_l1_loss(pred_delta[pair_mask], gt_delta[pair_mask]))
+                    pairwise_errs.append(
+                        torch.linalg.norm((pred_delta - gt_delta).detach(), dim=-1)[pair_mask].mean()
+                    )
+            if pairwise_terms:
+                pairwise_loss = torch.stack(pairwise_terms).mean()
+                total = total + self.human_world_anchor_pairwise_weight * pairwise_loss
+                details["v82_human_world_anchor_pairwise_loss"] = float(pairwise_loss.detach())
+                details["v82_human_world_anchor_pairwise_loss_weighted"] = float(
+                    (self.human_world_anchor_pairwise_weight * pairwise_loss).detach()
+                )
+                if pairwise_errs:
+                    details["v82_human_world_anchor_pairwise_err"] = float(
+                        torch.stack(pairwise_errs).mean()
+                    )
         if body_part_residual_terms and self.body_part_residual_weight > 0:
             body_part_loss = torch.stack(body_part_residual_terms).mean()
             total = total + self.body_part_residual_weight * body_part_loss
@@ -2618,6 +2763,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_raw_human_trans_err"] = float(torch.stack(raw_human_trans_errs).mean())
         if human_anchor_errs:
             details["v82_human_anchor_err"] = float(torch.stack(human_anchor_errs).mean())
+        if human_world_anchor_errs:
+            details["v82_human_world_anchor_err"] = float(
+                torch.stack(human_world_anchor_errs).mean()
+            )
         if body_part_raw_errs:
             details["v82_body_part_raw_err"] = float(torch.stack(body_part_raw_errs).mean())
         if body_part_corrected_errs:

@@ -1,0 +1,19 @@
+# V9 four-source converged probe: factorized human-then-pose with human world-anchor loss.
+#
+# This is the same model/loss as
+# train_v9_4source_token_probe_factorized_world_anchor_pose_human_lora, but the
+# schedule is long enough to judge convergence instead of stopping at 60 epochs.
+defaults:
+  - train_v9_4source_token_probe_factorized_world_anchor_pose_human_lora
+  - _self_
+
+epochs: 500
+save_freq: 10
+eval_freq: 10
+early_stopping_patience: 80
+save_last_checkpoint: true
+save_final_checkpoint: true
+
+exp_name: v9_4source_token_probe_factorized_world_anchor_converged_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_token_probe/${exp_name}

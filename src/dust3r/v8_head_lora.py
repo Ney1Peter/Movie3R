@@ -38,11 +38,14 @@ class LoRALinear(nn.Module):
         self.lora_dropout = nn.Dropout(float(dropout)) if dropout > 0 else nn.Identity()
         self.lora_down = nn.Linear(self.in_features, self.rank, bias=False)
         self.lora_up = nn.Linear(self.rank, self.out_features, bias=False)
+        self.lora_enabled = True
         nn.init.kaiming_uniform_(self.lora_down.weight, a=math.sqrt(5))
         nn.init.zeros_(self.lora_up.weight)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         base = F.linear(x, self.weight, self.bias)
+        if not self.lora_enabled:
+            return base
         lora = self.lora_up(self.lora_down(self.lora_dropout(x)))
         return base + lora.to(dtype=base.dtype) * self.scaling
 
@@ -108,6 +111,14 @@ def lora_parameter_l2(module: nn.Module):
     if not values:
         return None
     return torch.stack(values).mean()
+
+
+def set_lora_enabled(module: nn.Module, enabled: bool = True) -> int:
+    count = 0
+    for layer in iter_lora_layers(module):
+        layer.lora_enabled = bool(enabled)
+        count += 1
+    return count
 
 
 def count_lora_parameters(module: nn.Module) -> Dict[str, int]:

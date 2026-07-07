@@ -114,6 +114,43 @@ def parse_args():
         default=10000000
         )
     parser.add_argument(
+        "--freeze_state_after",
+        type=int,
+        default=None,
+        help=(
+            "Inference-only state-write ablation. Frames with original index >= "
+            "this value still run forward but do not update recurrent state, "
+            "pose memory, or V9 correction history."
+        ),
+    )
+    parser.add_argument(
+        "--freeze_state_feat_after",
+        type=int,
+        default=None,
+        help=(
+            "Inference-only ablation. Frames with original index >= this value "
+            "do not update the global recurrent state_feat."
+        ),
+    )
+    parser.add_argument(
+        "--freeze_pose_memory_after",
+        type=int,
+        default=None,
+        help=(
+            "Inference-only ablation. Frames with original index >= this value "
+            "do not update the pose retriever memory."
+        ),
+    )
+    parser.add_argument(
+        "--freeze_v9_history_after",
+        type=int,
+        default=None,
+        help=(
+            "Inference-only ablation. Frames with original index >= this value "
+            "do not update V9 correction-token history."
+        ),
+    )
+    parser.add_argument(
         "--use_ttt3r",
         action="store_true",
         help="Use TTT3R.",
@@ -200,6 +237,36 @@ def parse_args():
         action="store_true",
         help="Disable V6-A/V6.1 decoder-after AnchorPoseAdapter for ablation.",
     )
+    parser.add_argument(
+        "--disable_v8_pose_prompt",
+        action="store_true",
+        help="Disable V8/V9 correct-token prompt branch for inference ablation.",
+    )
+    parser.add_argument(
+        "--disable_v8_human_latent_corr",
+        action="store_true",
+        help="Disable V8/V9 human latent correction head for inference ablation.",
+    )
+    parser.add_argument(
+        "--disable_v8_human_trans_corr",
+        action="store_true",
+        help="Disable V8/V9 human translation correction head for inference ablation.",
+    )
+    parser.add_argument(
+        "--disable_v8_head_lora",
+        action="store_true",
+        help="Disable V8/V9 pose/human head LoRA modules for inference ablation.",
+    )
+    parser.add_argument(
+        "--disable_v8_pose_head_lora",
+        action="store_true",
+        help="Disable only the V8/V9 pose-head LoRA modules for inference ablation.",
+    )
+    parser.add_argument(
+        "--disable_v8_human_head_lora",
+        action="store_true",
+        help="Disable only the V8/V9 human-head LoRA modules for inference ablation.",
+    )
     # V6.1: real-video validation path. External XFeat anchors are built outside
     # demo.py and injected here as patch-level fields consumed by AnchorPoseAdapter.
     parser.add_argument(
@@ -233,7 +300,11 @@ def prepare_input(
     revisit=1, 
     update=True, 
     img_res=None, 
-    reset_interval=100
+    reset_interval=100,
+    freeze_state_after=None,
+    freeze_state_feat_after=None,
+    freeze_pose_memory_after=None,
+    freeze_v9_history_after=None,
 ):
     """
     Prepare input views for inference from a list of image paths.
@@ -259,9 +330,23 @@ def prepare_input(
         K_mhmr = get_camera_parameters(img_res, device="cpu") # if use pseudo K
 
     views = []
+
+    def _should_update_frame(i, freeze_after):
+        return not (freeze_after is not None and i >= int(freeze_after))
+
+    def _update_flags(i):
+        base_update = _should_update_frame(i, freeze_state_after)
+        return {
+            "update": base_update,
+            "update_state": base_update and _should_update_frame(i, freeze_state_feat_after),
+            "update_mem": base_update and _should_update_frame(i, freeze_pose_memory_after),
+            "update_v8_history": base_update and _should_update_frame(i, freeze_v9_history_after),
+        }
+
     if raymaps is None and raymap_mask is None:
         # Only images are provided.
         for i in range(len(images)):
+            update_flags = _update_flags(i)
             view = {
                 "img": images[i]["img"],
                 "ray_map": torch.full(
@@ -281,7 +366,10 @@ def prepare_input(
                     ).unsqueeze(0),
                 "img_mask": torch.tensor(True).unsqueeze(0),
                 "ray_mask": torch.tensor(False).unsqueeze(0),
-                "update": torch.tensor(True).unsqueeze(0),
+                "update": torch.tensor(update_flags["update"]).unsqueeze(0),
+                "update_state": torch.tensor(update_flags["update_state"]).unsqueeze(0),
+                "update_mem": torch.tensor(update_flags["update_mem"]).unsqueeze(0),
+                "update_v8_history": torch.tensor(update_flags["update_v8_history"]).unsqueeze(0),
                 "reset": torch.tensor((i+1) % reset_interval == 0).unsqueeze(0),
             }
             if img_res is not None:
@@ -301,6 +389,7 @@ def prepare_input(
         j = 0
         k = 0
         for i in range(num_views):
+            update_flags = _update_flags(i)
             view = {
                 "img": (
                     images[j]["img"]
@@ -324,7 +413,10 @@ def prepare_input(
                     ).unsqueeze(0),
                 "img_mask": torch.tensor(img_mask[i]).unsqueeze(0),
                 "ray_mask": torch.tensor(raymap_mask[i]).unsqueeze(0),
-                "update": torch.tensor(img_mask[i]).unsqueeze(0),
+                "update": torch.tensor(img_mask[i] and update_flags["update"]).unsqueeze(0),
+                "update_state": torch.tensor(img_mask[i] and update_flags["update_state"]).unsqueeze(0),
+                "update_mem": torch.tensor(img_mask[i] and update_flags["update_mem"]).unsqueeze(0),
+                "update_v8_history": torch.tensor(img_mask[i] and update_flags["update_v8_history"]).unsqueeze(0),
                 "reset": torch.tensor((i+1) % reset_interval == 0).unsqueeze(0),
             }
             if img_res is not None:
@@ -350,6 +442,9 @@ def prepare_input(
                 new_view["instance"] = str(r * len(views) + i)
                 if r > 0 and not update:
                     new_view["update"] = torch.tensor(False).unsqueeze(0)
+                    new_view["update_state"] = torch.tensor(False).unsqueeze(0)
+                    new_view["update_mem"] = torch.tensor(False).unsqueeze(0)
+                    new_view["update_v8_history"] = torch.tensor(False).unsqueeze(0)
                 new_views.append(new_view)
         return new_views
 
@@ -722,6 +817,7 @@ def run_inference(args):
     # Import model and inference functions after adding the ckpt path.
     from src.dust3r.inference import inference_recurrent_lighter
     from src.dust3r.model import ARCroco3DStereo
+    from src.dust3r.v8_head_lora import set_lora_enabled
     from viser_utils import SceneHumanViewer
 
     # Prepare image file paths.
@@ -780,6 +876,30 @@ def run_inference(args):
     if args.disable_anchor_pose_adapter and hasattr(model, "enable_anchor_pose_adapter"):
         model.enable_anchor_pose_adapter = False
         print("AnchorPoseAdapter disabled for ablation.")
+    if args.disable_v8_pose_prompt and hasattr(model, "enable_v8_pose_prompt"):
+        model.enable_v8_pose_prompt = False
+        print("V8/V9 pose prompt disabled for ablation.")
+    if args.disable_v8_human_latent_corr and hasattr(model, "enable_v8_human_latent_corr"):
+        model.enable_v8_human_latent_corr = False
+        print("V8/V9 human latent correction disabled for ablation.")
+    if args.disable_v8_human_trans_corr and hasattr(model, "enable_v8_human_trans_corr"):
+        model.enable_v8_human_trans_corr = False
+        print("V8/V9 human translation correction disabled for ablation.")
+    disabled_lora = {}
+    if args.disable_v8_head_lora or args.disable_v8_pose_head_lora:
+        n = 0
+        if hasattr(model.downstream_head, "pose_head"):
+            n = set_lora_enabled(model.downstream_head.pose_head, False)
+        disabled_lora["pose_head"] = n
+    if args.disable_v8_head_lora or args.disable_v8_human_head_lora:
+        n = 0
+        for attr in ("deccam", "decpose", "decshape", "decexpression"):
+            if hasattr(model.downstream_head, attr):
+                n += set_lora_enabled(getattr(model.downstream_head, attr), False)
+        disabled_lora["human_head"] = n
+    if disabled_lora and hasattr(model, "enable_v8_head_lora"):
+        model.enable_v8_head_lora = False
+        print(f"V8/V9 head LoRA disabled for ablation: {disabled_lora}")
     model.eval()
 
     # Prepare input views.
@@ -792,8 +912,33 @@ def run_inference(args):
         revisit=1,
         update=True,
         img_res=img_res,
-        reset_interval=args.reset_interval
+        reset_interval=args.reset_interval,
+        freeze_state_after=args.freeze_state_after,
+        freeze_state_feat_after=args.freeze_state_feat_after,
+        freeze_pose_memory_after=args.freeze_pose_memory_after,
+        freeze_v9_history_after=args.freeze_v9_history_after,
     )
+    if args.freeze_state_after is not None:
+        print(
+            f"Freeze-state-after enabled: frames with original index >= "
+            f"{args.freeze_state_after} will not write recurrent state, pose "
+            f"memory, or V9 correction history."
+        )
+    if args.freeze_state_feat_after is not None:
+        print(
+            f"Freeze-state-feat-after enabled: frames with original index >= "
+            f"{args.freeze_state_feat_after} will not write recurrent state_feat."
+        )
+    if args.freeze_pose_memory_after is not None:
+        print(
+            f"Freeze-pose-memory-after enabled: frames with original index >= "
+            f"{args.freeze_pose_memory_after} will not write pose memory."
+        )
+    if args.freeze_v9_history_after is not None:
+        print(
+            f"Freeze-v9-history-after enabled: frames with original index >= "
+            f"{args.freeze_v9_history_after} will not write V9 correction history."
+        )
     # V6.1: ordinary mp4 inference has no dataset loader, so external anchor
     # fields are attached here before model.forward_recurrent_lighter().
     if args.anchor_path is not None:

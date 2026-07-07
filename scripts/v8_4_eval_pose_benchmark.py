@@ -102,6 +102,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def parse_raw_roots(text: str):
+    if text is None or str(text).strip().lower() in {"", "none", "null"}:
+        return None
     value = ast.literal_eval(text) if text.strip().startswith("{") else text
     if isinstance(value, dict):
         return {str(k): str(v) for k, v in value.items()}
