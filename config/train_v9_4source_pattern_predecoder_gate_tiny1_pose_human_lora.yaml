@@ -1,0 +1,96 @@
+# V9 pre-decoder change-gate tiny overfit probe.
+#
+# This uses exactly one 4-frame clip and one long12 clip per source:
+# AvatarReX, THuman, MVHuman100, MVHuman200. The 4-frame clip is stable
+# same-camera AAAA, while long12 is a repeated camera-change pattern.
+# It is meant to answer whether the gate can learn "do not correct stable
+# frames, correct changed frames" under an easy overfit setting.
+defaults:
+  - train_v9_4source_pattern_predecoder_gate_pose_human_lora
+  - _self_
+
+v9_pattern_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_pattern_gate_tiny1
+v9_long12_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_long12_gate_tiny1
+
+# Neutral initialization: sigmoid(0)=0.5. The existing larger probe keeps
+# bias=2.0 through the parent config.
+v9_pre_decoder_change_gate_bias_value: 0.0
+
+train_datasets:
+  - name: avatarrex_4f
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=16101, n_corres=0, manifest_path="${v9_pattern_manifest_root}/avatarrex/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_long12
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=16102, n_corres=0, manifest_path="${v9_long12_manifest_root}/avatarrex/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_4f
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=16201, n_corres=0, manifest_path="${v9_pattern_manifest_root}/thuman/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_long12
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=16202, n_corres=0, manifest_path="${v9_long12_manifest_root}/thuman/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100_4f
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=16301, n_corres=0, manifest_path="${v9_pattern_manifest_root}/mvhuman100/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman100_long12
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=16302, n_corres=0, manifest_path="${v9_long12_manifest_root}/mvhuman100/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_4f
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=16401, n_corres=0, manifest_path="${v9_pattern_manifest_root}/mvhuman200/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_long12
+    weight: 0.125
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=16402, n_corres=0, manifest_path="${v9_long12_manifest_root}/mvhuman200/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+test_dataset:
+  - name: avatarrex_4f_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=17101, n_corres=0, manifest_path="${v9_pattern_manifest_root}/avatarrex/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_long12_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=17102, n_corres=0, manifest_path="${v9_long12_manifest_root}/avatarrex/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_4f_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=17201, n_corres=0, manifest_path="${v9_pattern_manifest_root}/thuman/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman_long12_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=17202, n_corres=0, manifest_path="${v9_long12_manifest_root}/thuman/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100_4f_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=17301, n_corres=0, manifest_path="${v9_pattern_manifest_root}/mvhuman100/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman100_long12_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=17302, n_corres=0, manifest_path="${v9_long12_manifest_root}/mvhuman100/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_4f_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=17401, n_corres=0, manifest_path="${v9_pattern_manifest_root}/mvhuman200/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200_long12_one
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=17402, n_corres=0, manifest_path="${v9_long12_manifest_root}/mvhuman200/train_one_pattern.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_mixed_epoch_steps: 1
+start_epoch: 1
+epochs: 121
+warmup_epochs: 1
+eval_freq: 10
+save_freq: 10
+
+exp_name: v9_4source_pattern_predecoder_gate_tiny1_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_predecoder_gate_tiny1/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_predecoder_gate_tiny1/${exp_name}

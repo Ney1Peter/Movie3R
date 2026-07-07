@@ -13,6 +13,7 @@ defaults:
 
 v9_pattern_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_pattern_probe
 v9_long12_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_long12_pattern_probe
+v9_pre_decoder_change_gate_bias_value: 2.0
 
 model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   state_size=768, state_pe='2d', pos_embed='RoPE100',
@@ -39,7 +40,7 @@ model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   v8_pose_prompt_pooling='mean',
   v9_pre_decoder_change_gate=True,
   v9_pre_decoder_change_gate_threshold=0.5,
-  v9_pre_decoder_change_gate_bias=2.0,
+  v9_pre_decoder_change_gate_bias=${v9_pre_decoder_change_gate_bias_value},
   v9_pre_decoder_change_gate_force_first_noop=True,
   v8_human_trans_corr=False,
   v8_human_trans_corr_gate_bias=0.0,
