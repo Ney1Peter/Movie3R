@@ -2023,6 +2023,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_world_anchor_joint_indices=(0, 3, 6, 9, 10, 11, 15),
         body_part_residual_weight=0.0,
         body_part_joint_indices=(0, 1, 2, 10, 11),
+        shot_gate_bce_weight=0.0,
+        shot_gate_trans_threshold=0.05,
+        shot_gate_rot_threshold_deg=3.0,
+        stable_noop_residual_weight=0.0,
+        stable_raw_consistency_weight=0.0,
         pose_lora_norm_weight=0.0,
         human_lora_norm_weight=0.0,
     ):
@@ -2064,6 +2069,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.body_part_joint_indices = self._parse_human_anchor_joint_indices(
             body_part_joint_indices
         )
+        self.shot_gate_bce_weight = float(shot_gate_bce_weight)
+        self.shot_gate_trans_threshold = float(shot_gate_trans_threshold)
+        self.shot_gate_rot_threshold_deg = float(shot_gate_rot_threshold_deg)
+        self.stable_noop_residual_weight = float(stable_noop_residual_weight)
+        self.stable_raw_consistency_weight = float(stable_raw_consistency_weight)
         self.pose_lora_norm_weight = float(pose_lora_norm_weight)
         self.human_lora_norm_weight = float(human_lora_norm_weight)
         self.human_anchor_smpl_layer = nn.ModuleDict()
@@ -2378,6 +2388,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         body_part_delta_norms = []
         human_trans_errs = []
         raw_human_trans_errs = []
+        shot_gate_terms = []
+        shot_gate_targets = []
+        shot_gate_values = []
+        stable_noop_residual_terms = []
+        stable_raw_consistency_terms = []
         pose_lora_norm_terms = []
         human_lora_norm_terms = []
 
@@ -2390,6 +2405,50 @@ class V82PoseRelationLoss(V81PosePromptLoss):
 
             pose_loss = self._pose_loss(pred_pose, gt_pose)
             pose_losses.append(pose_loss.mean())
+
+            shot_target = None
+            stable_sample_mask = None
+            if (
+                self.shot_gate_bce_weight > 0
+                or self.stable_noop_residual_weight > 0
+                or self.stable_raw_consistency_weight > 0
+            ):
+                if view_idx == 0:
+                    shot_target = pred_pose.new_zeros((pred_pose.shape[0], 1, 1))
+                else:
+                    prev_gt_pose = gt_poses[view_idx - 1].to(
+                        device=pred_pose.device,
+                        dtype=pred_pose.dtype,
+                    )
+                    gt_step_t_err, gt_step_r_err = self._pose_errors(gt_pose, prev_gt_pose)
+                    shot_target = (
+                        (gt_step_t_err > self.shot_gate_trans_threshold)
+                        | (gt_step_r_err > math.radians(self.shot_gate_rot_threshold_deg))
+                    ).to(dtype=pred_pose.dtype).reshape(-1, 1, 1)
+                    details[f"v82_gt_step_trans/{view_idx}"] = float(gt_step_t_err.detach().mean())
+                    details[f"v82_gt_step_rot_deg/{view_idx}"] = float(
+                        torch.rad2deg(gt_step_r_err.detach().mean())
+                    )
+                shot_gate_targets.append(shot_target.detach().mean())
+                stable_sample_mask = shot_target.reshape(-1) < 0.5
+                details[f"v82_shot_gate_target/{view_idx}"] = float(shot_target.detach().mean())
+
+                gate_logit = pred.get("v9_pre_decoder_change_logit", None)
+                pre_gate = pred.get("v9_pre_decoder_change_gate", None)
+                if gate_logit is not None:
+                    gate_logit = gate_logit.float().reshape_as(shot_target)
+                    shot_gate_terms.append(
+                        F.binary_cross_entropy_with_logits(gate_logit, shot_target)
+                    )
+                    shot_gate_values.append(torch.sigmoid(gate_logit).detach().mean())
+                    details[f"v82_pre_decoder_gate/{view_idx}"] = float(
+                        torch.sigmoid(gate_logit).detach().mean()
+                    )
+                elif pre_gate is not None:
+                    pre_gate = pre_gate.float().reshape_as(shot_target).clamp(1e-4, 1.0 - 1e-4)
+                    shot_gate_terms.append(F.binary_cross_entropy(pre_gate, shot_target))
+                    shot_gate_values.append(pre_gate.detach().mean())
+                    details[f"v82_pre_decoder_gate/{view_idx}"] = float(pre_gate.detach().mean())
 
             trans_err_for_loss, rot_err_for_loss = self._pose_errors(pred_pose, gt_pose)
             corrected_norm_err_for_loss = self._normalized_pose_error(
@@ -2455,6 +2514,19 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     pose_noop_loss = F.smooth_l1_loss(delta_applied, torch.zeros_like(delta_applied))
                     pose_noop_terms.append(pose_noop_loss)
                     details[f"v82_pose_noop_loss/{view_idx}"] = float(pose_noop_loss.detach())
+                if (
+                    self.stable_noop_residual_weight > 0
+                    and stable_sample_mask is not None
+                    and stable_sample_mask.any()
+                ):
+                    stable_pose_noop = F.smooth_l1_loss(
+                        delta_applied[stable_sample_mask],
+                        torch.zeros_like(delta_applied[stable_sample_mask]),
+                    )
+                    stable_noop_residual_terms.append(stable_pose_noop)
+                    details[f"v82_stable_pose_noop_loss/{view_idx}"] = float(
+                        stable_pose_noop.detach()
+                    )
 
             gate = pred.get("v8_pose_prompt_gate", None)
             if gate is not None:
@@ -2481,6 +2553,8 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     or self.human_cam_ref_weight > 0
                     or self.human_pairwise_ref_weight > 0
                     or self.human_anchor_weight > 0
+                    or self.stable_noop_residual_weight > 0
+                    or self.stable_raw_consistency_weight > 0
                 )
                 and "smpl_transl" in gt
                 and "smpl_transl" in pred
@@ -2583,6 +2657,21 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                         details[f"v82_human_latent_delta_norm/{view_idx}"] = float(
                             human_delta.detach().norm(dim=-1).mean()
                         )
+                if (
+                    human_delta is not None
+                    and self.stable_noop_residual_weight > 0
+                    and stable_sample_mask is not None
+                    and stable_sample_mask.any()
+                ):
+                    human_delta = human_delta.float()
+                    stable_human_noop = F.smooth_l1_loss(
+                        human_delta[stable_sample_mask],
+                        torch.zeros_like(human_delta[stable_sample_mask]),
+                    )
+                    stable_noop_residual_terms.append(stable_human_noop)
+                    details[f"v82_stable_human_noop_loss/{view_idx}"] = float(
+                        stable_human_noop.detach()
+                    )
 
             if self.body_part_residual_weight > 0:
                 body_part_out = self._body_part_residual_loss(gt, pred)
@@ -2596,6 +2685,68 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                     details[f"v82_body_part_raw_err/{view_idx}"] = float(raw_part_err.detach())
                     details[f"v82_body_part_corrected_err/{view_idx}"] = float(corrected_part_err.detach())
                     details[f"v82_body_part_delta_norm/{view_idx}"] = float(part_delta_norm.detach())
+
+            if (
+                self.stable_raw_consistency_weight > 0
+                and stable_sample_mask is not None
+                and stable_sample_mask.any()
+            ):
+                raw_pose_for_consistency = pred.get("v8_raw_camera_pose", None)
+                if raw_pose_for_consistency is not None:
+                    raw_pose_for_consistency = raw_pose_for_consistency.to(
+                        device=pred_pose.device,
+                        dtype=pred_pose.dtype,
+                    )
+                    pose_consistency = self._pose_loss(
+                        pred_pose[stable_sample_mask],
+                        raw_pose_for_consistency[stable_sample_mask],
+                    ).mean()
+                    stable_raw_consistency_terms.append(pose_consistency)
+                    details[f"v82_stable_pose_raw_consistency_loss/{view_idx}"] = float(
+                        pose_consistency.detach()
+                    )
+                raw_human_t_for_consistency = pred.get("v8_human_trans_corr_smpl_transl_raw", None)
+                if raw_human_t_for_consistency is None:
+                    raw_human_t_for_consistency = pred.get(
+                        "v8_human_latent_corr_smpl_transl_raw", None
+                    )
+                pred_human_t_for_consistency = pred.get("smpl_transl", None)
+                if (
+                    raw_human_t_for_consistency is not None
+                    and pred_human_t_for_consistency is not None
+                ):
+                    raw_human_t_for_consistency = raw_human_t_for_consistency.to(
+                        device=pred_human_t_for_consistency.device,
+                        dtype=pred_human_t_for_consistency.dtype,
+                    )
+                    pred_human_t_for_consistency = pred_human_t_for_consistency.float()
+                    num_humans_consistency = min(
+                        raw_human_t_for_consistency.shape[1],
+                        pred_human_t_for_consistency.shape[1],
+                    )
+                    if num_humans_consistency > 0:
+                        raw_human_t_for_consistency = raw_human_t_for_consistency[
+                            :, :num_humans_consistency
+                        ]
+                        pred_human_t_for_consistency = pred_human_t_for_consistency[
+                            :, :num_humans_consistency
+                        ]
+                        human_mask_consistency = self._human_trans_mask(
+                            gt,
+                            pred_human_t_for_consistency,
+                        )[:, :num_humans_consistency]
+                        human_mask_consistency = human_mask_consistency & stable_sample_mask[
+                            :, None
+                        ].to(device=human_mask_consistency.device)
+                        if human_mask_consistency.any():
+                            human_consistency = F.smooth_l1_loss(
+                                pred_human_t_for_consistency[human_mask_consistency],
+                                raw_human_t_for_consistency[human_mask_consistency],
+                            )
+                            stable_raw_consistency_terms.append(human_consistency)
+                            details[f"v82_stable_human_raw_consistency_loss/{view_idx}"] = float(
+                                human_consistency.detach()
+                            )
 
         if pose_losses:
             pose_loss = torch.stack(pose_losses).mean()
@@ -2611,6 +2762,27 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             total = total + self.pose_noop_weight * pose_noop_loss
             details["v82_pose_noop_loss"] = float(pose_noop_loss.detach())
             details["v82_pose_noop_loss_weighted"] = float((self.pose_noop_weight * pose_noop_loss).detach())
+        if shot_gate_terms and self.shot_gate_bce_weight > 0:
+            shot_gate_loss = torch.stack(shot_gate_terms).mean()
+            total = total + self.shot_gate_bce_weight * shot_gate_loss
+            details["v82_shot_gate_bce_loss"] = float(shot_gate_loss.detach())
+            details["v82_shot_gate_bce_loss_weighted"] = float(
+                (self.shot_gate_bce_weight * shot_gate_loss).detach()
+            )
+        if stable_noop_residual_terms and self.stable_noop_residual_weight > 0:
+            stable_noop_loss = torch.stack(stable_noop_residual_terms).mean()
+            total = total + self.stable_noop_residual_weight * stable_noop_loss
+            details["v82_stable_noop_residual_loss"] = float(stable_noop_loss.detach())
+            details["v82_stable_noop_residual_loss_weighted"] = float(
+                (self.stable_noop_residual_weight * stable_noop_loss).detach()
+            )
+        if stable_raw_consistency_terms and self.stable_raw_consistency_weight > 0:
+            stable_consistency_loss = torch.stack(stable_raw_consistency_terms).mean()
+            total = total + self.stable_raw_consistency_weight * stable_consistency_loss
+            details["v82_stable_raw_consistency_loss"] = float(stable_consistency_loss.detach())
+            details["v82_stable_raw_consistency_loss_weighted"] = float(
+                (self.stable_raw_consistency_weight * stable_consistency_loss).detach()
+            )
         if drift_terms and self.drift_weight > 0:
             drift_loss = torch.stack(drift_terms).mean()
             total = total + self.drift_weight * drift_loss
@@ -2755,6 +2927,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_delta_norm"] = float(torch.stack(delta_norms).mean())
         if drift_targets:
             details["v82_drift_target_mean"] = float(torch.stack(drift_targets).mean())
+        if shot_gate_targets:
+            details["v82_shot_gate_target_mean"] = float(torch.stack(shot_gate_targets).mean())
+        if shot_gate_values:
+            details["v82_pre_decoder_gate_mean"] = float(torch.stack(shot_gate_values).mean())
         if improvements:
             details["v82_norm_error_improvement"] = float(torch.stack(improvements).mean())
         if human_trans_errs:

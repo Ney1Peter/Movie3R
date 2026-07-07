@@ -700,6 +700,96 @@ class V82PoseRelationResidualHead(nn.Module):
         return corrected_delta, gate, delta, drift_logit
 
 
+class V9PreDecoderChangeGate(nn.Module):
+    """Predict whether the current frame should receive decoder-in correction.
+
+    This gate runs before appending V9 correct tokens to the recurrent decoder.
+    It is intentionally small: the existing prompt/head still performs the actual
+    correction, while this module only decides whether that branch should be
+    exposed to the decoder for the current frame.
+    """
+
+    def __init__(
+        self,
+        dec_dim: int,
+        memory_dim: Optional[int] = None,
+        hidden_dim: Optional[int] = None,
+        gate_bias: float = 2.0,
+    ):
+        super().__init__()
+        self.dec_dim = int(dec_dim)
+        self.memory_dim = int(memory_dim or dec_dim * 2)
+        hidden = int(hidden_dim or dec_dim)
+        self.memory_proj = nn.Linear(self.memory_dim, self.dec_dim)
+        self.state_norm = nn.LayerNorm(self.dec_dim)
+        self.human_norm = nn.LayerNorm(self.dec_dim)
+        self.mlp = nn.Sequential(
+            nn.LayerNorm(self.dec_dim * 8),
+            nn.Linear(self.dec_dim * 8, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, hidden),
+            nn.GELU(),
+            nn.Linear(hidden, 1),
+        )
+        nn.init.zeros_(self.mlp[-1].weight)
+        nn.init.constant_(self.mlp[-1].bias, float(gate_bias))
+
+    def _mean_or_zero(self, tokens: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
+        if not _has_aligned_batch(tokens, batch_size):
+            return ref.new_zeros(batch_size, 1, self.dec_dim)
+        return tokens.mean(dim=1, keepdim=True)
+
+    def _memory_summary(self, pose_memory: Optional[torch.Tensor], batch_size: int, ref: torch.Tensor):
+        if not _has_aligned_batch(pose_memory, batch_size):
+            return ref.new_zeros(batch_size, 1, self.dec_dim)
+        return self.memory_proj(pose_memory).mean(dim=1, keepdim=True)
+
+    def forward(
+        self,
+        pose_token: torch.Tensor,
+        human_tokens: Optional[torch.Tensor] = None,
+        state_tokens: Optional[torch.Tensor] = None,
+        pose_memory: Optional[torch.Tensor] = None,
+        prev_pose_token: Optional[torch.Tensor] = None,
+        prev_human_token: Optional[torch.Tensor] = None,
+    ):
+        batch_size = pose_token.shape[0]
+        current_pose = pose_token
+        previous_pose = (
+            self._mean_or_zero(prev_pose_token, batch_size, pose_token)
+            if _has_aligned_batch(prev_pose_token, batch_size)
+            else current_pose
+        )
+        pose_delta = current_pose - previous_pose
+
+        current_human = self.human_norm(self._mean_or_zero(human_tokens, batch_size, pose_token))
+        previous_human = (
+            self.human_norm(self._mean_or_zero(prev_human_token, batch_size, pose_token))
+            if _has_aligned_batch(prev_human_token, batch_size)
+            else current_human
+        )
+        human_delta = current_human - previous_human
+
+        state_summary = self.state_norm(self._mean_or_zero(state_tokens, batch_size, pose_token))
+        memory_summary = self._memory_summary(pose_memory, batch_size, pose_token)
+        features = torch.cat(
+            [
+                current_pose,
+                previous_pose,
+                pose_delta,
+                current_human,
+                previous_human,
+                human_delta,
+                state_summary,
+                memory_summary,
+            ],
+            dim=-1,
+        )
+        logit = self.mlp(features)
+        gate = torch.sigmoid(logit)
+        return gate, logit
+
+
 class V8HumanTranslationCorrectionHead(nn.Module):
     """Explicit sanity-check head for correcting whole-body SMPL translation.
 
