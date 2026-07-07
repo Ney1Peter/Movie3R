@@ -256,6 +256,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v9_pre_decoder_change_gate_threshold=0.5,
         v9_pre_decoder_change_gate_bias=2.0,
         v9_pre_decoder_change_gate_force_first_noop=True,
+        v9_pre_decoder_change_gate_teacher_forcing=False,
         v8_factorized_human_pose_corr=False,
         v8_factorized_human_stopgrad_for_pose=True,
         v8_human_latent_corr_pooling=None,
@@ -346,6 +347,7 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v9_pre_decoder_change_gate_threshold = v9_pre_decoder_change_gate_threshold
         self.v9_pre_decoder_change_gate_bias = v9_pre_decoder_change_gate_bias
         self.v9_pre_decoder_change_gate_force_first_noop = v9_pre_decoder_change_gate_force_first_noop
+        self.v9_pre_decoder_change_gate_teacher_forcing = v9_pre_decoder_change_gate_teacher_forcing
         self.v8_factorized_human_pose_corr = v8_factorized_human_pose_corr
         self.v8_factorized_human_stopgrad_for_pose = v8_factorized_human_stopgrad_for_pose
         self.v8_human_latent_corr_pooling = (
@@ -712,6 +714,9 @@ class ARCroco3DStereo(CroCoNet):
         )
         self.v9_pre_decoder_change_gate_force_first_noop = bool(
             getattr(config, "v9_pre_decoder_change_gate_force_first_noop", True)
+        )
+        self.v9_pre_decoder_change_gate_teacher_forcing = bool(
+            getattr(config, "v9_pre_decoder_change_gate_teacher_forcing", False)
         )
         self.v8_factorized_human_pose_corr = bool(getattr(config, "v8_factorized_human_pose_corr", False))
         self.v8_factorized_human_stopgrad_for_pose = bool(
@@ -2261,6 +2266,7 @@ class ARCroco3DStereo(CroCoNet):
         prev_pose_token,
         prev_human_token,
         view_idx,
+        teacher_gate=None,
     ):
         if corr_tokens is None:
             return None, None, 0, None
@@ -2282,12 +2288,30 @@ class ARCroco3DStereo(CroCoNet):
             effective_gate = torch.zeros_like(change_gate)
         else:
             effective_gate = change_gate
+        route_gate = effective_gate
+        use_teacher_gate = (
+            bool(getattr(self, "v9_pre_decoder_change_gate_teacher_forcing", False))
+            and self.training
+            and teacher_gate is not None
+        )
+        if use_teacher_gate:
+            teacher_gate = teacher_gate.to(device=change_gate.device, dtype=change_gate.dtype)
+            teacher_gate = teacher_gate.reshape(change_gate.shape[0], -1)[:, :1].reshape_as(change_gate)
+            teacher_gate = teacher_gate.clamp(0.0, 1.0)
+            if self.v9_pre_decoder_change_gate_force_first_noop and int(view_idx) == 0:
+                teacher_gate = torch.zeros_like(teacher_gate)
+            route_gate = teacher_gate
         threshold = float(getattr(self, "v9_pre_decoder_change_gate_threshold", 0.5))
-        append_corr = bool((effective_gate.detach() >= threshold).any().item())
+        append_corr = bool((route_gate.detach() > threshold).any().item())
         info = {
             "v9_pre_decoder_change_gate": change_gate,
             "v9_pre_decoder_change_logit": change_logit,
             "v9_pre_decoder_effective_gate": effective_gate,
+            "v9_pre_decoder_route_gate": route_gate,
+            "v9_pre_decoder_teacher_forcing": effective_gate.new_full(
+                effective_gate.shape,
+                1.0 if use_teacher_gate else 0.0,
+            ),
             "v9_pre_decoder_append": effective_gate.new_full(
                 effective_gate.shape,
                 1.0 if append_corr else 0.0,
@@ -2296,7 +2320,7 @@ class ARCroco3DStereo(CroCoNet):
         if not append_corr:
             return None, None, 0, info
 
-        routed_corr_tokens = corr_tokens * effective_gate.to(
+        routed_corr_tokens = corr_tokens * route_gate.to(
             device=corr_tokens.device,
             dtype=corr_tokens.dtype,
         )
@@ -3185,6 +3209,7 @@ class ARCroco3DStereo(CroCoNet):
                         v8_prev_pose_token,
                         v8_prev_human_token,
                         i,
+                        teacher_gate=views[i].get("shot_label", None),
                     )
                 )
             f_anchor, pos_anchor, n_anchor_i, anchor_decoder_info, anchor_mask_i = self._build_anchor_decoder_tokens(
@@ -3978,6 +4003,7 @@ class ARCroco3DStereo(CroCoNet):
                         v8_prev_pose_token,
                         v8_prev_human_token,
                         i,
+                        teacher_gate=view.get("shot_label", None),
                     )
                 )
             # **========== V6-C 原始代码备份：V6-B 轻量推理路径把 AnchorToken 直接送入 decoder attention ==========**

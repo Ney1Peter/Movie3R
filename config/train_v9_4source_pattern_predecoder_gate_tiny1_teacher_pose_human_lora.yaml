@@ -1,0 +1,14 @@
+# Tiny overfit probe with GT teacher-forced pre-decoder routing.
+#
+# During training, shot_label=0 frames do not append correct tokens and
+# shot_label=1 frames do append correct tokens. The gate prediction is still
+# supervised by BCE, and eval/inference still uses the predicted gate.
+defaults:
+  - train_v9_4source_pattern_predecoder_gate_tiny1_pose_human_lora
+  - _self_
+
+v9_pre_decoder_change_gate_teacher_forcing_value: true
+
+exp_name: v9_4source_pattern_predecoder_gate_tiny1_teacher_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_predecoder_gate_tiny1_teacher/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_predecoder_gate_tiny1_teacher/${exp_name}
