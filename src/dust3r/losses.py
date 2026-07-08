@@ -2024,6 +2024,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         body_part_residual_weight=0.0,
         body_part_joint_indices=(0, 1, 2, 10, 11),
         shot_gate_bce_weight=0.0,
+        shot_gate_pos_weight=1.0,
+        shot_gate_neg_weight=1.0,
+        shot_gate_margin_weight=0.0,
+        shot_gate_stable_margin=0.2,
+        shot_gate_change_margin=0.7,
         shot_gate_trans_threshold=0.05,
         shot_gate_rot_threshold_deg=3.0,
         stable_noop_residual_weight=0.0,
@@ -2070,6 +2075,11 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             body_part_joint_indices
         )
         self.shot_gate_bce_weight = float(shot_gate_bce_weight)
+        self.shot_gate_pos_weight = float(shot_gate_pos_weight)
+        self.shot_gate_neg_weight = float(shot_gate_neg_weight)
+        self.shot_gate_margin_weight = float(shot_gate_margin_weight)
+        self.shot_gate_stable_margin = float(shot_gate_stable_margin)
+        self.shot_gate_change_margin = float(shot_gate_change_margin)
         self.shot_gate_trans_threshold = float(shot_gate_trans_threshold)
         self.shot_gate_rot_threshold_deg = float(shot_gate_rot_threshold_deg)
         self.stable_noop_residual_weight = float(stable_noop_residual_weight)
@@ -2389,8 +2399,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         human_trans_errs = []
         raw_human_trans_errs = []
         shot_gate_terms = []
+        shot_gate_margin_terms = []
         shot_gate_targets = []
         shot_gate_values = []
+        raw_pose_step_gate_values = []
         stable_noop_residual_terms = []
         stable_raw_consistency_terms = []
         pose_lora_norm_terms = []
@@ -2437,18 +2449,63 @@ class V82PoseRelationLoss(V81PosePromptLoss):
                 pre_gate = pred.get("v9_pre_decoder_change_gate", None)
                 if gate_logit is not None:
                     gate_logit = gate_logit.float().reshape_as(shot_target)
-                    shot_gate_terms.append(
-                        F.binary_cross_entropy_with_logits(gate_logit, shot_target)
+                    gate_prob = torch.sigmoid(gate_logit)
+                    gate_weight = torch.where(
+                        shot_target > 0.5,
+                        gate_logit.new_full(shot_target.shape, self.shot_gate_pos_weight),
+                        gate_logit.new_full(shot_target.shape, self.shot_gate_neg_weight),
                     )
-                    shot_gate_values.append(torch.sigmoid(gate_logit).detach().mean())
+                    shot_gate_terms.append(
+                        F.binary_cross_entropy_with_logits(
+                            gate_logit,
+                            shot_target,
+                            weight=gate_weight,
+                        )
+                    )
+                    if self.shot_gate_margin_weight > 0:
+                        stable_margin = F.relu(gate_prob - self.shot_gate_stable_margin).pow(2)
+                        change_margin = F.relu(self.shot_gate_change_margin - gate_prob).pow(2)
+                        shot_gate_margin_terms.append(
+                            torch.where(shot_target > 0.5, change_margin, stable_margin).mean()
+                        )
+                    shot_gate_values.append(gate_prob.detach().mean())
                     details[f"v82_pre_decoder_gate/{view_idx}"] = float(
-                        torch.sigmoid(gate_logit).detach().mean()
+                        gate_prob.detach().mean()
                     )
                 elif pre_gate is not None:
                     pre_gate = pre_gate.float().reshape_as(shot_target).clamp(1e-4, 1.0 - 1e-4)
-                    shot_gate_terms.append(F.binary_cross_entropy(pre_gate, shot_target))
+                    gate_weight = torch.where(
+                        shot_target > 0.5,
+                        pre_gate.new_full(shot_target.shape, self.shot_gate_pos_weight),
+                        pre_gate.new_full(shot_target.shape, self.shot_gate_neg_weight),
+                    )
+                    shot_gate_terms.append(F.binary_cross_entropy(pre_gate, shot_target, weight=gate_weight))
+                    if self.shot_gate_margin_weight > 0:
+                        stable_margin = F.relu(pre_gate - self.shot_gate_stable_margin).pow(2)
+                        change_margin = F.relu(self.shot_gate_change_margin - pre_gate).pow(2)
+                        shot_gate_margin_terms.append(
+                            torch.where(shot_target > 0.5, change_margin, stable_margin).mean()
+                        )
                     shot_gate_values.append(pre_gate.detach().mean())
                     details[f"v82_pre_decoder_gate/{view_idx}"] = float(pre_gate.detach().mean())
+
+                raw_pose_step_gate = pred.get("v9_raw_pose_step_gate", None)
+                if raw_pose_step_gate is not None:
+                    raw_pose_step_gate = raw_pose_step_gate.float().reshape_as(shot_target)
+                    raw_pose_step_gate_values.append(raw_pose_step_gate.detach().mean())
+                    details[f"v82_raw_pose_step_gate/{view_idx}"] = float(
+                        raw_pose_step_gate.detach().mean()
+                    )
+                    raw_pose_step_trans = pred.get("v9_raw_pose_step_trans", None)
+                    if raw_pose_step_trans is not None:
+                        details[f"v82_raw_pose_step_trans/{view_idx}"] = float(
+                            raw_pose_step_trans.float().detach().mean()
+                        )
+                    raw_pose_step_rot = pred.get("v9_raw_pose_step_rot_deg", None)
+                    if raw_pose_step_rot is not None:
+                        details[f"v82_raw_pose_step_rot_deg/{view_idx}"] = float(
+                            raw_pose_step_rot.float().detach().mean()
+                        )
 
             trans_err_for_loss, rot_err_for_loss = self._pose_errors(pred_pose, gt_pose)
             corrected_norm_err_for_loss = self._normalized_pose_error(
@@ -2769,6 +2826,13 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_shot_gate_bce_loss_weighted"] = float(
                 (self.shot_gate_bce_weight * shot_gate_loss).detach()
             )
+        if shot_gate_margin_terms and self.shot_gate_margin_weight > 0:
+            shot_gate_margin_loss = torch.stack(shot_gate_margin_terms).mean()
+            total = total + self.shot_gate_margin_weight * shot_gate_margin_loss
+            details["v82_shot_gate_margin_loss"] = float(shot_gate_margin_loss.detach())
+            details["v82_shot_gate_margin_loss_weighted"] = float(
+                (self.shot_gate_margin_weight * shot_gate_margin_loss).detach()
+            )
         if stable_noop_residual_terms and self.stable_noop_residual_weight > 0:
             stable_noop_loss = torch.stack(stable_noop_residual_terms).mean()
             total = total + self.stable_noop_residual_weight * stable_noop_loss
@@ -2931,6 +2995,10 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             details["v82_shot_gate_target_mean"] = float(torch.stack(shot_gate_targets).mean())
         if shot_gate_values:
             details["v82_pre_decoder_gate_mean"] = float(torch.stack(shot_gate_values).mean())
+        if raw_pose_step_gate_values:
+            details["v82_raw_pose_step_gate_mean"] = float(
+                torch.stack(raw_pose_step_gate_values).mean()
+            )
         if improvements:
             details["v82_norm_error_improvement"] = float(torch.stack(improvements).mean())
         if human_trans_errs:

@@ -257,9 +257,19 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v9_pre_decoder_change_gate_bias=2.0,
         v9_pre_decoder_change_gate_force_first_noop=True,
         v9_pre_decoder_change_gate_teacher_forcing=False,
+        v9_pre_decoder_change_gate_soft_route=False,
         v9_pre_decoder_teacher_pose_key="raw_camera_pose",
         v9_pre_decoder_teacher_trans_threshold=0.05,
         v9_pre_decoder_teacher_rot_threshold_deg=3.0,
+        v9_raw_pose_step_gate=False,
+        v9_raw_pose_step_gate_source="main",
+        v9_raw_pose_step_gate_trans_threshold=0.05,
+        v9_raw_pose_step_gate_rot_threshold_deg=3.0,
+        v9_raw_pose_step_gate_force_first_noop=True,
+        v9_oracle_correction_gate=False,
+        v9_oracle_correction_cache=False,
+        v9_oracle_correction_inference_only=True,
+        v9_oracle_correction_post_residual_only=False,
         v8_factorized_human_pose_corr=False,
         v8_factorized_human_stopgrad_for_pose=True,
         v8_human_latent_corr_pooling=None,
@@ -351,9 +361,19 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v9_pre_decoder_change_gate_bias = v9_pre_decoder_change_gate_bias
         self.v9_pre_decoder_change_gate_force_first_noop = v9_pre_decoder_change_gate_force_first_noop
         self.v9_pre_decoder_change_gate_teacher_forcing = v9_pre_decoder_change_gate_teacher_forcing
+        self.v9_pre_decoder_change_gate_soft_route = v9_pre_decoder_change_gate_soft_route
         self.v9_pre_decoder_teacher_pose_key = v9_pre_decoder_teacher_pose_key
         self.v9_pre_decoder_teacher_trans_threshold = v9_pre_decoder_teacher_trans_threshold
         self.v9_pre_decoder_teacher_rot_threshold_deg = v9_pre_decoder_teacher_rot_threshold_deg
+        self.v9_raw_pose_step_gate = v9_raw_pose_step_gate
+        self.v9_raw_pose_step_gate_source = v9_raw_pose_step_gate_source
+        self.v9_raw_pose_step_gate_trans_threshold = v9_raw_pose_step_gate_trans_threshold
+        self.v9_raw_pose_step_gate_rot_threshold_deg = v9_raw_pose_step_gate_rot_threshold_deg
+        self.v9_raw_pose_step_gate_force_first_noop = v9_raw_pose_step_gate_force_first_noop
+        self.v9_oracle_correction_gate = v9_oracle_correction_gate
+        self.v9_oracle_correction_cache = v9_oracle_correction_cache
+        self.v9_oracle_correction_inference_only = v9_oracle_correction_inference_only
+        self.v9_oracle_correction_post_residual_only = v9_oracle_correction_post_residual_only
         self.v8_factorized_human_pose_corr = v8_factorized_human_pose_corr
         self.v8_factorized_human_stopgrad_for_pose = v8_factorized_human_stopgrad_for_pose
         self.v8_human_latent_corr_pooling = (
@@ -724,6 +744,9 @@ class ARCroco3DStereo(CroCoNet):
         self.v9_pre_decoder_change_gate_teacher_forcing = bool(
             getattr(config, "v9_pre_decoder_change_gate_teacher_forcing", False)
         )
+        self.v9_pre_decoder_change_gate_soft_route = bool(
+            getattr(config, "v9_pre_decoder_change_gate_soft_route", False)
+        )
         self.v9_pre_decoder_teacher_pose_key = str(
             getattr(config, "v9_pre_decoder_teacher_pose_key", "raw_camera_pose")
         )
@@ -732,6 +755,33 @@ class ARCroco3DStereo(CroCoNet):
         )
         self.v9_pre_decoder_teacher_rot_threshold_deg = float(
             getattr(config, "v9_pre_decoder_teacher_rot_threshold_deg", 3.0)
+        )
+        self.v9_raw_pose_step_gate_enabled = bool(
+            getattr(config, "v9_raw_pose_step_gate", False)
+        )
+        self.v9_raw_pose_step_gate_source = str(
+            getattr(config, "v9_raw_pose_step_gate_source", "main") or "main"
+        ).lower()
+        self.v9_raw_pose_step_gate_trans_threshold = float(
+            getattr(config, "v9_raw_pose_step_gate_trans_threshold", 0.05)
+        )
+        self.v9_raw_pose_step_gate_rot_threshold_deg = float(
+            getattr(config, "v9_raw_pose_step_gate_rot_threshold_deg", 3.0)
+        )
+        self.v9_raw_pose_step_gate_force_first_noop = bool(
+            getattr(config, "v9_raw_pose_step_gate_force_first_noop", True)
+        )
+        self.v9_oracle_correction_gate_enabled = bool(
+            getattr(config, "v9_oracle_correction_gate", False)
+        )
+        self.v9_oracle_correction_cache_enabled = bool(
+            getattr(config, "v9_oracle_correction_cache", False)
+        )
+        self.v9_oracle_correction_inference_only = bool(
+            getattr(config, "v9_oracle_correction_inference_only", True)
+        )
+        self.v9_oracle_correction_post_residual_only = bool(
+            getattr(config, "v9_oracle_correction_post_residual_only", False)
         )
         self.v8_factorized_human_pose_corr = bool(getattr(config, "v8_factorized_human_pose_corr", False))
         self.v8_factorized_human_stopgrad_for_pose = bool(
@@ -2339,9 +2389,45 @@ class ARCroco3DStereo(CroCoNet):
         prev_human_token,
         view_idx,
         teacher_gate=None,
+        force_gate=None,
     ):
         if corr_tokens is None:
             return None, None, 0, None
+        if force_gate is not None:
+            force_gate = force_gate.to(device=corr_tokens.device, dtype=corr_tokens.dtype)
+            force_gate = force_gate.reshape(corr_tokens.shape[0], -1)[:, :1]
+            force_gate = force_gate.reshape(corr_tokens.shape[0], 1, 1).clamp(0.0, 1.0)
+            if self.v9_pre_decoder_change_gate_force_first_noop and int(view_idx) == 0:
+                force_gate = torch.zeros_like(force_gate)
+            threshold = float(getattr(self, "v9_pre_decoder_change_gate_threshold", 0.5))
+            append_corr = bool((force_gate.detach() > threshold).any().item())
+            info = {
+                "v9_pre_decoder_change_gate": force_gate,
+                "v9_pre_decoder_change_logit": None,
+                "v9_pre_decoder_effective_gate": force_gate,
+                "v9_pre_decoder_route_gate": force_gate,
+                "v9_pre_decoder_teacher_gate": force_gate.new_full(force_gate.shape, -1.0),
+                "v9_pre_decoder_teacher_forcing": force_gate.new_zeros(force_gate.shape),
+                "v9_pre_decoder_append": force_gate.new_full(
+                    force_gate.shape,
+                    1.0 if append_corr else 0.0,
+                ),
+                "v9_pre_decoder_soft_route": force_gate.new_zeros(force_gate.shape),
+                "v9_oracle_force_gate": force_gate.detach(),
+            }
+            if not append_corr:
+                return None, None, 0, info
+            routed_corr_tokens = corr_tokens * force_gate.to(
+                device=corr_tokens.device,
+                dtype=corr_tokens.dtype,
+            )
+            pos_corr = make_v8_corr_pos(
+                routed_corr_tokens.shape[0],
+                routed_corr_tokens.shape[1],
+                routed_corr_tokens.device,
+                pos_dtype,
+            )
+            return routed_corr_tokens, pos_corr, routed_corr_tokens.shape[1], info
         if not getattr(self, "enable_v9_pre_decoder_change_gate", False):
             pos_corr = make_v8_corr_pos(
                 corr_tokens.shape[0], corr_tokens.shape[1], corr_tokens.device, pos_dtype
@@ -2374,7 +2460,16 @@ class ARCroco3DStereo(CroCoNet):
                 teacher_gate = torch.zeros_like(teacher_gate)
             route_gate = teacher_gate
         threshold = float(getattr(self, "v9_pre_decoder_change_gate_threshold", 0.5))
+        soft_route = (
+            bool(getattr(self, "v9_pre_decoder_change_gate_soft_route", False))
+            and self.training
+            and not use_teacher_gate
+        )
         append_corr = bool((route_gate.detach() > threshold).any().item())
+        if soft_route and not (
+            self.v9_pre_decoder_change_gate_force_first_noop and int(view_idx) == 0
+        ):
+            append_corr = True
         info = {
             "v9_pre_decoder_change_gate": change_gate,
             "v9_pre_decoder_change_logit": change_logit,
@@ -2390,6 +2485,10 @@ class ARCroco3DStereo(CroCoNet):
             "v9_pre_decoder_append": effective_gate.new_full(
                 effective_gate.shape,
                 1.0 if append_corr else 0.0,
+            ),
+            "v9_pre_decoder_soft_route": effective_gate.new_full(
+                effective_gate.shape,
+                1.0 if soft_route else 0.0,
             ),
         }
         if not append_corr:
@@ -2519,6 +2618,156 @@ class ARCroco3DStereo(CroCoNet):
             return None
         pose_raw = self.downstream_head.pose_head(pose_token[:, 0].float())
         return postprocess_pose(pose_raw, self.pose_mode)
+
+    def _v9_raw_pose_step_gate_from_pose(self, raw_pose, prev_raw_pose, view_idx):
+        if not getattr(self, "v9_raw_pose_step_gate_enabled", False):
+            return None, {}
+        if raw_pose is None:
+            return None, {}
+        batch_size = raw_pose.shape[0]
+        if (
+            prev_raw_pose is None
+            or (
+                getattr(self, "v9_raw_pose_step_gate_force_first_noop", True)
+                and int(view_idx) == 0
+            )
+        ):
+            gate = raw_pose.new_zeros((batch_size, 1, 1))
+            zero = raw_pose.new_zeros((batch_size,))
+            return gate, {
+                "v9_raw_pose_step_gate": gate,
+                "v9_raw_pose_step_trans": zero,
+                "v9_raw_pose_step_rot_deg": zero,
+            }
+
+        prev_raw_pose = prev_raw_pose.to(device=raw_pose.device, dtype=raw_pose.dtype)
+        curr_t = raw_pose[:, :3]
+        prev_t = prev_raw_pose[:, :3]
+        trans_err = torch.linalg.norm(curr_t - prev_t, dim=-1)
+        curr_q = F.normalize(raw_pose[:, 3:7], dim=-1, eps=1e-7)
+        prev_q = F.normalize(prev_raw_pose[:, 3:7], dim=-1, eps=1e-7)
+        quat_dot = (curr_q * prev_q).sum(dim=-1).abs().clamp(max=1.0 - 1e-7)
+        rot_err = 2.0 * torch.acos(quat_dot)
+        rot_deg = torch.rad2deg(rot_err)
+        gate = (
+            (trans_err > float(getattr(self, "v9_raw_pose_step_gate_trans_threshold", 0.05)))
+            | (
+                rot_deg
+                > float(getattr(self, "v9_raw_pose_step_gate_rot_threshold_deg", 3.0))
+            )
+        ).to(dtype=raw_pose.dtype).reshape(batch_size, 1, 1)
+        return gate, {
+            "v9_raw_pose_step_gate": gate,
+            "v9_raw_pose_step_trans": trans_err.detach(),
+            "v9_raw_pose_step_rot_deg": rot_deg.detach(),
+        }
+
+    def _use_v9_clean_raw_pose_step_gate(self):
+        if not getattr(self, "v9_raw_pose_step_gate_enabled", False):
+            return False
+        source = str(getattr(self, "v9_raw_pose_step_gate_source", "main") or "main").lower()
+        return source in {"clean", "clean_human3r", "human3r", "original", "original_human3r"}
+
+    def _use_v9_oracle_correction_gate(self):
+        if not getattr(self, "v9_oracle_correction_gate_enabled", False):
+            return False
+        if getattr(self, "v9_oracle_correction_inference_only", True) and self.training:
+            return False
+        return True
+
+    def _use_v9_oracle_correction_cache(self):
+        if not self._use_v9_oracle_correction_gate():
+            return False
+        return bool(getattr(self, "v9_oracle_correction_cache_enabled", False))
+
+    def _use_v9_oracle_post_residual_only(self):
+        if not self._use_v9_oracle_correction_gate():
+            return False
+        return bool(getattr(self, "v9_oracle_correction_post_residual_only", False))
+
+    def _v9_oracle_gate_from_view(self, view, ref_tensor, view_idx):
+        if not self._use_v9_oracle_correction_gate() or ref_tensor is None:
+            return None, {}
+        shot_label = view.get("shot_label", None) if isinstance(view, dict) else None
+        if shot_label is None:
+            return None, {}
+        gate = shot_label.to(device=ref_tensor.device, dtype=ref_tensor.dtype)
+        gate = gate.reshape(ref_tensor.shape[0], -1)[:, :1].reshape(ref_tensor.shape[0], 1, 1)
+        gate = gate.clamp(0.0, 1.0)
+        if int(view_idx) == 0:
+            gate = torch.zeros_like(gate)
+        return gate, {
+            "v9_oracle_new_correction_gate": gate.detach(),
+            "v9_oracle_cache_enabled": gate.new_full(
+                gate.shape,
+                1.0 if self._use_v9_oracle_correction_cache() else 0.0,
+            ),
+        }
+
+    def _v9_clean_raw_pose_step_gate_rollout(
+        self,
+        gate_state_feat,
+        state_pos,
+        gate_mem,
+        init_gate_state_feat,
+        feat_i,
+        pos_i,
+        global_img_feat_i,
+        pose_pos_i,
+        smpl_feat_i,
+        smpl_pos_i,
+        prev_raw_pose,
+        view_idx,
+        reset_pose=False,
+    ):
+        if not self._use_v9_clean_raw_pose_step_gate() or not self.pose_head_flag:
+            return None, {}, prev_raw_pose, gate_state_feat, gate_mem
+        with torch.no_grad():
+            if int(view_idx) == 0 or bool(reset_pose):
+                gate_pose_feat = self.pose_token.expand(feat_i.shape[0], -1, -1)
+            else:
+                gate_pose_feat = self.pose_retriever.inquire(global_img_feat_i, gate_mem)
+            new_gate_state, gate_dec, _ = self._recurrent_rollout(
+                gate_state_feat,
+                state_pos,
+                feat_i,
+                pos_i,
+                gate_pose_feat,
+                pose_pos_i,
+                smpl_feat_i,
+                smpl_pos_i,
+                init_gate_state_feat,
+                f_shot=None,
+                f_pose_shot=None,
+                f_corr=None,
+                pos_corr=None,
+                f_anchor=None,
+                pos_anchor=None,
+                use_ttt3r=False,
+            )
+            raw_pose_token = gate_dec[-1][:, 0:1].float()
+            raw_pose = self._camera_pose_from_pose_token(raw_pose_token)
+            step_gate, step_info = self._v9_raw_pose_step_gate_from_pose(
+                raw_pose,
+                prev_raw_pose,
+                view_idx,
+            )
+            if step_info:
+                step_info["v9_raw_pose_step_gate_clean"] = raw_pose_token.new_ones(
+                    raw_pose_token.shape[0], 1, 1
+                )
+            new_gate_mem = self.pose_retriever.update_mem(
+                gate_mem,
+                global_img_feat_i,
+                raw_pose_token,
+            )
+        return (
+            None if step_gate is None else step_gate.detach(),
+            step_info,
+            None if raw_pose is None else raw_pose.detach(),
+            new_gate_state.detach(),
+            new_gate_mem.detach(),
+        )
 
     def _refresh_pose_dependent_outputs(self, res):
         if "camera_pose" not in res:
@@ -2737,6 +2986,9 @@ class ARCroco3DStereo(CroCoNet):
         if start_view >= 0 and view_idx is not None:
             mask_value = 1.0 if int(view_idx) >= start_view else 0.0
             apply_mask = smpl_transl.new_full(smpl_transl.shape[:2] + (1,), mask_value)
+        no_corr_before = int(getattr(self, "v9_force_no_correction_before_view", -1))
+        if no_corr_before >= 0 and view_idx is not None and int(view_idx) < no_corr_before:
+            apply_mask = smpl_transl.new_zeros(smpl_transl.shape[:2] + (1,))
         corrected_transl, corr_info = self.v8_human_trans_corr_head(
             human_tokens=human_token.float(),
             corr_tokens=corr_token.float(),
@@ -2813,6 +3065,9 @@ class ARCroco3DStereo(CroCoNet):
         if start_view >= 0 and view_idx is not None:
             mask_value = 1.0 if int(view_idx) >= start_view else 0.0
             apply_mask = human_token.new_full(human_token.shape[:2] + (1,), mask_value)
+        no_corr_before = int(getattr(self, "v9_force_no_correction_before_view", -1))
+        if no_corr_before >= 0 and view_idx is not None and int(view_idx) < no_corr_before:
+            apply_mask = human_token.new_zeros(human_token.shape[:2] + (1,))
         corrected_token, corr_info = self.v8_human_latent_corr_head(
             human_tokens=human_token.float(),
             corr_tokens=corr_token.float(),
@@ -3154,6 +3409,16 @@ class ARCroco3DStereo(CroCoNet):
         init_state_feat = state_feat.clone()
         init_mem = mem.clone()
         all_state_args = [(state_feat, state_pos, init_state_feat, mem, init_mem)]
+        use_v9_clean_raw_pose_step_gate = self._use_v9_clean_raw_pose_step_gate()
+        v9_gate_state_feat = init_state_feat.detach().clone() if use_v9_clean_raw_pose_step_gate else None
+        v9_gate_init_state_feat = init_state_feat.detach().clone() if use_v9_clean_raw_pose_step_gate else None
+        v9_gate_mem = init_mem.detach().clone() if use_v9_clean_raw_pose_step_gate else None
+        v9_gate_prev_raw_camera_pose = None
+        use_v9_oracle_correction_gate = self._use_v9_oracle_correction_gate()
+        use_v9_oracle_correction_cache = self._use_v9_oracle_correction_cache()
+        v9_oracle_pose_delta_cache = None
+        v9_oracle_human_delta_cache = None
+        v9_oracle_cache_active = False
 
         # Shot-Aware Adaptation: pre-compute q_tokens using decoder input image tokens
         shot_infos = [None] * len(views)
@@ -3198,6 +3463,7 @@ class ARCroco3DStereo(CroCoNet):
         v8_prev_human_token = None
         v8_prev_delta_token = None
         v8_prev_gate = None
+        v9_prev_raw_camera_pose = None
         for i in range(len(views)):
             feat_i = feat[i]
             pos_i = pos[i]
@@ -3254,6 +3520,40 @@ class ARCroco3DStereo(CroCoNet):
                 self.enable_shot_adaptation
                 and getattr(self, "enable_layerwise_pose_shot_adapter", False)
             ) else None
+            v9_clean_pose_step_gate = None
+            v9_clean_pose_step_info = {}
+            v9_clean_raw_camera_pose = None
+            new_v9_gate_state_feat = None
+            new_v9_gate_mem = None
+            v9_oracle_new_correction_gate = None
+            v9_oracle_info = {}
+            if use_v9_oracle_correction_gate:
+                v9_oracle_new_correction_gate, v9_oracle_info = self._v9_oracle_gate_from_view(
+                    views[i],
+                    pose_feat_i,
+                    i,
+                )
+            if use_v9_clean_raw_pose_step_gate:
+                (
+                    v9_clean_pose_step_gate,
+                    v9_clean_pose_step_info,
+                    v9_clean_raw_camera_pose,
+                    new_v9_gate_state_feat,
+                    new_v9_gate_mem,
+                ) = self._v9_clean_raw_pose_step_gate_rollout(
+                    v9_gate_state_feat,
+                    state_pos,
+                    v9_gate_mem,
+                    v9_gate_init_state_feat,
+                    feat_i,
+                    pos_i,
+                    global_img_feat_i,
+                    pose_pos_i,
+                    smpl_feat_i,
+                    smpl_pos_i,
+                    v9_gate_prev_raw_camera_pose,
+                    i,
+                )
             v8_prompt_out = None
             v9_pre_decoder_info = None
             f_corr = None
@@ -3261,6 +3561,12 @@ class ARCroco3DStereo(CroCoNet):
             n_corr_i = 0
             use_v8_prompt_decoder_token = bool(getattr(self, "v8_pose_prompt_use_decoder_token", True))
             if getattr(self, "enable_v8_pose_prompt", False) and use_v8_prompt_decoder_token:
+                v9_force_gate = v9_clean_pose_step_gate
+                if (
+                    v9_oracle_new_correction_gate is not None
+                    and not self._use_v9_oracle_post_residual_only()
+                ):
+                    v9_force_gate = v9_oracle_new_correction_gate
                 v8_prompt_out = self.v8_pose_prompt(
                     image_tokens=feat_i,
                     pose_token=pose_feat_i,
@@ -3288,6 +3594,7 @@ class ARCroco3DStereo(CroCoNet):
                         v8_prev_human_token,
                         i,
                         teacher_gate=v9_teacher_gate,
+                        force_gate=v9_force_gate,
                     )
                 )
             f_anchor, pos_anchor, n_anchor_i, anchor_decoder_info, anchor_mask_i = self._build_anchor_decoder_tokens(
@@ -3348,6 +3655,7 @@ class ARCroco3DStereo(CroCoNet):
             v8_factorized_pose_info = None
             v8_delta_for_history = None
             v8_gate_for_history = None
+            v9_oracle_reuse_pose_delta = False
             if getattr(self, "enable_v8_pose_prompt", False) and (n_corr_i > 0 or not use_v8_prompt_decoder_token):
                 if n_corr_i > 0:
                     v8_layout = self._decoder_token_layout(
@@ -3405,29 +3713,153 @@ class ARCroco3DStereo(CroCoNet):
                     v8_delta_applied, v8_gate, v8_delta_raw = v8_head_out
                     v8_drift_logit = None
                 v8_raw_pose_token = pose_token_for_head
-                pose_token_for_head = pose_token_for_head + v8_delta_applied
                 with torch.no_grad():
                     v8_raw_camera_pose = self._camera_pose_from_pose_token(v8_raw_pose_token)
+                if v9_clean_pose_step_gate is not None:
+                    v9_pose_step_gate = v9_clean_pose_step_gate
+                    v9_pose_step_info = v9_clean_pose_step_info
+                else:
+                    v9_pose_step_gate, v9_pose_step_info = self._v9_raw_pose_step_gate_from_pose(
+                        v8_raw_camera_pose,
+                        v9_prev_raw_camera_pose,
+                        i,
+                    )
+                v8_gate_for_heads = v8_gate
+                if v9_pose_step_gate is not None:
+                    v9_pose_step_gate = v9_pose_step_gate.to(
+                        device=v8_delta_applied.device,
+                        dtype=v8_delta_applied.dtype,
+                    )
+                    v8_delta_applied = v8_delta_applied * v9_pose_step_gate
+                    v8_gate_for_heads = v8_gate * v9_pose_step_gate
+                if (
+                    v9_oracle_new_correction_gate is not None
+                    and self._use_v9_oracle_post_residual_only()
+                ):
+                    oracle_gate = v9_oracle_new_correction_gate.to(
+                        device=v8_delta_applied.device,
+                        dtype=v8_delta_applied.dtype,
+                    )
+                    oracle_gate = oracle_gate.reshape(v8_delta_applied.shape[0], -1)[:, :1]
+                    oracle_gate = oracle_gate.reshape(v8_delta_applied.shape[0], 1, 1)
+                    oracle_gate_on = bool((oracle_gate.detach() > 0.5).any().item())
+                    if use_v9_oracle_correction_cache:
+                        if oracle_gate_on:
+                            v9_oracle_pose_delta_cache = v8_delta_applied.detach()
+                            v9_oracle_cache_active = True
+                        elif (
+                            v9_oracle_cache_active
+                            and v9_oracle_pose_delta_cache is not None
+                            and v9_oracle_pose_delta_cache.shape == v8_delta_applied.shape
+                        ):
+                            v8_delta_applied = v9_oracle_pose_delta_cache.to(
+                                device=v8_delta_applied.device,
+                                dtype=v8_delta_applied.dtype,
+                            )
+                            v8_gate_for_heads = torch.ones(
+                                v8_delta_applied.shape[0],
+                                1,
+                                1,
+                                device=v8_delta_applied.device,
+                                dtype=v8_delta_applied.dtype,
+                            )
+                            v9_oracle_reuse_pose_delta = True
+                        else:
+                            v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                            v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                    else:
+                        v8_delta_applied = v8_delta_applied * oracle_gate
+                        v8_gate_for_heads = v8_gate_for_heads * oracle_gate
+                v9_force_no_correction_before_view = int(
+                    getattr(self, "v9_force_no_correction_before_view", -1)
+                )
+                v9_force_no_correction = (
+                    v9_force_no_correction_before_view >= 0
+                    and int(i) < v9_force_no_correction_before_view
+                )
+                if v9_force_no_correction:
+                    v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                    v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                pose_token_for_head = pose_token_for_head + v8_delta_applied
                 v8_pose_prompt_info = {
-                    "v8_pose_prompt_gate": v8_gate,
+                    "v8_pose_prompt_gate": v8_gate_for_heads,
+                    "v8_pose_prompt_learned_gate": v8_gate,
                     "v8_pose_prompt_delta_raw": v8_delta_raw,
                     "v8_pose_prompt_delta_applied": v8_delta_applied,
                     "v8_pose_prompt_delta_norm": v8_delta_raw.norm(dim=-1),
                     "v8_pose_prompt_corr_token": v8_corr_token,
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
+                    "v9_force_no_correction": v8_gate_for_heads.new_full(
+                        v8_gate_for_heads.shape,
+                        1.0 if v9_force_no_correction else 0.0,
+                    ),
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                v8_pose_prompt_info.update(v9_pose_step_info)
                 if v8_factorized_pose_info is not None:
                     v8_pose_prompt_info.update(v8_factorized_pose_info)
                 if v8_drift_logit is not None:
                     v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
                     v8_pose_prompt_info["v8_raw_camera_pose"] = v8_raw_camera_pose.detach()
+                    if not use_v9_clean_raw_pose_step_gate:
+                        v9_prev_raw_camera_pose = v8_raw_camera_pose.detach()
+                if v9_clean_raw_camera_pose is not None:
+                    v8_pose_prompt_info["v9_clean_raw_camera_pose"] = v9_clean_raw_camera_pose.detach()
                 if getattr(self, "enable_v8_body_part_residual", False):
                     v8_body_part_info = self.v8_body_part_residual_head(v8_body_part_corr_token_for_head)
                 v8_corr_token_for_history = v8_corr_token
                 v8_delta_for_history = v8_delta_applied
-                v8_gate_for_history = v8_gate
+                v8_gate_for_history = v8_gate_for_heads
+            if (
+                use_v9_oracle_correction_cache
+                and v9_oracle_new_correction_gate is not None
+                and not self._use_v9_oracle_post_residual_only()
+            ):
+                oracle_gate_on = bool((v9_oracle_new_correction_gate.detach() > 0.5).any().item())
+                if oracle_gate_on and v8_delta_for_history is not None:
+                    v9_oracle_pose_delta_cache = v8_delta_for_history.detach()
+                    v9_oracle_cache_active = True
+                elif (
+                    (not oracle_gate_on)
+                    and v9_oracle_cache_active
+                    and v9_oracle_pose_delta_cache is not None
+                    and v9_oracle_pose_delta_cache.shape == pose_token_for_head.shape
+                ):
+                    cached_pose_delta = v9_oracle_pose_delta_cache.to(
+                        device=pose_token_for_head.device,
+                        dtype=pose_token_for_head.dtype,
+                    )
+                    pose_token_for_head = pose_token_for_head + cached_pose_delta
+                    v8_delta_for_history = cached_pose_delta
+                    v8_gate_for_history = torch.ones(
+                        pose_token_for_head.shape[0],
+                        1,
+                        1,
+                        device=pose_token_for_head.device,
+                        dtype=pose_token_for_head.dtype,
+                    )
+                    v9_oracle_reuse_pose_delta = True
+                    if v8_pose_prompt_info is None:
+                        v8_pose_prompt_info = {
+                            "v8_pose_prompt_gate": v8_gate_for_history,
+                            "v8_pose_prompt_delta_raw": cached_pose_delta,
+                            "v8_pose_prompt_delta_applied": cached_pose_delta,
+                            "v8_pose_prompt_delta_norm": cached_pose_delta.norm(dim=-1),
+                            "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
+                        }
+                    else:
+                        v8_pose_prompt_info["v8_pose_prompt_gate"] = v8_gate_for_history
+                        v8_pose_prompt_info["v8_pose_prompt_delta_applied"] = cached_pose_delta
+                        v8_pose_prompt_info["v8_pose_prompt_pose_token_corrected"] = pose_token_for_head
+            if v9_oracle_info:
+                if v8_pose_prompt_info is None:
+                    v8_pose_prompt_info = {}
+                v8_pose_prompt_info.update(v9_oracle_info)
+                v8_pose_prompt_info["v9_oracle_pose_cache_applied"] = pose_token_for_head.new_full(
+                    (pose_token_for_head.shape[0], 1, 1),
+                    1.0 if v9_oracle_reuse_pose_delta else 0.0,
+                )
             if v9_pre_decoder_info is not None and v8_gate_for_history is None:
                 v8_gate_for_history = v9_pre_decoder_info.get("v9_pre_decoder_effective_gate")
             pose_token_anchor_info = None
@@ -3536,6 +3968,41 @@ class ARCroco3DStereo(CroCoNet):
                             view_idx=i,
                             shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
                         )
+                    if (
+                        use_v9_oracle_correction_cache
+                        and v9_oracle_new_correction_gate is not None
+                    ):
+                        oracle_gate_on = bool(
+                            (v9_oracle_new_correction_gate.detach() > 0.5).any().item()
+                        )
+                        if (
+                            oracle_gate_on
+                            and human_latent_info is not None
+                            and human_latent_info.get("v8_human_latent_corr_delta_applied", None) is not None
+                        ):
+                            v9_oracle_human_delta_cache = human_latent_info[
+                                "v8_human_latent_corr_delta_applied"
+                            ].detach()
+                        elif (
+                            (not oracle_gate_on)
+                            and v9_oracle_cache_active
+                            and v9_oracle_human_delta_cache is not None
+                            and v9_oracle_human_delta_cache.shape == raw_human_token_for_head.shape
+                        ):
+                            cached_human_delta = v9_oracle_human_delta_cache.to(
+                                device=raw_human_token_for_head.device,
+                                dtype=raw_human_token_for_head.dtype,
+                            )
+                            smpl_token = raw_human_token_for_head + cached_human_delta
+                            if human_latent_info is None:
+                                human_latent_info = {}
+                            human_latent_info["v8_human_latent_corr_delta_applied"] = cached_human_delta
+                            human_latent_info["v8_human_latent_corr_gate"] = cached_human_delta.new_ones(
+                                cached_human_delta.shape[:2] + (1,)
+                            )
+                            human_latent_info["v9_oracle_human_cache_applied"] = cached_human_delta.new_ones(
+                                cached_human_delta.shape[:2] + (1,)
+                            )
                     human_token_for_corr = smpl_token
                 smpl_token = torch.cat([smpl_token, smpl_tk_mhmr[i]], dim=-1)
 
@@ -3718,6 +4185,41 @@ class ARCroco3DStereo(CroCoNet):
                     1 - reset_mask
                 )
                 mem = init_mem * reset_mask + mem * (1 - reset_mask)
+            if use_v9_clean_raw_pose_step_gate and new_v9_gate_state_feat is not None:
+                v9_gate_state_feat = new_v9_gate_state_feat * update_mask + v9_gate_state_feat * (
+                    1 - update_mask
+                )
+                v9_gate_mem = new_v9_gate_mem * update_mask + v9_gate_mem * (
+                    1 - update_mask
+                )
+                if v9_clean_raw_camera_pose is not None:
+                    pose_update_mask = update_mask.reshape(update_mask.shape[0], -1)[:, :1]
+                    if v9_gate_prev_raw_camera_pose is None:
+                        v9_gate_prev_raw_camera_pose = v9_clean_raw_camera_pose.detach()
+                    else:
+                        v9_gate_prev_raw_camera_pose = (
+                            v9_clean_raw_camera_pose.detach() * pose_update_mask
+                            + v9_gate_prev_raw_camera_pose * (1 - pose_update_mask)
+                        )
+                if reset_mask is not None:
+                    v9_gate_state_feat = v9_gate_init_state_feat * reset_mask + v9_gate_state_feat * (
+                        1 - reset_mask
+                    )
+                    v9_gate_mem = init_mem.detach() * reset_mask + v9_gate_mem * (1 - reset_mask)
+                    if v9_clean_raw_camera_pose is not None and v9_gate_prev_raw_camera_pose is not None:
+                        pose_reset_mask = reset_mask.reshape(reset_mask.shape[0], -1)[:, :1]
+                        v9_gate_prev_raw_camera_pose = (
+                            v9_clean_raw_camera_pose.detach() * pose_reset_mask
+                            + v9_gate_prev_raw_camera_pose * (1 - pose_reset_mask)
+                        )
+            if (
+                use_v9_oracle_correction_cache
+                and reset_mask is not None
+                and bool((reset_mask.detach() > 0.5).any().item())
+            ):
+                v9_oracle_pose_delta_cache = None
+                v9_oracle_human_delta_cache = None
+                v9_oracle_cache_active = False
             if getattr(self, "enable_v8_pose_prompt", False):
                 v8_prev_corr_token = self._blend_v8_prompt_history(
                     v8_prev_corr_token,
@@ -3900,6 +4402,17 @@ class ARCroco3DStereo(CroCoNet):
         v8_prev_human_token = None
         v8_prev_delta_token = None
         v8_prev_gate = None
+        v9_prev_raw_camera_pose = None
+        use_v9_clean_raw_pose_step_gate = self._use_v9_clean_raw_pose_step_gate()
+        v9_gate_state_feat = None
+        v9_gate_init_state_feat = None
+        v9_gate_mem = None
+        v9_gate_prev_raw_camera_pose = None
+        use_v9_oracle_correction_gate = self._use_v9_oracle_correction_gate()
+        use_v9_oracle_correction_cache = self._use_v9_oracle_correction_cache()
+        v9_oracle_pose_delta_cache = None
+        v9_oracle_human_delta_cache = None
+        v9_oracle_cache_active = False
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
@@ -4027,6 +4540,10 @@ class ARCroco3DStereo(CroCoNet):
                 mem = self.pose_retriever.mem.expand(feat_i.shape[0], -1, -1)
                 init_state_feat = state_feat.clone()
                 init_mem = mem.clone()
+                if use_v9_clean_raw_pose_step_gate:
+                    v9_gate_state_feat = init_state_feat.detach().clone()
+                    v9_gate_init_state_feat = init_state_feat.detach().clone()
+                    v9_gate_mem = init_mem.detach().clone()
                 if ret_state:
                     all_state_args.append(
                         (state_feat, state_pos, init_state_feat, mem, init_mem)
@@ -4051,6 +4568,47 @@ class ARCroco3DStereo(CroCoNet):
             f_anchor_decoder = f_anchor if use_anchor_decoder_tokens_i else None
             pos_anchor_decoder = pos_anchor if use_anchor_decoder_tokens_i else None
             n_anchor_decoder_i = n_anchor_i if use_anchor_decoder_tokens_i else 0
+            v9_clean_pose_step_gate = None
+            v9_clean_pose_step_info = {}
+            v9_clean_raw_camera_pose = None
+            new_v9_gate_state_feat = None
+            new_v9_gate_mem = None
+            v9_oracle_new_correction_gate = None
+            v9_oracle_info = {}
+            if use_v9_oracle_correction_gate:
+                v9_oracle_new_correction_gate, v9_oracle_info = self._v9_oracle_gate_from_view(
+                    view,
+                    pose_feat_i,
+                    i,
+                )
+            if use_v9_clean_raw_pose_step_gate and v9_gate_state_feat is not None:
+                if i == 0:
+                    reset_pose_for_gate = True
+                elif isinstance(reset_mask, torch.Tensor):
+                    reset_pose_for_gate = bool(reset_mask.detach().any().item())
+                else:
+                    reset_pose_for_gate = bool(reset_mask)
+                (
+                    v9_clean_pose_step_gate,
+                    v9_clean_pose_step_info,
+                    v9_clean_raw_camera_pose,
+                    new_v9_gate_state_feat,
+                    new_v9_gate_mem,
+                ) = self._v9_clean_raw_pose_step_gate_rollout(
+                    v9_gate_state_feat,
+                    state_pos,
+                    v9_gate_mem,
+                    v9_gate_init_state_feat,
+                    feat_i,
+                    pos_i,
+                    global_img_feat_i,
+                    pose_pos_i,
+                    smpl_feat_i,
+                    smpl_pos_i,
+                    v9_gate_prev_raw_camera_pose,
+                    i,
+                    reset_pose=reset_pose_for_gate,
+                )
             v8_prompt_out = None
             v9_pre_decoder_info = None
             f_corr = None
@@ -4058,6 +4616,12 @@ class ARCroco3DStereo(CroCoNet):
             n_corr_i = 0
             use_v8_prompt_decoder_token = bool(getattr(self, "v8_pose_prompt_use_decoder_token", True))
             if getattr(self, "enable_v8_pose_prompt", False) and use_v8_prompt_decoder_token:
+                v9_force_gate = v9_clean_pose_step_gate
+                if (
+                    v9_oracle_new_correction_gate is not None
+                    and not self._use_v9_oracle_post_residual_only()
+                ):
+                    v9_force_gate = v9_oracle_new_correction_gate
                 v8_prompt_out = self.v8_pose_prompt(
                     image_tokens=feat_i,
                     pose_token=pose_feat_i,
@@ -4082,6 +4646,7 @@ class ARCroco3DStereo(CroCoNet):
                         v8_prev_human_token,
                         i,
                         teacher_gate=view.get("shot_label", None),
+                        force_gate=v9_force_gate,
                     )
                 )
             # **========== V6-C 原始代码备份：V6-B 轻量推理路径把 AnchorToken 直接送入 decoder attention ==========**
@@ -4171,6 +4736,7 @@ class ARCroco3DStereo(CroCoNet):
             v8_factorized_pose_info = None
             v8_delta_for_history = None
             v8_gate_for_history = None
+            v9_oracle_reuse_pose_delta = False
             if getattr(self, "enable_v8_pose_prompt", False) and (n_corr_i > 0 or not use_v8_prompt_decoder_token):
                 if n_corr_i > 0:
                     v8_layout = self._decoder_token_layout(
@@ -4228,29 +4794,153 @@ class ARCroco3DStereo(CroCoNet):
                     v8_delta_applied, v8_gate, v8_delta_raw = v8_head_out
                     v8_drift_logit = None
                 v8_raw_pose_token = pose_token_for_head
-                pose_token_for_head = pose_token_for_head + v8_delta_applied
                 with torch.no_grad():
                     v8_raw_camera_pose = self._camera_pose_from_pose_token(v8_raw_pose_token)
+                if v9_clean_pose_step_gate is not None:
+                    v9_pose_step_gate = v9_clean_pose_step_gate
+                    v9_pose_step_info = v9_clean_pose_step_info
+                else:
+                    v9_pose_step_gate, v9_pose_step_info = self._v9_raw_pose_step_gate_from_pose(
+                        v8_raw_camera_pose,
+                        v9_prev_raw_camera_pose,
+                        i,
+                    )
+                v8_gate_for_heads = v8_gate
+                if v9_pose_step_gate is not None:
+                    v9_pose_step_gate = v9_pose_step_gate.to(
+                        device=v8_delta_applied.device,
+                        dtype=v8_delta_applied.dtype,
+                    )
+                    v8_delta_applied = v8_delta_applied * v9_pose_step_gate
+                    v8_gate_for_heads = v8_gate * v9_pose_step_gate
+                if (
+                    v9_oracle_new_correction_gate is not None
+                    and self._use_v9_oracle_post_residual_only()
+                ):
+                    oracle_gate = v9_oracle_new_correction_gate.to(
+                        device=v8_delta_applied.device,
+                        dtype=v8_delta_applied.dtype,
+                    )
+                    oracle_gate = oracle_gate.reshape(v8_delta_applied.shape[0], -1)[:, :1]
+                    oracle_gate = oracle_gate.reshape(v8_delta_applied.shape[0], 1, 1)
+                    oracle_gate_on = bool((oracle_gate.detach() > 0.5).any().item())
+                    if use_v9_oracle_correction_cache:
+                        if oracle_gate_on:
+                            v9_oracle_pose_delta_cache = v8_delta_applied.detach()
+                            v9_oracle_cache_active = True
+                        elif (
+                            v9_oracle_cache_active
+                            and v9_oracle_pose_delta_cache is not None
+                            and v9_oracle_pose_delta_cache.shape == v8_delta_applied.shape
+                        ):
+                            v8_delta_applied = v9_oracle_pose_delta_cache.to(
+                                device=v8_delta_applied.device,
+                                dtype=v8_delta_applied.dtype,
+                            )
+                            v8_gate_for_heads = torch.ones(
+                                v8_delta_applied.shape[0],
+                                1,
+                                1,
+                                device=v8_delta_applied.device,
+                                dtype=v8_delta_applied.dtype,
+                            )
+                            v9_oracle_reuse_pose_delta = True
+                        else:
+                            v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                            v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                    else:
+                        v8_delta_applied = v8_delta_applied * oracle_gate
+                        v8_gate_for_heads = v8_gate_for_heads * oracle_gate
+                v9_force_no_correction_before_view = int(
+                    getattr(self, "v9_force_no_correction_before_view", -1)
+                )
+                v9_force_no_correction = (
+                    v9_force_no_correction_before_view >= 0
+                    and int(i) < v9_force_no_correction_before_view
+                )
+                if v9_force_no_correction:
+                    v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                    v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                pose_token_for_head = pose_token_for_head + v8_delta_applied
                 v8_pose_prompt_info = {
-                    "v8_pose_prompt_gate": v8_gate,
+                    "v8_pose_prompt_gate": v8_gate_for_heads,
+                    "v8_pose_prompt_learned_gate": v8_gate,
                     "v8_pose_prompt_delta_raw": v8_delta_raw,
                     "v8_pose_prompt_delta_applied": v8_delta_applied,
                     "v8_pose_prompt_delta_norm": v8_delta_raw.norm(dim=-1),
                     "v8_pose_prompt_corr_token": v8_corr_token,
                     "v8_pose_prompt_pose_token_raw": v8_raw_pose_token,
+                    "v9_force_no_correction": v8_gate_for_heads.new_full(
+                        v8_gate_for_heads.shape,
+                        1.0 if v9_force_no_correction else 0.0,
+                    ),
                     "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
                 }
+                v8_pose_prompt_info.update(v9_pose_step_info)
                 if v8_factorized_pose_info is not None:
                     v8_pose_prompt_info.update(v8_factorized_pose_info)
                 if v8_drift_logit is not None:
                     v8_pose_prompt_info["v8_pose_prompt_drift_logit"] = v8_drift_logit
                 if v8_raw_camera_pose is not None:
                     v8_pose_prompt_info["v8_raw_camera_pose"] = v8_raw_camera_pose.detach()
+                    if not use_v9_clean_raw_pose_step_gate:
+                        v9_prev_raw_camera_pose = v8_raw_camera_pose.detach()
+                if v9_clean_raw_camera_pose is not None:
+                    v8_pose_prompt_info["v9_clean_raw_camera_pose"] = v9_clean_raw_camera_pose.detach()
                 if getattr(self, "enable_v8_body_part_residual", False):
                     v8_body_part_info = self.v8_body_part_residual_head(v8_body_part_corr_token_for_head)
                 v8_corr_token_for_history = v8_corr_token
                 v8_delta_for_history = v8_delta_applied
-                v8_gate_for_history = v8_gate
+                v8_gate_for_history = v8_gate_for_heads
+            if (
+                use_v9_oracle_correction_cache
+                and v9_oracle_new_correction_gate is not None
+                and not self._use_v9_oracle_post_residual_only()
+            ):
+                oracle_gate_on = bool((v9_oracle_new_correction_gate.detach() > 0.5).any().item())
+                if oracle_gate_on and v8_delta_for_history is not None:
+                    v9_oracle_pose_delta_cache = v8_delta_for_history.detach()
+                    v9_oracle_cache_active = True
+                elif (
+                    (not oracle_gate_on)
+                    and v9_oracle_cache_active
+                    and v9_oracle_pose_delta_cache is not None
+                    and v9_oracle_pose_delta_cache.shape == pose_token_for_head.shape
+                ):
+                    cached_pose_delta = v9_oracle_pose_delta_cache.to(
+                        device=pose_token_for_head.device,
+                        dtype=pose_token_for_head.dtype,
+                    )
+                    pose_token_for_head = pose_token_for_head + cached_pose_delta
+                    v8_delta_for_history = cached_pose_delta
+                    v8_gate_for_history = torch.ones(
+                        pose_token_for_head.shape[0],
+                        1,
+                        1,
+                        device=pose_token_for_head.device,
+                        dtype=pose_token_for_head.dtype,
+                    )
+                    v9_oracle_reuse_pose_delta = True
+                    if v8_pose_prompt_info is None:
+                        v8_pose_prompt_info = {
+                            "v8_pose_prompt_gate": v8_gate_for_history,
+                            "v8_pose_prompt_delta_raw": cached_pose_delta,
+                            "v8_pose_prompt_delta_applied": cached_pose_delta,
+                            "v8_pose_prompt_delta_norm": cached_pose_delta.norm(dim=-1),
+                            "v8_pose_prompt_pose_token_corrected": pose_token_for_head,
+                        }
+                    else:
+                        v8_pose_prompt_info["v8_pose_prompt_gate"] = v8_gate_for_history
+                        v8_pose_prompt_info["v8_pose_prompt_delta_applied"] = cached_pose_delta
+                        v8_pose_prompt_info["v8_pose_prompt_pose_token_corrected"] = pose_token_for_head
+            if v9_oracle_info:
+                if v8_pose_prompt_info is None:
+                    v8_pose_prompt_info = {}
+                v8_pose_prompt_info.update(v9_oracle_info)
+                v8_pose_prompt_info["v9_oracle_pose_cache_applied"] = pose_token_for_head.new_full(
+                    (pose_token_for_head.shape[0], 1, 1),
+                    1.0 if v9_oracle_reuse_pose_delta else 0.0,
+                )
             if v9_pre_decoder_info is not None and v8_gate_for_history is None:
                 v8_gate_for_history = v9_pre_decoder_info.get("v9_pre_decoder_effective_gate")
             pose_token_anchor_info = None
@@ -4375,6 +5065,41 @@ class ARCroco3DStereo(CroCoNet):
                             view_idx=i,
                             shared_gate=None if v8_pose_prompt_info is None else v8_pose_prompt_info.get("v8_pose_prompt_gate"),
                         )
+                    if (
+                        use_v9_oracle_correction_cache
+                        and v9_oracle_new_correction_gate is not None
+                    ):
+                        oracle_gate_on = bool(
+                            (v9_oracle_new_correction_gate.detach() > 0.5).any().item()
+                        )
+                        if (
+                            oracle_gate_on
+                            and human_latent_info is not None
+                            and human_latent_info.get("v8_human_latent_corr_delta_applied", None) is not None
+                        ):
+                            v9_oracle_human_delta_cache = human_latent_info[
+                                "v8_human_latent_corr_delta_applied"
+                            ].detach()
+                        elif (
+                            (not oracle_gate_on)
+                            and v9_oracle_cache_active
+                            and v9_oracle_human_delta_cache is not None
+                            and v9_oracle_human_delta_cache.shape == raw_human_token_for_head.shape
+                        ):
+                            cached_human_delta = v9_oracle_human_delta_cache.to(
+                                device=raw_human_token_for_head.device,
+                                dtype=raw_human_token_for_head.dtype,
+                            )
+                            smpl_token = raw_human_token_for_head + cached_human_delta
+                            if human_latent_info is None:
+                                human_latent_info = {}
+                            human_latent_info["v8_human_latent_corr_delta_applied"] = cached_human_delta
+                            human_latent_info["v8_human_latent_corr_gate"] = cached_human_delta.new_ones(
+                                cached_human_delta.shape[:2] + (1,)
+                            )
+                            human_latent_info["v9_oracle_human_cache_applied"] = cached_human_delta.new_ones(
+                                cached_human_delta.shape[:2] + (1,)
+                            )
                     human_token_for_corr = smpl_token
                 smpl_token_cat = torch.cat([smpl_token, smpl_tk_mhmr], dim=-1)
             if (
@@ -4611,6 +5336,41 @@ class ARCroco3DStereo(CroCoNet):
                     1 - reset_mask
                 )
                 mem = init_mem * reset_mask + mem * (1 - reset_mask)
+            if use_v9_clean_raw_pose_step_gate and new_v9_gate_state_feat is not None:
+                v9_gate_state_feat = new_v9_gate_state_feat * update_mask_state_base + v9_gate_state_feat * (
+                    1 - update_mask_state_base
+                )
+                v9_gate_mem = new_v9_gate_mem * update_mask_mem + v9_gate_mem * (
+                    1 - update_mask_mem
+                )
+                if v9_clean_raw_camera_pose is not None:
+                    pose_update_mask = update_mask_mem.reshape(update_mask_mem.shape[0], -1)[:, :1]
+                    if v9_gate_prev_raw_camera_pose is None:
+                        v9_gate_prev_raw_camera_pose = v9_clean_raw_camera_pose.detach()
+                    else:
+                        v9_gate_prev_raw_camera_pose = (
+                            v9_clean_raw_camera_pose.detach() * pose_update_mask
+                            + v9_gate_prev_raw_camera_pose * (1 - pose_update_mask)
+                        )
+                if reset_mask is not None:
+                    v9_gate_state_feat = v9_gate_init_state_feat * reset_mask + v9_gate_state_feat * (
+                        1 - reset_mask
+                    )
+                    v9_gate_mem = init_mem.detach() * reset_mask + v9_gate_mem * (1 - reset_mask)
+                    if v9_clean_raw_camera_pose is not None and v9_gate_prev_raw_camera_pose is not None:
+                        pose_reset_mask = reset_mask.reshape(reset_mask.shape[0], -1)[:, :1]
+                        v9_gate_prev_raw_camera_pose = (
+                            v9_clean_raw_camera_pose.detach() * pose_reset_mask
+                            + v9_gate_prev_raw_camera_pose * (1 - pose_reset_mask)
+                        )
+            if (
+                use_v9_oracle_correction_cache
+                and reset_mask is not None
+                and bool((reset_mask.detach() > 0.5).any().item())
+            ):
+                v9_oracle_pose_delta_cache = None
+                v9_oracle_human_delta_cache = None
+                v9_oracle_cache_active = False
             if getattr(self, "enable_v8_pose_prompt", False):
                 v8_prev_corr_token = self._blend_v8_prompt_history(
                     v8_prev_corr_token,

@@ -42,6 +42,30 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--render", action="store_true")
     parser.add_argument("--render_video", action="store_true")
+    parser.add_argument(
+        "--oracle_correction_gate",
+        action="store_true",
+        help="Use view['shot_label'] as an oracle V9 correction gate during inference.",
+    )
+    parser.add_argument(
+        "--oracle_correction_cache",
+        action="store_true",
+        help="When the oracle gate is off, reuse the previous correction residual within the same shot.",
+    )
+    parser.add_argument(
+        "--oracle_pre_decoder_gate",
+        action="store_true",
+        help="Apply oracle gate before the decoder. By default oracle only gates/caches decoder-after residuals.",
+    )
+    parser.add_argument(
+        "--freeze_updates_from_view",
+        type=int,
+        default=-1,
+        help=(
+            "Inference-only state freeze probe. If >=0, views from this index "
+            "onward do not update recurrent state, pose memory, or V9 history."
+        ),
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -84,9 +108,23 @@ def main() -> None:
         drop_last=False,
     )
     views = next(iter(loader))
+    if args.freeze_updates_from_view >= 0:
+        for view_idx, view in enumerate(views):
+            if view_idx < args.freeze_updates_from_view:
+                continue
+            update_mask = torch.zeros_like(view["img_mask"], dtype=torch.bool)
+            view["update"] = update_mask
+            view["update_state"] = update_mask
+            view["update_mem"] = update_mask
+            view["update_v8_history"] = update_mask
 
     add_path_to_dust3r(str(args.model_path))
     model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device).eval()
+    if args.oracle_correction_gate or args.oracle_correction_cache:
+        model.v9_oracle_correction_gate_enabled = True
+        model.v9_oracle_correction_cache_enabled = bool(args.oracle_correction_cache)
+        model.v9_oracle_correction_inference_only = True
+        model.v9_oracle_correction_post_residual_only = not bool(args.oracle_pre_decoder_gate)
     img_res = getattr(model, "mhmr_img_res", None)
     smpl_model = SMPLModel(
         device,
@@ -103,6 +141,47 @@ def main() -> None:
         print(f">> Inference with model on {len(views)} AvatarReX_AABB dataloader views")
         output, _ = model(views, ret_state=True, inference=True)
         outputs = to_cpu({"views": output.views, "pred": output.ress})
+
+    diagnostics = []
+    for view_idx, pred in enumerate(outputs["pred"]):
+        row = {"view_idx": int(view_idx)}
+        view = outputs["views"][view_idx]
+        if "shot_label" in view:
+            shot_value = view["shot_label"]
+            if hasattr(shot_value, "detach"):
+                shot_value = shot_value.detach().float().reshape(-1)[0].item()
+            row["shot_label"] = float(shot_value)
+        for update_key in ("update", "update_state", "update_mem", "update_v8_history"):
+            if update_key not in view:
+                continue
+            update_value = view[update_key]
+            if hasattr(update_value, "detach"):
+                update_value = update_value.detach().float().reshape(-1)[0].item()
+            row[update_key] = float(update_value)
+        for key in (
+            "v9_oracle_new_correction_gate",
+            "v9_oracle_pose_cache_applied",
+            "v9_oracle_human_cache_applied",
+            "v9_oracle_force_gate",
+            "v9_pre_decoder_effective_gate",
+            "v8_pose_prompt_gate",
+            "v8_pose_prompt_delta_applied",
+            "v8_human_latent_corr_delta_applied",
+        ):
+            value = pred.get(key, None)
+            if value is None:
+                continue
+            if hasattr(value, "detach"):
+                tensor = value.detach().float()
+                row[f"{key}_mean"] = float(tensor.mean().item())
+                if "delta" in key:
+                    row[f"{key}_norm"] = float(tensor.norm(dim=-1).mean().item())
+            else:
+                row[key] = value
+        diagnostics.append(row)
+    with open(args.output_dir / "v9_oracle_correction_diagnostics.json", "w", encoding="utf-8") as f:
+        json.dump(diagnostics, f, indent=2, sort_keys=True)
+        f.write("\n")
 
     prepare_output(
         outputs,
@@ -127,6 +206,10 @@ def main() -> None:
         "resolution": list(args.resolution),
         "inference_path": "AvatarReX_AABB dataloader + inference",
         "load_da3_depth": bool(args.load_da3_depth),
+        "oracle_correction_gate": bool(args.oracle_correction_gate or args.oracle_correction_cache),
+        "oracle_correction_cache": bool(args.oracle_correction_cache),
+        "oracle_correction_stage": "pre_decoder" if args.oracle_pre_decoder_gate else "post_residual",
+        "freeze_updates_from_view": int(args.freeze_updates_from_view),
         "note": "Saved depth/pointmap comes from the model prediction; AvatarReX DA3 depth is not used unless --load_da3_depth is set.",
         "saved_output": True,
     }

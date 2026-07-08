@@ -105,6 +105,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--smpl_downsample", type=int, default=1)
     parser.add_argument("--camera_downsample", type=int, default=1)
     parser.add_argument("--reset_interval", type=int, default=100)
+    parser.add_argument(
+        "--freeze_updates_from_view",
+        type=int,
+        default=-1,
+        help=(
+            "Inference-only state freeze probe. If >=0, views from this index "
+            "onward do not update recurrent state, pose memory, or V8/V9 history."
+        ),
+    )
+    parser.add_argument(
+        "--no_correction_before_view",
+        type=int,
+        default=-1,
+        help=(
+            "Inference-only correction probe. If >=0, force V8/V9 pose and "
+            "human correction residuals to zero before this view index."
+        ),
+    )
     parser.add_argument("--reuse_saved", action="store_true", help="Skip inference if saved raw/corrected dirs already exist.")
     parser.add_argument("--build_only", action="store_true", help="Build saved viewer payloads and exit without launching Viser.")
     parser.add_argument("--show_labels", action="store_true", help="Show text labels for camera sets and metrics.")
@@ -293,6 +311,8 @@ def build_saved_outputs_demo(args: argparse.Namespace, record: dict, out_dir: Pa
     add_path_to_dust3r(str(args.model_path))
     print(f"Loading model: {args.model_path}")
     model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(args.device).eval()
+    if args.no_correction_before_view >= 0:
+        model.v9_force_no_correction_before_view = int(args.no_correction_before_view)
     img_res = getattr(model, "mhmr_img_res", None)
 
     print("Preparing four image-only input frames:")
@@ -307,6 +327,15 @@ def build_saved_outputs_demo(args: argparse.Namespace, record: dict, out_dir: Pa
         img_res=img_res,
         reset_interval=args.reset_interval,
     )
+    if args.freeze_updates_from_view >= 0:
+        for view_idx, view in enumerate(views):
+            if view_idx < args.freeze_updates_from_view:
+                continue
+            update_mask = torch.zeros_like(view["img_mask"], dtype=torch.bool)
+            view["update"] = update_mask
+            view["update_state"] = update_mask
+            view["update_mem"] = update_mask
+            view["update_v8_history"] = update_mask
 
     print("Running image-only recurrent inference...")
     with torch.no_grad():

@@ -1,0 +1,14 @@
+# V9 four-source clean raw-pose step-gate probe.
+#
+# Same as raw-pose step-gate, but the step switch is computed from a separate
+# no-grad original Human3R rollout. This keeps the gate source independent from
+# V9 correction tokens, corrected pose memory, and correction history.
+defaults:
+  - train_v9_4source_pattern_raw_pose_step_gate_pose_human_lora
+  - _self_
+
+v9_raw_pose_step_gate_source_value: clean_human3r
+
+exp_name: v9_4source_pattern_clean_raw_pose_step_gate_t010_r5_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_clean_raw_pose_step_gate/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_clean_raw_pose_step_gate/${exp_name}

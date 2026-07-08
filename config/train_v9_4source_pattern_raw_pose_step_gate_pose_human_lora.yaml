@@ -1,0 +1,37 @@
+# V9 four-source raw-pose step-gate probe.
+#
+# This disables the learned pre-decoder change classifier and instead uses the
+# uncorrected Human3R raw camera pose step as a deterministic switch:
+# stable adjacent raw poses suppress pose/human correction, changed adjacent raw
+# poses allow the existing V9 correction branch to act.
+defaults:
+  - train_v9_4source_pattern_predecoder_gate_pose_human_lora
+  - _self_
+
+v9_pre_decoder_change_gate_value: false
+v9_raw_pose_step_gate_value: true
+v9_raw_pose_step_gate_trans_threshold_value: 0.1
+v9_raw_pose_step_gate_rot_threshold_deg_value: 5.0
+
+train_mixed_epoch_steps: 1
+epochs: 61
+warmup_epochs: 1
+eval_freq: 10
+save_freq: 10
+
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, shot_gate_bce_weight=0.0, shot_gate_trans_threshold=0.05, shot_gate_rot_threshold_deg=3.0, stable_noop_residual_weight=0.2, stable_raw_consistency_weight=0.5, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+test_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0, residual_weight=1.0e-5, drift_weight=0.1, improvement_weight=0.05, pose_key='raw_camera_pose', drift_trans_scale=0.5, drift_rot_scale_deg=45.0, drift_target_deadzone=0.05, drift_target_scale=0.45, improvement_margin=0.05, human_trans_weight=10.0, human_trans_delta_weight=1e-06, shot_gate_bce_weight=0.0, shot_gate_trans_threshold=0.05, shot_gate_rot_threshold_deg=3.0, stable_noop_residual_weight=0.2, stable_raw_consistency_weight=0.5, pose_lora_norm_weight=0.0, human_lora_norm_weight=0.0)
+
+test_dataset:
+  - name: avatarrex_4f_all
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=15101, n_corres=0, manifest_path="${v9_pattern_manifest_root}/avatarrex/train_all_patterns.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: avatarrex_long12_all
+    dataset: AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=12, seed=15102, n_corres=0, manifest_path="${v9_long12_manifest_root}/avatarrex/train_all_patterns.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+
+val_dataset: null
+
+console_log_keys: [lr, loss, avatarrex_4f_loss, avatarrex_long12_loss, thuman_4f_loss, thuman_long12_loss, mvhuman100_4f_loss, mvhuman100_long12_loss, mvhuman200_4f_loss, mvhuman200_long12_loss, v82_raw_pose_step_gate_mean, v82_shot_gate_target_mean, v82_stable_noop_residual_loss, v82_stable_raw_consistency_loss]
+
+exp_name: v9_4source_pattern_raw_pose_step_gate_t010_r5_pose_human_lora
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_raw_pose_step_gate/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_raw_pose_step_gate/${exp_name}

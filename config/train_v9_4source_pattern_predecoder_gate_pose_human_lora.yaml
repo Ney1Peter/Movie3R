@@ -13,8 +13,15 @@ defaults:
 
 v9_pattern_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_pattern_probe
 v9_long12_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_long12_pattern_probe
+v9_pre_decoder_change_gate_value: true
 v9_pre_decoder_change_gate_bias_value: 2.0
+v9_pre_decoder_change_gate_threshold_value: 0.5
 v9_pre_decoder_change_gate_teacher_forcing_value: false
+v9_pre_decoder_change_gate_soft_route_value: false
+v9_raw_pose_step_gate_value: false
+v9_raw_pose_step_gate_source_value: main
+v9_raw_pose_step_gate_trans_threshold_value: 0.05
+v9_raw_pose_step_gate_rot_threshold_deg_value: 3.0
 
 model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   state_size=768, state_pe='2d', pos_embed='RoPE100',
@@ -39,14 +46,20 @@ model: ARCroco3DStereo(ARCroco3DStereoConfig(freeze='v8_pose_prompt_head_lora',
   v8_factorized_human_stopgrad_for_pose=True,
   v8_pose_prompt_token_ablation='all',
   v8_pose_prompt_pooling='mean',
-  v9_pre_decoder_change_gate=True,
-  v9_pre_decoder_change_gate_threshold=0.5,
+  v9_pre_decoder_change_gate=${v9_pre_decoder_change_gate_value},
+  v9_pre_decoder_change_gate_threshold=${v9_pre_decoder_change_gate_threshold_value},
   v9_pre_decoder_change_gate_bias=${v9_pre_decoder_change_gate_bias_value},
   v9_pre_decoder_change_gate_force_first_noop=True,
   v9_pre_decoder_change_gate_teacher_forcing=${v9_pre_decoder_change_gate_teacher_forcing_value},
+  v9_pre_decoder_change_gate_soft_route=${v9_pre_decoder_change_gate_soft_route_value},
   v9_pre_decoder_teacher_pose_key='raw_camera_pose',
   v9_pre_decoder_teacher_trans_threshold=0.05,
   v9_pre_decoder_teacher_rot_threshold_deg=3.0,
+  v9_raw_pose_step_gate=${v9_raw_pose_step_gate_value},
+  v9_raw_pose_step_gate_source='${v9_raw_pose_step_gate_source_value}',
+  v9_raw_pose_step_gate_trans_threshold=${v9_raw_pose_step_gate_trans_threshold_value},
+  v9_raw_pose_step_gate_rot_threshold_deg=${v9_raw_pose_step_gate_rot_threshold_deg_value},
+  v9_raw_pose_step_gate_force_first_noop=True,
   v8_human_trans_corr=False,
   v8_human_trans_corr_gate_bias=0.0,
   v8_human_trans_corr_use_gate=True,
@@ -162,7 +175,7 @@ print_freq: 1
 structured_log_freq: 1
 print_img_freq: 1000000
 save_code: false
-console_log_keys: [lr, loss, avatarrex_4f_loss, avatarrex_long12_loss, thuman_4f_loss, thuman_long12_loss, mvhuman100_4f_loss, mvhuman100_long12_loss, mvhuman200_4f_loss, mvhuman200_long12_loss, v82_pre_decoder_gate_mean, v82_shot_gate_target_mean, v82_shot_gate_bce_loss, v82_stable_noop_residual_loss, v82_stable_raw_consistency_loss]
+console_log_keys: [lr, loss, avatarrex_4f_loss, avatarrex_long12_loss, thuman_4f_loss, thuman_long12_loss, mvhuman100_4f_loss, mvhuman100_long12_loss, mvhuman200_4f_loss, mvhuman200_long12_loss, v82_pre_decoder_gate_mean, v82_raw_pose_step_gate_mean, v82_shot_gate_target_mean, v82_shot_gate_bce_loss, v82_stable_noop_residual_loss, v82_stable_raw_consistency_loss]
 
 exp_name: v9_4source_pattern_predecoder_gate_pose_human_lora
 logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v9_4source_pattern_predecoder_gate/${exp_name}/logs
