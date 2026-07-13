@@ -17,6 +17,7 @@ import json
 import shutil
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -55,6 +56,7 @@ from v9_online_stream_human3r_segment_align import strict_original_model
 
 
 SOURCE_ORDER = ("avatarrex", "thuman", "mvhuman100", "mvhuman200")
+DEFAULT_BAD_SAMPLE_REGISTRY = REPO_ROOT / "config" / "manifests" / "v10_static_alignment_bad_samples.jsonl"
 
 
 @dataclass
@@ -85,7 +87,22 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT / "config" / "manifests" / "v9_4source_pattern_probe",
     )
+    parser.add_argument(
+        "--manifest_map",
+        type=Path,
+        default=None,
+        help=(
+            "Optional JSON file with a source_manifests mapping. This lets large "
+            "V9 manifest sets be reused without copying them into the probe layout."
+        ),
+    )
     parser.add_argument("--manifest_name", default="train_aabb.jsonl")
+    parser.add_argument(
+        "--bad_sample_registry",
+        type=Path,
+        default=DEFAULT_BAD_SAMPLE_REGISTRY,
+        help="JSONL blacklist for samples whose saved Human3R output is unusable.",
+    )
     parser.add_argument("--model_path", type=Path, default=REPO_ROOT / "src" / "human3r_896L.pth")
     parser.add_argument("--data_root", type=Path, default=Path("/data/wangzheng/iJCV-CODE/data"))
     parser.add_argument("--sources", nargs="+", default=list(SOURCE_ORDER), choices=list(SOURCE_ORDER))
@@ -105,6 +122,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--prior_weight", type=float, default=1e-4)
     parser.add_argument("--log_every", type=int, default=100)
     parser.add_argument("--skip_inference", action="store_true")
+    parser.add_argument(
+        "--skip_bad_samples",
+        action="store_true",
+        help="Skip cached samples whose saved Human3R output has no detected human.",
+    )
     parser.add_argument("--eval_checkpoint", type=Path, default=None)
     parser.add_argument("--eval_only", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
@@ -121,6 +143,72 @@ def read_jsonl(path: Path) -> list[dict]:
     return records
 
 
+def aabb_tuple_from_any_record(record: dict) -> tuple[str, str, int]:
+    if "seqs" in record and "frames" in record:
+        seqs = record["seqs"]
+        frames = record["frames"]
+        return str(seqs[0]), str(seqs[2]), int(frames[0])
+    return str(record.get("seqA", "")), str(record.get("seqB", "")), int(record.get("start_frame", -1))
+
+
+def bad_sample_key(record: dict) -> tuple[str, str, str, str, int]:
+    seq_a, seq_b, start_frame = aabb_tuple_from_any_record(record)
+    return (
+        str(record.get("source", "")),
+        str(record.get("group", "")),
+        seq_a,
+        seq_b,
+        int(start_frame),
+    )
+
+
+def load_bad_sample_keys(path: Path | None) -> set[tuple[str, str, str, str, int]]:
+    if path is None or not Path(path).is_file():
+        return set()
+    keys = set()
+    with Path(path).open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            keys.add(bad_sample_key(row))
+    return keys
+
+
+def append_bad_sample(args: argparse.Namespace, record: dict, pattern_id: str, exc: Exception) -> None:
+    registry = getattr(args, "bad_sample_registry", None)
+    if registry is None:
+        return
+    registry = Path(registry)
+    existing = load_bad_sample_keys(registry)
+    if bad_sample_key(record) in existing:
+        return
+    row = dict(record)
+    row["pattern_id"] = str(pattern_id)
+    row["reason"] = str(exc)
+    row["recorded_at"] = datetime.now(timezone.utc).isoformat()
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    with registry.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def source_manifest_paths(args: argparse.Namespace) -> dict[str, Path]:
+    map_path = getattr(args, "manifest_map", None)
+    if not map_path:
+        return {}
+    map_path = Path(map_path)
+    with map_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    manifests = data.get("source_manifests", data)
+    if not isinstance(manifests, dict):
+        raise TypeError(f"manifest_map must contain a source_manifests object: {map_path}")
+    return {str(source): Path(path) for source, path in manifests.items()}
+
+
 def safe_name(text: str) -> str:
     keep = []
     for ch in str(text):
@@ -133,20 +221,40 @@ def safe_name(text: str) -> str:
 
 def select_records(args: argparse.Namespace) -> list[dict]:
     selected = []
+    manifest_paths = source_manifest_paths(args)
+    bad_keys = load_bad_sample_keys(getattr(args, "bad_sample_registry", None))
+    boundary = int(getattr(args, "boundary", 2))
+    default_shot_labels = [0, 0, 0, 0]
+    if 0 <= boundary < len(default_shot_labels):
+        default_shot_labels[boundary] = 1
     for source in args.sources:
-        path = args.manifest_root / source / str(args.manifest_name)
+        path = manifest_paths.get(source)
+        if path is None:
+            path = args.manifest_root / source / str(args.manifest_name)
         records = read_jsonl(path)
-        if len(records) < int(args.samples_per_source):
-            raise RuntimeError(f"{source} only has {len(records)} AABB records in {path}")
-        for local_idx, record in enumerate(records[: int(args.samples_per_source)]):
+        picked = 0
+        for manifest_idx, record in enumerate(records):
             record = dict(record)
             record["source"] = source
-            record["source_local_index"] = local_idx
+            if bad_sample_key(record) in bad_keys:
+                continue
+            record["source_local_index"] = picked
+            record.setdefault("oracle_boundary", boundary)
+            record.setdefault("shot_labels", list(default_shot_labels))
             record.setdefault(
                 "pattern_id",
-                f"{source}_{record.get('group', 'group')}_{record.get('start_frame', 'start')}_{local_idx}",
+                f"{source}_{record.get('group', 'group')}_{record.get('start_frame', 'start')}_{picked}",
             )
+            record["source_manifest_index"] = manifest_idx
             selected.append(record)
+            picked += 1
+            if picked >= int(args.samples_per_source):
+                break
+        if picked < int(args.samples_per_source):
+            raise RuntimeError(
+                f"{source} only has {picked}/{int(args.samples_per_source)} usable AABB records "
+                f"in {path}; bad registry={getattr(args, 'bad_sample_registry', None)}"
+            )
     return selected
 
 
@@ -168,11 +276,7 @@ def raw_roots_for_record(record: dict):
 
 
 def aabb_tuple_from_record(record: dict) -> tuple[str, str, int]:
-    if "seqs" in record and "frames" in record:
-        seqs = record["seqs"]
-        frames = record["frames"]
-        return str(seqs[0]), str(seqs[2]), int(frames[0])
-    return str(record["seqA"]), str(record["seqB"]), int(record["start_frame"])
+    return aabb_tuple_from_any_record(record)
 
 
 def load_aabb_views_for_record(record: dict, args: argparse.Namespace, device: torch.device) -> list[dict]:
@@ -263,20 +367,26 @@ def cache_samples(records: list[dict], args: argparse.Namespace, device: torch.d
         print(f">> [{index + 1}/{len(records)}] cache {record['source']} {pattern_id}", flush=True)
         views = load_aabb_views_for_record(record, args, device)
         smpl_model.update_smpl_gt(views)
-        if not args.skip_inference:
-            run_local_reset_human3r(model, views, local_dir, args, device)
-        if not output_complete(local_dir):
-            raise FileNotFoundError(f"Local Human3R output is incomplete: {local_dir}")
-
-        pred_data = load_sequence(local_dir, 4, device)
-        target_poses, target_joints, bridge_debug = extract_gt_world(
-            views,
-            pred_data.poses,
-            pred_data.joints_world,
-            int(args.boundary),
-            joint_ids_np,
-            device,
-        )
+        try:
+            if not args.skip_inference:
+                run_local_reset_human3r(model, views, local_dir, args, device)
+            if not output_complete(local_dir):
+                raise FileNotFoundError(f"Local Human3R output is incomplete: {local_dir}")
+            pred_data = load_sequence(local_dir, 4, device)
+            target_poses, target_joints, bridge_debug = extract_gt_world(
+                views,
+                pred_data.poses,
+                pred_data.joints_world,
+                int(args.boundary),
+                joint_ids_np,
+                device,
+            )
+        except (FileNotFoundError, KeyError, ValueError) as exc:
+            if getattr(args, "skip_bad_samples", False):
+                append_bad_sample(args, record, pattern_id, exc)
+                print(f"!! skip bad sample {record['source']} {pattern_id}: {exc}", flush=True)
+                continue
+            raise
         pred_joints_t = torch.from_numpy(pred_data.joints_world).to(device=device, dtype=torch.float32)
         feature = build_feature(pred_joints_t, int(args.boundary), joint_ids).detach().cpu()
         cached.append(

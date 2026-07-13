@@ -38,6 +38,7 @@ for path in (str(REPO_ROOT), str(SRC_ROOT), str(ARCHIVE_V7)):
 from add_ckpt_path import add_path_to_dust3r
 from demo import parse_seq_path, prepare_input, prepare_output
 from overfit_human_anchor_pose_correction import FOOT_JOINTS, STABLE_JOINTS, load_sequence
+from v10_image_only_detector import DEFAULT_FEATURE_CSV, StreamingImageOnlyShotDetector
 from v9_segment_human3r_yaw_align_probe import (
     copy_np_payload,
     copy_smpl,
@@ -56,6 +57,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output_root", type=Path, default=REPO_ROOT / "output" / "v9_online_stream_probe")
     parser.add_argument("--model_path", type=Path, default=REPO_ROOT / "src" / "human3r_896L.pth")
     parser.add_argument("--boundary", type=int, default=2, help="First frame index of the new segment.")
+    parser.add_argument(
+        "--boundary_mode",
+        choices=["oracle", "image_detector"],
+        default="oracle",
+        help="oracle uses --boundary; image_detector predicts boundaries online from adjacent frames.",
+    )
+    parser.add_argument("--detector_feature_csv", type=Path, default=DEFAULT_FEATURE_CSV)
+    parser.add_argument("--detector_threshold", type=float, default=0.5)
+    parser.add_argument("--detector_image_size", type=int, default=192)
+    parser.add_argument("--detector_orb_size", type=int, default=384)
+    parser.add_argument(
+        "--learned_checkpoint",
+        type=Path,
+        default=None,
+        help="Optional V10 learned alignment checkpoint. If set, also writes online_human3r_learned_aligned.",
+    )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--size", type=int, default=512)
     parser.add_argument("--overwrite", action="store_true")
@@ -149,7 +166,54 @@ def prepare_case_inputs(input_dir: Path, case_dir: Path, overwrite: bool) -> Pat
     return input_copy
 
 
-def run_streaming_human3r(input_copy: Path, local_dir: Path, args: argparse.Namespace) -> dict:
+def image_paths_for_case(input_copy: Path) -> list[Path]:
+    return list_images(input_copy)
+
+
+def resolve_boundaries(input_copy: Path, args: argparse.Namespace) -> tuple[list[int], dict]:
+    images = image_paths_for_case(input_copy)
+    if args.boundary_mode == "oracle":
+        boundary = int(args.boundary)
+        labels = [0 for _ in images]
+        if 0 < boundary < len(labels):
+            labels[boundary] = 1
+        return [boundary], {
+            "boundary_mode": "oracle",
+            "shot_labels": labels,
+            "boundaries": [boundary],
+            "pairs": [],
+        }
+
+    detector = StreamingImageOnlyShotDetector(
+        feature_csv=args.detector_feature_csv,
+        image_size=int(args.detector_image_size),
+        orb_size=int(args.detector_orb_size),
+        threshold=float(args.detector_threshold),
+    )
+    labels, pairs = detector.predict_sequence(images)
+    boundaries = [idx for idx, label in enumerate(labels) if idx > 0 and int(label) == 1]
+    return boundaries, {
+        "boundary_mode": "image_detector",
+        "shot_labels": labels,
+        "boundaries": boundaries,
+        "pairs": pairs,
+        "detector": {
+            "feature_csv": str(args.detector_feature_csv),
+            "method": "logreg:image_all",
+            "threshold": float(args.detector_threshold),
+            "image_size": int(args.detector_image_size),
+            "orb_size": int(args.detector_orb_size),
+            "strict_streaming": True,
+        },
+    }
+
+
+def run_streaming_human3r(
+    input_copy: Path,
+    local_dir: Path,
+    args: argparse.Namespace,
+    boundaries: list[int],
+) -> dict:
     if output_complete(local_dir) and not args.overwrite:
         return {"status": "exists", "output_dir": str(local_dir)}
     if local_dir.exists() and args.overwrite:
@@ -183,11 +247,13 @@ def run_streaming_human3r(input_copy: Path, local_dir: Path, args: argparse.Name
     if tmpdirname is not None:
         shutil.rmtree(tmpdirname)
 
-    # Oracle boundary, online semantics: reset state after the last frame of A,
-    # so B1 is processed from a fresh local Human3R state.
+    # Online semantics: reset state after the last frame of the previous
+    # segment, so the boundary frame is processed from a fresh local state.
     for view in views:
         view["reset"] = torch.tensor(False).unsqueeze(0)
-    views[int(args.boundary) - 1]["reset"] = torch.tensor(True).unsqueeze(0)
+    for boundary in boundaries:
+        if 0 < int(boundary) < len(views):
+            views[int(boundary) - 1]["reset"] = torch.tensor(True).unsqueeze(0)
 
     with torch.no_grad():
         outputs, _ = inference_recurrent_lighter(views, model, str(device_t), use_ttt3r=False)
@@ -217,7 +283,8 @@ def run_streaming_human3r(input_copy: Path, local_dir: Path, args: argparse.Name
         "model_path": str(args.model_path),
         "strict_original_human3r": True,
         "disabled_lora": disabled_lora,
-        "streaming_reset_after_frame": int(args.boundary - 1),
+        "streaming_reset_after_frames": [int(boundary - 1) for boundary in boundaries if 0 < int(boundary) < len(img_paths)],
+        "boundaries": [int(boundary) for boundary in boundaries],
         "num_frames": len(img_paths),
         "output_dir": str(local_dir),
     }
@@ -227,12 +294,13 @@ def run_streaming_human3r(input_copy: Path, local_dir: Path, args: argparse.Name
     return summary
 
 
-def write_online_aligned(local_dir: Path, aligned_dir: Path, boundary: int, overwrite: bool) -> dict:
+def write_online_aligned(local_dir: Path, aligned_dir: Path, boundaries: list[int], overwrite: bool) -> dict:
     if aligned_dir.exists() and overwrite:
         shutil.rmtree(aligned_dir)
     for sub in ["camera", "color", "conf", "depth", "smpl"]:
         (aligned_dir / sub).mkdir(parents=True, exist_ok=True)
 
+    boundary_set = {int(boundary) for boundary in boundaries if int(boundary) > 0}
     history_dirs: list[np.ndarray] = []
     history_trans: list[np.ndarray] = []
     segment_R = np.eye(3, dtype=np.float64)
@@ -243,15 +311,9 @@ def write_online_aligned(local_dir: Path, aligned_dir: Path, boundary: int, over
     n_frames = len(sorted((local_dir / "camera").glob("*.npz")))
     for frame_idx in range(n_frames):
         root_dir, root_t = root_from_saved_frame(local_dir, frame_idx)
-        if frame_idx < boundary:
-            segment_R = np.eye(3, dtype=np.float64)
-            segment_t = np.zeros(3, dtype=np.float64)
-            history_dirs.append(root_dir)
-            history_trans.append(root_t)
-            mode = "history_identity"
-        elif frame_idx == boundary:
+        if frame_idx in boundary_set:
             if not history_dirs:
-                raise ValueError("Boundary cannot be 0 for this online alignment probe.")
+                raise ValueError("Boundary cannot be the first frame for this online alignment probe.")
             hist_dir = normalize(np.mean(np.stack(history_dirs), axis=0))
             hist_t = np.mean(np.stack(history_trans), axis=0)
             yaw = signed_yaw_between(root_dir, hist_dir, up)
@@ -269,7 +331,7 @@ def write_online_aligned(local_dir: Path, aligned_dir: Path, boundary: int, over
                 }
             )
         else:
-            mode = "cached_segment_transform"
+            mode = "history_identity" if not history_dirs or not any(frame_idx > b for b in boundary_set) else "cached_segment_transform"
 
         cam_path = local_dir / "camera" / f"{frame_idx:06d}.npz"
         cam = np.load(cam_path)
@@ -278,16 +340,16 @@ def write_online_aligned(local_dir: Path, aligned_dir: Path, boundary: int, over
         copy_smpl(
             local_dir / "smpl" / f"{frame_idx:06d}.npz",
             aligned_dir / "smpl" / f"{frame_idx:06d}.npz",
-            segment_R if frame_idx >= boundary else None,
-            segment_t if frame_idx >= boundary else None,
+            segment_R if mode != "history_identity" else None,
+            segment_t if mode != "history_identity" else None,
         )
         for sub, ext in [("color", ".png"), ("conf", ".npy"), ("depth", ".npy")]:
             copy_np_payload(local_dir / sub / f"{frame_idx:06d}{ext}", aligned_dir / sub / f"{frame_idx:06d}{ext}")
 
-        if frame_idx >= boundary:
-            aligned_root_t = segment_R @ root_t + segment_t
-        else:
-            aligned_root_t = root_t
+        aligned_root_t = segment_R @ root_t + segment_t
+        aligned_root_dir = segment_R @ root_dir
+        history_dirs.append(aligned_root_dir)
+        history_trans.append(aligned_root_t)
         transform_records.append(
             {
                 "frame": int(frame_idx),
@@ -300,7 +362,158 @@ def write_online_aligned(local_dir: Path, aligned_dir: Path, boundary: int, over
     return {
         "local_dir": str(local_dir),
         "aligned_dir": str(aligned_dir),
-        "boundary": int(boundary),
+        "boundaries": [int(boundary) for boundary in boundaries],
+        "transform_records": transform_records,
+    }
+
+
+def build_online_alignment_feature(hist: np.ndarray, cur: np.ndarray) -> torch.Tensor:
+    hist_t = torch.from_numpy(hist.astype(np.float32))
+    cur_t = torch.from_numpy(cur.astype(np.float32))
+    hist_center = hist_t.mean(dim=0, keepdim=True)
+    cur_center = cur_t.mean(dim=0, keepdim=True)
+    hist_shape = hist_t - hist_center
+    cur_shape = cur_t - cur_center
+    feature = torch.cat(
+        [
+            hist_t.flatten(),
+            cur_t.flatten(),
+            hist_shape.flatten(),
+            cur_shape.flatten(),
+            (cur_t - hist_t).flatten(),
+            hist_center.flatten(),
+            cur_center.flatten(),
+            (cur_center - hist_center).flatten(),
+        ],
+        dim=0,
+    )
+    return feature.unsqueeze(0)
+
+
+def write_online_learned_aligned(
+    local_dir: Path,
+    aligned_dir: Path,
+    boundaries: list[int],
+    checkpoint_path: Path,
+    device: str,
+    overwrite: bool,
+) -> dict:
+    """Apply the learned V10 segment transform with online/cache semantics.
+
+    At a boundary frame, the transform is predicted from already-aligned history
+    anchors plus the current local-reset frame only. Later frames reuse the cached
+    transform. This avoids using future frames to decide the boundary transform.
+    """
+
+    if aligned_dir.exists() and overwrite:
+        shutil.rmtree(aligned_dir)
+    for sub in ["camera", "color", "conf", "depth", "smpl"]:
+        (aligned_dir / sub).mkdir(parents=True, exist_ok=True)
+
+    from v9_learned_stream_alignment_overfit import StreamingAlignmentMLP, so3_exp
+
+    device_t = torch.device(device if device != "cuda" or torch.cuda.is_available() else "cpu")
+    checkpoint = torch.load(checkpoint_path, map_location=device_t)
+    ckpt_args = checkpoint.get("args", {})
+    if bool(ckpt_args.get("use_body_frame_input", False)):
+        raise ValueError(
+            "This online writer currently supports the V10 checkpoint with "
+            "use_body_frame_input=False; got use_body_frame_input=True."
+        )
+    joint_ids = checkpoint.get("joint_ids", None)
+    if joint_ids is None:
+        joint_ids = torch.as_tensor(sorted(set(STABLE_JOINTS + FOOT_JOINTS)), dtype=torch.long)
+    joint_ids_np = np.asarray(joint_ids.detach().cpu().numpy(), dtype=np.int64)
+    in_dim = int(next(iter(checkpoint["model"].values())).shape[0])
+    model = StreamingAlignmentMLP(
+        in_dim=in_dim,
+        hidden_dim=int(ckpt_args.get("hidden_dim", 256)),
+        max_rot_deg=float(ckpt_args.get("max_rot_deg", 180.0)),
+        max_trans=float(ckpt_args.get("max_trans", 12.0)),
+    ).to(device_t)
+    model.load_state_dict(checkpoint["model"], strict=True)
+    model.eval()
+
+    data = load_sequence(local_dir, len(sorted((local_dir / "camera").glob("*.npz"))), torch.device("cpu"))
+    boundary_set = {int(boundary) for boundary in boundaries if int(boundary) > 0}
+    segment_R = np.eye(3, dtype=np.float64)
+    segment_t = np.zeros(3, dtype=np.float64)
+    aligned_joint_history: list[np.ndarray] = []
+    transform_records = []
+
+    for frame_idx in range(data.poses.shape[0]):
+        mode = "history_identity"
+        if frame_idx in boundary_set:
+            if not aligned_joint_history:
+                raise ValueError("Boundary cannot be the first frame for learned online alignment.")
+            hist = np.stack(aligned_joint_history, axis=0)[:, joint_ids_np].mean(axis=0)
+            cur = data.joints_world[frame_idx, joint_ids_np]
+            feature = build_online_alignment_feature(hist, cur).to(device_t)
+            if feature.shape[-1] != in_dim:
+                raise ValueError(f"Feature dim mismatch: online={feature.shape[-1]}, checkpoint={in_dim}")
+            with torch.no_grad():
+                rotvec, trans = model(feature)
+                R_t = so3_exp(rotvec)[0]
+                t_t = trans[0]
+            segment_R = R_t.detach().cpu().numpy().astype(np.float64)
+            segment_t = t_t.detach().cpu().numpy().astype(np.float64)
+            mode = "learned_boundary_transform"
+            transform_records.append(
+                {
+                    "frame": int(frame_idx),
+                    "mode": mode,
+                    "rotvec_deg_norm": float(torch.rad2deg(rotvec.norm(dim=-1)).detach().cpu()[0]),
+                    "translation_norm": float(trans.norm(dim=-1).detach().cpu()[0]),
+                    "translation": segment_t.astype(np.float32).tolist(),
+                    "strict_streaming_feature": "aligned_history_mean_plus_current_boundary_frame",
+                }
+            )
+        elif any(frame_idx > boundary for boundary in boundary_set):
+            mode = "cached_learned_transform"
+
+        src_pose = data.poses[frame_idx].astype(np.float32)
+        if mode == "history_identity":
+            pose = src_pose
+            aligned_joints = data.joints_world[frame_idx]
+            smpl_R = None
+            smpl_t = None
+        else:
+            pose = transform_pose(src_pose, segment_R, segment_t)
+            aligned_joints = (
+                np.einsum("ij,kj->ki", segment_R, data.joints_world[frame_idx]) + segment_t[None, :]
+            )
+            smpl_R = segment_R
+            smpl_t = segment_t
+
+        cam_path = local_dir / "camera" / f"{frame_idx:06d}.npz"
+        save_camera(cam_path, aligned_dir / "camera" / f"{frame_idx:06d}.npz", pose)
+        copy_smpl(
+            local_dir / "smpl" / f"{frame_idx:06d}.npz",
+            aligned_dir / "smpl" / f"{frame_idx:06d}.npz",
+            smpl_R,
+            smpl_t,
+        )
+        for sub, ext in [("color", ".png"), ("conf", ".npy"), ("depth", ".npy")]:
+            copy_np_payload(local_dir / sub / f"{frame_idx:06d}{ext}", aligned_dir / sub / f"{frame_idx:06d}{ext}")
+        aligned_joint_history.append(aligned_joints.astype(np.float32))
+        transform_records.append(
+            {
+                "frame": int(frame_idx),
+                "mode": mode,
+            }
+        )
+
+    return {
+        "local_dir": str(local_dir),
+        "aligned_dir": str(aligned_dir),
+        "checkpoint": str(checkpoint_path),
+        "boundaries": [int(boundary) for boundary in boundaries],
+        "joint_ids": joint_ids_np.astype(int).tolist(),
+        "streaming_semantics": {
+            "uses_future_frames_as_input": False,
+            "boundary_transform_feature": "aligned history anchors + current boundary-frame anchors",
+            "later_segment_frames_use_cached_transform": True,
+        },
         "transform_records": transform_records,
     }
 
@@ -343,20 +556,39 @@ def main() -> None:
     input_copy = prepare_case_inputs(args.input_dir, case_dir, args.overwrite)
     local_dir = case_dir / "online_human3r_local_reset"
     aligned_dir = case_dir / "online_human3r_global_aligned"
+    learned_dir = case_dir / "online_human3r_learned_aligned"
+    boundaries, boundary_debug = resolve_boundaries(input_copy, args)
 
     run_summary = {"status": "skip_inference"}
     if not args.skip_inference:
-        run_summary = run_streaming_human3r(input_copy, local_dir, args)
-    align_summary = write_online_aligned(local_dir, aligned_dir, int(args.boundary), args.overwrite)
-    metrics = compute_metrics(local_dir, aligned_dir, int(args.boundary))
+        run_summary = run_streaming_human3r(input_copy, local_dir, args, boundaries)
+    align_summary = write_online_aligned(local_dir, aligned_dir, boundaries, args.overwrite)
+    learned_summary = None
+    if args.learned_checkpoint is not None:
+        learned_summary = write_online_learned_aligned(
+            local_dir,
+            learned_dir,
+            boundaries,
+            args.learned_checkpoint,
+            args.device,
+            args.overwrite,
+        )
+    metric_boundary = int(boundaries[0]) if boundaries else int(args.boundary)
+    metrics = compute_metrics(local_dir, aligned_dir, metric_boundary)
+    learned_metrics = None
+    if learned_summary is not None:
+        learned_metrics = compute_metrics(local_dir, learned_dir, metric_boundary)
     summary = {
         "case_name": case_name,
         "input_dir": str(args.input_dir),
         "case_dir": str(case_dir),
         "run": run_summary,
         "alignment": align_summary,
+        "learned_alignment": learned_summary,
+        "boundary": boundary_debug,
         "metrics": metrics,
-        "method": "true streaming full-sequence Human3R with oracle reset boundary and online first-frame segment transform cache",
+        "learned_metrics": learned_metrics,
+        "method": "true streaming full-sequence Human3R with online boundary detection and segment transform cache",
     }
     summary_path = case_dir / "online_stream_alignment_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")

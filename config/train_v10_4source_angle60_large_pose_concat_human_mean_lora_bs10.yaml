@@ -1,0 +1,72 @@
+# V10 large-data four-source training baseline.
+#
+# This is the large-scale V9-style correct-token baseline kept for comparison
+# with the V10 streaming alignment route. It reuses the existing V9 angle>=60
+# four-source manifests and the previously better-generalizing pose concat +
+# human mean pooling setup.
+#
+# Data scale:
+# - AvatarReX, THuman, MVHuman100, MVHuman200 are trained as separate sources.
+# - Each source exposes a 32k logical train pool: 24k AABB + 8k AAAA.
+# - MVHuman manifests currently contain 8k/2k unique train records, so
+#   allow_repeat=True intentionally repeats them to keep source proportions
+#   balanced during long training.
+defaults:
+  - train_v9_4source_angle60_pose_concat_human_mean_avatarrex_weighted_lora_bs10
+  - _self_
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.30
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      24000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10101, n_corres=0, manifest_path="${v9_4source_avatarrex_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 8000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10102, n_corres=0, manifest_path="${v9_4source_avatarrex_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.25
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      24000 @ AvatarReX_AABB(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10201, n_corres=0, manifest_path="${v9_4source_thuman_manifest_root}/train_aabb_60k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+      + 8000 @ AvatarReX_Video(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10202, n_corres=0, manifest_path="${v9_4source_thuman_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100
+    weight: 0.25
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      24000 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10301, n_corres=0, manifest_path="${v9_4source_mvhuman100_manifest_root}/train_aabb_60k.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 8000 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10302, n_corres=0, manifest_path="${v9_4source_mvhuman100_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200
+    weight: 0.20
+    batch_size: 10
+    num_workers: 4
+    dataset: >-
+      24000 @ AvatarReX_AABB(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10401, n_corres=0, manifest_path="${v9_4source_mvhuman200_manifest_root}/train_aabb_60k.jsonl", pair_scope='same_parent', load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+      + 8000 @ AvatarReX_Video(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='resize_only_16', num_views=4, seed=10402, n_corres=0, manifest_path="${v9_4source_mvhuman200_manifest_root}/train_aaaa_20k.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_mixed_epoch_steps: 150
+epochs: 200
+warmup_epochs: 6
+eval_freq: 10
+
+save_freq: 10
+keep_freq: 0
+early_stopping_patience: 50
+save_last_checkpoint: true
+save_final_checkpoint: true
+print_freq: 50
+structured_log_freq: 1
+print_img_freq: 1000000
+save_code: false
+console_log_keys: [lr, loss, avatarrex_loss, thuman_loss, mvhuman100_loss, mvhuman200_loss]
+
+val_monitor_weights:
+  avatarrex: 1.5
+  thuman: 1.0
+  mvhuman100: 1.0
+  mvhuman200: 1.0
+
+exp_name: v10_4source_angle60_large_pose_concat_human_mean_lora_bs10
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v10_4source_large_baseline/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v10_4source_large_baseline/${exp_name}

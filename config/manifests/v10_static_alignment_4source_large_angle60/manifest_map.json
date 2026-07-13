@@ -1,0 +1,21 @@
+{
+  "description": "Large four-source AABB manifest map for V10 streaming alignment probes. The files are the existing V9 angle>=60 manifests; this map avoids copying large jsonl files.",
+  "default_manifest_name": "train_aabb_60k.jsonl",
+  "source_manifests": {
+    "avatarrex": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests/train_aabb_60k.jsonl",
+    "thuman": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_thuman00_02_angle60_manifests/train_aabb_60k.jsonl",
+    "mvhuman100": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman100_angle60_manifests/train_aabb_60k.jsonl",
+    "mvhuman200": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman200_angle60_manifests/train_aabb_60k.jsonl"
+  },
+  "source_counts": {
+    "avatarrex": 8000,
+    "thuman": 8000,
+    "mvhuman100": 7999,
+    "mvhuman200": 8000
+  },
+  "notes": [
+    "All four source manifests are already filtered toward large view changes, angle>=60.",
+    "The V10 alignment probe currently trains on AABB boundaries only.",
+    "AAAA and long/pattern manifests remain separate because this V10 probe uses oracle AABB boundaries."
+  ]
+}

@@ -4380,9 +4380,10 @@ class ARCroco3DStereo(CroCoNet):
                 return ARCroco3DStereoOutput(ress=ress, views=views)
 
 
-    def forward_recurrent_lighter(self, views, device, ret_state=False, use_ttt3r=False):
+    def forward_recurrent_lighter(self, views, device, ret_state=False, use_ttt3r=False, return_token_debug=False):
         ress = []
         all_state_args = []
+        token_debug_frames = []
         last_smpl_tk = None
         last_smpl_id = None
         max_smpl_id = -1
@@ -4413,6 +4414,21 @@ class ARCroco3DStereo(CroCoNet):
         v9_oracle_pose_delta_cache = None
         v9_oracle_human_delta_cache = None
         v9_oracle_cache_active = False
+
+        def _debug_flatten_token(x):
+            if x is None:
+                return None
+            return x.detach().float().reshape(x.shape[0], -1).cpu()
+
+        def _debug_pool_token(x):
+            if x is None:
+                return None
+            x = x.detach().float()
+            return torch.cat(
+                [x.mean(dim=1), x.std(dim=1, unbiased=False)],
+                dim=-1,
+            ).cpu()
+
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
@@ -4952,6 +4968,18 @@ class ARCroco3DStereo(CroCoNet):
             new_mem = self.pose_retriever.update_mem(
                 mem, global_img_feat_i, out_pose_feat_i
             )
+            token_debug_row = None
+            if return_token_debug:
+                token_debug_row = {
+                    "view_idx": int(i),
+                    "pose_token_in": _debug_flatten_token(pose_feat_i),
+                    "pose_token_out": _debug_flatten_token(pose_token_for_head),
+                    "human_token_in": _debug_pool_token(smpl_feat_i),
+                    "state_summary_before": _debug_pool_token(state_feat),
+                    "state_summary_new": _debug_pool_token(new_state_feat),
+                    "pose_memory_summary_before": _debug_pool_token(mem),
+                    "pose_memory_summary_new": _debug_pool_token(new_mem),
+                }
             assert len(dec) == self.dec_depth + 1
             # **========== 原始代码备份：inference 原始 head token slicing ==========**
             # if n_humans_i > 0:
@@ -5402,13 +5430,22 @@ class ARCroco3DStereo(CroCoNet):
                     update_mask=update_mask_history,
                     reset_mask=reset_mask,
                 )
+            if token_debug_row is not None:
+                token_debug_row["human_token_out"] = _debug_pool_token(smpl_token)
+                token_debug_row["state_summary_after"] = _debug_pool_token(state_feat)
+                token_debug_row["pose_memory_summary_after"] = _debug_pool_token(mem)
+                token_debug_frames.append(token_debug_row)
             if ret_state:
                 all_state_args.append(
                     (state_feat, state_pos, init_state_feat, mem, init_mem)
                 )
            
         if ret_state:
+            if return_token_debug:
+                return ress, views, all_state_args, token_debug_frames
             return ress, views, all_state_args
+        if return_token_debug:
+            return ress, views, token_debug_frames
         return ress, views
 
     def forward_recurrent_lighter_naive(self, views, device, ret_state=False, use_ttt3r=False):
