@@ -1,0 +1,241 @@
+{
+  "dataset": "bedlam_seq000021_good_6fps",
+  "source_root": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21",
+  "npz_path": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/20221010_3-10_500_batch01hand_zoom_suburb_d_6fps.npz",
+  "camera_csv": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/cam/seq_000021_camera.csv",
+  "seq": "seq_000021",
+  "image_pattern": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/images/seq_000021/seq_000021_{frame:04d}.png",
+  "body_mask_pattern": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/mask/seq_000021/seq_000021_{frame:04d}_{person:02d}_body.png",
+  "clothing_mask_pattern": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/mask/seq_000021/seq_000021_{frame:04d}_{person:02d}_clothing.png",
+  "env_mask_pattern": "/data/wangzheng/iJCV-CODE/data/BEDLAM/21/mask/seq_000021/seq_000021_{frame:04d}_env.png",
+  "npz_imgname_pattern": "seq_000021/seq_000021_{frame:04d}.png",
+  "kept_frames": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    50,
+    55,
+    60,
+    65,
+    70,
+    75,
+    80,
+    85,
+    90,
+    95,
+    100,
+    105,
+    110,
+    115,
+    120,
+    125,
+    130,
+    135,
+    140
+  ],
+  "excluded_frames": [
+    {
+      "frame": 145,
+      "reason": "NPZ contains 3 people, but body masks contain 4 instances. The extra mask is seq_000021_0145_00_body.png, a truncated person at the right image border."
+    }
+  ],
+  "num_kept_frames": 29,
+  "num_people_per_kept_frame": 4,
+  "image_camera_npz_mask_alignment": {
+    "images": "All kept frames have seq_000021_{frame:04d}.png.",
+    "camera": "All kept frames have matching rows in seq_000021_camera.csv.",
+    "npz": "All kept frames have imgname seq_000021/seq_000021_{frame:04d}.png.",
+    "mask": "All kept frames have body masks 00, 01, 02, 03.",
+    "person_order": "For kept frames, NPZ person order matches body mask instance order 00, 01, 02, 03 by bbox-center cross-check."
+  },
+  "npz_indices_by_frame": {
+    "0000": [
+      2940,
+      2969,
+      2999,
+      3029
+    ],
+    "0005": [
+      2941,
+      2970,
+      3000,
+      3030
+    ],
+    "0010": [
+      2942,
+      2971,
+      3001,
+      3031
+    ],
+    "0015": [
+      2943,
+      2972,
+      3002,
+      3032
+    ],
+    "0020": [
+      2944,
+      2973,
+      3003,
+      3033
+    ],
+    "0025": [
+      2945,
+      2974,
+      3004,
+      3034
+    ],
+    "0030": [
+      2946,
+      2975,
+      3005,
+      3035
+    ],
+    "0035": [
+      2947,
+      2976,
+      3006,
+      3036
+    ],
+    "0040": [
+      2948,
+      2977,
+      3007,
+      3037
+    ],
+    "0045": [
+      2949,
+      2978,
+      3008,
+      3038
+    ],
+    "0050": [
+      2950,
+      2979,
+      3009,
+      3039
+    ],
+    "0055": [
+      2951,
+      2980,
+      3010,
+      3040
+    ],
+    "0060": [
+      2952,
+      2981,
+      3011,
+      3041
+    ],
+    "0065": [
+      2953,
+      2982,
+      3012,
+      3042
+    ],
+    "0070": [
+      2954,
+      2983,
+      3013,
+      3043
+    ],
+    "0075": [
+      2955,
+      2984,
+      3014,
+      3044
+    ],
+    "0080": [
+      2956,
+      2985,
+      3015,
+      3045
+    ],
+    "0085": [
+      2957,
+      2986,
+      3016,
+      3046
+    ],
+    "0090": [
+      2958,
+      2987,
+      3017,
+      3047
+    ],
+    "0095": [
+      2959,
+      2988,
+      3018,
+      3048
+    ],
+    "0100": [
+      2960,
+      2989,
+      3019,
+      3049
+    ],
+    "0105": [
+      2961,
+      2990,
+      3020,
+      3050
+    ],
+    "0110": [
+      2962,
+      2991,
+      3021,
+      3051
+    ],
+    "0115": [
+      2963,
+      2992,
+      3022,
+      3052
+    ],
+    "0120": [
+      2964,
+      2993,
+      3023,
+      3053
+    ],
+    "0125": [
+      2965,
+      2994,
+      3024,
+      3054
+    ],
+    "0130": [
+      2966,
+      2995,
+      3025,
+      3055
+    ],
+    "0135": [
+      2967,
+      2996,
+      3026,
+      3056
+    ],
+    "0140": [
+      2968,
+      2997,
+      3027,
+      3057
+    ]
+  },
+  "center_cross_check": {
+    "bbox_center_vs_npz_center_mean_px": 13.822510690134585,
+    "bbox_center_vs_npz_center_median_px": 13.863187545857347,
+    "bbox_center_vs_npz_center_max_px": 25.398695070146697,
+    "note": "The center distance is not expected to be zero because NPZ center and mask bbox center are different definitions. The important check is that the best assignment keeps the order [0, 1, 2, 3] for all kept frames."
+  },
+  "training_note": "This manifest only filters and references existing BEDLAM files. It does not copy images, masks, cameras, or NPZ data."
+}
