@@ -22,6 +22,9 @@ V10_CAUSAL_STREAMING_MODEL_DESIGN_20260713.md
 V10_BEDLAM_MOTION_INTEGRATOR_PROBE_20260713.md
 V10_MINIMAL_BEDLAM21_VALIDATION_20260714.md
 V10_ORACLE_STATE_VS_GAUGE_PROBE_20260715.md
+近期补充的 candidate、latent-token 和 state-query 报告已移动到：
+
+../../../archive/20260721/docs/v10/
 ```
 
 ## 归档记录
@@ -36,4 +39,4 @@ archive/V10_STATIC_ALIGNMENT_PROBE_RESULTS_20260708.md
 archive/V10_STREAMING_GLOBAL_ALIGNMENT.md
 ```
 
-当前主线以严格流式 global-state integrator 为核心，优先围绕 Human3R output-domain、oracle boundary、history-current direct + residual integrator 继续推进。
+V10 已归档。当前保留方法见 `../ACTIVE_BOUNDARY_ALIGNMENT.md`。
