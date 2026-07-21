@@ -1,0 +1,14 @@
+{
+  "description": "Held-out GT AABB manifests for the V10 explicit candidate Oracle Selection probe.",
+  "source_manifests": {
+    "avatarrex": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests/test_aabb_2k.jsonl",
+    "thuman": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_thuman00_02_angle60_manifests/test_aabb_2k.jsonl",
+    "mvhuman100": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman100_angle60_manifests/test_aabb_2k.jsonl",
+    "mvhuman200": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman200_angle60_manifests/test_aabb_2k.jsonl"
+  },
+  "notes": [
+    "Ground-truth camera poses are used only for post-hoc candidate evaluation and Oracle selection.",
+    "AvatarReX remains excluded from future selector training and is reserved for zero-shot evaluation.",
+    "Records are sampled deterministically and balanced by view-angle bucket."
+  ]
+}
