@@ -1,6 +1,6 @@
 # Active Boundary Alignment
 
-当前主线只使用四个主版本，共享工具不再编号。
+当前主线使用五个主版本，共享工具不再编号。
 
 ## V10.1 Fixed Explicit
 
@@ -61,6 +61,32 @@ PYTHONPATH=src:. .venv/bin/python scripts/v13_1_real_video_fixed_alignment_viewe
 ```
 
 该版本不使用 VGGT、DA3、camera GT、GT depth 或完整未来 shot。
+
+## V14.1 Shot-Aware State Routing
+
+V14.1 不修改 Boundary SE(3)，而是修改 camera cut 处的信息流：
+
+- scene/camera 在第一张 cut 后帧解码前 hard reset，只读写 fresh state；
+- human 分支可以读取隔离的跨 shot 人体记忆；
+- raw human token 不写入 scene/camera state；
+- world root 必须先经过统一 Boundary SE(3)，再提交到长期人体轨迹。
+
+当前推荐的 training-free 配置为：
+
+- raw token mixing：`0`；
+- shape memory：`0.25`；
+- root-centered local pose memory：`0.15`；
+- world trajectory：Align-Then-Commit；
+- 不使用固定 world-root jump verify 阈值。
+
+单 cut、四数据源、多 cut 和因果控制结果见
+`docs/movie3r/V14_1_SHOT_AWARE_STATE_ROUTING.md`。
+
+入口：
+
+- `scripts/v14_1_shot_aware_state_routing_probe.py`
+- `scripts/v14_1_multicut_state_routing_rollout.py`
+- `scripts/v14_1_shape_memory_sweep.py`
 
 ## Cached Outputs
 
