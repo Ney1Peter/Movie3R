@@ -88,6 +88,11 @@ from dust3r.v8_head_lora import (
     lora_parameter_l2,
     mark_lora_trainable,
 )
+from dust3r.shot_human_memory import (
+    HumanMemoryConfig,
+    StreamingHumanMemory,
+    transform_points,
+)
 printer = get_logger(__name__, log_level="DEBUG")
 
 from dust3r.utils.device import to_cpu, to_gpu
@@ -4380,7 +4385,15 @@ class ARCroco3DStereo(CroCoNet):
                 return ARCroco3DStereoOutput(ress=ress, views=views)
 
 
-    def forward_recurrent_lighter(self, views, device, ret_state=False, use_ttt3r=False, return_token_debug=False):
+    def forward_recurrent_lighter(
+        self,
+        views,
+        device,
+        ret_state=False,
+        use_ttt3r=False,
+        return_token_debug=False,
+        shot_routing=None,
+    ):
         ress = []
         all_state_args = []
         token_debug_frames = []
@@ -4414,6 +4427,30 @@ class ARCroco3DStereo(CroCoNet):
         v9_oracle_pose_delta_cache = None
         v9_oracle_human_delta_cache = None
         v9_oracle_cache_active = False
+        routing = {} if shot_routing is None else dict(shot_routing)
+        routing_mode = str(routing.get("mode", "continue")).lower()
+        routing_enabled = bool(routing.get("enabled", shot_routing is not None))
+        routing_cut_indices = {int(value) for value in routing.get("cut_indices", ())}
+        routing_uses_fresh_state = routing_mode not in {"continue", "full_old_state"}
+        routing_preserves_tracklet = routing_mode in {
+            "tracklet",
+            "selective",
+            "selective_token",
+            "selective_shape",
+            "selective_full",
+        }
+        routing_uses_human_memory = routing_mode in {
+            "selective",
+            "selective_token",
+            "selective_shape",
+            "selective_full",
+        }
+        human_memory_config = HumanMemoryConfig.from_mapping(routing)
+        human_memory = StreamingHumanMemory(human_memory_config)
+        memory_override = routing.get("memory_override")
+        boundary_transforms = routing.get("boundary_transforms", {})
+        active_boundary_transform = None
+        routing_after_cut = False
 
         def _debug_flatten_token(x):
             if x is None:
@@ -4458,6 +4495,11 @@ class ARCroco3DStereo(CroCoNet):
 
             shape = shapes
             feat_i = img_out[-1]
+            cut_before_decode = routing_enabled and i in routing_cut_indices
+            if cut_before_decode and routing_uses_fresh_state:
+                # Shot-adaptation history is consumed before the recurrent
+                # decoder, so clear it as soon as the cut frame is encoded.
+                prev_f_dec = None
             # V6.1: keep per-frame encoder tokens so an anchor on frame i can
             # gather both ref_patch_idx and cur_patch_idx in this streaming path.
             anchor_feats.append(feat_i)
@@ -4564,6 +4606,51 @@ class ARCroco3DStereo(CroCoNet):
                     all_state_args.append(
                         (state_feat, state_pos, init_state_feat, mem, init_mem)
                     )
+
+            if cut_before_decode:
+                routing_after_cut = True
+                transform_value = boundary_transforms.get(i, boundary_transforms.get(str(i)))
+                if transform_value is not None:
+                    active_boundary_transform = torch.as_tensor(
+                        transform_value,
+                        device=state_feat.device,
+                        dtype=state_feat.dtype,
+                    )
+                    if active_boundary_transform.ndim == 2:
+                        active_boundary_transform = active_boundary_transform.unsqueeze(0)
+                if memory_override is not None:
+                    human_memory.override = dict(memory_override)
+                if routing_uses_fresh_state:
+                    # A true hard reset must be equivalent to starting a new
+                    # Human3R rollout at the first post-cut frame.  Reusing the
+                    # initial state encoded from frame 0 would retain old-shot
+                    # image content even though the recurrent state was reset.
+                    state_feat, state_pos = self._init_state(feat_i, pos_i)
+                    init_state_feat = state_feat.detach().clone()
+                    mem = self.pose_retriever.mem.expand(feat_i.shape[0], -1, -1)
+                    init_mem = mem.detach().clone()
+                    reset_mask = True
+                    v8_prev_corr_token = None
+                    v8_prev_pose_token = None
+                    v8_prev_human_token = None
+                    v8_prev_delta_token = None
+                    v8_prev_gate = None
+                    v9_prev_raw_camera_pose = None
+                    v9_oracle_pose_delta_cache = None
+                    v9_oracle_human_delta_cache = None
+                    v9_oracle_cache_active = False
+                    if use_v9_clean_raw_pose_step_gate:
+                        v9_gate_state_feat = init_state_feat.detach().clone()
+                        v9_gate_init_state_feat = init_state_feat.detach().clone()
+                        v9_gate_mem = init_mem.detach().clone()
+                    if bool(routing.get("consume_view_reset_at_cut", True)):
+                        view["reset"] = torch.zeros_like(view["reset"], dtype=torch.bool)
+                if not routing_preserves_tracklet:
+                    last_smpl_tk = None
+                    last_smpl_id = None
+                    max_smpl_id = -1
+                if not routing_uses_human_memory:
+                    human_memory.clear()
 
             if self.pose_head_flag:
                 global_img_feat_i = self._get_img_level_feat(feat_i)
@@ -5008,6 +5095,10 @@ class ARCroco3DStereo(CroCoNet):
             human_latent_info = None
             raw_human_transl_for_info = None
             raw_human_smpl_for_info = None
+            routing_attention = None
+            routing_token_context = None
+            routing_token_raw = None
+            smpl_token_for_tracking = None
             if n_corr_i > 0 or n_anchor_decoder_i > 0:
                 # **========== V6-C 原始代码备份：V6-B 轻量推理 head 前显式 drop decoder 内 AnchorToken ==========**
                 # head_input, smpl_token, q_out = self._make_head_input_from_decoder(
@@ -5072,6 +5163,12 @@ class ARCroco3DStereo(CroCoNet):
                     smpl_token_cat = None
             if smpl_token is not None:
                 raw_human_token_for_head = smpl_token
+                routing_token_raw = raw_human_token_for_head.detach().clone()
+                smpl_token_for_tracking = raw_human_token_for_head
+                if routing_uses_human_memory and routing_after_cut:
+                    smpl_token, routing_attention, routing_token_context = human_memory.condition_token(
+                        raw_human_token_for_head
+                    )
                 if getattr(self, "enable_v8_human_latent_corr", False):
                     raw_human_smpl_for_info = self._raw_smpl_from_human_token(
                         raw_human_token_for_head,
@@ -5261,10 +5358,115 @@ class ARCroco3DStereo(CroCoNet):
 
                 res = self._attach_shot_info(res, shot_info)
 
+            routing_commit = None
+            routing_quality = None
+            routing_world_root = None
+            if routing_uses_human_memory and smpl_token_for_tracking is not None:
+                if routing_after_cut:
+                    routing_prediction_info = human_memory.stabilize_prediction(
+                        res, routing_attention
+                    )
+                    if "shape_raw" in routing_prediction_info:
+                        res["v14_1_smpl_shape_raw"] = routing_prediction_info["shape_raw"]
+                    if "rotmat_raw" in routing_prediction_info:
+                        res["v14_1_smpl_rotmat_raw"] = routing_prediction_info["rotmat_raw"]
+
+                detection_score = scores[img_id, h_id, w_id, 0].reshape(1, -1)
+                if "camera_pose" in res and "smpl_transl" in res:
+                    camera_to_local_world = pose_encoding_to_camera(res["camera_pose"].float())
+                    local_world_root = transform_points(
+                        camera_to_local_world,
+                        res["smpl_transl"].float(),
+                    )
+                    routing_world_root = local_world_root
+                    if routing_after_cut and active_boundary_transform is not None:
+                        boundary = active_boundary_transform.to(local_world_root)
+                        if boundary.shape[0] == 1 and local_world_root.shape[0] > 1:
+                            boundary = boundary.expand(local_world_root.shape[0], -1, -1)
+                        routing_world_root = transform_points(boundary, local_world_root)
+
+                if not routing_after_cut:
+                    routing_commit = torch.ones_like(detection_score, dtype=torch.bool)
+                    human_memory.commit(
+                        smpl_token_for_tracking,
+                        res,
+                        routing_world_root,
+                        valid=routing_commit,
+                    )
+                else:
+                    commit_mode = human_memory_config.commit_mode.lower()
+                    if commit_mode == "immediate":
+                        routing_commit = torch.ones_like(detection_score, dtype=torch.bool)
+                        immediate_root = None
+                        if "camera_pose" in res and "smpl_transl" in res:
+                            immediate_root = transform_points(
+                                pose_encoding_to_camera(res["camera_pose"].float()),
+                                res["smpl_transl"].float(),
+                            )
+                        human_memory.commit(
+                            smpl_token_for_tracking,
+                            res,
+                            immediate_root,
+                            valid=routing_commit,
+                        )
+                    elif commit_mode == "align":
+                        routing_commit = torch.ones_like(detection_score, dtype=torch.bool)
+                        human_memory.commit(
+                            smpl_token_for_tracking,
+                            res,
+                            routing_world_root,
+                            valid=routing_commit,
+                        )
+                    elif commit_mode == "verify":
+                        routing_commit, routing_quality = human_memory.quality(
+                            res,
+                            detection_score,
+                            routing_world_root,
+                            routing_attention,
+                        )
+                        human_memory.commit(
+                            smpl_token_for_tracking,
+                            res,
+                            routing_world_root,
+                            valid=routing_commit,
+                        )
+                    elif commit_mode not in {"none", "off"}:
+                        raise ValueError(f"Unsupported V14.1 commit mode: {commit_mode}")
+
+                res["v14_1_human_token_raw"] = routing_token_raw
+                res["v14_1_human_token_conditioned"] = smpl_token.detach().clone()
+                if routing_attention is not None:
+                    res["v14_1_memory_attention"] = routing_attention.detach()
+                if routing_token_context is not None:
+                    res["v14_1_memory_token_context"] = routing_token_context.detach()
+                if routing_world_root is not None:
+                    res["v14_1_provisional_world_root"] = routing_world_root.detach()
+                if routing_commit is not None:
+                    res["v14_1_memory_commit"] = routing_commit.float()
+                if routing_quality is not None:
+                    for key, value in routing_quality.items():
+                        res[f"v14_1_quality_{key}"] = value
+                snapshot = human_memory.snapshot()
+                for key, value in snapshot.items():
+                    res[f"v14_1_memory_{key}"] = value
+                res["v14_1_memory_commit_count"] = smpl_token.new_full(
+                    (smpl_token.shape[0], 1), float(human_memory.commit_count)
+                )
+                res["v14_1_predecode_reset"] = smpl_token.new_full(
+                    (smpl_token.shape[0], 1), 1.0 if cut_before_decode and routing_uses_fresh_state else 0.0
+                )
+
             # tracking
             num_miss_match0 = 0
-            if last_smpl_tk is not None and smpl_token is not None:
-                cost_mat = -torch.cdist(last_smpl_tk, smpl_token, p=2)
+            # Keep the original tracking path bitwise-compatible unless the
+            # isolated human-memory branch is active.  In that branch IDs are
+            # matched with raw tokens so memory conditioning cannot create a
+            # self-reinforcing identity match.
+            tracking_smpl_token = (
+                smpl_token_for_tracking if routing_uses_human_memory else smpl_token
+            )
+            if last_smpl_tk is not None and tracking_smpl_token is not None:
+                cost_mat = -torch.cdist(last_smpl_tk, tracking_smpl_token, p=2)
                 cost_mat = log_optimal_transport(
                     cost_mat, alpha=torch.tensor(-10.0, device=device), iters=20)
                 matches = cost_mat[:, :-1, :-1]
@@ -5304,20 +5506,20 @@ class ARCroco3DStereo(CroCoNet):
                     max_smpl_id += num_new_persons
             else:
                 # first frame with humans
-                if smpl_token is not None:
+                if tracking_smpl_token is not None:
                     smpl_id = torch.arange(n_humans_i, device=device)[None]  # (1, nvh)
                     max_smpl_id = n_humans_i - 1
                 else:
                     smpl_id = None
 
-            if smpl_token is not None:
+            if tracking_smpl_token is not None:
                 if num_miss_match0 > 0:
                     miss_match_id0 = last_smpl_id[~valid0][None]
                     miss_match_tk0 = last_smpl_tk[~valid0][None]
                     last_smpl_id = torch.cat([smpl_id, miss_match_id0], dim=1)
-                    last_smpl_tk = torch.cat([smpl_token, miss_match_tk0], dim=1)
+                    last_smpl_tk = torch.cat([tracking_smpl_token, miss_match_tk0], dim=1)
                 else:
-                    last_smpl_tk = smpl_token.clone()
+                    last_smpl_tk = tracking_smpl_token.clone()
                     last_smpl_id = smpl_id.clone()
 
             if smpl_id is not None:
