@@ -12,6 +12,7 @@
 | [版本编号规则](BOUNDARY_VERSIONING.md) | 新旧编号映射和后续编号规则 |
 | [V11 几何完整性审计](v11/V11_RETAINED_GEOMETRY_INTEGRITY.md) | Torso、条件宽基线、接触修正和统一尺度结论 |
 | [V14.3 人-相机联合对齐](V14_3_PROJECTION_CONSISTENT_REANCHORING.md) | Coupled root、DA3 metric cue、scene 安全边界和连续性可视化 |
+| [V11/V14 方法详细比较](V11_V14_ALIGNMENT_METHOD_COMPARISON.md) | 旧 V46/V47、V11.4 与 V14.3 的模型、流程、结果、创新性和后续路线 |
 | [训练代码入口](train_code.md) | 训练代码说明入口 |
 
 ## 历史归档
