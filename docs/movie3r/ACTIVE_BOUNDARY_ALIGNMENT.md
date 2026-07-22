@@ -1,6 +1,6 @@
 # Active Boundary Alignment
 
-当前主线使用五个主版本，共享工具不再编号。
+当前主线使用七个主版本，共享工具不再编号。
 
 ## V10.1 Fixed Explicit
 
@@ -109,6 +109,33 @@ alignment module。完整报告见
 
 - `scripts/v14_2_canonical_human_memory_probe.py`
 - `scripts/v14_2_multicut_memory_replay.py`
+
+## V14.3 Projection-Consistent Re-anchoring
+
+V14.3 修复了 V18/DA3 camera-only 的核心不一致：同一个 calibrated camera-frame
+human root 同时用于 camera translation 和完整 SMPL-X placement。
+
+- V18 camera 保持 `0.872 m`，human root `0.676 -> 0.444 m`；
+- DA3 camera 保持 `0.518 m`，human root `1.005 -> 0.220 m`；
+- coupling 数值闭环最大误差 `2.73e-7 m`；
+- V14.2 continuity 可安全联合，不改变 camera/scene/root anchor；
+- continuity 平均 mesh 视觉改变量仅 `1.53 px`，保留为轻量数值正则，不作为主要
+  视觉贡献；
+- DA3 显著改善 MVHuman metric mismatch，但 raw Human3R scene discontinuity
+  增至 `1.382 m`，尚未形成完整 camera-human-scene metric solution。
+
+当前 geometry-safe 主候选是 `V18 Human Projection Coupled + V14.2 Continuity`；
+DA3 Coupled 保留为 cut-time metric candidate，等待 pointmap metric scale 问题解决。
+
+完整报告和可视化见：
+
+- `docs/movie3r/V14_3_PROJECTION_CONSISTENT_REANCHORING.md`
+- `output/v14_3_projection_consistent_reanchoring/visualization/index.html`
+
+入口：
+
+- `scripts/v14_3_projection_consistent_reanchoring_probe.py`
+- `scripts/v14_3_human_continuity_visualization.py`
 
 ## Cached Outputs
 
