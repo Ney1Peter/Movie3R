@@ -157,3 +157,5 @@ TMPDIR=output/v14_5_final_audit/tmp \
 界面中的 `1 cut`、`2 cuts` 是方法主要适用区间；`4 cuts`、`8 cuts` 是累计误差压力测试，不是方法适用于无限长度的证据。
 
 三维视角默认使用 `Current human`，以当前人体为中心并保留固定第三方观察方向；`Current shot` 用于查看当前 shot 内相机、人体和局部轨迹，`Full rollout` 用于查看完整累计漂移。切换序列、cut 前缀或主方法后会自动重新居中，也可以点击 `Center 3D view` 手动恢复视角。
+
+Viewer 的 pointmap 仅做显示采样，不参与方法或指标计算。为保证多 Cut 累计点云播放流畅，默认使用稀疏的 `point stride = 32`、`confidence > 1.5`，并去除膨胀后的人体 foreground mask；因此页面中的点数不能用于判断底层 Human3R pointmap 是否发生变化。临时检查时可使用 `--point_stride 10` 对齐原版 `SceneHumanViewer` 默认密度，或使用 `--point_stride 1` 查看全部有效点，代价是更高的浏览器负载。
