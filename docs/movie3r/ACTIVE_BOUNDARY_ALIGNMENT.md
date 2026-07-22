@@ -88,6 +88,28 @@ V14.1 不修改 Boundary SE(3)，而是修改 camera cut 处的信息流：
 - `scripts/v14_1_multicut_state_routing_rollout.py`
 - `scripts/v14_1_shape_memory_sweep.py`
 
+## V14.2 Canonical Human Memory
+
+V14.2 联合测试 V14.1 canonical shape/scale 是否也能改善 V18 human-projection
+Boundary translation。180 个四源 cuts 的结果是：
+
+- continuity 成立：shape jump `0.718 -> 0.558`，scale jump
+  `0.00751 -> 0.00577`，local-pose residual `5.37 -> 4.58 deg`；
+- alignment 不成立：V18 current body `0.872 m`，canonical alpha=0.25
+  `0.871 m`，完整 canonical `0.874 m`；
+- GT scale-only 可达到 `0.462 m`，GT beta-only 为 `0.895 m`，说明缺失的是历史
+  Human3R memory 无法提供的绝对 world-scale scalar；
+- camera-pose metric 改善仍不等于 final Human3R geometry continuity 改善。
+
+因此 V14.2 保留为 `Shot-aware Human Continuity Memory`，不作为 Boundary
+alignment module。完整报告见
+`docs/movie3r/V14_2_CANONICAL_HUMAN_MEMORY.md`。
+
+入口：
+
+- `scripts/v14_2_canonical_human_memory_probe.py`
+- `scripts/v14_2_multicut_memory_replay.py`
+
 ## Cached Outputs
 
 已有输出目录仍保留旧编号，以避免复制数 GB 缓存。这些目录名只是历史缓存
