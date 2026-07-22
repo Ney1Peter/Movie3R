@@ -124,8 +124,9 @@ human root 同时用于 camera translation 和完整 SMPL-X placement。
 - DA3 显著改善 MVHuman metric mismatch，但 raw Human3R scene discontinuity
   增至 `1.382 m`，尚未形成完整 camera-human-scene metric solution。
 
-当前 geometry-safe 主候选是 `V18 Human Projection Coupled + V14.2 Continuity`；
-DA3 Coupled 保留为 cut-time metric candidate，等待 pointmap metric scale 问题解决。
+这是 V14.3 当时的 camera-human 候选。V14.4 在统一 180-cut 协议中重新评测后发现，
+它的主要优势是投影和方程闭环，并没有超过 V11.4 的 camera、absolute human 和 scene
+结果。因此该临时主候选已被 V14.4 的最终决策替代。
 
 完整报告和可视化见：
 
@@ -136,6 +137,39 @@ DA3 Coupled 保留为 cut-time metric candidate，等待 pointmap metric scale �
 
 - `scripts/v14_3_projection_consistent_reanchoring_probe.py`
 - `scripts/v14_3_human_continuity_visualization.py`
+
+## V14.4 Unified Similarity Re-anchoring
+
+V14.4 在同一个 pre-shot gauge、同一 180-cut 样本、同一 rotation 和 scene 有效子集下，
+联合测试 V11.4 shared shot scale 与 V14.3 projection-consistent coupled root。
+
+- V11.4 + Conditional VGGT：camera `0.403 m`、root `0.163 m`、joints
+  `0.216 m`、scene `0.532 m`；
+- Unified Human Projection：camera `0.674 m`、root `0.364 m`、scene
+  `0.721 m`，只在 torso reprojection `6.6 px` 上明显更好；
+- Unified DA3：camera `0.435 m`、root `0.184 m`、scene `0.557 m`，接近但仍未
+  稳定超过 V11.4；
+- GT separate human/scene scales 比 GT shared scalar 的 scene 低 `0.370 m`，说明
+  当前 Human3R human/scene local geometry 不能由一个 scalar 同时解释；
+- Naive sequential 明显差于 Unified，证明不能顺序叠加 V11.4 和 V14.3；
+- continuity 在 alignment 后可安全叠加，但不贡献 Boundary 精度。
+
+当前最终 effect-first 主线回到：
+
+```text
+V11.4 Uniform Similarity + Conditional VGGT rotation tail
+```
+
+V14.3 coupled equation 和 V14.4 Unified 保留为 camera-human consistency、必要性和
+single-scalar insufficiency 消融。完整报告见
+`docs/movie3r/V14_4_UNIFIED_SIMILARITY_REANCHORING.md`。
+
+入口：
+
+- `scripts/v14_4_unified_similarity_reanchoring_probe.py`
+- `scripts/v14_4_interactive_unified_viewer.py`
+
+当前三维 viewer 端口为 `8106`。
 
 ## Cached Outputs
 

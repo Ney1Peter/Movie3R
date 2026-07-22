@@ -8,7 +8,8 @@
 - `V11.x`：可保留的 rotation、contact、scale 方法及消融。
 - `V12.x`：缓存、可视化和工程验证。
 - `V13.x`：真实视频和流式系统验证。
-- `V14.x`：camera cut 下的 state transition、跨 shot 人体记忆和提交协议。
+- `V14.x`：camera cut 下的 state transition、跨 shot 人体记忆、coupled root 和统一
+  similarity 验证。
 
 同一任务内的小实验使用 `.1/.2/.3`。失败实验留在该主版本的子编号或归档
 目录，不再继续增加 V30、V40、V50。
@@ -29,3 +30,9 @@
 
 V15-V45 的其他失败、Oracle 或诊断实验保持原文件名进入归档，仅用于历史
 追溯，不再作为活跃版本。
+
+## Current Decision
+
+V14.4 已在统一 180-cut 协议中完成 V11.4 与 V14.3 的正式横向比较。当前部署选择为
+`V11.4 Uniform Similarity + Conditional VGGT`。V14.3/V14.4 保留为 coupled-root 和
+single-shared-scale 的结构消融，不再继续创建新的高编号版本。
