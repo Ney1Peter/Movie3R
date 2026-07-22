@@ -236,6 +236,8 @@ def run_case(
         ("pre", str(record["seqA"]), pre_frames, pre_dir),
         ("post", str(record["seqB"]), post_frames, post_dir),
     ):
+        if not args.overwrite and shot_complete(output, count):
+            continue
         if output.exists() and not shot_complete(output, count):
             shutil.rmtree(output)
         dataset = build_shot_dataset(args, record, seq, frames, side)
