@@ -9,6 +9,7 @@
 | 文档 | 内容 |
 |---|---|
 | [仓库最新冻结版本](../../LATEST_MODEL.md) | 当前唯一默认路径、冻结 tag、结果、适用范围和复现入口 |
+| [V14.7 当前独立方法](V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md) | 当前方法的正式名称、统一流程、版本关系和冻结边界 |
 | [完整模型与消融](CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md) | 输入输出、完整架构、所有模块作用、最新消融和限制 |
 | [V14.6 组件必要性审计](V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md) | VGGT off 下 Fixed、V16、DA3、Keypoint 和 V11.4 公平消融 |
 | [Boundary Alignment 主线](ACTIVE_BOUNDARY_ALIGNMENT.md) | 保留版本、方法差异、运行命令、输出位置 |

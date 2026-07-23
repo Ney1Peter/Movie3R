@@ -4,7 +4,8 @@ Movie3R 是基于 Human3R 的多镜头人体重建研究项目。
 
 ## 最新冻结版本
 
-当前默认方法是面向 short shot 和稀疏 camera cuts 的流式重对齐：
+当前默认方法独立编号为 **V14.7 Shot-Aware Uniform Similarity Re-anchoring**，
+面向 short shot 和稀疏 camera cuts 的流式重对齐：
 
 ```text
 pre-decode Human3R hard reset
@@ -22,6 +23,7 @@ camera-human placement，但存在 scene trade-off，且不适用于无限长度
 
 ```text
 LATEST_MODEL.md
+docs/movie3r/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md
 docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md
 docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md
 ```

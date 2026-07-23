@@ -2,6 +2,9 @@
 
 > 文档日期：2026-07-23
 >
+> 当前独立版本：**V14.7 Shot-Aware Uniform Similarity Re-anchoring**。
+> V11.4 是其中的 shared-scale block，V14.6 是冻结该选择的组件审计。
+>
 > 用途：提供给不了解实验历史的研究人员或 AI，分析当前方法是否合理、创新性在哪里、
 > 哪些模块真正有效，以及后续应该保留、简化还是替换哪些组件。
 >
@@ -1311,7 +1314,8 @@ scene  0.536 -> 0.526 m
 | V14.3 | Projection-Consistent Coupled Root | diagnostic |
 | V14.4 | Unified Similarity Re-anchoring | shared-scale/coupled-root统一比较 |
 | V14.5 | Final Geometry/Leakage/Streaming Audit | 最终严格审计 |
-| V14.6 | Alignment Component Necessity Audit | 最新无 VGGT 组件消融 |
+| V14.6 | Alignment Component Necessity Audit | 无 VGGT 组件消融 |
+| **V14.7** | **Shot-Aware Uniform Similarity Re-anchoring** | **当前完整方法与唯一默认版本** |
 
 ---
 

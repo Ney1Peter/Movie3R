@@ -1,6 +1,6 @@
 # Active Boundary Alignment
 
-当前主线使用七个主版本，共享工具不再编号。
+当前主线使用紧凑版本体系，共享工具不再编号。当前完整方法统一编号为 V14.7。
 
 ## V10.1 Fixed Explicit
 
@@ -185,6 +185,19 @@ DA3+Keypoint root、Keypoint-only 和 V11.4 fused scale 的公平消融。结论
 默认关闭的 continuity 选项。
 
 完整报告见 `docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md`。
+
+## V14.7 Shot-Aware Uniform Similarity Re-anchoring
+
+V14.7 是当前方法的独立名称，将最终保留的完整路径统一为一个版本：
+
+```text
+Hard Reset -> Fixed Explicit -> V16 rotation -> V11.4 shared scale
+-> explicit translation -> one fixed short-shot Boundary
+```
+
+V11.4、V16 是组件来源，V14.6 是消融证据；对外方法、代码冻结和论文描述统一使用
+V14.7。完整定义见
+`docs/movie3r/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md`。
 
 ## Cached Outputs
 

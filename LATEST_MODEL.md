@@ -2,7 +2,9 @@
 
 > Freeze date: 2026-07-23
 >
-> Release tag: `v14.6-short-shot-freeze`
+> Method version: `V14.7 Shot-Aware Uniform Similarity Re-anchoring`
+>
+> Release tag: `v14.7-shot-aware-similarity`
 >
 > Scope: short-shot, sparse-camera-cut streaming re-anchoring
 
@@ -39,9 +41,11 @@ the cut and then reused; it is not re-estimated per frame.
 
 ## Version Identity
 
-The latest **method** remains `V11.4 Uniform Similarity`, preceded by Fixed
-Explicit and V16 rotation. `V14.6` is the component-necessity audit that froze
-this selection; it is not a different alignment algorithm.
+The current standalone method is **V14.7 Shot-Aware Uniform Similarity
+Re-anchoring**. Its scale block comes from V11.4, its rotation correction comes
+from V16, and V14.6 is the component-necessity audit that froze this selection.
+V14.7 introduces a single unambiguous method identity; it does not change the
+frozen V14.6 numbers.
 
 Legacy names:
 
@@ -88,6 +92,7 @@ detection is not yet a validated part of this frozen release.
 | Purpose | Path |
 |---|---|
 | Full architecture and all ablations | `docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md` |
+| Standalone current method | `docs/movie3r/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md` |
 | Short-shot freeze record | `docs/movie3r/V11_4_SHORT_SHOT_METHOD_FREEZE.md` |
 | Component audit | `docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md` |
 | Final leakage/streaming audit | `docs/movie3r/V14_5_FINAL_GEOMETRY_STREAMING_AUDIT.md` |
@@ -122,7 +127,8 @@ Use `--enable_vggt` only for an explicit optional-tail experiment.
 ## Detailed Reading Order
 
 1. `LATEST_MODEL.md`
-2. `docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md`
-3. `docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md`
-4. `docs/movie3r/V14_5_FINAL_GEOMETRY_STREAMING_AUDIT.md`
-5. Historical V14.3/V14.4 reports only when studying failed alternatives
+2. `docs/movie3r/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md`
+3. `docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md`
+4. `docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md`
+5. `docs/movie3r/V14_5_FINAL_GEOMETRY_STREAMING_AUDIT.md`
+6. Historical V14.3/V14.4 reports only when studying failed alternatives

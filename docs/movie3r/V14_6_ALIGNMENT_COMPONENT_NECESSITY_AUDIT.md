@@ -231,3 +231,6 @@ Hard Reset
 6. **VGGT 默认关闭；它是可选 tail rescue，不属于默认方法。**
 7. **最终方法实际上只有两个主要 alignment correction block：V16 rotation 和 V11.4
    shared scale。Fixed 提供 coarse anchor，最后显式求一次 translation。**
+
+该审计完成后，以上完整保留路径正式单列为 **V14.7 Shot-Aware Uniform Similarity
+Re-anchoring**。V14.6 继续表示本组件审计，不作为方法名称。
