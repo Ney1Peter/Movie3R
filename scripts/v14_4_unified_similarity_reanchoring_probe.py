@@ -62,6 +62,9 @@ from v14_3_projection_consistent_reanchoring_probe import (  # noqa: E402
 MAIN_METHODS = (
     "fixed_explicit",
     "v16_raw_scale",
+    "da3_background_only_uniform_similarity",
+    "da3_keypoint_root_uniform_similarity",
+    "keypoint_projection_relative_uniform_similarity",
     "v11_1_conditional_wide_raw_scale",
     "v11_4_uniform_similarity",
     "v14_3_v18_camera_only",
@@ -134,6 +137,13 @@ def parse_args() -> argparse.Namespace:
         "--component_report",
         type=Path,
         default=ROOT / "output/v48_component_necessity_ablation/v48_component_necessity_ablation.json",
+    )
+    parser.add_argument(
+        "--background_scale_report",
+        type=Path,
+        default=ROOT
+        / "output/archive/20260721/v21_absolute_shot_background_scale/gated_full180"
+        / "v21_absolute_shot_background_scale.json",
     )
     parser.add_argument(
         "--output_dir",
@@ -536,6 +546,7 @@ def run_case(
     case: dict,
     bridge: dict,
     component: dict,
+    background_scale: dict,
     layer10: SMPL_Layer,
     layer11: SMPL_Layer,
     foot_indices: np.ndarray,
@@ -552,6 +563,12 @@ def run_case(
     da3_new_scale = float(bridge["root_scales"]["new"])
     da3_relative_scale = float(
         np.clip(pre_scale * da3_new_scale / max(da3_old_scale, 1e-6), 0.20, 2.50)
+    )
+    background_old_scale = float(
+        background_scale["variants"]["median_ratio"]["old_scene_scale"]
+    )
+    background_new_scale = float(
+        background_scale["variants"]["median_ratio"]["new_scene_scale"]
     )
     pre_pose = scale_pose(stream["old_pose"][-1], pre_scale)
     targets = common_targets(stream, pre_pose)
@@ -687,6 +704,24 @@ def run_case(
 
     definitions = [
         method_definition("v16_raw_scale", pre_scale, pre_scale, "raw"),
+        method_definition(
+            "da3_background_only_uniform_similarity",
+            background_new_scale,
+            background_new_scale,
+            "raw",
+        ),
+        method_definition(
+            "da3_keypoint_root_uniform_similarity",
+            da3_new_scale,
+            da3_new_scale,
+            "raw",
+        ),
+        method_definition(
+            "keypoint_projection_relative_uniform_similarity",
+            human_relative_scale,
+            human_relative_scale,
+            "raw",
+        ),
         method_definition(
             "v11_1_conditional_wide_raw_scale",
             pre_scale,
@@ -851,6 +886,8 @@ def run_case(
         "scales": {
             "common_pre": pre_scale,
             "v11_4_post": v11_scale,
+            "da3_background_only_old": background_old_scale,
+            "da3_background_only_new": background_new_scale,
             "da3_absolute_old": da3_old_scale,
             "da3_absolute_new": da3_new_scale,
             "da3_relative_post": da3_relative_scale,
@@ -1092,7 +1129,14 @@ def main() -> None:
         cases = selected
     bridges = load_json_cases(args.bridge_report)
     components = load_json_cases(args.component_report)
-    names = [case["case_name"] for case in cases if case["case_name"] in bridges and case["case_name"] in components]
+    background_scales = load_json_cases(args.background_scale_report)
+    names = [
+        case["case_name"]
+        for case in cases
+        if case["case_name"] in bridges
+        and case["case_name"] in components
+        and case["case_name"] in background_scales
+    ]
     if args.max_cases <= 0 and args.smoke_per_source <= 0 and len(names) != 180:
         raise RuntimeError(f"Expected 180 common cases, got {len(names)}")
     case_map = {case["case_name"]: case for case in cases}
@@ -1114,6 +1158,7 @@ def main() -> None:
                 case_map[name],
                 bridges[name],
                 components[name],
+                background_scales[name],
                 layer10,
                 layer11,
                 foot_indices,
@@ -1142,6 +1187,28 @@ def main() -> None:
         for source in sources
     }
     comparisons = {
+        "v16_to_da3_background_only": paired_comparison(
+            rows, "v16_raw_scale", "da3_background_only_uniform_similarity"
+        ),
+        "v16_to_da3_keypoint_root": paired_comparison(
+            rows, "v16_raw_scale", "da3_keypoint_root_uniform_similarity"
+        ),
+        "v16_to_keypoint_projection_relative": paired_comparison(
+            rows, "v16_raw_scale", "keypoint_projection_relative_uniform_similarity"
+        ),
+        "v16_to_v11_4": paired_comparison(
+            rows, "v16_raw_scale", "v11_4_uniform_similarity"
+        ),
+        "da3_background_only_to_v11_4": paired_comparison(
+            rows,
+            "da3_background_only_uniform_similarity",
+            "v11_4_uniform_similarity",
+        ),
+        "da3_keypoint_root_to_v11_4": paired_comparison(
+            rows,
+            "da3_keypoint_root_uniform_similarity",
+            "v11_4_uniform_similarity",
+        ),
         "v11_4_to_unified": paired_comparison(
             rows, "v11_4_uniform_similarity", "unified_shared_scale_coupled_root"
         ),
@@ -1206,6 +1273,22 @@ def main() -> None:
         source: {
             name: paired_comparison([row for row in rows if row["source"] == source], *pair)
             for name, pair in {
+                "v16_to_da3_background_only": (
+                    "v16_raw_scale",
+                    "da3_background_only_uniform_similarity",
+                ),
+                "v16_to_da3_keypoint_root": (
+                    "v16_raw_scale",
+                    "da3_keypoint_root_uniform_similarity",
+                ),
+                "v16_to_keypoint_projection_relative": (
+                    "v16_raw_scale",
+                    "keypoint_projection_relative_uniform_similarity",
+                ),
+                "v16_to_v11_4": (
+                    "v16_raw_scale",
+                    "v11_4_uniform_similarity",
+                ),
                 "v11_4_to_unified": (
                     "v11_4_uniform_similarity",
                     "unified_shared_scale_coupled_root",

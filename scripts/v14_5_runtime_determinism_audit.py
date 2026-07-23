@@ -25,6 +25,10 @@ for path in (ROOT, ROOT / "src", ROOT / "scripts"):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from torch_cache_support import configure_torch_cache  # noqa: E402
+
+configure_torch_cache()
+
 from scripts.v14_1_shot_aware_state_routing_probe import (  # noqa: E402
     build_model,
     read_jsonl,

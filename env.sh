@@ -9,7 +9,9 @@ source "$SCRIPT_DIR/.venv/bin/activate"
 export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.4}"
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$SCRIPT_DIR/.venv/lib/python3.10/site-packages/torch/lib:${LD_LIBRARY_PATH:-}"
-export TORCH_HOME="${TORCH_HOME:-$HOME/.cache/torch}"
+export TORCH_HOME="${TORCH_HOME:-/data/${USER}/.cache/torch}"
+export TORCH_HUB_DIR="${TORCH_HUB_DIR:-$TORCH_HOME/hub}"
+export TORCH_EXTENSIONS_DIR="${TORCH_EXTENSIONS_DIR:-/data/${USER}/.cache/torch_extensions}"
 
 # 3. 验证
 echo "Human3R 环境已激活"

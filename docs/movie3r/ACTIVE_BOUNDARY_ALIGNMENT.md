@@ -154,11 +154,16 @@ V14.4 在同一个 pre-shot gauge、同一 180-cut 样本、同一 rotation 和 
 - Naive sequential 明显差于 Unified，证明不能顺序叠加 V11.4 和 V14.3；
 - continuity 在 alignment 后可安全叠加，但不贡献 Boundary 精度。
 
-当前最终 effect-first 主线回到：
+当前默认 effect-first 主线为：
 
 ```text
-V11.4 Uniform Similarity + Conditional VGGT rotation tail
+Fixed Explicit + V16 torso-motion + V11.4 Uniform Similarity
 ```
+
+Conditional VGGT 已改为默认关闭的可选 rotation-tail rescue，不属于默认方法。180-cut
+无 VGGT 路径为 camera `0.463 m`、rotation `16.04 deg`；显式开启 VGGT 后分别为
+`0.403 m`、`12.09 deg`。V14.2 continuity 同样默认关闭，仅作为 alignment 后的人体
+连续性附加项。
 
 V14.3 coupled equation 和 V14.4 Unified 保留为 camera-human consistency、必要性和
 single-scalar insufficiency 消融。完整报告见
@@ -169,7 +174,17 @@ single-scalar insufficiency 消融。完整报告见
 - `scripts/v14_4_unified_similarity_reanchoring_probe.py`
 - `scripts/v14_4_interactive_unified_viewer.py`
 
-当前三维 viewer 端口为 `8106`。
+当前真实 recurrent 三维 viewer 端口为 `8107`。
+
+## V14.6 Alignment Component Necessity Audit
+
+在相同 180-cut evaluator、VGGT off 下完成了 Fixed、V16、DA3 background、
+DA3+Keypoint root、Keypoint-only 和 V11.4 fused scale 的公平消融。结论是 V16 独立
+有效；V11.4 对 camera 有显著但较小的额外收益并伴随 scene trade-off；DA3 和 Keypoint
+单独均不构成显著 camera 模块，应视为 V11.4 联合尺度规则的内部 cue。V14.2 仅作为
+默认关闭的 continuity 选项。
+
+完整报告见 `docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md`。
 
 ## Cached Outputs
 

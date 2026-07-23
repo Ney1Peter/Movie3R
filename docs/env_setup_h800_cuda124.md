@@ -107,7 +107,8 @@ echo 'export PATH=$CUDA_HOME/bin:$PATH' >> ~/.bashrc
 echo 'export LD_LIBRARY_PATH=$WORKING_DIR/.venv/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
 
 # Dinov2 backbone 缓存（训练需要）
-echo 'export TORCH_HOME=$HOME/.cache/torch' >> ~/.bashrc
+echo 'export TORCH_HOME=/data/$USER/.cache/torch' >> ~/.bashrc
+echo 'export TORCH_HUB_DIR=$TORCH_HOME/hub' >> ~/.bashrc
 
 source ~/.bashrc
 ```
@@ -142,18 +143,19 @@ huggingface-cli download faneggg/human3r human3r_896L.pth --local-dir ./src
 
 ## Dinov2 backbone 缓存
 
-训练需要 Dinov2 权重，缓存位置 `$TORCH_HOME`（默认 `~/.cache/torch`）。
+训练需要 Dinov2 权重，缓存位置 `$TORCH_HOME`（当前服务器默认
+`/data/$USER/.cache/torch`，避免占用较小的 home 分区）。
 
 如果网络通畅，训练时会自动从 GitHub 下载。如果网络不通，需要从有缓存的服务器拷贝：
 
 ```bash
 # 拷贝 Dinov2 缓存到目标服务器
-scp -r user@源服务器:/root/.cache/torch/hub /root/.cache/torch/
+scp -r user@源服务器:/root/.cache/torch/hub /data/$USER/.cache/torch/
 ```
 
 验证缓存是否完整：
 ```bash
-find ~/.cache/torch -name "*dinov2*" | head -5
+find /data/$USER/.cache/torch -name "*dinov2*" | head -5
 # 应看到 facebookresearch_dinov2_main 目录
 ```
 

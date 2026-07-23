@@ -8,6 +8,9 @@
 
 | 文档 | 内容 |
 |---|---|
+| [仓库最新冻结版本](../../LATEST_MODEL.md) | 当前唯一默认路径、冻结 tag、结果、适用范围和复现入口 |
+| [完整模型与消融](CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md) | 输入输出、完整架构、所有模块作用、最新消融和限制 |
+| [V14.6 组件必要性审计](V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md) | VGGT off 下 Fixed、V16、DA3、Keypoint 和 V11.4 公平消融 |
 | [Boundary Alignment 主线](ACTIVE_BOUNDARY_ALIGNMENT.md) | 保留版本、方法差异、运行命令、输出位置 |
 | [版本编号规则](BOUNDARY_VERSIONING.md) | 新旧编号映射和后续编号规则 |
 | [V11 几何完整性审计](v11/V11_RETAINED_GEOMETRY_INTEGRITY.md) | Torso、条件宽基线、接触修正和统一尺度结论 |

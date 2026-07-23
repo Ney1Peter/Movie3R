@@ -31,9 +31,28 @@ from torchvision.models.detection import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for path in (ROOT, ROOT / "src", ROOT / "scripts"):
+for path in (
+    ROOT,
+    ROOT / "src",
+    ROOT / "scripts",
+    ROOT / "scripts/archive_v2_v6",
+    ROOT / "scripts/archive_v7",
+    ROOT / "archive/20260721/scripts",
+    ROOT / "output/v14_5_final_audit/tmp/frozen_pyc_modules",
+    ROOT.parent / "Movie3R-dataset/Depth-Anything-3/src",
+):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
+
+from torch_cache_support import configure_torch_cache  # noqa: E402
+
+configure_torch_cache()
+
+import dust3r  # noqa: E402
+
+_ARCHIVED_DUST3R = ROOT / "archive/20260721/src/dust3r"
+if str(_ARCHIVED_DUST3R) not in dust3r.__path__:
+    dust3r.__path__.append(str(_ARCHIVED_DUST3R))
 
 from demo import prepare_output  # noqa: E402
 from dust3r.inference import inference_recurrent_lighter  # noqa: E402
@@ -107,6 +126,11 @@ def parse_args() -> argparse.Namespace:
         "--vggt_weights",
         type=Path,
         default=Path("/data/wangzheng/Movie3R/vggt/vggt_weights/model.pt"),
+    )
+    parser.add_argument(
+        "--enable_vggt",
+        action="store_true",
+        help="Opt in to Conditional VGGT rotation-tail rescue (disabled by default).",
     )
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--resolution", type=int, nargs=2, default=(512, 288))
@@ -311,10 +335,11 @@ def conditional_rotation(
         np.block([[fixed[:3, :3], np.zeros((3, 1))], [np.zeros((1, 3)), np.ones((1, 1))]]),
         np.block([[torso, np.zeros((3, 1))], [np.zeros((1, 3)), np.ones((1, 1))]]),
     )
-    if residual < 10.0:
+    if residual < 10.0 or not bool(args.enable_vggt):
         return torso, {
             "branch": "torso",
             "pretrigger": False,
+            "vggt_enabled": bool(args.enable_vggt),
             "torso_residual_deg": residual,
             "torso": torso_diag,
         }
@@ -594,7 +619,7 @@ def main() -> None:
     args.query_rows = 20
     args.query_cols = 16
     args.pair_batch_size = 2
-    vggt = build_vggt(args)
+    vggt = build_vggt(args) if bool(args.enable_vggt) else None
     cases = []
     started = time.perf_counter()
 
@@ -747,6 +772,7 @@ def main() -> None:
             "max_cuts": int(args.max_cuts),
             "v16_bound_deg": 20.0,
             "vggt_pretrigger": "torso residual >= 10 deg",
+            "vggt_enabled": bool(args.enable_vggt),
             "v11_4_scale": "DA3 background median_ratio_q15_gate_lt95, once per shot",
             "gt_use": "evaluation only after candidate generation",
         },

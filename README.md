@@ -1,26 +1,38 @@
 # Movie3R
 
-Movie3R 是基于 Human3R 的多镜头人体重建研究项目。当前项目已经完成 V2-V7 旧方向归档，准备进入 **V8 调研阶段**。
+Movie3R 是基于 Human3R 的多镜头人体重建研究项目。
 
-## 当前状态
+## 最新冻结版本
 
-近期测试显示，Human3R 的明显偏移主要出现在低纹理、弱背景特征、简单场景中的 shot boundary；在 RICH / AvatarReX 等纹理更丰富的数据上，原版 Human3R 往往已经较稳定。
-
-因此，项目当前不再把 V2-V7 的 ShotToken / background AnchorToken / 后处理式 correction 作为主线继续推进，而是从 V8 重新定义低纹理场景下的失败模式和最小实验。
-
-详细说明见：
+当前默认方法是面向 short shot 和稀疏 camera cuts 的流式重对齐：
 
 ```text
-docs/movie3r/current_research_context.md
-docs/movie3r/v8/START_HERE.md
-docs/movie3r/v8/README.md
+pre-decode Human3R hard reset
+-> Fixed Explicit
+-> V16 bounded torso-motion rotation
+-> V11.4 fused DA3/Keypoint shared shot scale
+-> one explicit translation
+-> one fixed shot-level Boundary
 ```
 
-V2-V7 历史文档已归档到：
+Conditional VGGT 和 V14.2 continuity 默认关闭。该版本改善 short-horizon
+camera-human placement，但存在 scene trade-off，且不适用于无限长度多 cut mapping。
+
+最新版本、结果、入口和冻结范围见：
 
 ```text
+LATEST_MODEL.md
+docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md
+docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md
+```
+
+V2-V8 及其他失败/诊断实验仍保留在历史目录，不作为当前默认方法：
+
+```text
+archive/20260721/
 docs/movie3r/archive_v2_v6/
 docs/movie3r/archive_v7/
+docs/movie3r/archive_v8/
 ```
 
 ## 快速开始

@@ -7,13 +7,27 @@ from torch import nn
 import sys
 import os
 
+
+def _hub_dir():
+    explicit = os.environ.get('TORCH_HUB_DIR')
+    if explicit:
+        return explicit
+    torch_home = os.environ.get('TORCH_HOME')
+    if torch_home:
+        return os.path.join(os.path.expanduser(torch_home), 'hub')
+    data_home = os.path.join('/data', os.environ.get('USER', ''), '.cache', 'torch', 'hub')
+    if os.path.isdir(data_home):
+        return data_home
+    return torch.hub.get_dir()
+
+
 class Dinov2Backbone(nn.Module):
     def __init__(self, name='dinov2_vitb14', pretrained=False, *args, **kwargs):
         super().__init__()
         self.name = name
         # Try direct import from cached hub to avoid GitHub network issues
         try:
-            hub_dir = os.environ.get('TORCH_HUB_DIR', os.path.join(os.path.expanduser('~'), '.cache', 'torch', 'hub'))
+            hub_dir = _hub_dir()
             dinov2_path = os.path.join(hub_dir, 'facebookresearch_dinov2_main')
             if os.path.exists(dinov2_path):
                 sys.path.insert(0, dinov2_path)
@@ -45,4 +59,3 @@ class Dinov2Backbone(nn.Module):
         assert len(x.shape) == 4
         y = self.encoder.get_intermediate_layers(x)[0] # ViT-L+896x896: [bs,4096,1024] - [bs,nb_patches,emb]
         return y
-

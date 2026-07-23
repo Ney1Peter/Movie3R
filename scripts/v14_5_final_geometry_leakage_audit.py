@@ -61,7 +61,7 @@ WEIGHTS = {
     ),
     "vggt_1b": Path("/data/wangzheng/Movie3R/vggt/vggt_weights/model.pt"),
     "keypoint_rcnn": Path(
-        "/home/wangzheng/.cache/torch/hub/checkpoints/"
+        "/data/wangzheng/.cache/torch/hub/checkpoints/"
         "keypointrcnn_resnet50_fpn_coco-fc266e95.pth"
     ),
 }

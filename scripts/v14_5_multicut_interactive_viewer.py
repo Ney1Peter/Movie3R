@@ -52,7 +52,7 @@ METHODS = (
 METHOD_LABELS = (
     "Hard Reset + Fixed",
     "V11.1 Raw Scale",
-    "V11.4 Uniform Similarity",
+    "V11.4 Uniform Similarity (historical VGGT cache)",
     "Unified DA3",
 )
 METHOD_COLORS = (

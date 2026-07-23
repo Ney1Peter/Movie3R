@@ -24,6 +24,10 @@ from torchvision.models.detection import (
 ROOT = Path(__file__).resolve().parents[1]
 FROZEN_V18 = ROOT / "archive/20260721/scripts/v18_cache_2d_keypoints.py"
 
+from torch_cache_support import configure_torch_cache  # noqa: E402
+
+configure_torch_cache()
+
 
 def frozen_select_person():
     spec = importlib.util.spec_from_file_location("v14_5_frozen_v18_keypoints", FROZEN_V18)

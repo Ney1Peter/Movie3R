@@ -17,14 +17,17 @@ camera cut
   -> reset Human3R state before decoding the first post-cut frame
   -> Fixed Explicit coarse Boundary
   -> V16 torso-motion rotation with a fixed 20 deg bound
-  -> Conditional VGGT only for difficult rotation tails
   -> V11.4 one uniform shot scale
   -> solve one translation from the predicted pre-cut human anchor
      and current post-cut human root
   -> apply one fixed shot-level Boundary to the complete new shot
-  -> optional V14.2 continuity after alignment
   -> Align-Then-Commit
 ```
+
+默认关闭的附加模块：
+
+- Conditional VGGT：仅在显式开启时处理困难 rotation tail；
+- V14.2 continuity：仅在需要 shape/scale/local-pose 平滑时于 alignment 后开启。
 
 ## 每个模型何时使用
 
@@ -33,11 +36,16 @@ camera cut
 | Human3R | 每一帧 | 生成 shot-local camera、pointmap 和 SMPL-X；cut 后第一帧 decode 前 hard reset |
 | Fixed Explicit | 每个 cut 一次 | 生成可解释的 coarse Boundary 初始化 |
 | V16 torso motion | 每个 cut 一次 | 用人体 torso temporal motion 修正 rotation，统一限制在 20 deg 内 |
-| VGGT-1B | 只在 frozen trigger 命中的 cut | 处理困难 rotation tail；不逐帧运行，不负责 scale 或 translation |
+| VGGT-1B | **默认关闭**；可选 tail rescue | 显式开启后只处理困难 rotation tail；不负责 scale 或 translation |
 | Keypoint R-CNN | cut-time scale/depth cue | 提供人体 2D keypoints，不直接预测 SE(3) |
 | DA3Metric-Large | 每个 cut 的 pre/post Boundary 图像 | 提供人体/背景 metric cue，估计统一 shot scale |
 | V11.4 uniform similarity | 每个新 shot 一次 | 用同一个 scale 缩放 camera translation、pointmap、human root、body offsets、joints 和 vertices |
-| V14.2 continuity | alignment 完成后，可选 | 只稳定 shape、body scale 和 local pose，不参与 Boundary 求解 |
+| V14.2 continuity | **默认关闭**；alignment 完成后可选 | 只稳定 shape、body scale 和 local pose，不参与 Boundary 求解 |
+
+组件必要性审计见
+`docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md`。其中 DA3 和
+Keypoint R-CNN 的单独分支均未获得显著 camera 增益；当前保留的是二者在 V11.4 中的
+联合有界尺度规则，不把它们分别视为两个独立贡献。
 
 ## 统一几何规则
 
@@ -87,33 +95,36 @@ translation t
 
 ## 目前效果
 
-### 180-cut 统一协议
+### 180-cut 统一协议，无 VGGT 默认路径
 
-| 指标 | Fixed | V11.4 + Conditional VGGT |
+| 指标 | Fixed | V11.4（VGGT off） |
 |---|---:|---:|
-| camera translation | `0.712 m` | `0.403 m` |
-| camera rotation | `24.20 deg` | `12.09 deg` |
+| camera translation | `0.712 m` | `0.463 m` |
+| camera rotation | `24.20 deg` | `16.04 deg` |
 | human root | `0.234 m` | `0.163 m` |
-| human joints | `0.290 m` | `0.216 m` |
-| human vertices | `0.285 m` | `0.210 m` |
-| scene discontinuity | `0.483 m` | `0.532 m` |
-| camera success | `41.1%` | `70.0%` |
+| human joints | `0.290 m` | `0.225 m` |
+| human vertices | `0.285 m` | `0.218 m` |
+| scene discontinuity | `0.483 m` | `0.536 m` |
+| camera success | `41.1%` | `60.6%` |
 
-### Untouched 60-cut holdout
+显式开启 Conditional VGGT 后，180-cut camera translation/rotation 可进一步到
+`0.403 m / 12.09 deg`，但它不再属于默认路径。
 
-| 指标 | Fixed | V11.4 + Conditional VGGT |
+### Untouched 60-cut holdout，无 VGGT 默认路径
+
+| 指标 | Fixed | V11.4（VGGT off） |
 |---|---:|---:|
-| camera translation | `0.663 m` | `0.450 m` |
-| camera rotation | `23.05 deg` | `14.08 deg` |
+| camera translation | `0.663 m` | `0.508 m` |
+| camera rotation | `23.05 deg` | `17.62 deg` |
 | human root | `0.234 m` | `0.195 m` |
-| human joints | `0.291 m` | `0.241 m` |
-| human vertices | `0.285 m` | `0.236 m` |
-| scene discontinuity | `0.475 m` | `0.546 m` |
-| camera success | `41.7%` | `66.7%` |
+| human joints | `0.291 m` | `0.245 m` |
+| human vertices | `0.285 m` | `0.240 m` |
+| scene discontinuity | `0.475 m` | `0.547 m` |
+| camera success | `41.7%` | `60.0%` |
 
 结论是稳定的：
 
-- camera 和 human 在独立 holdout 上复现改善；
+- 默认无 VGGT 路径的 camera 和 human 在独立 holdout 上复现改善；
 - scene 存在约 5-7 cm 的显著 trade-off；
 - V11.4 scale 是 camera-oriented，不是 scene-optimal scale。
 

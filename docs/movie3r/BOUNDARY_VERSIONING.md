@@ -34,5 +34,6 @@ V15-V45 的其他失败、Oracle 或诊断实验保持原文件名进入归档�
 ## Current Decision
 
 V14.4 已在统一 180-cut 协议中完成 V11.4 与 V14.3 的正式横向比较。当前部署选择为
-`V11.4 Uniform Similarity + Conditional VGGT`。V14.3/V14.4 保留为 coupled-root 和
+`Fixed Explicit + V16 torso-motion + V11.4 Uniform Similarity`。Conditional VGGT
+默认关闭，仅保留为可选 rotation-tail rescue。V14.3/V14.4 保留为 coupled-root 和
 single-shared-scale 的结构消融，不再继续创建新的高编号版本。
