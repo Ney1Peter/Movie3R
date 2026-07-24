@@ -6,8 +6,8 @@ V13 是独立的多人 shared-Boundary 正式研究目录，不是 V12 的一个
 V20 Phase 1 v2 实验冻结，用于验证：在人物身份已知时，多个人能否共同提供比可部署
 单人选择器更稳定的 camera-cut 几何约束。
 
-当前路线状态已经冻结为：**GT-ID 多人几何可行性通过，值得进入 cross-shot WHO/Re-ID
-阶段；可部署多人身份关联尚未完成。** 里程碑边界见
+当前路线状态已经冻结为：**GT-ID 多人几何可行性通过；Phase 3 原生 cross-shot WHO
+bridge 已完成审计但未通过可部署 gate。** 里程碑边界见
 [`MULTIHUMAN_GEOMETRY_VALIDATED.md`](MULTIHUMAN_GEOMETRY_VALIDATED.md)。
 
 ```text
@@ -68,16 +68,35 @@ layout weighting 和 rotation/translation 分解。开发集选出的 soft rule 
 没有超过 naive mean，因此当前 fusion 仍冻结为 naive mean。`dance` 两人 36-cut pilot
 也得到相同路线决策：多人平均有帮助，手工 soft weighting 尚不稳定。
 
+## Phase 3 身份桥审计
+
+Phase 3 比较了 refined `H'`、CUT3R/Multi-HMR head token、fused prompt、beta、local
+pose、三种 prototype、三种距离以及 Hungarian/Sinkhorn。`three` 开发集选择出的最强规则
+是 last local pose + cosine + Hungarian，但它是短时 motion compatibility，不是稳定 identity。
+
+端到端结果：
+
+| Sequence | Single | GT-ID multi | Automatic-ID multi | ID switch | Catastrophic |
+|---|---:|---:|---:|---:|---:|
+| three | 0.814 | 0.664 | 0.850 | 52 | 3.17% |
+| dance | 0.802 | 0.758 | 0.885 | 2 | 5.56% |
+| box | 0.720 | 0.614 | 0.612 | 0 | 0.0% |
+
+`box` 证明 WHO 完全正确时自动路径可以兑现 GT-ID 收益；`three/dance` 证明少量错误 ID
+会被 one shared Boundary 放大为灾难误差。保守 geometry verification 也没有修复该尾部。
+因此 V13 默认仍保持 `token_reid=false`，不能称为可部署多人版本。详细报告见
+[`docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`](docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md)。
+
 ## 路线决策与下一阶段
 
 当前版本正式记录为“多人 geometry validated”，原因是 `three` 和 `dance` 都表明：在
 严格身份正确时，多人 shared-Boundary 优于可部署单人 anchor，且人数增加呈单调改善。
 这满足继续研究多人路线的前置条件。
 
-下一阶段只解决 WHO：Human3R native token 的跨 shot Re-ID、dustbin、新人/消失人物、
-tracklet TTL 和 geometry verification。Token 只参与 identity association，不能直接回归
-Boundary；通过 tentative match 后，仍由多人显式几何求唯一 shared Boundary，并执行
-Match-Then-Align / Align-Then-Commit。
+当前 native token/local-pose WHO 路线不进入默认系统。若继续研究，只允许增加单独的轻量
+shot-invariant ID adapter 或冻结 appearance cue；它仍只参与 identity association，不能
+直接回归 Boundary。Uniform Multi-Human Consensus、Match-Then-Align 和
+Align-Then-Commit 保持冻结。
 
 ## 当前启用与关闭
 
@@ -129,20 +148,23 @@ PYTHONPATH=src:. .venv/bin/python versions/v13/viewer.py \
   --port 8080
 ```
 
-Native Human3R token 和 EgoBody 数据探针分别位于：
+Phase 3 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于：
 
+- `versions/v13/identity_bridge.py`
+- `versions/v13/experiments/phase3_cross_shot_identity.py`
+- `versions/v13/experiments/phase3_egohumans_identity.py`
 - `versions/v13/native_token_probe.py`
 - `versions/v13/egobody_probe.py`
 
-它们源自历史 V20 实验，是身份/数据诊断入口，不代表 token Re-ID 已经通过验证。
+身份桥是已审计的负结果入口，不代表 token Re-ID 已通过验证。
 
 ## 不能宣称的内容
 
 - 当前不是可部署多人版本，因为 GT identity/GT mesh projection 进入 WHO association。
 - 当前 robust Huber/layout/reject 比 naive mean 更差，不能作为默认 consensus。
-- 还没有完成 token Re-ID、dustbin、TTL、进入/离开和遮挡恢复。
-- 当前只有 MultiHuman `three` 主调试序列和 `dance` 小规模跨序列 pilot，不是最终跨数据
-  benchmark。
+- 已实现 token probe、dustbin、TTL 和人数下降路径，但 automatic-ID gate 失败，不能启用。
+- `dance/box` 是冻结的独立 sequence 验证，EgoHumans 是跨数据 stress test；它们仍不是完整
+  多数据 benchmark。
 - V13 不能替代 V12 当前单人默认路径；单人输入应自动退化为 V12/Lite 逻辑，
   这一完整集成尚未冻结。
 
@@ -154,3 +176,4 @@ Native Human3R token 和 EgoBody 数据探针分别位于：
 - `versions/v13/docs/V20_EGOBODY_MULTIHUMAN_DATASET_GUIDE.md`
 - `versions/v13/docs/V20_EGOBODY_LEGOASSEMBLE_FEASIBILITY.md`
 - `versions/v13/docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`
+- `versions/v13/docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`，自动 WHO bridge 最终负结果

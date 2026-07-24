@@ -11,3 +11,8 @@ is V13, and it is not yet a deployable cross-shot Re-ID system.
 `V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md` records the fusion-only analysis
 and the `dance` cross-sequence pilot. Its current decision is to retain naive
 mean rather than any tested soft uncertainty rule.
+
+`V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md` records the completed automatic WHO
+audit. The GT-ID geometry milestone remains valid, but the native token/local
+pose bridge fails the gain-retention and catastrophic-swap gates, so automatic
+multi-human alignment remains disabled by default.
