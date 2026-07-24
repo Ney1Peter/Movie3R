@@ -2,9 +2,10 @@
   "schema_version": 1,
   "release": "Movie3R-Multi V13.0",
   "legacy_version": "V20 Phase 1 v2",
-  "status": "independent-research-release-gt-id-oracle",
+  "status": "gt-id-multi-human-geometry-validated",
   "source_commit": "e45e2af",
   "git_tag": "movie3r-v13-multi",
+  "milestone_git_tag": "movie3r-v13-multihuman-geometry-validated",
   "base_checkpoint": {
     "path": "src/human3r_896L.pth",
     "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"
@@ -35,6 +36,18 @@
     "dance_pilot": 36
   },
   "phase2_fusion": "retain naive mean; tested soft uncertainty rules did not improve held-out mean and P90 together",
+  "research_decision": {
+    "multi_human_geometry": "validated against deployable single-human anchor selection under strict GT-ID",
+    "proceed_to_next_stage": true,
+    "default_fusion": "naive all-valid-human mean",
+    "soft_uncertainty_fusion": "not retained"
+  },
+  "next_stage": [
+    "native Human3R token cross-shot identity probing",
+    "dustbin and entering/disappearing human handling",
+    "geometry verification of tentative identity matches",
+    "Match-Then-Align and Align-Then-Commit integration"
+  ],
   "deployable": false,
   "reason_not_deployable": "GT identity and GT mesh projection are used for cross-shot WHO association"
 }

@@ -8,14 +8,15 @@
 |---|---|---|---|---|
 | [Movie3R-Learned V9.0](v9/README.md) | V9 | 冻结训练版 | 学习式 AABB correction 与 LoRA 权重复现 | `movie3r-v9-trained` |
 | [Movie3R-Single V12.0](v12/README.md) | V10.1、V11.4、V14.x | 当前单人主版 | short-shot camera-human 显式流式重对齐 | `movie3r-v12-single` |
-| [Movie3R-Multi V13.0](v13/README.md) | V20 Phase 1 v2 | GT-ID 研究版 | 多人 shared-Boundary 几何可行性 | `movie3r-v13-multi` |
+| [Movie3R-Multi V13.0](v13/README.md) | V20 Phase 1/2 | 多人几何已验证（GT-ID） | shared-Boundary 有效，进入 WHO/Re-ID 阶段 | `movie3r-v13-multihuman-geometry-validated` |
 
 ## 选择规则
 
 - 需要复现此前训练得到的神经网络 correction：使用 V9.0。
 - 需要当前效果最好、可严格流式运行的单人 camera-cut 对齐：使用 V12.0。
 - 需要研究多人能否提供冗余 Boundary 约束：使用 V13.0。
-- V13.0 当前身份关联使用 GT-ID Oracle，只能用于研究与调试；可部署多人 Re-ID 尚未完成。
+- V13.0 已验证 GT-ID 下多人几何优于可部署单人 anchor，值得进入下一阶段；当前身份关联
+  仍使用 GT-ID Oracle，只能用于研究与调试，可部署多人 Re-ID 尚未完成。
 - V12.0 适合 short shot 和稀疏 cut，不是无限长度 world mapping。
 
 目录结构固定为：
