@@ -22,9 +22,8 @@ for path in (ROOT, ROOT / "src", ROOT / "scripts"):
         sys.path.insert(0, str(path))
 
 from dust3r.utils.smpl_layer import SMPL_Layer  # noqa: E402
+from versions.v13 import gt_id_consensus as gt_consensus  # noqa: E402
 from versions.v13.gt_id_consensus import (  # noqa: E402
-    IDENTITIES,
-    VIDEO_NAMES,
     evaluate_case,
     full_intrinsics,
     gt_w2c,
@@ -58,6 +57,10 @@ def parse_args() -> argparse.Namespace:
         default=ROOT / "output/v13/multihuman",
     )
     parser.add_argument(
+        "--sequence", choices=tuple(gt_consensus.SEQUENCE_IDENTITIES), default="three"
+    )
+    parser.add_argument("--report_path", type=Path)
+    parser.add_argument(
         "--data_root",
         type=Path,
         default=Path(
@@ -75,11 +78,7 @@ def frame_image(args: argparse.Namespace, camera: int, frame: int) -> np.ndarray
     if cached.is_file():
         image = cv2.imread(str(cached), cv2.IMREAD_COLOR)
     else:
-        video = (
-            args.data_root
-            / "three_original_video/three_new"
-            / VIDEO_NAMES[camera]
-        )
+        video = gt_consensus.video_path(args, camera)
         capture = cv2.VideoCapture(str(video))
         capture.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
         ok, image = capture.read()
@@ -203,9 +202,16 @@ def save_identity_audit(
 
 
 def load_payload(args: argparse.Namespace) -> tuple[dict, dict]:
-    report_path = args.result_dir / "v13_gtid_offsets_0_1_2_4_8.json"
-    if not report_path.is_file():
-        report_path = args.result_dir / "v20_phase1_gtid_v2_offsets_0_1_2_4_8.json"
+    report_path = args.report_path
+    if report_path is None:
+        candidates = sorted(args.result_dir.glob("v13_gtid_offsets_*.json"))
+        if not candidates:
+            candidates = sorted(
+                args.result_dir.glob("v20_phase1_gtid_v2_offsets_*.json")
+            )
+        if not candidates:
+            raise FileNotFoundError(f"No V13 result JSON in {args.result_dir}")
+        report_path = max(candidates, key=lambda path: path.stat().st_size)
     report = json.loads(report_path.read_text(encoding="utf-8"))
     case = next(
         row for row in report["cases"] if row["case"]["key"] == args.case
@@ -229,7 +235,7 @@ def left_order_corrected_cache(cache: dict) -> dict:
         key=lambda row: 0.5 * (row["bbox"][0] + row["bbox"][2]),
     )
     gt_order = sorted(
-        IDENTITIES,
+        gt_consensus.IDENTITIES,
         key=lambda identity: 0.5
         * (
             assignment["gt_bboxes"][identity][0]
@@ -262,9 +268,10 @@ def identity_order_markdown(cache: dict) -> str:
 
 def main() -> None:
     args = parse_args()
+    gt_consensus.IDENTITIES = gt_consensus.SEQUENCE_IDENTITIES[str(args.sequence)]
     case, cache = load_payload(args)
     cache = reassign_cache_gt_identities(
-        SimpleNamespace(data_root=args.data_root, size=512), cache
+        SimpleNamespace(data_root=args.data_root, size=512, sequence=args.sequence), cache
     )
     method_key = METHOD_KEYS[args.method]
     method = evaluate_case(cache)["methods"][method_key]
@@ -282,7 +289,7 @@ def main() -> None:
     cameras = [int(spec["source_camera"])] * len(spec["pre_frames"]) + [
         int(spec["target_camera"])
     ]
-    geometry_args = SimpleNamespace(data_root=args.data_root)
+    geometry_args = SimpleNamespace(data_root=args.data_root, sequence=args.sequence)
     images = [
         frame_image(args, camera, frame)
         for camera, frame in zip(cameras, frames)
@@ -331,7 +338,7 @@ def main() -> None:
             int(human["detection_index"]): rank
             for rank, (_, human) in enumerate(ordered)
         }
-        for identity_index, identity in enumerate(IDENTITIES):
+        for identity_index, identity in enumerate(gt_consensus.IDENTITIES):
             if identity not in humans:
                 continue
             human = humans[identity]
@@ -368,7 +375,7 @@ def main() -> None:
         gt_poses.append(gauge @ np.linalg.inv(gt_w2c(geometry_args, camera, frame)))
         frame_gt = []
         frame_gt_labels = []
-        for identity in IDENTITIES:
+        for identity in gt_consensus.IDENTITIES:
             value = transform_points(
                 gauge, load_obj_vertices(mesh_path(geometry_args, identity, frame))
             )

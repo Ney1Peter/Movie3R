@@ -59,6 +59,11 @@ All humans share ONE Boundary.
 因此原预注册的严格 gate 仍是 FAIL；但它显著优于所有已测试的可部署单人选择策略，
 证明多人冗余几何本身有价值。
 
+Phase 2 进一步比较了 soft confidence、motion uncertainty、candidate dispersion、
+layout weighting 和 rotation/translation 分解。开发集选出的 soft rule 在 held-out 上
+没有超过 naive mean，因此当前 fusion 仍冻结为 naive mean。`dance` 两人 36-cut pilot
+也得到相同路线决策：多人平均有帮助，手工 soft weighting 尚不稳定。
+
 ## 当前启用与关闭
 
 启用：frozen Human3R、pre-decode hard reset、Fixed Explicit、V16 20 度约束、显式
@@ -76,6 +81,16 @@ PYTHONPATH=src:. .venv/bin/python versions/v13/gt_id_consensus.py \
   --data_root /data/wangzheng/iJCV-CODE/data/MultiHuman/Real-World-Capture/extracted \
   --device cuda:0 \
   --output_dir output/v13/multihuman
+```
+
+可用 `--sequence three|dance|box` 选择 Real-World-Capture 序列。`dance/box` 自动使用
+两个人；`three` 使用三个人。
+
+Phase 2 fusion-only 复评：
+
+```bash
+PYTHONPATH=src:. .venv/bin/python \
+  versions/v13/experiments/fusion_optimization.py
 ```
 
 仅使用已有 cache 重评 V2 identity：
@@ -121,3 +136,4 @@ Native Human3R token 和 EgoBody 数据探针分别位于：
 - `versions/v13/docs/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS.md`，旧错误 ID 报告，仅作审计
 - `versions/v13/docs/V20_EGOBODY_MULTIHUMAN_DATASET_GUIDE.md`
 - `versions/v13/docs/V20_EGOBODY_LEGOASSEMBLE_FEASIBILITY.md`
+- `versions/v13/docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`

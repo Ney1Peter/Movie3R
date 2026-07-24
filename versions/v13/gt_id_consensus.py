@@ -46,6 +46,16 @@ from versions.v13.native_token_probe import jsonable, tensor_numpy  # noqa: E402
 
 
 IDENTITIES = ("person0", "person1", "person2")
+SEQUENCE_IDENTITIES = {
+    "three": ("person0", "person1", "person2"),
+    "dance": ("person0", "person1"),
+    "box": ("person0", "person1"),
+}
+SEQUENCE_FRAME_RANGES = {
+    "three": (379, 1555),
+    "dance": (109, 753),
+    "box": (434, 699),
+}
 VIDEO_NAMES = (
     "SaveToAvi-MJPG-18181923-0000.mp4",
     "SaveToAvi-MJPG-18181924-0000.mp4",
@@ -62,11 +72,12 @@ class CaseSpec:
     source_camera: int
     target_camera: int
     offset: int
+    sequence: str = "three"
 
     @property
     def key(self) -> str:
         return (
-            f"three_t{self.timestamp:04d}_c{self.source_camera}"
+            f"{self.sequence}_t{self.timestamp:04d}_c{self.source_camera}"
             f"_c{self.target_camera}_k{self.offset}"
         )
 
@@ -80,6 +91,7 @@ def parse_args() -> argparse.Namespace:
             "/data/wangzheng/iJCV-CODE/data/MultiHuman/Real-World-Capture/extracted"
         ),
     )
+    parser.add_argument("--sequence", choices=tuple(SEQUENCE_IDENTITIES), default="three")
     parser.add_argument("--model_path", type=Path, default=ROOT / "src/human3r_896L.pth")
     parser.add_argument(
         "--output_dir",
@@ -118,16 +130,17 @@ def parse_camera_pairs(values: list[str]) -> tuple[tuple[int, int], ...]:
 def case_specs(args: argparse.Namespace) -> list[CaseSpec]:
     pairs = parse_camera_pairs(list(args.camera_pairs))
     specs = [
-        CaseSpec(int(timestamp), source, target, int(offset))
+        CaseSpec(int(timestamp), source, target, int(offset), str(args.sequence))
         for offset in args.offsets
         for timestamp in args.timestamps
         for source, target in pairs
     ]
+    first_frame, last_frame = SEQUENCE_FRAME_RANGES[str(args.sequence)]
     specs = [
         spec
         for spec in specs
-        if spec.timestamp - int(args.history_frames) + 1 >= 379
-        and spec.timestamp + spec.offset <= 1555
+        if spec.timestamp - int(args.history_frames) + 1 >= first_frame
+        and spec.timestamp + spec.offset <= last_frame
     ]
     return specs[: int(args.max_cases)] if int(args.max_cases) > 0 else specs
 
@@ -218,7 +231,9 @@ def load_obj_vertices(path: Path) -> np.ndarray:
 
 
 def video_path(args: argparse.Namespace, camera: int) -> Path:
-    return args.data_root / "three_original_video/three_new" / VIDEO_NAMES[camera]
+    sequence = str(args.sequence)
+    video_dir = "three_new" if sequence == "three" else sequence
+    return args.data_root / f"{sequence}_original_video" / video_dir / VIDEO_NAMES[camera]
 
 
 def frame_cache_path(args: argparse.Namespace, camera: int, frame: int) -> Path:
@@ -244,11 +259,13 @@ def extract_video_frame(args: argparse.Namespace, camera: int, frame: int) -> Pa
 
 
 def parameter_root(args: argparse.Namespace, identity: str, frame: int) -> Path:
-    return args.data_root / "three/three" / identity / "parameter" / str(frame)
+    sequence = str(args.sequence)
+    return args.data_root / sequence / sequence / identity / "parameter" / str(frame)
 
 
 def mesh_path(args: argparse.Namespace, identity: str, frame: int) -> Path:
-    return args.data_root / "three/three" / identity / "smplx" / str(frame) / "smplx.obj"
+    sequence = str(args.sequence)
+    return args.data_root / sequence / sequence / identity / "smplx" / str(frame) / "smplx.obj"
 
 
 def gt_w2c(args: argparse.Namespace, camera: int, frame: int) -> np.ndarray:
@@ -259,8 +276,9 @@ def gt_w2c(args: argparse.Namespace, camera: int, frame: int) -> np.ndarray:
 
 
 def full_intrinsics(args: argparse.Namespace, camera: int) -> np.ndarray:
+    sequence = str(args.sequence)
     payload = json.loads(
-        (args.data_root / "three_original_video/calibration_new.json").read_text(
+        (args.data_root / f"{sequence}_original_video/calibration_new.json").read_text(
             encoding="utf-8"
         )
     )
@@ -1386,7 +1404,8 @@ def aggregate(cases: list[dict]) -> dict:
     for offset in sorted({int(case["case"]["offset"]) for case in cases}):
         subset = [case for case in cases if int(case["case"]["offset"]) == offset]
         by_offset[str(offset)] = {name: method_summary(subset, name) for name in method_names}
-    subset_rows = {1: [], 2: [], 3: []}
+    max_humans = len(IDENTITIES)
+    subset_rows = {size: [] for size in range(1, max_humans + 1)}
     for case in cases:
         for name, row in case["methods"].items():
             if name.startswith("subset_huber_n"):
@@ -1402,16 +1421,18 @@ def aggregate(cases: list[dict]) -> dict:
         }
         for size, rows in subset_rows.items()
     }
-    common_three_cases = [case for case in cases if case["candidate_count"] == 3]
-    common_three_rows = {1: [], 2: [], 3: []}
-    for case in common_three_cases:
+    common_support_cases = [
+        case for case in cases if case["candidate_count"] == max_humans
+    ]
+    common_support_rows = {size: [] for size in range(1, max_humans + 1)}
+    for case in common_support_cases:
         for name, row in case["methods"].items():
             if name.startswith("subset_huber_n"):
                 size = int(name.split("_n", 1)[1].split("_", 1)[0])
-                common_three_rows[size].append(row)
+                common_support_rows[size].append(row)
     number_ablation_common_support = {
         str(size): {
-            "case_count": len(common_three_cases),
+            "case_count": len(common_support_cases),
             "subset_evaluations": len(rows),
             "camera_translation_error_m": finite_distribution(
                 [row["camera_translation_error_m"] for row in rows]
@@ -1426,13 +1447,19 @@ def aggregate(cases: list[dict]) -> dict:
             if rows
             else float("nan"),
         }
-        for size, rows in common_three_rows.items()
+        for size, rows in common_support_rows.items()
     }
     leave_one_out = {}
-    for removed in range(3):
-        kept = "-".join(str(index) for index in range(3) if index != removed)
-        name = f"subset_huber_n2_{kept}"
-        rows = [case["methods"][name] for case in common_three_cases]
+    for removed in range(max_humans):
+        kept = "-".join(
+            str(index) for index in range(max_humans) if index != removed
+        )
+        name = f"subset_huber_n{max_humans - 1}_{kept}"
+        rows = [
+            case["methods"][name]
+            for case in common_support_cases
+            if name in case["methods"]
+        ]
         leave_one_out[f"minus_person{removed}"] = {
             "valid_cases": len(rows),
             "camera_translation_error_m": finite_distribution(
@@ -1613,8 +1640,8 @@ def aggregate(cases: list[dict]) -> dict:
         "methods": summaries,
         "by_offset": by_offset,
         "number_ablation": number_ablation,
-        "number_ablation_common_three_person_support": number_ablation_common_support,
-        "leave_one_out_common_three_person_support": leave_one_out,
+        "number_ablation_common_support": number_ablation_common_support,
+        "leave_one_out_common_support": leave_one_out,
         "layout_diagnostics": layout_diagnostics,
         "selector_diagnostics": selector_diagnostics,
         "assignment_diagnostics": assignment_diagnostics,
@@ -1653,11 +1680,13 @@ def markdown_report(report: dict) -> str:
         "layout_select_one_reject",
     )
     lines = [
-        "# V20 Phase 1 GT-ID Multi-Human Consensus Alignment v2",
+        "# V13 Phase 1 GT-ID Multi-Human Consensus Alignment",
+        "",
+        "Historical experiment name: V20 Phase 1 v2.",
         "",
         "## 实验协议",
         "",
-        f"- 数据：MultiHuman Real-World-Capture `three`，{aggregate_report['case_count']} 个 cuts。",
+        f"- 数据：MultiHuman Real-World-Capture `{report['sequence']}`，{aggregate_report['case_count']} 个 cuts。",
         "- 输入：完整 2048x2048 画面仅缩放到 512x512，不裁剪。",
         "- 开启：Human3R fresh hard reset、Fixed Explicit coarse、V16 torso 20 deg、显式 root translation。",
         "- 关闭：DA3、Keypoint R-CNN、V11.4 scale、VGGT、额外 scene refinement、continuity memory。",
@@ -1696,9 +1725,7 @@ def markdown_report(report: dict) -> str:
             "|---:|---:|---:|---:|---:|---:|",
         ]
     )
-    for size, row in aggregate_report[
-        "number_ablation_common_three_person_support"
-    ].items():
+    for size, row in aggregate_report["number_ablation_common_support"].items():
         lines.append(
             f"| {size} | {row['subset_evaluations']} | "
             f"{fmt(row['camera_translation_error_m']['mean'])}/{fmt(row['camera_translation_error_m']['p90'])} | "
@@ -1709,7 +1736,7 @@ def markdown_report(report: dict) -> str:
     lines.extend(
         [
             "",
-            f"以上三行严格使用同一批 {len([case for case in report['cases'] if case['candidate_count'] == 3])} 个三人均可用 cuts；Evaluations 包含该人数的全部组合。",
+            f"以上各行严格使用同一批 {len([case for case in report['cases'] if case['candidate_count'] == len(IDENTITIES)])} 个全部人物均可用 cuts；Evaluations 包含该人数的全部组合。",
             "",
             "## Selector 命中 Oracle Best Single",
             "",
@@ -1754,7 +1781,9 @@ def markdown_report(report: dict) -> str:
 
 
 def main() -> None:
+    global IDENTITIES
     args = parse_args()
+    IDENTITIES = SEQUENCE_IDENTITIES[str(args.sequence)]
     torch.manual_seed(int(args.seed))
     np.random.seed(int(args.seed))
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -1799,6 +1828,7 @@ def main() -> None:
         "experiment": "Movie3R-Multi V13 GT-ID Consensus",
         "legacy_experiment": "V20 Phase 1 GT-ID Multi-Human Consensus Alignment v2",
         "scope": "Lite geometry feasibility; no Re-ID and no external depth/rotation/scale model",
+        "sequence": str(args.sequence),
         "candidate_gt_usage": {
             "gt_identity_for_oracle_association": True,
             "gt_smplx_projection_for_oracle_association": True,

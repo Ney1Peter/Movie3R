@@ -7,3 +7,7 @@ identity-association error.
 
 The V20 filenames are legacy experiment identifiers. The formal release name
 is V13, and it is not yet a deployable cross-shot Re-ID system.
+
+`V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md` records the fusion-only analysis
+and the `dance` cross-sequence pilot. Its current decision is to retain naive
+mean rather than any tested soft uncertainty rule.

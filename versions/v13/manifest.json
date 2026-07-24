@@ -13,7 +13,8 @@
     "versions/v13/gt_id_consensus.py",
     "versions/v13/viewer.py",
     "versions/v13/native_token_probe.py",
-    "versions/v13/egobody_probe.py"
+    "versions/v13/egobody_probe.py",
+    "versions/v13/experiments/fusion_optimization.py"
   ],
   "default_modules": {
     "hard_reset": true,
@@ -28,8 +29,12 @@
   },
   "identity_association": "strict GT SMPL-X projection Oracle",
   "consensus": "SO(3) mean rotation plus arithmetic mean of per-human translations",
-  "dataset": "MultiHuman Real-World-Capture three",
-  "evaluated_cuts": 315,
+  "dataset": "MultiHuman Real-World-Capture three; dance pilot",
+  "evaluated_cuts": {
+    "three": 315,
+    "dance_pilot": 36
+  },
+  "phase2_fusion": "retain naive mean; tested soft uncertainty rules did not improve held-out mean and P90 together",
   "deployable": false,
   "reason_not_deployable": "GT identity and GT mesh projection are used for cross-shot WHO association"
 }
