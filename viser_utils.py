@@ -355,6 +355,7 @@ class SceneHumanViewer:
         downsample_factor=10,
         smpl_downsample_factor=1,
         camera_downsample_factor=1,
+        initial_timestep=0,
     ):
         self.size=size
         self.server = viser.ViserServer(port=port)
@@ -378,6 +379,9 @@ class SceneHumanViewer:
         self.gt_cam_dict = gt_cam_dict
         self.gt_smpl_verts = gt_smpl_verts
         self.num_frames = len(self.all_steps)
+        self.initial_timestep = int(
+            np.clip(initial_timestep, 0, max(self.num_frames - 1, 0))
+        )
         self.image_mask = image_mask
         self.show_camera = show_camera
         self.show_gt_camera = show_gt_camera and gt_cam_dict is not None
@@ -1290,7 +1294,7 @@ class SceneHumanViewer:
                 min=0,
                 max=self.num_frames - 1,
                 step=1,
-                initial_value=0,
+                initial_value=self.initial_timestep,
                 disabled=False,
             )
             gui_next_frame = self.server.add_gui_button("Next Step", disabled=False)
