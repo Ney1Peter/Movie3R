@@ -135,7 +135,19 @@ docs/movie3r/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md
 V14.7 的 Git 冻结 tag 为：
 
 ```text
-v14.7-shot-aware-similarity
+movie3r-single-v14.7
 ```
 
-V14.6 tag 保留为命名前的审计快照，不删除。
+`v14.7-shot-aware-similarity` 和 V14.6 tag 保留为命名/审计快照，不删除。正式独立
+单人版本说明与机器可读 manifest 位于：
+
+```text
+versions/v14.7-single/
+```
+
+任意图像序列的实际多 cut 入口为：
+
+```text
+scripts/v14_7_custom_multicut_demo.py
+scripts/v14_7_custom_multicut_viewer.py
+```

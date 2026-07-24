@@ -4,15 +4,18 @@
 >
 > Method version: `V14.7 Shot-Aware Uniform Similarity Re-anchoring`
 >
-> Release tag: `v14.7-shot-aware-similarity`
+> Release tag: `movie3r-single-v14.7`
 >
 > Scope: short-shot, sparse-camera-cut streaming re-anchoring
 
-This file is the canonical entry point for the latest retained Movie3R method.
-Historical experiment numbers remain in the repository for auditability, but
-they do not define the default runtime path.
+This file is the canonical entry point for the current default single-human
+method. It is not the catalog for every retained version. The trained V9 model,
+this single-human release and the V20 multi-human research release are indexed
+separately in `versions/README.md`.
 
 ## Current Default
+
+Formal release identity: **Movie3R-Single V14.7**.
 
 ```text
 streaming RGB + intrinsics + cut trigger
@@ -91,6 +94,8 @@ detection is not yet a validated part of this frozen release.
 
 | Purpose | Path |
 |---|---|
+| All formal releases | `versions/README.md` |
+| Single release manifest | `versions/v14.7-single/manifest.json` |
 | Full architecture and all ablations | `docs/movie3r/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md` |
 | Standalone current method | `docs/movie3r/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md` |
 | Short-shot freeze record | `docs/movie3r/V11_4_SHORT_SHOT_METHOD_FREEZE.md` |
@@ -99,6 +104,8 @@ detection is not yet a validated part of this frozen release.
 | Unified evaluator and scale ablations | `scripts/v14_4_unified_similarity_reanchoring_probe.py` |
 | True recurrent 1/2/4/8-cut audit | `scripts/v14_5_true_recurrent_multicut_audit.py` |
 | Recurrent 3D viewer | `scripts/v14_5_multicut_interactive_viewer.py` |
+| Arbitrary image multi-cut demo | `scripts/v14_7_custom_multicut_demo.py` |
+| Arbitrary image multi-cut viewer | `scripts/v14_7_custom_multicut_viewer.py` |
 
 The viewer currently reads a historical Conditional-VGGT recurrent cache and
 labels it as such. It must not be presented as the new no-VGGT default result.

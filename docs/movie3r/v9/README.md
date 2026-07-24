@@ -1,6 +1,12 @@
-# Movie3R V9
+# Movie3R-Learned V9.0 Historical Documentation
 
-V9 是当前主线，从已经验证的 V8.9 implicit human-pose correction branch 开始。
+V9 是已经完成训练并冻结保留的学习式版本，不是当前 V14.7 显式几何默认主线。
+正式版本、权重 SHA-256、训练 commit 和复现命令见：
+
+```text
+versions/v9-learned/README.md
+versions/v9-learned/manifest.json
+```
 
 新对话或新实验请先读：
 
@@ -13,18 +19,21 @@ V9 是当前主线，从已经验证的 V8.9 implicit human-pose correction bran
 | [GUARDRAILS.md](GUARDRAILS.md) | 易错细节和固定规则：坐标系、dataloader、可视化、训练、commit |
 | [FORMAL_60H_TRAINING_PLAN.md](FORMAL_60H_TRAINING_PLAN.md) | 下一轮正式 60h 混合训练方案：数据、配置、指标、checkpoint、训练前检查 |
 
-Current base commit:
+Exact training-code commit:
 
 ```text
-a79eb18 feat: add v8.9 implicit human-pose correction
+6eb64cb feat: prepare v9 mixed formal training
 ```
 
-Current preserved checkpoint:
+Preserved checkpoints:
 
 ```text
-output/v9_saved_weights/v9_implicit_avatarrex_single_checkpoint-best.pth
-output/v9_saved_weights/v9_implicit_avatarrex_single_checkpoint-final.pth
+checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-best.pth
+checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-last.pth
+checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-final.pth
 ```
+
+Frozen Git tag: `movie3r-v9-trained`.
 
 Starting point:
 

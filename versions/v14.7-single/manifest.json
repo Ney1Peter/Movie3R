@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "release": "Movie3R-Single V14.7",
+  "legacy_components": ["V10.1 Fixed Explicit", "V16 torso", "V11.4 shared scale", "V14.x audit"],
+  "status": "active-single-human-short-shot",
+  "source_commit": "af92478",
+  "git_tag": "movie3r-single-v14.7",
+  "base_checkpoint": {
+    "path": "src/human3r_896L.pth",
+    "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"
+  },
+  "entrypoints": [
+    "scripts/v14_7_custom_multicut_demo.py",
+    "scripts/v14_7_custom_multicut_viewer.py",
+    "scripts/v14_4_unified_similarity_reanchoring_probe.py",
+    "scripts/v14_5_true_recurrent_multicut_audit.py"
+  ],
+  "default_modules": {
+    "hard_reset": true,
+    "fixed_explicit": true,
+    "v16_torso_rotation": true,
+    "v11_4_shared_scale": true,
+    "conditional_vggt": false,
+    "v14_2_continuity": false
+  },
+  "external_models": ["DA3Metric-Large", "torchvision Keypoint R-CNN"],
+  "uses_gt_at_inference": false,
+  "cut_trigger_is_external": true,
+  "scope": "single-human, short-shot, sparse-camera-cut streaming re-anchoring"
+}

@@ -1,5 +1,11 @@
 # V20 Phase 1 v2: Strict GT-ID Multi-Human Consensus Re-evaluation
 
+> Formal release track: **Movie3R-Multi V20.0**.
+>
+> Canonical release entry: `versions/v20-multi/README.md`.
+>
+> This remains a GT-ID Oracle research release, not a deployable Re-ID system.
+
 | 项目 | 当前定义 |
 |---|---|
 | 版本名称 | V20 Phase 1 v2 Strict GT-ID Multi-Human Geometry |

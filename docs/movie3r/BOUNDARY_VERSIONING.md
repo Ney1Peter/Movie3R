@@ -10,11 +10,25 @@
 - `V13.x`：真实视频和流式系统验证。
 - `V14.x`：camera cut 下的 state transition、跨 shot 人体记忆、coupled root 和统一
   similarity 验证。
+- `V20.x`：多人 identity association、GT-ID 几何共识和 shared-Boundary 扩展。
 
 同一任务内的小实验使用 `.1/.2/.3`。失败实验留在该主版本的子编号或归档
 目录，不再继续增加 V30、V40、V50。
 
 共享工具使用 `boundary_*.py`，不分配版本号。
+
+## Formal Release Tracks
+
+实验编号和正式发布线是两个层次。当前正式发布线为：
+
+| 发布线 | 对应实验 | 说明 |
+|---|---|---|
+| Movie3R-Learned V9.0 | V9 | 已训练 relation-correction/LoRA 模型 |
+| Movie3R-Single V14.7 | V10.1/V16/V11.4/V14.x | 当前单人 short-shot 默认版 |
+| Movie3R-Multi V20.0 | V20 Phase 1 v2 | GT-ID 多人几何研究版，尚不可部署 |
+
+统一入口为 `versions/README.md`。三条线分别冻结，不能再把 V9 权重、V14.7
+显式几何和 V20 Oracle consensus 混称为一个“当前模型”。
 
 ## Legacy Mapping
 

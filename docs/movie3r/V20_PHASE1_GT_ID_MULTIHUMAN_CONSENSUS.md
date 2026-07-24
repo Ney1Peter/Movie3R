@@ -1,5 +1,10 @@
 # V20 Phase 1: GT-ID Multi-Human Consensus Alignment Feasibility Study
 
+> Historical invalidated report. Do not use its old geometry conclusion.
+> The corrected current result is
+> `docs/movie3r/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS_V2.md`, released as
+> **Movie3R-Multi V20.0** under `versions/v20-multi/`.
+
 ## 0. 2026-07-24 Identity Audit Addendum
 
 **原 `Phase 1 geometry gate: FAIL` 结论已撤回，等待修复 GT-ID assignment 后重跑。**
