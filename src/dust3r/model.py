@@ -4466,6 +4466,11 @@ class ARCroco3DStereo(CroCoNet):
                 dim=-1,
             ).cpu()
 
+        def _debug_person_tokens(x):
+            if x is None:
+                return None
+            return x.detach().float().cpu()
+
         for i, _view in enumerate(views):
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
@@ -5059,6 +5064,12 @@ class ARCroco3DStereo(CroCoNet):
             if return_token_debug:
                 token_debug_row = {
                     "view_idx": int(i),
+                    "num_humans": int(n_humans_i),
+                    "head_scores": scores[img_id, h_id, w_id, 0].detach().float().cpu(),
+                    "head_locations": loc.detach().float().cpu(),
+                    "mhmr_head_tokens": _debug_person_tokens(smpl_tk_mhmr),
+                    "cut3r_head_tokens": _debug_person_tokens(smpl_tk_cut3r),
+                    "fused_human_prompts": _debug_person_tokens(smpl_feat_i),
                     "pose_token_in": _debug_flatten_token(pose_feat_i),
                     "pose_token_out": _debug_flatten_token(pose_token_for_head),
                     "human_token_in": _debug_pool_token(smpl_feat_i),
@@ -5634,6 +5645,13 @@ class ARCroco3DStereo(CroCoNet):
                 )
             if token_debug_row is not None:
                 token_debug_row["human_token_out"] = _debug_pool_token(smpl_token)
+                token_debug_row["refined_human_tokens"] = _debug_person_tokens(
+                    tracking_smpl_token
+                )
+                token_debug_row["human_head_tokens"] = _debug_person_tokens(smpl_token)
+                token_debug_row["smpl_ids"] = (
+                    None if smpl_id is None else smpl_id.detach().cpu()
+                )
                 token_debug_row["state_summary_after"] = _debug_pool_token(state_feat)
                 token_debug_row["pose_memory_summary_after"] = _debug_pool_token(mem)
                 token_debug_frames.append(token_debug_row)
