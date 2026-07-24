@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "release": "Movie3R-Learned V9.0",
+  "legacy_version": "V9",
+  "status": "frozen-trained-model",
+  "source_commit": "6eb64cb2158fb443d53cd4f1713af1899fe5a026",
+  "git_tag": "movie3r-v9-trained",
+  "training_config": "config/train_v9_mixed_avatarrex_thuman_60h_pose_human_lora_bs10.yaml",
+  "resolved_config": {
+    "path": "versions/v9/resolved_config.yaml",
+    "sha256": "93c5a8acca8263eeac89a52b944c2ef09630a5fb39762d05d1185639c0f2150f"
+  },
+  "base_checkpoint": {
+    "path": "src/human3r_896L.pth",
+    "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"
+  },
+  "preferred_checkpoint": "checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-final.pth",
+  "checkpoints": [
+    {
+      "path": "checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-best.pth",
+      "bytes": 4985106570,
+      "sha256": "4376d623a7fb658da33eac03912697ba9a21aa919a25e6a5761eedbe745e25a8"
+    },
+    {
+      "path": "checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-last.pth",
+      "bytes": 4985106570,
+      "sha256": "a1f2173f45db82c914dc646afdae28f1a511279920666217a749f7ba7e07a02d"
+    },
+    {
+      "path": "checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-final.pth",
+      "bytes": 4831184406,
+      "sha256": "3fb2799420f7fd3caa63a47c9cde73090a6f93383520363484eb5158e446fceb"
+    }
+  ],
+  "entrypoints": [
+    "versions/v9/run.py",
+    "versions/v9/viewer.py",
+    "demo.py"
+  ],
+  "primary_input_pattern": "four-frame AABB",
+  "uses_gt_at_inference": false
+}

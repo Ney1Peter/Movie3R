@@ -36,5 +36,5 @@ scripts/archive_v2_v6/
 这些文档用于追溯和复盘，不应再被理解为当前主线设计。当前主线见：
 
 ```text
-docs/movie3r/v9/README.md
+versions/v9/docs/README.md
 ```

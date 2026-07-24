@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from scripts.v14_3_projection_consistent_reanchoring_probe import (
+from versions.v12.experiments.v14_3_projection_consistent_reanchoring_probe import (
     boundary_from_camera_pose,
     camera_pose_from_human,
     mesh_bbox_metrics,

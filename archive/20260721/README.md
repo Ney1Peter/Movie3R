@@ -6,7 +6,7 @@ deleted so prior results remain recoverable.
 
 The current retained methods and run commands are documented in:
 
-`docs/movie3r/ACTIVE_BOUNDARY_ALIGNMENT.md`
+`versions/v12/docs/ACTIVE_BOUNDARY_ALIGNMENT.md`
 
 Archive layout:
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "release": "Movie3R-Multi V13.0",
+  "legacy_version": "V20 Phase 1 v2",
+  "status": "independent-research-release-gt-id-oracle",
+  "source_commit": "e45e2af",
+  "git_tag": "movie3r-v13-multi",
+  "base_checkpoint": {
+    "path": "src/human3r_896L.pth",
+    "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"
+  },
+  "entrypoints": [
+    "versions/v13/gt_id_consensus.py",
+    "versions/v13/viewer.py",
+    "versions/v13/native_token_probe.py",
+    "versions/v13/egobody_probe.py"
+  ],
+  "default_modules": {
+    "hard_reset": true,
+    "fixed_explicit": true,
+    "v16_torso_rotation": true,
+    "shot_scale": 1.0,
+    "da3": false,
+    "keypoint_rcnn": false,
+    "vggt": false,
+    "continuity": false,
+    "token_reid": false
+  },
+  "identity_association": "strict GT SMPL-X projection Oracle",
+  "consensus": "SO(3) mean rotation plus arithmetic mean of per-human translations",
+  "dataset": "MultiHuman Real-World-Capture three",
+  "evaluated_cuts": 315,
+  "deployable": false,
+  "reason_not_deployable": "GT identity and GT mesh projection are used for cross-shot WHO association"
+}

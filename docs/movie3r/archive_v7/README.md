@@ -38,7 +38,7 @@ docs/movie3r/archive_v7/online_human_scene_pose_correction_plan.md
 docs/movie3r/archive_v7/human_scene_pose_correction_experiment_log.md
 docs/movie3r/archive_v7/implicit_token_adapter_validation.md
 docs/movie3r/archive_v2_v6/README.md
-docs/movie3r/v9/README.md
+versions/v9/docs/README.md
 tasklist/TODO.md
 ```
 

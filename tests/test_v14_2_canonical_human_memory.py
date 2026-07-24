@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from scripts.v14_2_canonical_human_memory_probe import (
+from versions.v12.experiments.v14_2_canonical_human_memory_probe import (
     blend_rotations,
     boundary_from_camera_pose,
     camera_pose_from_human,
