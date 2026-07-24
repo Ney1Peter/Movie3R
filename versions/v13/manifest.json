@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "release": "Movie3R-Multi V13.0",
   "legacy_version": "V20 Phase 1 v2",
-  "status": "gt-id-geometry-validated-native-identity-bridge-failed",
+  "status": "gt-id-geometry-validated-native-and-appearance-identity-bridges-failed",
   "source_commit": "e45e2af",
   "git_tag": "movie3r-v13-multi",
   "milestone_git_tag": "movie3r-v13-multihuman-geometry-validated",
@@ -16,9 +16,13 @@
     "versions/v13/native_token_probe.py",
     "versions/v13/egobody_probe.py",
     "versions/v13/identity_bridge.py",
+    "versions/v13/appearance_identity.py",
+    "versions/v13/configs/phase4_precision_config.json",
     "versions/v13/experiments/fusion_optimization.py",
     "versions/v13/experiments/phase3_cross_shot_identity.py",
-    "versions/v13/experiments/phase3_egohumans_identity.py"
+    "versions/v13/experiments/phase3_egohumans_identity.py",
+    "versions/v13/experiments/phase4_precision_identity.py",
+    "versions/v13/experiments/phase4_egohumans_identity.py"
   ],
   "default_modules": {
     "hard_reset": true,
@@ -40,7 +44,12 @@
     "phase3_identity_three": 315,
     "phase3_identity_dance": 36,
     "phase3_identity_box": 36,
-    "phase3_egohumans_multicut_streams": 3
+    "phase3_egohumans_multicut_streams": 3,
+    "phase4_identity_three": 315,
+    "phase4_identity_dance": 36,
+    "phase4_identity_box": 36,
+    "phase4_egohumans_multicut_streams": 3,
+    "phase4_egohumans_cuts": 6
   },
   "phase2_fusion": "retain naive mean; tested soft uncertainty rules did not improve held-out mean and P90 together",
   "research_decision": {
@@ -49,15 +58,18 @@
     "default_fusion": "naive all-valid-human mean",
     "soft_uncertainty_fusion": "not retained",
     "native_cross_shot_identity_bridge": "failed deployable gain-retention and catastrophic-swap gates",
+    "precision_first_appearance_bridge": "zero wrong accepted on MultiHuman only at insufficient coverage; zero coverage on EgoHumans",
+    "phase4b_adapter_training": "not started because crop quality, independent appearance value, and disjoint training data are insufficient",
     "default_token_reid": false,
     "gt_id_geometry_milestone_preserved": true
   },
   "next_stage": [
-    "optional lightweight shot-invariant WHO adapter with frozen Human3R",
-    "optional frozen appearance cue as a separately costed reference",
+    "improve deployable person crops without GT bbox",
+    "evaluate a frozen person-ReID encoder as a separately costed reference",
+    "only then reconsider a lightweight shot-invariant WHO adapter with disjoint splits",
     "do not modify Uniform Multi-Human Consensus to compensate for identity errors",
     "do not let identity features predict SE3, scale, Boundary, or fusion weights"
   ],
   "deployable": false,
-  "reason_not_deployable": "GT-ID geometry is valid, but the audited automatic identity bridge has catastrophic error tails on three, dance, and difficult EgoHumans cuts"
+  "reason_not_deployable": "GT-ID geometry is valid, but native matching accepts catastrophic swaps while the precision-first appearance gate has insufficient coverage and collapses to zero on EgoHumans"
 }

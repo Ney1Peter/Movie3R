@@ -87,6 +87,16 @@ def test_combined_feature_equalizes_token_and_beta_cues():
     assert raw[0, 0] < raw[0, 1]
 
 
+def test_phase_specific_direct_feature_is_supported_without_registry_mutation():
+    value = frame([3, 4], [[1.0, 0.0], [0.0, 1.0]])
+    appearance = np.asarray([[0.2, 0.8], [0.7, 0.3]], dtype=np.float32)
+    value["features"]["appearance_embedding"] = appearance
+    bank = build_identity_bank(
+        [value], "appearance_embedding", "last", "normalized_l2"
+    )
+    assert np.array_equal(bank["prototypes"], appearance)
+
+
 def test_cosine_distance_is_finite_for_zero_memory_control():
     distance = feature_distance(
         np.zeros((2, 3), dtype=np.float32),

@@ -16,3 +16,10 @@ mean rather than any tested soft uncertainty rule.
 audit. The GT-ID geometry milestone remains valid, but the native token/local
 pose bridge fails the gain-retention and catastrophic-swap gates, so automatic
 multi-human alignment remains disabled by default.
+
+`V13_PHASE4_PRECISION_FIRST_IDENTITY.md` records the frozen DINOv2 appearance
+and precision-first gate study. It reaches zero wrong accepted matches on the
+MultiHuman sequences, but only at very low multi-human coverage; EgoHumans
+coverage collapses to zero and the identity-free fallback is catastrophic.
+Phase 4A therefore fails the deployable gate and Phase 4B adapter training is
+not started.

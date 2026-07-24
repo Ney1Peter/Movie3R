@@ -7,7 +7,7 @@ V20 Phase 1 v2 实验冻结，用于验证：在人物身份已知时，多个�
 单人选择器更稳定的 camera-cut 几何约束。
 
 当前路线状态已经冻结为：**GT-ID 多人几何可行性通过；Phase 3 原生 cross-shot WHO
-bridge 已完成审计但未通过可部署 gate。** 里程碑边界见
+bridge 和 Phase 4 precision-first appearance bridge 均未通过可部署 gate。** 里程碑边界见
 [`MULTIHUMAN_GEOMETRY_VALIDATED.md`](MULTIHUMAN_GEOMETRY_VALIDATED.md)。
 
 ```text
@@ -87,16 +87,34 @@ pose、三种 prototype、三种距离以及 Hungarian/Sinkhorn。`three` 开发
 因此 V13 默认仍保持 `token_reid=false`，不能称为可部署多人版本。详细报告见
 [`docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`](docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md)。
 
+## Phase 4 precision-first appearance 审计
+
+Phase 4 使用 Human3R predicted bbox 上的冻结 DINOv2-S/14 appearance，并要求 mutual
+nearest、distance margin、five-frame vote、beta/pose compatibility 和有效 crop。规则只在
+`three` 上选择，然后原样应用于 `dance`、`box` 和 EgoHumans。
+
+| Sequence | Accepted precision | Accepted coverage | Multi coverage | Composite |
+|---|---:|---:|---:|---:|
+| three | 100% | 14.37% | 7.62% | 3.882 |
+| dance | 100% | 13.11% | 2.78% | 3.359 |
+| box | 100% | 26.87% | 5.56% | 2.930 |
+| EgoHumans | N/A (0 accepted) | 0% | 0% | 非 Boundary benchmark |
+
+实际启用 multi 的少量 cut 中，身份正确且冻结几何仍优于单人。完整流中，低 coverage 使
+大部分 cut 进入较弱的 identity-free Fixed fallback；放宽 gate 又会重新引入 catastrophic
+ID swap。因此 Phase 4A 未通过部署 gate，Phase 4B adapter 没有启动。详细报告见
+[`docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md`](docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md)。
+
 ## 路线决策与下一阶段
 
 当前版本正式记录为“多人 geometry validated”，原因是 `three` 和 `dance` 都表明：在
 严格身份正确时，多人 shared-Boundary 优于可部署单人 anchor，且人数增加呈单调改善。
 这满足继续研究多人路线的前置条件。
 
-当前 native token/local-pose WHO 路线不进入默认系统。若继续研究，只允许增加单独的轻量
-shot-invariant ID adapter 或冻结 appearance cue；它仍只参与 identity association，不能
-直接回归 Boundary。Uniform Multi-Human Consensus、Match-Then-Align 和
-Align-Then-Commit 保持冻结。
+当前 native token/local-pose 和 frozen appearance WHO 路线均不进入默认系统。下一步应先
+改善可部署 person crop，并评估真正冻结的 person-ReID reference；在存在跨 capture 可分性后，
+才重新考虑轻量 shot-invariant ID adapter。身份模块仍只能参与 association，不能直接回归
+Boundary。Uniform Multi-Human Consensus、Match-Then-Align 和 Align-Then-Commit 保持冻结。
 
 ## 当前启用与关闭
 
@@ -148,11 +166,14 @@ PYTHONPATH=src:. .venv/bin/python versions/v13/viewer.py \
   --port 8080
 ```
 
-Phase 3 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于：
+Phase 3/4 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于：
 
 - `versions/v13/identity_bridge.py`
 - `versions/v13/experiments/phase3_cross_shot_identity.py`
 - `versions/v13/experiments/phase3_egohumans_identity.py`
+- `versions/v13/appearance_identity.py`
+- `versions/v13/experiments/phase4_precision_identity.py`
+- `versions/v13/experiments/phase4_egohumans_identity.py`
 - `versions/v13/native_token_probe.py`
 - `versions/v13/egobody_probe.py`
 
@@ -177,3 +198,4 @@ Phase 3 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于�
 - `versions/v13/docs/V20_EGOBODY_LEGOASSEMBLE_FEASIBILITY.md`
 - `versions/v13/docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`
 - `versions/v13/docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`，自动 WHO bridge 最终负结果
+- `versions/v13/docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md`，precision-first appearance 最终负结果

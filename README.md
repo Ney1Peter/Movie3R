@@ -46,7 +46,8 @@ versions/v12/docs/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md
 ```
 
 V9 已训练权重保存在 `checkpoints/v9_mixed_60h_pose_human_lora_bs10/`；V13 当前是
-严格 GT-ID Oracle 研究版，不应描述成已经完成可部署跨镜头 Re-ID。
+严格 GT-ID Oracle 研究版。Native WHO 和 precision-first frozen appearance WHO 都未通过
+部署 gate，不应描述成已经完成可部署跨镜头 Re-ID。
 
 V2-V8 及其他失败/诊断实验仍保留在历史目录，不作为当前默认方法：
 

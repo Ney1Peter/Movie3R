@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "selected_on": "MultiHuman three only",
+  "selection_scope": "identity precision and coverage; no camera or Boundary metric",
+  "appearance_encoder": {
+    "name": "dinov2_vits14",
+    "dimension": 768,
+    "input_size": 224,
+    "sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+    "bbox_source": "Human3R predicted full-body bbox",
+    "bbox_padding": 0.08
+  },
+  "precision_gate": {
+    "feature": "appearance_beta_pose",
+    "prototype": "mean",
+    "distance": "cosine",
+    "max_primary_distance": 0.09979426095336005,
+    "min_primary_margin": 0.02420205939635007,
+    "min_vote_fraction": 0.6,
+    "max_beta_distance": 0.6189280456390862,
+    "max_pose_distance": 0.016089346204818167,
+    "min_valid_observations": 3,
+    "require_mutual": true
+  },
+  "gate_objective": "zero wrong accepted first, then maximum multi activation coverage, accepted coverage and IDF1",
+  "geometry": "frozen V13 Phase 2 uniform consensus",
+  "prototype_window": 5,
+  "track_ttl": 8
+}

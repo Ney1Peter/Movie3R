@@ -79,7 +79,7 @@ class CausalIdentityMemory:
 
     @staticmethod
     def _observation(frame: dict, detection_index: int) -> dict:
-        return {
+        observation = {
             "count": 1,
             "track_ids": np.asarray([-1], dtype=np.int64),
             "head_scores": np.asarray(
@@ -90,6 +90,12 @@ class CausalIdentityMemory:
                 for name, value in frame["features"].items()
             },
         }
+        if "appearance_valid" in frame:
+            observation["appearance_valid"] = np.asarray(
+                [np.asarray(frame["appearance_valid"], dtype=bool)[detection_index]],
+                dtype=bool,
+            )
+        return observation
 
     def _append(self, track_id: int, frame: dict, detection_index: int, timestamp: int) -> None:
         observation = self._observation(frame, detection_index)
@@ -139,6 +145,10 @@ class CausalIdentityMemory:
             if int(timestamp) - int(tracklet.last_seen) <= self.ttl:
                 frames.extend(tracklet.observations)
         return frames
+
+    def prototype_frames(self, timestamp: int) -> list[dict]:
+        """Return a read-only snapshot of non-expired identity observations."""
+        return self._prototype_frames(timestamp)
 
     def tentative_match(self, post_frame: dict, config: MatchConfig, timestamp: int) -> dict:
         """Compute association without mutating any tracklet or prototype."""
@@ -213,12 +223,19 @@ def _normalize_rows(value: np.ndarray) -> np.ndarray:
 
 def frame_feature(frame: dict, name: str) -> np.ndarray:
     """Return one person row per detection, preserving detection order."""
-    if name not in FEATURE_COMPONENTS:
+    if name in FEATURE_COMPONENTS:
+        components = FEATURE_COMPONENTS[name]
+    elif name in frame.get("features", {}):
+        # Phase-specific frozen features, such as a predicted-bbox appearance
+        # embedding, can be supplied directly without changing Phase 3's
+        # registered feature search space.
+        components = (name,)
+    else:
         raise KeyError(name)
     count = int(frame["count"])
     components = [
         _rows(frame["features"][component], count, component)
-        for component in FEATURE_COMPONENTS[name]
+        for component in components
     ]
     if len(components) == 1:
         return components[0]
