@@ -109,9 +109,24 @@ Human token 仍不得直接预测 rotation、translation、scale 或 Boundary。
 - 不能宣称 soft uncertainty fusion 优于 naive mean；
 - 不能把两个调试序列视为最终跨数据 benchmark。
 
+## 后续身份阶段状态
+
+该里程碑之后的 Phase 3/4/5 不改变 GT-ID geometry 结论：
+
+- Phase 3 native token bridge 未通过 catastrophic-swap gate；
+- Phase 4 precision-first appearance 达到零错误但覆盖过低；
+- Phase 5 running-mean persistent state 在 `three` 上将安全 multi coverage 提高到 `50%`，
+  Top-6 recall 达到 `92.22%`；
+- Phase 5 手工 joint WHO-WHERE scorer 的 zero-wrong coverage 只有 `35.56%`，低于
+  identity-only `51.11%`，因此没有进入 commit 或 frozen evaluation。
+
+所以当前研究决定从“继续尝试 WHO”更新为：**保留 GT-ID geometry Oracle 和 persistent
+state 分析，但 automatic multi-human 默认继续关闭。**
+
 详细实验和完整数值见：
 
 - `docs/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS_V2.md`
 - `docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`
+- `docs/V13_PHASE5_CAUSAL_IDENTITY_STATE.md`
 - `output/v13/phase2_fusion/v13_phase2_fusion.json`
 - `output/v13/dance_phase2/fusion/v13_phase2_fusion.json`

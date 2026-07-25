@@ -23,3 +23,8 @@ MultiHuman sequences, but only at very low multi-human coverage; EgoHumans
 coverage collapses to zero and the identity-free fallback is catastrophic.
 Phase 4A therefore fails the deployable gate and Phase 4B adapter training is
 not started.
+
+`V13_PHASE5_CAUSAL_IDENTITY_STATE.md` records the causal multi-cut state study.
+Running-mean persistent state passes Stage 0/1 and raises safe identity
+coverage, but bounded joint WHO-WHERE scoring fails to improve the identity-only
+zero-wrong operating point. Automatic multi-human commit therefore remains off.

@@ -6,8 +6,8 @@ V13 是独立的多人 shared-Boundary 正式研究目录，不是 V12 的一个
 V20 Phase 1 v2 实验冻结，用于验证：在人物身份已知时，多个人能否共同提供比可部署
 单人选择器更稳定的 camera-cut 几何约束。
 
-当前路线状态已经冻结为：**GT-ID 多人几何可行性通过；Phase 3 原生 cross-shot WHO
-bridge 和 Phase 4 precision-first appearance bridge 均未通过可部署 gate。** 里程碑边界见
+当前路线状态已经冻结为：**GT-ID 多人几何可行性通过；Phase 3/4 automatic WHO 未通过；
+Phase 5 shot-persistent state 提高了安全覆盖，但 joint WHO-WHERE scorer 未通过。** 里程碑边界见
 [`MULTIHUMAN_GEOMETRY_VALIDATED.md`](MULTIHUMAN_GEOMETRY_VALIDATED.md)。
 
 ```text
@@ -116,6 +116,26 @@ ID swap。因此 Phase 4A 未通过部署 gate，Phase 4B adapter 没有启动�
 才重新考虑轻量 shot-invariant ID adapter。身份模块仍只能参与 association，不能直接回归
 Boundary。Uniform Multi-Human Consensus、Match-Then-Align 和 Align-Then-Commit 保持冻结。
 
+## Phase 5 causal identity state 审计
+
+Phase 5 在 `three` 上构造 15 条 multi-cut streams、90 个 cuts。Human3R scene/camera state
+每个 shot fresh reset，只有固定大小 external identity state 跨 shot 保留。
+
+running-mean state 将 unfiltered IDF1 从 `0.8202` 提升到 `0.9255`。严格 causal margin replay
+达到 zero wrong accepted、`50%` multi coverage、`92.22%` Top-6 GT assignment recall，并通过
+reverse/random 整流 detection-order audit。
+
+但是每个 Top-6 hypothesis 分别运行冻结 Boundary 后，手工 joint score 没有超过 identity-only：
+
+```text
+zero-wrong multi coverage:
+identity-only 51.11% > best joint 35.56% > geometry-only 5.56%
+```
+
+因此 persistent state 作为研究组件保留，joint scorer 不参与 commit，automatic multi-human
+仍保持关闭。详细报告见
+[`docs/V13_PHASE5_CAUSAL_IDENTITY_STATE.md`](docs/V13_PHASE5_CAUSAL_IDENTITY_STATE.md)。
+
 ## 当前启用与关闭
 
 启用：frozen Human3R、pre-decode hard reset、Fixed Explicit、V16 20 度约束、显式
@@ -166,7 +186,7 @@ PYTHONPATH=src:. .venv/bin/python versions/v13/viewer.py \
   --port 8080
 ```
 
-Phase 3/4 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于：
+Phase 3/4/5 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位于：
 
 - `versions/v13/identity_bridge.py`
 - `versions/v13/experiments/phase3_cross_shot_identity.py`
@@ -174,6 +194,10 @@ Phase 3/4 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位�
 - `versions/v13/appearance_identity.py`
 - `versions/v13/experiments/phase4_precision_identity.py`
 - `versions/v13/experiments/phase4_egohumans_identity.py`
+- `versions/v13/shot_persistent_identity.py`
+- `versions/v13/causal_who_where.py`
+- `versions/v13/experiments/phase5_causal_identity_state.py`
+- `versions/v13/experiments/phase5_joint_hypothesis_probe.py`
 - `versions/v13/native_token_probe.py`
 - `versions/v13/egobody_probe.py`
 
@@ -199,3 +223,4 @@ Phase 3/4 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位�
 - `versions/v13/docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`
 - `versions/v13/docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`，自动 WHO bridge 最终负结果
 - `versions/v13/docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md`，precision-first appearance 最终负结果
+- `versions/v13/docs/V13_PHASE5_CAUSAL_IDENTITY_STATE.md`，persistent state 正结果和 joint scorer 停止结论
