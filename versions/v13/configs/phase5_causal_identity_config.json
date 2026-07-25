@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "selected_on": "MultiHuman three causal multi-cut development streams only",
+  "identity_state": {
+    "feature": "appearance_beta_pose",
+    "prototype": "running_mean",
+    "track_normalized": false,
+    "dispersion_floor": 0.05,
+    "history_size": 5,
+    "ttl_stream_frames": 60,
+    "max_tracks": 8
+  },
+  "hypotheses": {
+    "top_k": 6,
+    "identity_margin": 0.042287553364318435,
+    "unmatched": "explicit dustbin partial assignment"
+  },
+  "stage0_result": {
+    "accepted_precision": 1.0,
+    "wrong_accepted": 0,
+    "multi_activation_coverage": 0.5,
+    "top6_gt_assignment_recall": 0.9222222222222223,
+    "full_stream_permutation_agreement": 1.0
+  },
+  "where": "frozen Phase 2 Fixed Explicit + V16 20deg + mean_raw_t",
+  "joint_probe": {
+    "retained": false,
+    "reason": "best zero-wrong joint multi coverage 0.3556 is below identity-only 0.5111; joint camera composite also regresses",
+    "best_tested_score": "within-cut normalized identity cost + 4.0 * normalized geometry score",
+    "best_zero_wrong_multi_coverage": 0.35555555555555557,
+    "identity_only_zero_wrong_multi_coverage": 0.5111111111111111
+  },
+  "automatic_multi_human_default": false,
+  "gt_used_by_identity_or_joint_score": false,
+  "gt_used_for_development_selection_and_evaluation": true
+}
