@@ -1,6 +1,11 @@
 # V20 多人 Multi-Shot 调试数据指南
 
-## EgoBody `001_legoassemble` 与 MultiHuman 的数据特点、限制和推荐用途
+## EgoHumans `001_legoassemble` 与 MultiHuman 的数据特点、限制和推荐用途
+
+> 命名勘误（2026-07-27）：`001_legoassemble` 实际属于 EgoHumans。本文文件名中的
+> `EGOBODY` 和本地父目录 `data/EgoBody/` 是历史命名，为保持旧引用和实验路径可复现而保留。
+> 独立的 EgoBody release 位于本地 `data/EgoHuman/`，详见
+> `V13_EGOHUMANS_EGOBODY_DATASET_AUDIT_20260727.md`。
 
 ## 1. 文档目的
 
@@ -33,7 +38,7 @@ All accepted humans agree on ONE shared shot Boundary.
 
 ## 2. 总体对比
 
-| 属性 | EgoBody `001_legoassemble` | MultiHuman 静态部分 | MultiHuman Real-World-Capture |
+| 属性 | EgoHumans `001_legoassemble` | MultiHuman 静态部分 | MultiHuman Real-World-Capture |
 |---|---|---|---|
 | 数据性质 | 真实同步多相机连续序列 | 静态扫描/拟合 mesh | 真实同步多相机连续视频 |
 | 人数 | 固定 3 人 | 1/2/3 人 | `box` 2 人、`dance` 2 人、`three` 3 人 |
@@ -56,15 +61,15 @@ All accepted humans agree on ONE shared shot Boundary.
 
 最重要的分工是：
 
-- **EgoBody** 更适合验证多人 detection、2D身份标注、鱼眼输入、不同视角人数变化和相机标定。
+- **EgoHumans** 更适合验证多人 detection、2D身份标注、鱼眼输入、不同视角人数变化和相机标定。
 - **MultiHuman Real-World-Capture** 更适合验证真实动态交互、多人遮挡、逐帧 SMPL-X vertex 和 recurrent multi-cut。
 - **MultiHuman 静态部分** 只能做几何和 mesh 单元测试，不能直接测试 RGB Human3R。
 
 ---
 
-# 第一部分：EgoBody `001_legoassemble`
+# 第一部分：EgoHumans `001_legoassemble`
 
-## 3. EgoBody 数据概况
+## 3. EgoHumans 数据概况
 
 根目录：
 
@@ -101,7 +106,7 @@ cam01/frame300 -> cam06/frame300
 
 这种人体完全不动、只改变相机的严格 camera-cut 几何测试。
 
-## 4. EgoBody 目录说明
+## 4. EgoHumans 目录说明
 
 ### 4.1 `exo/`
 
@@ -268,7 +273,7 @@ colmap_from_aria_transforms.pkl["aria01"]
 
 这只能用于 GT evaluation/gauge conversion，不能进入可部署 Boundary candidate。
 
-## 5. EgoBody 相机和投影审计
+## 5. EgoHumans 相机和投影审计
 
 相机标定明确使用：
 
@@ -304,7 +309,7 @@ GT SMPL vertices 经 `aria01 -> COLMAP -> fisheye camera` 投影后，frame 300 
 
 这证明 GT body、Aria/COLMAP gauge 和 exo 标定总体一致。`cam04` 是明显困难视角，适合测试遮挡和 fallback，不适合单独作为最精确的 reprojection 样本。
 
-## 6. EgoBody 已完成的多人实验
+## 6. EgoHumans 已完成的多人实验
 
 这一部分是**已经运行过的结果**。
 
@@ -401,7 +406,7 @@ Fixed Explicit coarse
 
 不能将上述数字写成最终 V20 结果。
 
-## 7. EgoBody 有什么、没有什么
+## 7. EgoHumans 有什么、没有什么
 
 ### 有
 
@@ -427,7 +432,7 @@ Fixed Explicit coarse
 - GT body 是优化拟合，不是独立 mocap ground truth；
 - 只有一个 capture/三个人，不能单独证明跨人物泛化。
 
-## 8. EgoBody 推荐用途
+## 8. EgoHumans 推荐用途
 
 最适合：
 
@@ -674,7 +679,7 @@ R: 3x3
 T: 3
 ```
 
-没有 distortion coefficients。与 EgoBody 不同，这里不应直接标记为 `OPENCV_FISHEYE`。当前应按数据给出的 pinhole K/R/T 使用；若后续发现边缘系统误差，再单独审计图像是否已经去畸变。
+没有 distortion coefficients。与 EgoHumans 不同，这里不应直接标记为 `OPENCV_FISHEYE`。当前应按数据给出的 pinhole K/R/T 使用；若后续发现边缘系统误差，再单独审计图像是否已经去畸变。
 
 逐人物裁剪参数：
 
@@ -784,17 +789,17 @@ output/v20_multihuman_dataset_audit/three_frame1000/projection_overlay_cam0.jpg
 
 | 研究问题 | 首选数据 | 原因 |
 |---|---|---|
-| Human3R 是否检测到所有人 | EgoBody + MultiHuman | 一个有 bbox，一个有更强遮挡 |
+| Human3R 是否检测到所有人 | EgoHumans + MultiHuman | 一个有 bbox，一个有更强遮挡 |
 | 输出数组 index 是否稳定 ID | 两者 | 都有稳定 GT identity |
-| Native `H'` 是否支持跨 shot Re-ID | 两者 | EgoBody 已有负结果，MultiHuman 可验证动态动作 |
+| Native `H'` 是否支持跨 shot Re-ID | 两者 | EgoHumans 已有负结果，MultiHuman 可验证动态动作 |
 | shape 是否比 token 更稳定 | 两者 | 需要避免只在三个固定人物上过拟合 |
 | local pose 是否只是同步 cue | MultiHuman | 可测试不同时间戳和明显动作变化 |
 | 多人是否改善 Boundary | MultiHuman `three` 优先 | 3 人动态连续、SMPL-X GT 完整 |
 | 遮挡人物是否应剔除 | MultiHuman | 人体距离近、遮挡明显 |
-| 只剩一个人时 fallback | EgoBody `cam04` | 已观察到只检测到 1 人 |
-| 鱼眼边缘鲁棒性 | EgoBody | 明确 fisheye 标定 |
+| 只剩一个人时 fallback | EgoHumans `cam04` | 已观察到只检测到 1 人 |
+| 鱼眼边缘鲁棒性 | EgoHumans | 明确 fisheye 标定 |
 | SMPL-X full vertex error | MultiHuman | GT 与 Human3R topology 一致 |
-| 2D keypoint reprojection | EgoBody | 有 133 点 GT |
+| 2D keypoint reprojection | EgoHumans | 有 133 点 GT |
 | scene pointmap accuracy | 两者都不足 | 缺 dense scene GT |
 | 长期泛化或 benchmark | 两者都不足 | capture/subject 数量有限 |
 
@@ -862,7 +867,7 @@ Hard Reset
 - token + shape + pose；
 - zero/shuffle/wrong-person controls。
 
-EgoBody 用于有 bbox/2D GT 的受控 probe；MultiHuman 用于动态动作和 SMPL-X GT。
+EgoHumans 用于有 bbox/2D GT 的受控 probe；MultiHuman 用于动态动作和 SMPL-X GT。
 
 ### 阶段 D：可部署 Match-Then-Align
 
@@ -950,7 +955,7 @@ camera2: frame 1006-1010
 短期调试建议：
 
 1. 用 **MultiHuman `three`** 完成正式 GT-ID multi-human Fixed Explicit/V16 几何门槛。
-2. 用 **EgoBody** 验证 bbox/2D keypoint identity、鱼眼视角和只剩一人的 fallback。
+2. 用 **EgoHumans** 验证 bbox/2D keypoint identity、鱼眼视角和只剩一人的 fallback。
 3. 用两者共同测试 native token 是否跨 camera、跨动作稳定。
 4. MultiHuman geometry 成立后，再实现 external identity bank、dustbin、TTL 和 geometry verification。
 5. DA3、V11.4 shared scale 和 VGGT 在 GT-ID Lite 多人收益成立前保持关闭。
@@ -958,7 +963,7 @@ camera2: frame 1006-1010
 
 ## 24. 最终结论
 
-### EgoBody
+### EgoHumans
 
 是一套标注丰富、坐标明确、包含鱼眼和视角漏人的三人同步多相机数据。它对 detection、2D identity、camera evaluation 和 fallback 非常有价值，但人体 GT 是 SMPL，不适合直接做 Human3R SMPL-X full vertex 评价。
 
@@ -973,7 +978,7 @@ camera2: frame 1006-1010
 两套数据不是替代关系，而是互补关系：
 
 ```text
-EgoBody:
+EgoHumans:
   richer 2D labels + fisheye + camera/dropout diagnostics
 
 MultiHuman:

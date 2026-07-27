@@ -28,3 +28,9 @@ not started.
 Running-mean persistent state passes Stage 0/1 and raises safe identity
 coverage, but bounded joint WHO-WHERE scoring fails to improve the identity-only
 zero-wrong operating point. Automatic multi-human commit therefore remains off.
+
+`V13_EGOHUMANS_EGOBODY_DATASET_AUDIT_20260727.md` freezes the corrected dataset
+naming and the local EgoBody completeness audit. In particular,
+`data/EgoBody/001_legoassemble` is an EgoHumans capture despite its local parent
+directory, while `data/EgoHuman` contains the separate EgoBody release. The
+legacy `V20_EGOBODY_*` filenames remain unchanged only for reproducibility.

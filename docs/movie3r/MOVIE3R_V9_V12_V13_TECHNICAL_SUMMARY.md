@@ -1732,6 +1732,7 @@ manifest: versions/v13/manifest.json
 - `versions/v13/docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`
 - `versions/v13/docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md`
 - `versions/v13/docs/V13_PHASE5_CAUSAL_IDENTITY_STATE.md`
+- `versions/v13/docs/V13_EGOHUMANS_EGOBODY_DATASET_AUDIT_20260727.md`
 
 ---
 

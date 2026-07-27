@@ -218,8 +218,9 @@ Phase 3/4/5 自动身份桥、Native Human3R token 和 EgoHumans 数据探针位
 - `versions/v13/MULTIHUMAN_GEOMETRY_VALIDATED.md`，当前路线里程碑与下一阶段准入决定
 - `versions/v13/docs/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS_V2.md`，当前有效结论
 - `versions/v13/docs/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS.md`，旧错误 ID 报告，仅作审计
-- `versions/v13/docs/V20_EGOBODY_MULTIHUMAN_DATASET_GUIDE.md`
-- `versions/v13/docs/V20_EGOBODY_LEGOASSEMBLE_FEASIBILITY.md`
+- `versions/v13/docs/V13_EGOHUMANS_EGOBODY_DATASET_AUDIT_20260727.md`，正式数据集归属与 EgoBody GT 完整性审计
+- `versions/v13/docs/V20_EGOBODY_MULTIHUMAN_DATASET_GUIDE.md`，旧文件名；内容实际为 EgoHumans `001_legoassemble`
+- `versions/v13/docs/V20_EGOBODY_LEGOASSEMBLE_FEASIBILITY.md`，旧文件名；内容实际为 EgoHumans probe
 - `versions/v13/docs/V13_PHASE2_MULTIHUMAN_FUSION_OPTIMIZATION.md`
 - `versions/v13/docs/V13_PHASE3_CROSS_SHOT_IDENTITY_BRIDGE.md`，自动 WHO bridge 最终负结果
 - `versions/v13/docs/V13_PHASE4_PRECISION_FIRST_IDENTITY.md`，precision-first appearance 最终负结果

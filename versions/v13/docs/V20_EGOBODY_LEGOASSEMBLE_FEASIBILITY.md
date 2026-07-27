@@ -1,4 +1,8 @@
-# V20 EgoBody `001_legoassemble` 多人调试可行性与首轮实验
+# V20 EgoHumans `001_legoassemble` 多人调试可行性与首轮实验
+
+> 命名勘误（2026-07-27）：`001_legoassemble` 实际属于 EgoHumans。本文文件名中的
+> `EGOBODY` 和本地父目录 `data/EgoBody/` 是历史命名，为保持旧引用和实验路径可复现而保留。
+> 独立的 EgoBody release 位于本地 `data/EgoHuman/`。
 
 ## 1. 结论
 
@@ -109,7 +113,7 @@ cam03 416-420 -> cam04 420-424 -> cam01 424-428
 
 第一条链中每帧均检测到 3 人，45 个 detection-to-GT assignments 全部成功。
 
-第二条链的 `cam02` 前四帧只检测到 2 人，之后恢复 3 人。第三条链的 `cam04` 每帧只检测到 1 人。该现象说明 EgoBody 能同时覆盖：
+第二条链的 `cam02` 前四帧只检测到 2 人，之后恢复 3 人。第三条链的 `cam04` 每帧只检测到 1 人。该现象说明 EgoHumans 能同时覆盖：
 
 - 三人全部可见；
 - 某个人短时漏检；
@@ -180,7 +184,7 @@ aria03: 2 -> 0 -> 3
 
 ## 8. 对 V20 设计的判断
 
-EgoBody 的首轮结果支持 V20 的总体职责分离：
+EgoHumans 的首轮结果支持 V20 的总体职责分离：
 
 ```text
 Token / body feature answers WHO.
@@ -224,7 +228,7 @@ versions/v13/egobody_probe.py
 versions/v13/native_token_probe.py
 ```
 
-为了复测不同相机链，EgoBody probe 支持：
+为了复测不同相机链，EgoHumans probe 支持：
 
 ```bash
 .venv/bin/python versions/v13/egobody_probe.py \

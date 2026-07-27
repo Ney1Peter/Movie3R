@@ -7,6 +7,7 @@
 
 | 入口 | 内容 |
 |---|---|
+| [V9/V12/V13 统一技术总结](MOVIE3R_V9_V12_V13_TECHNICAL_SUMMARY.md) | 三个正式版本的原理、输入、模型架构、输出、实验结果和限制 |
 | [版本总目录](../../versions/README.md) | 三个正式版本的定位、tag、权重和命令 |
 | [V9 已训练版](../../versions/v9/README.md) | 学习式 AABB correction、LoRA 权重与训练复现 |
 | [V12 单人版](../../versions/v12/README.md) | 当前 short-shot camera-human alignment 主版 |
@@ -19,7 +20,7 @@
   [`versions/v12/docs/`](../../versions/v12/docs/README.md)。
 - V12 的历史实验脚本均在
   [`versions/v12/experiments/`](../../versions/v12/experiments/README.md)。
-- V13 的 GT-ID 多人结果、EgoBody 与 MultiHuman 数据说明均在
+- V13 的 GT-ID 多人结果、EgoHumans/EgoBody 命名审计与 MultiHuman 数据说明均在
   [`versions/v13/docs/`](../../versions/v13/docs/README.md)。
 - V9 的训练计划、方法和训练记录均在
   [`versions/v9/docs/`](../../versions/v9/docs/README.md)。

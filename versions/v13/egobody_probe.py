@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Legacy V20 EgoBody probe retained inside Movie3R-Multi V13."""
+"""Legacy-named V20 EgoHumans probe retained inside Movie3R-Multi V13."""
 
 from __future__ import annotations
 
@@ -672,8 +672,8 @@ def main() -> None:
     geometry = geometry_probe(predictions, debug, labels, cameras, frames, exo, cuts)
 
     report = {
-        "experiment": "Movie3R-Multi V13 EgoBody feasibility probe",
-        "legacy_experiment": "V20 EgoBody three-person feasibility probe",
+        "experiment": "Movie3R-Multi V13 EgoHumans feasibility probe",
+        "legacy_experiment": "V20 EgoBody three-person feasibility probe (legacy name)",
         "scope": "Lite smoke test; no DA3, keypoint scale, VGGT, V11.4, or scene refinement",
         "candidate_gt_usage": {
             "human3r_inference": False,
@@ -736,7 +736,7 @@ def main() -> None:
         {"predictions": compact_predictions, "token_debug": debug, "labels": labels},
         args.output_dir / "v13_egobody_compact_tokens.pt",
     )
-    print(f">> EgoBody V13 report: {report_path}", flush=True)
+    print(f">> EgoHumans V13 report: {report_path}", flush=True)
     print(f">> Runtime excluding model load: {report['runtime_seconds_excluding_model_load']:.2f}s", flush=True)
 
 
