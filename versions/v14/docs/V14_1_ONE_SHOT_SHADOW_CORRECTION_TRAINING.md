@@ -1,5 +1,11 @@
 # V14.1: First-Post-Cut Event-Only Correction
 
+> 2026-07-27 contract correction: the first one-event and 10-event runs dropped
+> `shot_label` before model forward and used preprocessing different from `demo.py`.
+> Their metrics are withdrawn. The corrected single-event results and root-cause
+> audit are recorded in `V14_1_INITIAL_PILOT_RESULTS_20260727.md`. The corrected
+> 10-event run has not started.
+
 ## 1. 阶段定位
 
 V14.1 只验证一个最小问题：
@@ -345,7 +351,7 @@ config/manifests/v14_1_cut_event/ten/mvhuman200.jsonl
 目标：
 
 - dataloader 输出 `[0, 0, 1]`；
-- event frame 插入 2 个 correct tokens；
+- event frame 按配置插入 correct tokens（简化版 2 个，V9-parity 3 个）；
 - context frame head LoRA 关闭；
 - event frame head LoRA 开启；
 - 只有 event frame 产生监督；
@@ -360,25 +366,29 @@ config/manifests/v14_1_cut_event/ten/mvhuman200.jsonl
 - human translation 显著低于 raw；
 - 可视化中第一张 post-cut frame 的 camera/human 同向改善。
 
-当前结果：
+修正后的流式 checkpoint 结果：
 
 ```text
-40 epochs, GPU 2, 2m26s
+simplified V14.1:
+    camera translation: 0.082 m
+    camera rotation:    0.13 deg
+    human translation:  0.0126 m
 
-loss:                  1.1098 -> 0.0099
-camera translation:    1.1773 m -> 0.0891 m
-camera rotation:       17.245 deg -> 0.0969 deg
-human translation:     0.5238 m -> 0.0086 m
-event gate:            1.0
+V9-parity V14.1:
+    camera translation: 0.048 m
+    camera rotation:    0.25 deg
+    human translation:  0.0050 m
 ```
 
-checkpoint：
+诊断 checkpoint（易失路径）：
 
 ```text
-output/v14_1/v14_1_cut_event_single_lbn1_1192/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_simplified_exact_runtime/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_v9_parity_exact_runtime/checkpoint-best.pth
 ```
 
-结论：单样本纠正容量成立，但该结果是 overfit upper bound。
+结论：单样本纠正容量成立，但该结果只是 overfit upper bound。简化版与
+V9-parity 的差异必须逐项消融，不能整体归因于 momentum。
 
 ### Stage C: 10-event pilot
 
@@ -391,7 +401,8 @@ output/v14_1/v14_1_cut_event_single_lbn1_1192/checkpoint-best.pth
 
 正式大规模训练只能在 10-event pilot 显示稳定同向改善后开始。
 
-2026-07-27 pilot 已完成；完整结果见：
+第一次 10-event pilot 使用了错误训练契约，结果已经撤回。必须先完成单样本
+三维可视化确认，再按修正后的事件路由和预处理重跑。诊断记录见：
 
 ```text
 versions/v14/docs/V14_1_INITIAL_PILOT_RESULTS_20260727.md

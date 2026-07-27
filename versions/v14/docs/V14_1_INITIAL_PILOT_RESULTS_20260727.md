@@ -1,40 +1,23 @@
-# V14.1 Initial Event-Only Correction Results
+# V14.1 Single-Event Contract Diagnosis and Corrected Upper Bound
 
 Date: 2026-07-27
 
-## 1. Scope
+## 1. Status
 
-This report covers two capacity probes:
+The first V14.1 one-event and 10-event reports are invalid as event-only results.
+They were produced with a training/demo contract mismatch. They must not be used
+as evidence for V14.1 capacity or generalization.
 
-1. one-event overfit;
-2. 10-event multi-source pilot.
-
-Both use:
-
-```text
-A(t-1) -> A(t) -> B(t)
-shot_labels = [0, 0, 1]
-```
-
-Only the event frame is corrected and supervised. These are training-event results,
-not held-out generalization results.
-
-## 2. Architecture
+The corrected status is:
 
 ```text
-V9 checkpoint initialization
-+ semantic correct token
-+ alignment correct token
-+ full decoder attention on event frame
-+ pose latent residual
-+ human latent residual
-+ event-only pose/human head LoRA
+single-event routing and preprocessing fixed
+single-event upper bound reproduced in the streaming demo path
+10-event result withdrawn and not rerun yet
+large-scale training blocked on visual inspection
 ```
 
-Momentum, previous correction residual/history, learned gate, AABB/AAAA classification,
-future frames and segment loss are excluded.
-
-## 3. One-Event Overfit
+## 2. Sample and Intended Contract
 
 Sample:
 
@@ -43,178 +26,183 @@ lbn1/22053926 frame 1191
 lbn1/22053926 frame 1192
 lbn1/22010716 frame 1192
 view angle = 132.853 degrees
+shot_labels = [0, 0, 1]
 ```
 
-Training:
+The intended V14.1 contract is:
 
 ```text
-40 epochs
-GPU 2
-2m26s
+views 0 and 1:
+    ordinary context
+    no correction token
+    no event-only head LoRA
+    no direct supervision
+
+view 2:
+    explicit cut event
+    insert correction token(s)
+    enable correction heads
+    apply event supervision
 ```
 
-| Metric | Initial/raw | Corrected |
-|---|---:|---:|
-| Loss | 1.1098 | 0.0099 |
-| Camera translation | 1.1773 m | 0.0891 m |
-| Camera rotation | 17.245 deg | 0.0969 deg |
-| Human translation | 0.5238 m | 0.0086 m |
-| Event gate | 1.0 | 1.0 |
+## 3. Root Causes
 
-Checkpoint:
+### 3.1 `shot_label` was dropped before model forward
+
+`_make_v8_image_only_model_batch()` correctly removed GT camera, SMPL and depth
+fields, but it also removed the deployable `shot_label` input. The training model
+therefore did not receive `[0, 0, 1]`.
+
+Observed consequence:
 
 ```text
-output/v14_1/v14_1_cut_event_single_lbn1_1192/checkpoint-best.pth
+training:
+    correction was active on all three frames
+
+demo.py:
+    correction was active only on frame 2
 ```
 
-Conclusion: the event-only correction branch has enough capacity to fit one hard
-wide-view cut jointly for camera and human.
+The loss still supervised only frame 2, so a low training validation loss did not
+prove that the event-only inference graph worked. This was the primary bug.
 
-## 4. Ten-Event Dataset
+The fix preserves `shot_label` while continuing to strip every GT-only field.
+A regression test verifies both requirements.
 
-| Source | Events |
+### 3.2 Training and demo used different RGB preprocessing
+
+The old training config used `resize_only_16`; `demo.py` uses Human3R long-edge
+resize followed by center crop. Both happened to produce `512x368` tensors, but
+the actual normalized RGB tensors differed substantially:
+
+```text
+mean absolute difference approximately 0.048
+maximum absolute difference approximately 1.45-1.69
+```
+
+The dataset now uses `resize_mode='human3r_demo'`. The resulting training RGB
+tensors are exactly equal to the demo input tensors.
+
+### 3.3 Patch embedding class differed across train and checkpoint reload
+
+`load_model()` replaces `ManyAR_PatchEmbed` with `PatchEmbedDust3R` for video
+inference. The first corrected run still trained with the former and reloaded with
+the latter. The numerical effect was smaller than the two bugs above, but an exact
+upper-bound experiment cannot keep this discrepancy.
+
+V14.1 configs now train with `PatchEmbedDust3R`, matching checkpoint reload and
+`demo.py`.
+
+### 3.4 The simplified V14.1 architecture is not V9-equivalent
+
+The simplified branch changes several V9 choices at once:
+
+| Component | V9-parity | Simplified V14.1 |
+|---|---|---|
+| Correct tokens | semantic + alignment + momentum | semantic + alignment |
+| Reliability feature | enabled | disabled |
+| Learned correction gates | enabled | forced on at event |
+| Human latent gate | enabled | forced on at event |
+| Head LoRA on context | enabled | disabled |
+| Event supervision | event only | event only |
+
+This is an architecture ablation, not merely a different event schedule. These
+changes must be removed one at a time after the V9-parity reference is frozen.
+
+## 4. Forward-Path Audit
+
+For both corrected checkpoints:
+
+```text
+view 0: v9_pre_decoder_append = 0
+view 1: v9_pre_decoder_append = 0
+view 2: v9_pre_decoder_append = 1
+```
+
+Training-style `model.forward()` and demo-style
+`forward_recurrent_lighter()` agree to numerical precision:
+
+| Output | Maximum mean absolute difference |
 |---|---:|
-| AvatarReX | 3 |
-| THuman | 2 |
-| MVHuman100 | 3 |
-| MVHuman200 | 2 |
-| Total | 10 |
+| camera pose | about 1.9e-4 |
+| SMPL translation | about 4.0e-5 |
+| cross-view pointmap | about 3.5e-4 |
 
-The first attempted config used `1 @ Dataset` for each source and therefore evaluated
-only four events. That run was stopped. The valid run uses `3/2/3/2` for both train
-and test datasets and evaluates all 10 events.
+The training and streaming implementations are therefore not the remaining
+explanation for a large visual difference.
 
-Training:
+## 5. Corrected Single-Event Results
+
+The table below uses the reloaded checkpoint and the same streaming input/routing
+as `demo.py`, not an in-memory training-only forward.
+
+| Method | Camera translation | Camera rotation | Human translation |
+|---|---:|---:|---:|
+| Formal V9 checkpoint | 0.246 m | 7.13 deg | 0.0102 m |
+| V14.1 simplified, corrected contract | 0.082 m | 0.13 deg | 0.0126 m |
+| V14.1 V9-parity, corrected contract | 0.048 m | 0.25 deg | 0.0050 m |
+
+Interpretation:
+
+1. The corrected event-only branch can overfit the hard 132.9-degree cut.
+2. V14.1 is no longer numerically worse than V9 on this sample.
+3. The V9-parity branch gives the best camera translation and human translation.
+4. The simplified branch also fits, but its translation remains weaker; the
+   simplifications cannot yet be accepted as free changes.
+5. Pointmap/scene geometry has no GT depth supervision in this pilot, so these
+   camera/human metrics do not replace visual inspection.
+
+## 6. Withdrawn Results
+
+The former claims below are withdrawn:
 
 ```text
-12 epochs
-10 mixed updates per epoch
-each update consumes one event from every source
-GPU 4
-13m47s
-peak GPU memory about 10.4 GB
+old one-event result:
+    0.0891 m / 0.0969 deg / 0.0086 m
+
+old 10-event weighted result:
+    0.1025 m / 0.1659 deg / 0.0066 m
 ```
 
-## 5. Final Epoch-12 Results
+Both runs used the dropped-`shot_label` training path. They also used
+`resize_only_16`, while visualization used the Human3R demo preprocessing. The old
+checkpoints and metrics are debugging artifacts only.
 
-Values are per-source means over all events in that source.
+## 7. Current Visualization
 
-### 5.1 Camera Translation
-
-| Source | Raw | Corrected | Reduction |
-|---|---:|---:|---:|
-| AvatarReX | 1.3564 m | 0.1348 m | 90.1% |
-| THuman | 0.4488 m | 0.0480 m | 89.3% |
-| MVHuman100 | 0.6039 m | 0.1052 m | 82.6% |
-| MVHuman200 | 0.5111 m | 0.1043 m | 79.6% |
-| Weighted 10-event mean | 0.7801 m | 0.1025 m | 86.9% |
-
-### 5.2 Camera Rotation
-
-| Source | Raw | Corrected | Reduction |
-|---|---:|---:|---:|
-| AvatarReX | 35.3508 deg | 0.2562 deg | 99.3% |
-| THuman | 4.8252 deg | 0.0560 deg | 98.8% |
-| MVHuman100 | 21.1010 deg | 0.1496 deg | 99.3% |
-| MVHuman200 | 10.4828 deg | 0.1650 deg | 98.4% |
-| Weighted 10-event mean | 19.9971 deg | 0.1659 deg | 99.2% |
-
-### 5.3 Human Translation
-
-| Source | Raw | Corrected | Reduction |
-|---|---:|---:|---:|
-| AvatarReX | 0.4624 m | 0.0032 m | 99.3% |
-| THuman | 0.2496 m | 0.0047 m | 98.1% |
-| MVHuman100 | 1.3627 m | 0.0051 m | 99.6% |
-| MVHuman200 | 0.5968 m | 0.0157 m | 97.4% |
-| Weighted 10-event mean | 0.7168 m | 0.0066 m | 99.1% |
-
-### 5.4 Loss Progression
-
-| Epoch | AvatarReX mean/median | THuman mean/median | MVHuman100 mean/median | MVHuman200 mean/median |
-|---:|---:|---:|---:|---:|
-| 0 | 3.4366 / 1.1098 | 0.4318 / 0.3116 | 12.6596 / 11.8502 | 3.9860 / 2.2153 |
-| 4 | 3.5730 / 0.1390 | 0.0850 / 0.0624 | 0.4545 / 0.2042 | 0.2832 / 0.1502 |
-| 8 | 0.2291 / 0.0633 | 0.0253 / 0.0219 | 0.0835 / 0.0966 | 0.0803 / 0.0793 |
-| 12 | 0.0274 / 0.0231 | 0.0055 / 0.0049 | 0.0156 / 0.0183 | 0.0168 / 0.0081 |
-
-At epoch 4 one AvatarReX event remained a rotation outlier: source mean rotation was
-40.08 degrees although the median was 1.54 degrees. By epoch 8 this outlier was
-reduced and the source mean rotation reached 2.55 degrees. At epoch 12 all four
-source means were strongly below their raw baselines.
-
-## 6. Visualization
-
-All viewers use the same `lbn1` input and `cut_indices=2`:
+All viewers use the same three images and `cut_indices=2`:
 
 | Port | Model |
 |---:|---|
 | 8091 | Original Human3R |
 | 8092 | Formal V9 |
-| 8093 | V14.1 one-event overfit upper bound |
-| 8094 | V14.1 10-event pilot |
+| 8093 | Corrected simplified V14.1 upper bound |
+| 8094 | Corrected V9-parity V14.1 upper bound |
 
-The viewer comparison is required because the current loss does not supervise
-pointmap/scene alignment. A numerically good camera/human result is insufficient if
-the pointmap, camera and human do not remain visually coherent.
-
-## 7. Artifacts
-
-Persistent single-event checkpoint:
+The two corrected pilot checkpoints are currently stored under `/dev/shm`:
 
 ```text
-output/v14_1/v14_1_cut_event_single_lbn1_1192/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_simplified_exact_runtime/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_v9_parity_exact_runtime/checkpoint-best.pth
 ```
 
-Persistent 10-event logs:
+They are volatile diagnostic artifacts, not release checkpoints.
+
+## 8. Decision and Next Step
+
+The single-event training graph is now valid. Training must remain at one sample
+until the 8093/8094 inspection confirms that camera, pointmap and SMPL-X are
+coherent in 3D.
+
+If V9-parity is visually coherent but the simplified branch is not, use V9-parity
+as the reference and ablate in this order:
 
 ```text
-output/v14_1/v14_1_cut_event_ten_sequences/log.txt
-output/v14_1/v14_1_cut_event_ten_sequences/metrics_epoch.jsonl
-output/v14_1/v14_1_cut_event_ten_sequences/train_steps.jsonl
+1. remove momentum only
+2. disable reliability only
+3. disable learned pose/human gates only
+4. make pose/human head LoRA event-only only
 ```
 
-The data volume was full during this run. The 10-event full checkpoint is temporarily
-stored at:
-
-```text
-/dev/shm/movie3r_v14_1/v14_1_cut_event_ten_full/checkpoint-best.pth
-```
-
-This path is volatile and must not be treated as durable storage. Before a reboot,
-either free at least 5 GB on `/data` and copy it, or implement a compact
-base-checkpoint-plus-trainable-delta format.
-
-## 8. Interpretation
-
-Supported:
-
-1. Two correct tokens are sufficient for strong first-post-cut fitting capacity.
-2. Momentum and previous correction history are not required for this capacity probe.
-3. Camera and human can be corrected jointly on the event frame.
-4. The result is not limited to one source within the 10-event training set.
-
-Not supported yet:
-
-1. held-out event generalization;
-2. no-cut output equivalence over long streams;
-3. post-cut later-frame stability;
-4. corrected-state commit versus raw-reset-state commit;
-5. extraction of one explicit SE(3) Boundary;
-6. scene/pointmap consistency;
-7. automatic cut detection;
-8. multi-human identity and V13 consensus.
-
-## 9. Next Experiment
-
-The next minimal experiment should freeze this event-frame model and test unseen cut
-events from the same four sources, then compare:
-
-```text
-A. commit corrected recurrent state
-B. commit raw hard-reset recurrent state and use corrected output only
-C. derive one explicit first-frame SE(3) Boundary and apply it to later raw frames
-```
-
-Use at least 4-8 post-cut frames for this evaluation. Do not expand training scale
-until the subjective viewer confirms that camera, pointmap and human move coherently.
+Only one change is allowed per run. The 10-event pilot should be rerun only after
+one architecture passes both the numerical and subjective single-event checks.

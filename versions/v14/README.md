@@ -6,9 +6,9 @@ V14 是正式的 one-shot latent coarse-to-fine streaming版本。仓库中
 当前状态（2026-07-27）：
 
 ```text
-V14.1 event-only architecture implemented
-single-event overfit completed
-10-event pilot completed
+V14.1 event-only routing/preprocessing bugs fixed
+corrected single-event upper bound completed
+old 10-event pilot withdrawn; corrected rerun not started
 ```
 
 当前第一阶段文档：
@@ -22,10 +22,11 @@ single-event overfit completed
 versions/v14/docs/Movie3R-V14.MD
 ```
 
-当前可用单样本 checkpoint：
+当前诊断用单样本 checkpoint（位于易失的 `/dev/shm`）：
 
 ```text
-output/v14_1/v14_1_cut_event_single_lbn1_1192/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_simplified_exact_runtime/checkpoint-best.pth
+/dev/shm/movie3r_v14_1/v14_1_cut_event_single_v9_parity_exact_runtime/checkpoint-best.pth
 ```
 
 冻结依赖：
@@ -39,3 +40,6 @@ V13: mean_raw_t uniform multi-human consensus
 V14.1 使用两帧 pre-cut context 和一张显式标记的 post-cut event frame，只在 event
 frame 插入 semantic/alignment correct tokens并启用 pose/human correction。它暂不接
 identity、V13 residual、shot Boundary propagation或 automatic cut detector。
+
+简化架构不是 V9 的严格等价版本。V9-parity 诊断配置保留 momentum、reliability、
+learned gate 和 context head LoRA，用于逐项验证哪些简化可以安全删除。
