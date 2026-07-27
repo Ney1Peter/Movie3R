@@ -25,6 +25,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--subsample", type=int, default=1)
     parser.add_argument("--reset_interval", type=int, default=10000000)
     parser.add_argument(
+        "--cut_indices",
+        type=int,
+        nargs="*",
+        default=None,
+        help=(
+            "Zero-based frame indices marked as explicit camera-cut events. "
+            "This uses the same shot_label routing as demo.py."
+        ),
+    )
+    parser.add_argument(
         "--freeze_state_after",
         type=int,
         default=None,
@@ -206,6 +216,23 @@ def main() -> None:
         freeze_pose_memory_after=args.freeze_pose_memory_after,
         freeze_v9_history_after=args.freeze_v9_history_after,
     )
+    cut_indices = set(args.cut_indices or [])
+    invalid_cut_indices = sorted(
+        index for index in cut_indices if index < 0 or index >= len(views)
+    )
+    if invalid_cut_indices:
+        raise ValueError(
+            f"cut_indices outside input range [0, {len(views) - 1}]: "
+            f"{invalid_cut_indices}"
+        )
+    for view_idx, view in enumerate(views):
+        ref = view["img"]
+        view["shot_label"] = torch.full(
+            (ref.shape[0],),
+            1.0 if view_idx in cut_indices else 0.0,
+            device=ref.device,
+            dtype=ref.dtype,
+        )
     if tmpdirname is not None:
         shutil.rmtree(tmpdirname)
 
@@ -230,6 +257,7 @@ def main() -> None:
         "output_dir": str(args.output_dir),
         "num_frames": int(len(img_paths)),
         "subsample": int(args.subsample),
+        "cut_indices": sorted(cut_indices),
         "saved_output": True,
         "strict_original_human3r": bool(args.strict_original_human3r),
         "disable_v8_pose_prompt": bool(args.disable_v8_pose_prompt),

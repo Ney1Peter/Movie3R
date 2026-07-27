@@ -477,6 +477,10 @@ def _make_v8_image_only_model_batch(batch):
         "depth_only",
         "single_view",
         "quantile",
+        # V14.1 uses this deployable event signal to route correction tokens.
+        # Dropping it here makes training correct every frame while demo only
+        # corrects explicit cut frames.
+        "shot_label",
     }
 
     clean_batch = []
