@@ -281,6 +281,16 @@ def parse_args():
         default=8080,
         help="Port for the Human3R/viser viewer.",
     )
+    parser.add_argument(
+        "--cut_indices",
+        type=int,
+        nargs="*",
+        default=None,
+        help=(
+            "Zero-based frame indices marked as explicit camera-cut events. "
+            "V14.1 applies correction only at these frames."
+        ),
+    )
     # V6.1: camera-only viewer mode is a debugging convenience for checking
     # whether shot-boundary camera frustums move without loading full point clouds.
     parser.add_argument(
@@ -918,6 +928,25 @@ def run_inference(args):
         freeze_pose_memory_after=args.freeze_pose_memory_after,
         freeze_v9_history_after=args.freeze_v9_history_after,
     )
+    cut_indices = set(args.cut_indices or [])
+    invalid_cut_indices = sorted(
+        index for index in cut_indices if index < 0 or index >= len(views)
+    )
+    if invalid_cut_indices:
+        raise ValueError(
+            f"cut_indices outside input range [0, {len(views) - 1}]: "
+            f"{invalid_cut_indices}"
+        )
+    for view_idx, view in enumerate(views):
+        ref = view["img"]
+        view["shot_label"] = torch.full(
+            (ref.shape[0],),
+            1.0 if view_idx in cut_indices else 0.0,
+            device=ref.device,
+            dtype=ref.dtype,
+        )
+    if cut_indices:
+        print(f"Explicit cut events: {sorted(cut_indices)}")
     if args.freeze_state_after is not None:
         print(
             f"Freeze-state-after enabled: frames with original index >= "

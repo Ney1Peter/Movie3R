@@ -1,0 +1,2 @@
+{"angle_bucket":"060_090","clip_type":"cut_event","frames":[273,274,274],"group":"thuman00","pattern_id":"v14_1_thuman00_274","seqs":["thuman00/cam05","thuman00/cam05","thuman00/cam23"],"shot_labels":[0,0,1],"transition_angles_deg":[0.0,0.0,88.067021],"view_angle_deg":88.067021}
+{"angle_bucket":"090_120","clip_type":"cut_event","frames":[1740,1741,1741],"group":"thuman00","pattern_id":"v14_1_thuman00_1741","seqs":["thuman00/cam15","thuman00/cam15","thuman00/cam23"],"shot_labels":[0,0,1],"transition_angles_deg":[0.0,0.0,119.70714],"view_angle_deg":119.70714}

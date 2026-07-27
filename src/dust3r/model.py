@@ -87,6 +87,7 @@ from dust3r.v8_head_lora import (
     inject_lora_to_linear_modules,
     lora_parameter_l2,
     mark_lora_trainable,
+    set_lora_enabled,
 )
 from dust3r.shot_human_memory import (
     HumanMemoryConfig,
@@ -297,6 +298,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_head_lora_rank=8,
         v8_head_lora_alpha=8.0,
         v8_head_lora_dropout=0.0,
+        v14_1_event_only_head_lora=False,
+        v14_1_freeze_unused_prompt_params=False,
         **croco_kwargs,
     ):
         super().__init__()
@@ -405,6 +408,8 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_head_lora_rank = v8_head_lora_rank
         self.v8_head_lora_alpha = v8_head_lora_alpha
         self.v8_head_lora_dropout = v8_head_lora_dropout
+        self.v14_1_event_only_head_lora = v14_1_event_only_head_lora
+        self.v14_1_freeze_unused_prompt_params = v14_1_freeze_unused_prompt_params
         self.croco_kwargs = croco_kwargs
 
 
@@ -1549,6 +1554,7 @@ class ARCroco3DStereo(CroCoNet):
                 for p in module.parameters():
                     p.requires_grad = True
             n_pose_lora, n_human_lora = self._mark_v8_head_lora_trainable()
+            self._freeze_v14_1_unused_prompt_parameters()
             self.enable_shot_adaptation = False
             self.enable_shot_decoder_token = False
             self.enable_layerwise_pose_shot_adapter = False
@@ -1729,6 +1735,12 @@ class ARCroco3DStereo(CroCoNet):
         self.v8_head_lora_rank = int(getattr(config, "v8_head_lora_rank", 8))
         self.v8_head_lora_alpha = float(getattr(config, "v8_head_lora_alpha", 8.0))
         self.v8_head_lora_dropout = float(getattr(config, "v8_head_lora_dropout", 0.0))
+        self.v14_1_event_only_head_lora = bool(
+            getattr(config, "v14_1_event_only_head_lora", False)
+        )
+        self.v14_1_freeze_unused_prompt_params = bool(
+            getattr(config, "v14_1_freeze_unused_prompt_params", False)
+        )
         self.v8_pose_head_lora_modules = []
         self.v8_human_head_lora_modules = []
 
@@ -1769,6 +1781,36 @@ class ARCroco3DStereo(CroCoNet):
                 if hasattr(self.downstream_head, attr):
                     n_human += mark_lora_trainable(getattr(self.downstream_head, attr), trainable=True)
         return n_pose, n_human
+
+    def _set_v14_1_head_lora_for_event(self, enabled):
+        """Route pose/human head LoRA only on an explicit V14.1 event."""
+        if not getattr(self, "v14_1_event_only_head_lora", False):
+            return
+        active = bool(enabled) and bool(getattr(self, "enable_v8_head_lora", False))
+        if hasattr(self.downstream_head, "pose_head"):
+            set_lora_enabled(self.downstream_head.pose_head, active)
+        for attr in ("deccam", "decpose", "decshape", "decexpression"):
+            if hasattr(self.downstream_head, attr):
+                set_lora_enabled(getattr(self.downstream_head, attr), active)
+
+    def _freeze_v14_1_unused_prompt_parameters(self):
+        """Keep the V14.1 optimizer limited to the active two-token path."""
+        if not getattr(self, "v14_1_freeze_unused_prompt_params", False):
+            return
+        unused_modules = [
+            self.v8_pose_prompt.momentum_mlp,
+            self.v8_pose_prompt.human_alignment_mlp,
+            self.v8_pose_prompt.body_part_mlp,
+            self.v8_pose_prompt.human_anchor_single_mlp,
+            self.v8_pose_prompt.human_anchor_multi_mlp,
+            self.v8_pose_prompt.single_token_mlp,
+            self.v8_pose_residual_head.pool_score,
+            self.v8_pose_residual_head.drift_head,
+            self.v8_human_latent_corr_head.corr_pool_score,
+            self.v8_human_latent_corr_head.gate_head,
+        ]
+        freeze_all_params(unused_modules)
+        self.v8_pose_prompt.human_anchor_type_embed.requires_grad = False
 
     def _v8_head_lora_info(self):
         if not getattr(self, "enable_v8_head_lora", False):
@@ -3470,6 +3512,9 @@ class ARCroco3DStereo(CroCoNet):
         v8_prev_gate = None
         v9_prev_raw_camera_pose = None
         for i in range(len(views)):
+            # A previous batch may end on a cut event. Restore original heads
+            # before computing this view's raw diagnostics and proposal tokens.
+            self._set_v14_1_head_lora_for_event(False)
             feat_i = feat[i]
             pos_i = pos[i]
             smpl_feat_i = smpl_query[i]
@@ -4017,6 +4062,7 @@ class ARCroco3DStereo(CroCoNet):
             ):
                 head_input = self._replace_head_pose_token(head_input, pose_token_for_head)
 
+            self._set_v14_1_head_lora_for_event(n_corr_i > 0)
             res = self._downstream_head(
                 head_input, shape[i], pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token)
             if self.msk_head_flag:
@@ -4472,6 +4518,9 @@ class ARCroco3DStereo(CroCoNet):
             return x.detach().float().cpu()
 
         for i, _view in enumerate(views):
+            # Context frames use original Human3R heads. The explicit event
+            # enables LoRA again immediately before the corrected heads.
+            self._set_v14_1_head_lora_for_event(False)
             view = to_gpu(_view, device)
             batch_size = view["img"].shape[0]
             img_mask = view["img_mask"].reshape(
@@ -5243,6 +5292,7 @@ class ARCroco3DStereo(CroCoNet):
                 or getattr(self, "enable_v8_pose_prompt", False)
             ):
                 head_input = self._replace_head_pose_token(head_input, pose_token_for_head)
+            self._set_v14_1_head_lora_for_event(n_corr_i > 0)
             res = self._downstream_head(
                 head_input, shape, pos=pos_i, n_humans=n_humans_i, smpl_token=smpl_token_cat)
 

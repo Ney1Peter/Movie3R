@@ -2035,6 +2035,7 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         stable_raw_consistency_weight=0.0,
         pose_lora_norm_weight=0.0,
         human_lora_norm_weight=0.0,
+        supervise_shot_label_only=False,
     ):
         super().__init__(
             translation_weight=translation_weight,
@@ -2086,6 +2087,7 @@ class V82PoseRelationLoss(V81PosePromptLoss):
         self.stable_raw_consistency_weight = float(stable_raw_consistency_weight)
         self.pose_lora_norm_weight = float(pose_lora_norm_weight)
         self.human_lora_norm_weight = float(human_lora_norm_weight)
+        self.supervise_shot_label_only = bool(supervise_shot_label_only)
         self.human_anchor_smpl_layer = nn.ModuleDict()
 
     def get_name(self):
@@ -2413,6 +2415,28 @@ class V82PoseRelationLoss(V81PosePromptLoss):
             if pred_pose is None:
                 continue
             pred_pose = pred_pose.float()
+            if self.supervise_shot_label_only:
+                shot_label = gt.get("shot_label", None)
+                if shot_label is None:
+                    raise KeyError(
+                        "V82PoseRelationLoss(supervise_shot_label_only=True) requires shot_label"
+                    )
+                shot_label = torch.as_tensor(
+                    shot_label,
+                    device=pred_pose.device,
+                    dtype=pred_pose.dtype,
+                ).reshape(pred_pose.shape[0], -1)[:, 0]
+                event_mask = shot_label > 0.5
+                if event_mask.any() and not event_mask.all():
+                    raise ValueError(
+                        "V14.1 batches must share one event index; mixed event/non-event "
+                        "samples in a view are unsupported"
+                    )
+                details[f"v82_event_supervised/{view_idx}"] = float(
+                    event_mask.float().mean()
+                )
+                if not event_mask.any():
+                    continue
             gt_pose = gt_pose.to(device=pred_pose.device, dtype=pred_pose.dtype)
 
             pose_loss = self._pose_loss(pred_pose, gt_pose)
