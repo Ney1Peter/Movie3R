@@ -27,16 +27,16 @@
     "native_root_update": "none beyond frozen BRTC-LC v1",
     "rejected_person": "exact B0",
     "unmatched_person": "exact B0",
-    "causal_state": "propagate one root-centred rigid rotation through the current post shot"
+    "causal_state": "separate frozen-BRTC translation reference from propagated root-centred orientation history"
   },
   "implementation": {
-    "git_commit": "684a7e1",
+    "git_commit": "85267c9",
     "runtime": "versions/v14/b0_person_triangulation_orientation_kabsch.py",
-    "runtime_sha256": "87f9c53b07f4dd66df6a3dc7979cd10d628dcdbacc40b6a60d7f7c1d62f55ee4",
+    "runtime_sha256": "92c7f83a7388ba2fbc336ae77a8cf9a0f9cf1a55b26f18ebbe86f8a6597bd481",
     "probe": "versions/v14/probe_brtc_global_orientation_kabsch.py",
-    "probe_sha256": "218682e434dfe3ab130fc26620318bc8c862c8051749c990ce4ddf8de1a0fcf2",
+    "probe_sha256": "c12a29c5483eb8865d237d4e00c462f7b53acbc7e61ff03a63c6971eeeba9f71",
     "egohumans_evaluator": "versions/v14/eval_brtc_global_orientation_kabsch_egohumans.py",
-    "egohumans_evaluator_sha256": "6154704d205b7561a5417a6fb8894117c9704b9f6403fd1645a8a4c274471bb1"
+    "egohumans_evaluator_sha256": "8af6eb985d0a53690ab68741683edf7997d12eac4d5e98d05457dc8e068c4790"
   },
   "frozen_evidence": {
     "policy_file": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/FROZEN_POLICY_BEFORE_VALIDATION.json",
@@ -44,9 +44,11 @@
     "multihuman_validation": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/VALIDATION_RESULTS.json",
     "multihuman_validation_sha256": "8d9c14056e6642e03fc38044b147d29a39409ed80d2213ba9eb2c7813ef7b8eb",
     "egohumans_report": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/egohumans/report.json",
-    "egohumans_report_sha256": "2cb41d71ddfe6faf7bdf747c965ee4d18f6e4e56d78336cc0514c5d8889d22fe",
+    "egohumans_report_sha256": "89551e227110a328f38d04d34bcd4db0aa96071ea6da45b1ff5f4a771742156f",
     "runtime_probe_parity": true,
-    "runtime_probe_max_abs_delta": 0.0
+    "runtime_probe_max_abs_delta": 0.0,
+    "dual_state_runtime_contract": true,
+    "deployable_first_frame_propagation_max_abs_delta": 8.881784197001252e-16
   },
   "known_limitation": "The only strict-zero failure is +0.034 mm in a pelvis re-regressed after SMPL-X-to-SMPL mapping; native Human3R root is bit-exact. This manifest freezes a qualified candidate, not the default runtime."
 }
