@@ -1,0 +1,52 @@
+{
+  "name": "BRTC person-local global-orientation Kabsch v1",
+  "date": "2026-08-01",
+  "status": {
+    "default_runtime": false,
+    "strict_zero_decision": "NO_GO_GLOBAL_ORIENTATION_KABSCH_EGOHUMANS",
+    "qualified_candidate_with_explicit_proxy_tolerance": true,
+    "proxy_tolerance_mm": 0.1,
+    "qualified_status": "QUALIFIED_GLOBAL_ORIENTATION_KABSCH_CANDIDATE"
+  },
+  "base": {
+    "camera_and_translation_method": "frozen B0 + BRTC-LC v1",
+    "baseline_tag": "movie3r-v14-brtc-lc-v1",
+    "b0_checkpoint": "checkpoints/v14_brtc_lc_v1_b0/checkpoint-best.pth",
+    "b0_checkpoint_sha256": "8379243216775adbc886d00e6f93b6492f7d8f1bd67adb4e8ad6fbdd84e47123"
+  },
+  "policy": {
+    "max_angle_deg": 25.0,
+    "rotation_fraction": 0.5,
+    "min_observable_relative_improvement": 0.0
+  },
+  "policy_canonical_sha256": "59e42e235134f5cf3a1e2962d30e06de5cc386c1033f36372db4ace35ff5a423",
+  "constraints": {
+    "future_post_frames": 0,
+    "extra_pretrained_models": [],
+    "camera_update": "none",
+    "native_root_update": "none beyond frozen BRTC-LC v1",
+    "rejected_person": "exact B0",
+    "unmatched_person": "exact B0",
+    "causal_state": "propagate one root-centred rigid rotation through the current post shot"
+  },
+  "implementation": {
+    "git_commit": "684a7e1",
+    "runtime": "versions/v14/b0_person_triangulation_orientation_kabsch.py",
+    "runtime_sha256": "87f9c53b07f4dd66df6a3dc7979cd10d628dcdbacc40b6a60d7f7c1d62f55ee4",
+    "probe": "versions/v14/probe_brtc_global_orientation_kabsch.py",
+    "probe_sha256": "218682e434dfe3ab130fc26620318bc8c862c8051749c990ce4ddf8de1a0fcf2",
+    "egohumans_evaluator": "versions/v14/eval_brtc_global_orientation_kabsch_egohumans.py",
+    "egohumans_evaluator_sha256": "6154704d205b7561a5417a6fb8894117c9704b9f6403fd1645a8a4c274471bb1"
+  },
+  "frozen_evidence": {
+    "policy_file": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/FROZEN_POLICY_BEFORE_VALIDATION.json",
+    "policy_file_sha256": "cd51d67ef2779f7959b08a445ae9879fc9244285b099fd72a2348adc12718111",
+    "multihuman_validation": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/VALIDATION_RESULTS.json",
+    "multihuman_validation_sha256": "8d9c14056e6642e03fc38044b147d29a39409ed80d2213ba9eb2c7813ef7b8eb",
+    "egohumans_report": "output/v14/fine_alignment_research/brtc_global_orientation_kabsch/egohumans/report.json",
+    "egohumans_report_sha256": "2cb41d71ddfe6faf7bdf747c965ee4d18f6e4e56d78336cc0514c5d8889d22fe",
+    "runtime_probe_parity": true,
+    "runtime_probe_max_abs_delta": 0.0
+  },
+  "known_limitation": "The only strict-zero failure is +0.034 mm in a pelvis re-regressed after SMPL-X-to-SMPL mapping; native Human3R root is bit-exact. This manifest freezes a qualified candidate, not the default runtime."
+}
