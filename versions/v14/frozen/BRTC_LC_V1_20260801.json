@@ -1,0 +1,85 @@
+{
+  "freeze_id": "BRTC_LC_V1_20260801",
+  "status": "frozen_baseline",
+  "created_at": "2026-08-01 Asia/Shanghai",
+  "method_name": "Camera-Frozen Boundary Ray Triangulation with Layout Consensus",
+  "short_name": "BRTC-LC v1",
+  "pipeline": [
+    "frozen learned B0 camera/scene Boundary",
+    "automatic anonymous root+torso+centred-joints Hungarian association",
+    "last-pre/first-post five-core-joint closest-ray triangulation",
+    "ray-gap, joint-MAD and parallax gate",
+    "group-median shift plus pre-layout-selected individual residual",
+    "rigid translation of accepted post-cut people",
+    "bit-exact B0 fallback for rejected or unmatched people"
+  ],
+  "checkpoint": {
+    "path": "checkpoints/v14_brtc_lc_v1_b0/checkpoint-best.pth",
+    "size_bytes": 5087696045,
+    "sha256": "8379243216775adbc886d00e6f93b6492f7d8f1bd67adb4e8ad6fbdd84e47123",
+    "storage": "persistent_under_data_gitignored",
+    "copied_from": "/dev/shm/movie3r_b0_seed456_ep150_full_b192/checkpoint-best.pth",
+    "source_copy_parity": "bit_exact_at_freeze_time"
+  },
+  "runtime": {
+    "path": "versions/v14/b0_person_triangulation.py",
+    "sha256": "98b839f4ae2ff130b0c6ecbc4e0e634ba626d2433f148bee3e55ac169aab3327",
+    "api": "refine_matched_people(pre_camera, post_camera, pre_people, post_people, matches, config)",
+    "camera_update": "none",
+    "future_frames": 0,
+    "extra_pretrained_models": []
+  },
+  "parameters": {
+    "joint_ids": [0, 1, 2, 16, 17],
+    "joint_names": ["pelvis", "left_hip", "right_hip", "left_shoulder", "right_shoulder"],
+    "min_valid": 1,
+    "max_median_gap_m": 0.2,
+    "max_mad_m": 0.4,
+    "min_median_sine": 0.025,
+    "min_abs_raw_m": 0.0,
+    "cap_m": 2.0,
+    "residual_lambda_grid": [0.0, 0.25, 0.5, 0.75, 1.0]
+  },
+  "confirmation": {
+    "report": "output/v14/fine_alignment_research/b0_two_view_person_triangulation/confirm_three_offset1.json",
+    "report_sha256": "0ef83e82274549457319054d2505b26b08f0fc4a3cfe4d550d1a2531915f7481",
+    "split": "MultiHuman three offset1",
+    "cut_count": 42,
+    "person_count": 125,
+    "metrics_m": {
+      "root": {"b0": 0.37794001038432545, "brtc_lc": 0.23143660973811309},
+      "world_joint": {"b0": 0.4117225852090531, "brtc_lc": 0.27449336621339415},
+      "world_vertex": {"b0": 0.38905811376781535, "brtc_lc": 0.2524508305667674},
+      "pairwise_distance": {"b0": 0.13409798470881787, "brtc_lc": 0.0983513359586898},
+      "pairwise_vector": {"b0": 0.3296683474935277, "brtc_lc": 0.25877852771354665}
+    },
+    "coverage": 0.88,
+    "root_improve_rate": 0.672,
+    "root_harm_over_5cm_rate": 0.072,
+    "automatic_association_accuracy": 1.0,
+    "camera_max_abs_change": 0.0,
+    "passed_frozen_gate": true
+  },
+  "online_contract": {
+    "inputs": [
+      "last pre-cut B0-aligned camera and people",
+      "first post-cut B0-aligned camera and people",
+      "anonymous one-to-one association indices"
+    ],
+    "state": "the already-seen pre-cut boundary state only",
+    "outputs": [
+      "unchanged B0 cameras and scene",
+      "rigidly translated accepted post-cut person roots, joints and vertices",
+      "unchanged pose, shape and orientation",
+      "exact B0 geometry for rejected and unmatched people",
+      "observable gate and shift diagnostics"
+    ]
+  },
+  "limitations": [
+    "solves person root/depth and multi-person layout only",
+    "does not correct internal articulated pose, shape or global orientation",
+    "confirmation is controlled MultiHuman rather than an official Multi-THuMBS benchmark split",
+    "raw Human3R metrics are not metrics of this frozen method",
+    "person entry, exit, occlusion and association dustbin are not fully solved"
+  ]
+}
