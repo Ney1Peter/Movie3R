@@ -67,6 +67,19 @@ fusion, loss weights, or evaluation set in the same experiment.
 cd src
 CUDA_VISIBLE_DEVICES=2 PYTHONPATH=..:. ../.venv/bin/python train.py \
   --config-name train_v14_1_cut_first_cross_source_10
+
+cd ..
+CUDA_VISIBLE_DEVICES=2 PYTHONPATH=src:. .venv/bin/python \
+  versions/v14/cut_first_cross_source/evaluate_cut_events.py \
+  --model-path <checkpoint> --device cuda:0 --output-dir <eval-output>
+
+CUDA_VISIBLE_DEVICES=2 PYTHONPATH=src:. .venv/bin/python \
+  versions/v14/cut_first_cross_source/evaluate_four_source_b0.py \
+  --model-path <checkpoint> --device cuda:0 --output-dir <eval-output>
+
+CUDA_VISIBLE_DEVICES=2 PYTHONPATH=src:. .venv/bin/python \
+  versions/v14/cut_first_cross_source/audit_reset_only_parity.py \
+  --event-model <checkpoint> --device cuda:0 --output-dir <audit-output>
 ```
 
 All outputs go under `output/v14_cut_first_cross_source/`.  Existing V9/V14
