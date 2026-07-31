@@ -42,6 +42,7 @@ keep_freq: 0
 save_last_checkpoint: false
 save_final_checkpoint: true
 early_stopping_patience: 1000000
+print_freq: 96
 
 exp_name: v14_cut_first_cross_source_96ps_e6
 logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/${exp_name}/logs
