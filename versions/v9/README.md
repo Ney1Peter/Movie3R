@@ -35,12 +35,10 @@ Boundary，也不包含 V13 多人 consensus。
 
 ## 权重
 
-稳定目录中保留三份 checkpoint：
+稳定目录中只保留推理所需的 final checkpoint；best/last 训练状态已在空间清理时删除：
 
 | 文件 | 大小 | SHA-256 |
 |---|---:|---|
-| `checkpoint-best.pth` | 4,985,106,570 B | `4376d623a7fb658da33eac03912697ba9a21aa919a25e6a5761eedbe745e25a8` |
-| `checkpoint-last.pth` | 4,985,106,570 B | `a1f2173f45db82c914dc646afdae28f1a511279920666217a749f7ba7e07a02d` |
 | `checkpoint-final.pth` | 4,831,184,406 B | `3fb2799420f7fd3caa63a47c9cde73090a6f93383520363484eb5158e446fceb` |
 
 resolved Hydra config 的 SHA-256 为
