@@ -747,3 +747,263 @@ reproduction commands are recorded in:
 ```text
 versions/v14/docs/V14_B0_TWO_VIEW_TRIANGULATION_FINAL_20260731.md
 ```
+
+## 20. 2026-08-01 Frozen BRTC-LC v1 and EgoHumans Current-Method Result
+
+The current root/layout method is now frozen independently of later experiments.
+
+```text
+commit: 1d77b5d
+tag:    movie3r-v14-brtc-lc-v1
+manifest:
+  versions/v14/frozen/BRTC_LC_V1_20260801.json
+checkpoint:
+  checkpoints/v14_brtc_lc_v1_b0/checkpoint-best.pth
+sha256:
+  8379243216775adbc886d00e6f93b6492f7d8f1bd67adb4e8ad6fbdd84e47123
+```
+
+It remains the default runtime. The later experiments do not modify its B0 camera,
+association, ray evidence, group/layout consensus, or checkpoint.
+
+The same current B0+BRTC-LC method—not raw Human3R—was replayed on the available local
+EgoHumans subset: `001_legoassemble`, three manually assembled 15-frame streams and six
+cuts. The local Multi-THuMBS-style provisional result is:
+
+| W | WA | Fixed root | Fixed joint | Fixed vertex | Pair distance | Pair vector | Root Accel | ATE | IDs/stream |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 314.059 | 202.461 | 380.654 | 384.729 | 385.238 | 177.025 | 333.870 | 116.014 | 0.119 | 1.00 |
+
+The paper reports EgoHumans W/WA `279.0/166.0 mm`, so the local current method is still
+approximately `+35.1/+36.5 mm` worse. This is only a provisional gap: the official split,
+supplementary protocol, visibility treatment, evaluator, and complete Accel definition are
+not public. The result is nevertheless useful because it tests the actual frozen method and
+shows that global trajectory/person structure remains behind the paper reference.
+
+The viewers on ports `8091/8092` were stopped. All experiments in this section and below
+replay caches on CPU and write only under the `/data` Movie3R workspace.
+
+## 21. 2026-08-01 Search Round: What Was Tried and Rejected
+
+The search kept the hard constraints: no new pretrained vision model, zero future post
+frames, B0 camera bit-exact, rejected/unmatched people safe, and complete failure records.
+
+| Candidate | Positive evidence | Failure | Decision |
+|---|---|---|---|
+| Huber-IRLS BRTC | slight single-person gain | layout/coverage unstable | NO-GO |
+| fixed group damping | lower harm and some spatial metrics | pair distance regresses | NO-GO |
+| causal temporal ray bundle | lower correction jitter/Accel | spatial error slightly worse; below B0 Accel ceiling not reached | stabilizer only |
+| linear completeness | Ego W/WA/root/harm improve | independent variable-visibility spatial errors regress | NO-GO |
+| soft incomplete scale=0.9 | three/dance improve | box joint/vertex regress | NO-GO |
+| joint ray-layout least squares | fits pre layout | dance/box pair distance overfits badly | NO-GO |
+| FAGD-0.9 | same-visibility root gain; pair layout exact | equal-count replacements and Ego Accel/WA gate failure | NO-GO |
+| acceleration-gated FAGD | MultiHuman gain retained | Ego gate acts 0/6; no improvement | NO-GO |
+| geometry-only identity dustbin | dev rejects all four wrong edges | dance rejects correct IDs; box accepts confident full swap | NO-GO |
+| angular-safe group damping | offset1/box improve; population changes exact v1 | dance root/joint regress; Ego exact v1/no action | NO-GO |
+| learned group-alpha selector | grouped CV and offset1 root improve | pair layout, box, Ego W/WA and Accel conflict | NO-GO |
+| shared/group SO(3) Kabsch | all MultiHuman joint/vertex means improve | Ego fixed joint/vertex `+0.177/+0.006 mm`; weaker than individual | NO-GO |
+| person-local body scale | bone-length consistency is observable; offset1/box improve | dance vertex/Accel and Ego fixed joint/vertex regress | NO-GO |
+| individual Kabsch + body scale | net better than BRTC on Ego | scale is a negative increment over Kabsch on dance/Ego fixed mesh | NO-GO as second candidate |
+| two-frame group tangent translation | three-offset1/box improve; layout exact | dance root `+2.096 mm`; coherent motion is confounded with shared bias | NO-GO |
+| timestamp-aware velocity group tangent | three-offset1 and box improve strongly | every nonzero dance offset moves root in the wrong direction | NO-GO |
+| TORSO8 / observable orientation selector | small aggregate orientation gain | no configuration passes every timestamp and centred/raw mesh gate | NO-GO |
+| person-to-scene contact from current cache | physically independent degree of freedom | Ego has no scene fields; MultiHuman deletes foot-local support | NO-GO on current cache evidence |
+
+The repeated pattern is now explicit:
+
+1. BRTC shared translation is useful but slightly miscalibrated in some cases.
+2. Counts, action size, angular ray change, predicted acceleration, layout objective, and a
+   small observable classifier cannot reliably determine a better scalar group amplitude.
+3. Current root/torso/joint geometry can be confidently wrong about identity; threshold
+   tuning cannot replace an independent appearance/identity cue.
+4. Body scale flicker exists, but making predicted bone lengths continuous is not equivalent
+   to lowering complete world-mesh error.
+5. A new module should add a missing geometric degree of freedom, not repeatedly rescale the
+   same BRTC translation.
+
+The detailed negative reports are all under `versions/v14/docs/` and were committed in
+logical groups. They are retained to prevent repeating the same hypotheses.
+
+## 22. Qualified Candidate: Person-Local Global-Orientation Kabsch
+
+The one retained candidate adds the global-orientation degree of freedom that BRTC cannot
+represent:
+
+```text
+frozen B0 camera
+-> frozen BRTC-LC v1 translation
+-> BRTC-accepted match only
+-> last-pre/current-post root-centred hips+shoulders
+-> bounded per-person Kabsch SO(3)
+-> rotate joints/vertices around the corrected native root
+-> propagate the same rotation causally through the current shot
+```
+
+Frozen policy:
+
+```text
+maximum applied angle = 25 degrees
+rotation fraction      = 0.5
+minimum predicted torso-residual improvement = 0
+```
+
+It uses no RGB encoder, DA3, GT-side inference, dataset ID, future post frame, or new
+pretrained model. Rejected and unmatched people are exact B0; the camera and native Human3R
+root are exact frozen BRTC.
+
+Frozen MultiHuman results:
+
+| Split | Joint BRTC | Joint Kabsch | Vertex BRTC | Vertex Kabsch | Root/layout |
+|---|---:|---:|---:|---:|---|
+| three offset1 | .274493 | **.271315** | .252451 | **.250248** | exact BRTC |
+| dance | .177804 | **.168764** | .152914 | **.148234** | exact BRTC |
+| box | .421610 | **.418583** | .434528 | **.429938** | exact BRTC |
+
+EgoHumans provisional result:
+
+| Method | W | WA | pelvis MPJPE | pelvis MPVPE | Fixed joint | Fixed vertex | Root Accel | Joint Accel |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| BRTC v1 | 314.059 | 202.461 | 109.266 | 129.960 | 384.729 | 385.238 | 116.014 | 125.270 |
+| + individual Kabsch | **312.769** | **200.029** | **101.526** | **119.928** | **383.933** | **383.791** | **115.698** | **123.167** |
+
+Joint/vertex harm above 5 cm is zero on the Ego chains. Local W/WA remain
+`+33.769/+34.029 mm` above the paper reference, so this is progress rather than a claimed
+Multi-THuMBS win.
+
+### 22.1 Strict versus practical decision
+
+The predeclared zero-tolerance gate remains technically false because the Ego evaluator
+maps SMPL-X vertices to SMPL and re-regresses a pelvis root. That proxy changes
+`380.654 -> 380.688 mm`, a `+0.034 mm` regression. The stored native Human3R root has exactly
+zero change, and mapped pelvis versus native root already differs by median `18.193 mm`.
+
+Therefore both decisions are preserved:
+
+```text
+strict-zero evaluator decision:
+  NO_GO_GLOBAL_ORIENTATION_KABSCH_EGOHUMANS
+
+explicit 0.1 mm mapped-pelvis proxy tolerance:
+  QUALIFIED_GLOBAL_ORIENTATION_KABSCH_CANDIDATE
+```
+
+The qualified candidate is frozen but is not yet the default runtime:
+
+```text
+tag: movie3r-v14-brtc-kabsch-v1-candidate
+manifest:
+  versions/v14/frozen/BRTC_PERSON_LOCAL_KABSCH_V1_20260801.json
+runtime:
+  versions/v14/b0_person_triangulation_orientation_kabsch.py
+```
+
+### 22.2 Necessary dual-state streaming contract
+
+An implementation audit found a real causal-state issue. Feeding the already-rotated last
+shot back into BRTC makes its next translation read rotated joints and can move the root by
+up to `9.0556 mm` relative to frozen BRTC. Feeding only the translation reference prevents
+orientation inheritance. The deployable interface therefore separates:
+
+```text
+BRTC translation state:
+  unrotated frozen-v1 reference history
+
+person orientation state:
+  causally rotated history from the emitted previous shot
+```
+
+The full deployable runtime now consumes both states. MultiHuman and Ego runtime/probe
+geometry and rotation parity are zero; first-frame propagation parity is at most
+`8.88e-16`; rejected/unmatched geometry and orientation metadata are exact B0; camera and
+native root remain exact. Twelve related tests pass.
+
+## 23. Residual Error and the Next Research Direction
+
+After BRTC+Kabsch, the available Ego post-shot fixed-root error is still `326.984 mm`.
+Evaluator-only decomposition shows:
+
+```text
+shared root squared-error fraction: 71.6%
+root after oracle per-frame shared removal: 148.279 mm
+
+pelvis pose raw / oracle-SO3 / PA floor:
+101.583 / 75.568 / 64.946 mm
+```
+
+This means the first Kabsch module attacks a real orientation component, but the largest
+remaining world error is still a shared person/root component. Directly subtracting camera
+error does not solve it, and the failed scalar damping experiments show that its magnitude
+is not identifiable from BRTC action statistics alone.
+
+A first explicit shared-translation probe was also completed. It projected each accepted
+`last-pre -> current-post` root residual onto the post-camera ray tangent plane and applied
+a robust bounded group median. The frozen dev policy improved `three offset1` and `box`, but
+regressed native root on `dance` by `+2.096 mm`, so the decision is
+`NO_GO_TWO_FRAME_GROUP_TANGENT`. The failure identifies the missing observable: with only
+two frames, coherent human motion and a shared alignment bias are indistinguishable.
+
+Timestamp-aware causal velocity compensation was then implemented and tested. It rebuilt
+anonymous tracks from five causal pre-shot frames, extrapolated with the physical dataset
+timestamp delta, and only then robustly aggregated the ray-tangent residual. The frozen
+policy used `apply_when_dt_zero=false`, so all repeated-timestamp Ego cuts and offset-zero
+cases were exact Kabsch fallback rather than using stream-list indices as fake time.
+
+The branch improved three-offset1 by about `9.4/9.8/10.8 mm` root/joint/vertex and box by
+`2.3/3.1/3.3 mm` relative to Kabsch, but failed dance: root regressed `6.497 mm` and vertex
+regressed `1.712 mm`. Every nonzero dance delta (`1/2/4/8`) moved root in the wrong direction.
+Ego was exactly Kabsch and therefore could validate fallback invariants but not the velocity
+action. The frozen result is `NO_GO_VELOCITY_RESIDUAL_GROUP_TANGENT`; confirmation was not
+retuned. This shows that causal velocity reduces the ambiguity in some scenes but does not
+make shared root bias identifiable from human motion across captures.
+
+A second orientation search also failed under stricter grouped-CV. TORSO8 correspondences,
+a deterministic predicted-residual selector, and a mapped-pelvis pivot each had small mean
+benefits in some groups but local regressions. A shallow observable TORSO4/TORSO8 selector
+scanned 369 predeclared configurations with leave-one-timestamp-out evaluation; none passed
+all raw and pelvis-centred joint/vertex gates. The closest selector improved the four means
+by only `0.017--0.044 mm` and still regressed timestamp-1000 pelvis-centred vertex by
+`0.052 mm`. It was not frozen and no held-out split was opened. The decision is
+`NO_GO_SECOND_ORIENTATION_SELECTOR`; TORSO4 individual Kabsch remains the only retained
+orientation candidate.
+
+In parallel, the stronger long-term experiment should use an **independent explicit
+observation already available from Human3R**, not another scalar gate:
+
+```text
+frozen B0+BRTC+qualified Kabsch
+-> keep camera and native roots as separate audited states
+-> obtain Human3R's own scene pointmap/depth and visible body/foot geometry
+-> estimate a bounded shared person-to-scene contact/depth residual
+-> require multi-person/contact/ray agreement
+-> update accepted person roots only when this independent cue agrees
+-> exact BRTC+Kabsch fallback otherwise
+```
+
+This does not introduce a second pretrained model: it reuses outputs of the existing
+Human3R forward. The important test is whether scene contact/depth predicts the sign of the
+remaining shared root residual across new sequences. If the cache lacks pointmap/contact
+evidence, the correct next step is to extend the CPU geometry cache once, predeclare the
+gate, and obtain new held-out boundaries—not to tune another function of already-failed
+BRTC statistics.
+
+The availability audit found that this extension is in fact required. The current Ego
+cache has no scene/depth/confidence/foot-visibility field at all. MultiHuman retains only a
+sparse cloud created after removing each complete person bbox plus an 8% margin and then
+drops confidence and pixel coordinates. Foot-to-cloud coverage within 25 cm is only
+`7.7%/6.3%/0.7%/29.7%` on three-dev/three-offset1/dance/box. Consequently a fallback-only
+contact run would have zero meaningful coverage and is not a GO. The frozen decision is
+`NO_GO_CURRENT_CACHE_FOR_PERSON_SCENE_CONTACT_RESIDUAL` (insufficient evidence, not a proof
+that a correctly cached contact method cannot work). A reproducible audit and a compact
+foot-local patch cache contract are recorded in
+`V14_BRTC_PERSON_SCENE_CONTACT_AVAILABILITY_20260801.md`; no model or GPU was run for this
+audit.
+
+The earlier V11.2 control also prevents repeating a naive formulation: forcing predicted
+foot contact to zero required a mean `0.515 m` root shift and moved the human reprojection by
+`112.1 px` on average (`252.4 px` P95). Any future contact candidate must preserve an
+observable past signed person-to-surface offset, keep the camera fixed, cap the initial
+action at 30 mm, and fall back exactly when the local support is unobservable.
+
+For identity replacements, a separate lightweight appearance descriptor from existing
+Human3R/image tokens is required. Geometry-only confidence has been falsified and should
+not be revisited without an independent identity cue.
