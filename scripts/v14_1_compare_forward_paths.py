@@ -27,6 +27,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--force_event_only_routing",
+        action="store_true",
+        help="Force formal V9 weights through V14.1 event-only token/LoRA routing.",
+    )
     return parser.parse_args()
 
 
@@ -55,12 +60,17 @@ def main() -> None:
     args = parse_args()
 
     from dust3r.datasets.avatarrex import AvatarReX_Pattern
-    from dust3r.inference import _make_v8_image_only_model_batch
+    from dust3r.inference import (
+        _compose_v14_1_dual_path_scene,
+        _make_v14_1_event_off_batch,
+        _make_v8_image_only_model_batch,
+    )
     from dust3r.losses import V82PoseRelationLoss
     from dust3r.model import ARCroco3DStereo
     from dust3r.smpl_model import SMPLModel
     from dust3r.utils.device import todevice
-    from dust3r.utils.geometry import resize_camera_intrinsics
+    from dust3r.utils.camera import pose_encoding_to_camera
+    from dust3r.utils.geometry import geotrf, resize_camera_intrinsics
     from dust3r.utils.image import pad_image
 
     raw_calibration_root = {
@@ -107,6 +117,11 @@ def main() -> None:
     gt_batch = todevice(copy.deepcopy(batch), device)
     model_batch = todevice(model_batch, device)
     model = ARCroco3DStereo.from_pretrained(str(args.model_path)).to(device).eval()
+    if args.force_event_only_routing:
+        model.v9_oracle_correction_gate_enabled = True
+        model.v9_oracle_correction_inference_only = False
+        model.v9_oracle_correction_cache_enabled = False
+        model.v14_1_event_only_head_lora = True
     smpl_model = SMPLModel(
         device,
         model_args={
@@ -121,6 +136,13 @@ def main() -> None:
         train_preds = train_output.ress
         demo_preds, _, _ = model.forward_recurrent_lighter(
             copy.deepcopy(model_batch), str(device), ret_state=True, use_ttt3r=False
+        )
+        event_off_batch = _make_v14_1_event_off_batch(copy.deepcopy(model_batch))
+        demo_shadow_preds, _, _ = model.forward_recurrent_lighter(
+            copy.deepcopy(event_off_batch), str(device), ret_state=True, use_ttt3r=False
+        )
+        dual_path_preds = _compose_v14_1_dual_path_scene(
+            model_batch, demo_preds, demo_shadow_preds
         )
 
     criterion = V82PoseRelationLoss(
@@ -158,6 +180,7 @@ def main() -> None:
         "model_path": str(args.model_path.resolve()),
         "manifest_path": str(args.manifest_path.resolve()),
         "resize_mode": args.resize_mode,
+        "force_event_only_routing": bool(args.force_event_only_routing),
         "num_views": len(train_preds),
         "metrics": {
             "train": {"loss": float(train_loss.detach()), **train_metrics},
@@ -165,8 +188,15 @@ def main() -> None:
         },
         "views": [],
     }
-    for view_idx, (train_pred, demo_pred) in enumerate(zip(train_preds, demo_preds)):
-        view_report = {"view_idx": view_idx, "keys": {}}
+    for view_idx, (train_pred, demo_pred, demo_shadow_pred, dual_path_pred) in enumerate(
+        zip(train_preds, demo_preds, demo_shadow_preds, dual_path_preds)
+    ):
+        view_report = {
+            "view_idx": view_idx,
+            "keys": {},
+            "event_on_vs_off": {},
+            "dual_path_vs_raw": {},
+        }
         for key in selected_keys:
             comparison = _tensor_comparison(train_pred.get(key), demo_pred.get(key))
             if comparison is not None:
@@ -176,6 +206,45 @@ def main() -> None:
                     "train_present": key in train_pred,
                     "demo_present": key in demo_pred,
                 }
+        for key in (
+            "camera_pose",
+            "smpl_transl",
+            "smpl_shape",
+            "smpl_rotmat",
+            "smpl_expression",
+            "pts3d_in_self_view",
+            "pts3d_in_other_view",
+        ):
+            comparison = _tensor_comparison(
+                demo_pred.get(key), demo_shadow_pred.get(key)
+            )
+            if comparison is not None:
+                view_report["event_on_vs_off"][key] = comparison
+            dual_comparison = _tensor_comparison(
+                dual_path_pred.get(key), demo_shadow_pred.get(key)
+            )
+            if dual_comparison is not None:
+                view_report["dual_path_vs_raw"][key] = dual_comparison
+        camera_pose = demo_pred.get("camera_pose")
+        raw_camera_pose = demo_shadow_pred.get("camera_pose")
+        raw_world_pointmap = demo_shadow_pred.get("pts3d_in_other_view")
+        world_pointmap = demo_pred.get("pts3d_in_other_view")
+        if (
+            camera_pose is not None
+            and raw_camera_pose is not None
+            and raw_world_pointmap is not None
+            and world_pointmap is not None
+        ):
+            corrected_camera = pose_encoding_to_camera(camera_pose.float())
+            raw_camera = pose_encoding_to_camera(raw_camera_pose.float())
+            boundary = corrected_camera @ torch.linalg.inv(raw_camera)
+            shared_target = geotrf(
+                boundary,
+                raw_world_pointmap.float(),
+            )
+            view_report["shared_transform_consistency"] = _tensor_comparison(
+                world_pointmap, shared_target
+            )
         report["views"].append(view_report)
 
     payload = json.dumps(report, indent=2, sort_keys=True)

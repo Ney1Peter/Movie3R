@@ -291,6 +291,14 @@ def parse_args():
             "V14.1 applies correction only at these frames."
         ),
     )
+    parser.add_argument(
+        "--v14_1_dual_path_scene",
+        action="store_true",
+        help=(
+            "Run a Human3R-only shadow rollout and use its local pointmap at "
+            "explicit cut frames while retaining corrected camera/human outputs."
+        ),
+    )
     # V6.1: camera-only viewer mode is a debugging convenience for checking
     # whether shot-boundary camera frustums move without loading full point clouds.
     parser.add_argument(
@@ -744,7 +752,8 @@ def prepare_output(
                 shape=smpl_shape[f_id].numpy(),
                 rotvec=smpl_rotvec[f_id].numpy(),
                 transl=smpl_transl[f_id].numpy(),
-                expression=smpl_expression[f_id].numpy() if smpl_expression[f_id] is not None else None
+                expression=smpl_expression[f_id].numpy() if smpl_expression[f_id] is not None else None,
+                smpl_id=smpl_id[f_id].detach().cpu().numpy(),
             )
 
         # Save smpl projection
@@ -825,7 +834,11 @@ def run_inference(args):
     add_path_to_dust3r(args.model_path)
 
     # Import model and inference functions after adding the ckpt path.
-    from src.dust3r.inference import inference_recurrent_lighter
+    from src.dust3r.inference import (
+        _compose_v14_1_dual_path_scene,
+        _make_v14_1_event_off_batch,
+        inference_recurrent_lighter,
+    )
     from src.dust3r.model import ARCroco3DStereo
     from src.dust3r.v8_head_lora import set_lora_enabled
     from viser_utils import SceneHumanViewer
@@ -981,6 +994,18 @@ def run_inference(args):
     start_time = time.time()
     outputs, _ = inference_recurrent_lighter(
         views, model, device, use_ttt3r=args.use_ttt3r)
+    if args.v14_1_dual_path_scene:
+        shadow_views = _make_v14_1_event_off_batch(deepcopy(views))
+        shadow_outputs, _ = inference_recurrent_lighter(
+            shadow_views, model, device, verbose=False, use_ttt3r=args.use_ttt3r
+        )
+        outputs["pred"] = _compose_v14_1_dual_path_scene(
+            views, outputs["pred"], shadow_outputs["pred"]
+        )
+        print(
+            "V14.1 dual-path scene enabled: raw local pointmaps are composed "
+            "with corrected cut-frame camera poses."
+        )
     total_time = time.time() - start_time
     per_frame_time = total_time / len(views)
     print(

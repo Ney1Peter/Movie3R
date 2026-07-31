@@ -65,6 +65,10 @@ test_criterion: ${train_criterion}
 batch_size: 1
 num_workers: 0
 accum_iter: 1
+# Match the FP32 recurrent path used by demo.py. The V14.1 branch is small
+# enough that mixed precision is not needed for the single-event capacity test.
+amp: 0
+eval_amp: false
 warmup_epochs: 1
 gradient_checkpointing: false
 cuda_cache_reserve_mb: 0

@@ -1,0 +1,18 @@
+defaults:
+  - train_v14_1_cut_event_single_v9_event_only
+  - _self_
+
+# Loss-only ablation: keep V14.1 event-only routing and restore the auxiliary
+# terms used by the formal V9 checkpoint.
+train_criterion: V82PoseRelationLoss(translation_weight=1.0, rotation_weight=5.0,
+  residual_weight=1.0e-5, drift_weight=0.05, improvement_weight=0.05,
+  pose_key='raw_camera_pose', drift_trans_scale=0.5,
+  drift_rot_scale_deg=45.0, improvement_margin=0.0,
+  human_trans_weight=10.0, human_trans_delta_weight=1.0e-5,
+  human_trans_supervise_from_view=0, pose_lora_norm_weight=0.0,
+  human_lora_norm_weight=0.0, supervise_shot_label_only=True)
+test_criterion: ${train_criterion}
+
+exp_name: v14_1_v9_event_only_v9_loss_lbn1_1192
+logdir: /dev/shm/movie3r_v14_1/${exp_name}/logs
+output_dir: /dev/shm/movie3r_v14_1/${exp_name}

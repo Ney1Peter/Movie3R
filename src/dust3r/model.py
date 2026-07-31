@@ -300,6 +300,9 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         v8_head_lora_dropout=0.0,
         v14_1_event_only_head_lora=False,
         v14_1_freeze_unused_prompt_params=False,
+        v14_1_self_pointmap_keep_loss_weight=0.0,
+        v14_1_shared_pointmap_loss_weight=0.0,
+        v14_1_human_param_keep_loss_weight=0.0,
         **croco_kwargs,
     ):
         super().__init__()
@@ -410,6 +413,11 @@ class ARCroco3DStereoConfig(PretrainedConfig):
         self.v8_head_lora_dropout = v8_head_lora_dropout
         self.v14_1_event_only_head_lora = v14_1_event_only_head_lora
         self.v14_1_freeze_unused_prompt_params = v14_1_freeze_unused_prompt_params
+        self.v14_1_self_pointmap_keep_loss_weight = (
+            v14_1_self_pointmap_keep_loss_weight
+        )
+        self.v14_1_shared_pointmap_loss_weight = v14_1_shared_pointmap_loss_weight
+        self.v14_1_human_param_keep_loss_weight = v14_1_human_param_keep_loss_weight
         self.croco_kwargs = croco_kwargs
 
 
@@ -963,6 +971,15 @@ class ARCroco3DStereo(CroCoNet):
         self.shot_noop_loss_weight = config.shot_noop_loss_weight
         self.shot_pointmap_keep_loss_weight = config.shot_pointmap_keep_loss_weight
         self.shot_pose_residual_loss_weight = config.shot_pose_residual_loss_weight
+        self.v14_1_self_pointmap_keep_loss_weight = float(
+            getattr(config, "v14_1_self_pointmap_keep_loss_weight", 0.0)
+        )
+        self.v14_1_shared_pointmap_loss_weight = float(
+            getattr(config, "v14_1_shared_pointmap_loss_weight", 0.0)
+        )
+        self.v14_1_human_param_keep_loss_weight = float(
+            getattr(config, "v14_1_human_param_keep_loss_weight", 0.0)
+        )
         self.enable_anchor_pose_rotation = getattr(config, "anchor_pose_apply_rotation", False)
 
         debug_init_log(f"before set_freeze {config.freeze}")
@@ -2358,7 +2375,10 @@ class ARCroco3DStereo(CroCoNet):
     def _blend_v8_prompt_history(self, prev, new, update_mask=None, reset_mask=None):
         if new is None:
             return prev
-        if prev is None:
+        # Per-human prompt tensors change width when detections enter or leave.
+        # Without an explicit identity mapping, carrying the old slots by array
+        # index is invalid; restart only this prompt history at the new shape.
+        if prev is None or prev.shape != new.shape:
             prev = torch.zeros_like(new)
         out = new
         if update_mask is not None:

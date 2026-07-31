@@ -5,6 +5,7 @@ from dust3r.utils.device import to_cpu, collate_with_cat
 from dust3r.utils.misc import invalid_to_nans
 from dust3r.utils.geometry import depthmap_to_pts3d, geotrf
 from dust3r.model import ARCroco3DStereo
+from dust3r.utils.camera import pose_encoding_to_camera
 from dust3r.smpl_model import SMPLModel
 from accelerate import Accelerator
 import re
@@ -492,6 +493,229 @@ def _make_v8_image_only_model_batch(batch):
     return clean_batch
 
 
+def _v14_1_shadow_loss_enabled(model):
+    base_model = _unwrap_model(model)
+    return any(
+        float(getattr(base_model, name, 0.0)) > 0.0
+        for name in (
+            "v14_1_self_pointmap_keep_loss_weight",
+            "v14_1_shared_pointmap_loss_weight",
+            "v14_1_human_param_keep_loss_weight",
+        )
+    )
+
+
+def _make_v14_1_event_off_batch(batch):
+    """Keep the deployable inputs but route every frame through Human3R-only heads."""
+    event_off_batch = []
+    for view in batch:
+        event_off_view = dict(view)
+        shot_label = view.get("shot_label", None)
+        if torch.is_tensor(shot_label):
+            event_off_view["shot_label"] = torch.zeros_like(shot_label)
+        elif shot_label is not None:
+            event_off_view["shot_label"] = 0
+        event_off_batch.append(event_off_view)
+    return event_off_batch
+
+
+def _select_v14_1_event_samples(corrected, raw, event_mask):
+    if (
+        not torch.is_tensor(corrected)
+        or not torch.is_tensor(raw)
+        or corrected.shape != raw.shape
+        or corrected.ndim == 0
+        or corrected.shape[0] != event_mask.numel()
+    ):
+        return corrected
+    raw = raw.to(device=corrected.device, dtype=corrected.dtype)
+    mask_shape = (event_mask.numel(),) + (1,) * (corrected.ndim - 1)
+    return torch.where(event_mask.reshape(mask_shape), raw, corrected)
+
+
+def _compose_v14_1_dual_path_scene(batch, preds_corrected, preds_raw):
+    """Use raw local geometry with the corrected cut-frame camera and humans."""
+    if len(batch) != len(preds_corrected) or len(batch) != len(preds_raw):
+        raise ValueError("V14.1 dual-path inputs must contain the same number of views")
+
+    composed_preds = []
+    for view, pred_corrected, pred_raw in zip(batch, preds_corrected, preds_raw):
+        composed = dict(pred_corrected)
+        camera_pose = pred_corrected.get("camera_pose", None)
+        if camera_pose is None:
+            composed_preds.append(composed)
+            continue
+        shot_label = _as_shot_label(view, camera_pose)
+        if shot_label is None:
+            composed_preds.append(composed)
+            continue
+        event_mask = shot_label > 0.5
+        if not event_mask.any():
+            composed_preds.append(composed)
+            continue
+
+        raw_self = pred_raw.get("pts3d_in_self_view", None)
+        corrected_self = pred_corrected.get("pts3d_in_self_view", None)
+        if raw_self is None or corrected_self is None:
+            composed_preds.append(composed)
+            continue
+        composed_self = _select_v14_1_event_samples(
+            corrected_self, raw_self, event_mask
+        )
+        composed["pts3d_in_self_view"] = composed_self
+
+        corrected_world = pred_corrected.get("pts3d_in_other_view", None)
+        if corrected_world is not None:
+            raw_scene_in_corrected_world = geotrf(
+                pose_encoding_to_camera(camera_pose.float()),
+                composed_self.float(),
+            ).to(dtype=corrected_world.dtype)
+            composed["pts3d_in_other_view"] = _select_v14_1_event_samples(
+                corrected_world,
+                raw_scene_in_corrected_world,
+                event_mask,
+            )
+
+        if "conf_self" in pred_corrected and "conf_self" in pred_raw:
+            composed["conf_self"] = _select_v14_1_event_samples(
+                pred_corrected["conf_self"], pred_raw["conf_self"], event_mask
+            )
+        composed["v14_1_dual_path_scene"] = event_mask.to(
+            device=camera_pose.device, dtype=camera_pose.dtype
+        ).reshape(-1, 1, 1)
+        composed_preds.append(composed)
+    return composed_preds
+
+
+def _compute_v14_1_event_off_preds(model_batch, model):
+    if not _v14_1_shadow_loss_enabled(model):
+        return None
+    with torch.no_grad():
+        return model(_make_v14_1_event_off_batch(model_batch)).ress
+
+
+def _masked_smooth_l1_per_sample(pred, target, sample_mask):
+    if pred is None or target is None or pred.shape != target.shape or pred.numel() == 0:
+        return None
+    pred = pred.float()
+    target = target.to(device=pred.device, dtype=pred.dtype).detach()
+    finite = torch.isfinite(pred) & torch.isfinite(target)
+    safe_pred = torch.where(finite, pred, torch.zeros_like(pred))
+    safe_target = torch.where(finite, target, torch.zeros_like(target))
+    element_loss = F.smooth_l1_loss(safe_pred, safe_target, reduction="none")
+    per_sample = element_loss.reshape(element_loss.shape[0], -1).sum(dim=1)
+    valid_count = finite.reshape(finite.shape[0], -1).sum(dim=1)
+    valid_sample = valid_count > 0
+    per_sample = per_sample / valid_count.clamp_min(1).to(dtype=per_sample.dtype)
+    sample_mask = sample_mask.to(device=per_sample.device, dtype=torch.bool) & valid_sample
+    if not sample_mask.any():
+        return None
+    return per_sample[sample_mask].mean()
+
+
+def _compute_v14_1_shadow_geometry_loss(batch, preds_on, preds_off, model):
+    """Preserve local reconstruction while applying one corrected camera transform."""
+    if preds_off is None:
+        return None, {}
+
+    base_model = _unwrap_model(model)
+    self_weight = float(
+        getattr(base_model, "v14_1_self_pointmap_keep_loss_weight", 0.0)
+    )
+    shared_weight = float(
+        getattr(base_model, "v14_1_shared_pointmap_loss_weight", 0.0)
+    )
+    human_weight = float(
+        getattr(base_model, "v14_1_human_param_keep_loss_weight", 0.0)
+    )
+    if max(self_weight, shared_weight, human_weight) <= 0.0:
+        return None, {}
+
+    self_terms = []
+    shared_terms = []
+    human_terms = []
+    for view, pred_on, pred_off in zip(batch, preds_on, preds_off):
+        ref = pred_on.get("camera_pose", None)
+        if ref is None:
+            continue
+        shot_label = _as_shot_label(view, ref)
+        if shot_label is None:
+            continue
+        event_mask = shot_label > 0.5
+        if not event_mask.any():
+            continue
+
+        if self_weight > 0.0:
+            term = _masked_smooth_l1_per_sample(
+                pred_on.get("pts3d_in_self_view"),
+                pred_off.get("pts3d_in_self_view"),
+                event_mask,
+            )
+            if term is not None:
+                self_terms.append(term)
+
+        if shared_weight > 0.0:
+            camera_pose = pred_on.get("camera_pose", None)
+            raw_camera_pose = pred_off.get("camera_pose", None)
+            raw_world_pointmap = pred_off.get("pts3d_in_other_view", None)
+            world_pointmap = pred_on.get("pts3d_in_other_view", None)
+            if (
+                camera_pose is not None
+                and raw_camera_pose is not None
+                and raw_world_pointmap is not None
+                and world_pointmap is not None
+            ):
+                with torch.no_grad():
+                    corrected_camera = pose_encoding_to_camera(
+                        camera_pose.float().detach()
+                    )
+                    raw_camera = pose_encoding_to_camera(
+                        raw_camera_pose.float().detach()
+                    )
+                    boundary = corrected_camera @ torch.linalg.inv(raw_camera)
+                    shared_target = geotrf(
+                        boundary,
+                        raw_world_pointmap.float().detach(),
+                    )
+                term = _masked_smooth_l1_per_sample(
+                    world_pointmap,
+                    shared_target,
+                    event_mask,
+                )
+                if term is not None:
+                    shared_terms.append(term)
+
+        if human_weight > 0.0:
+            per_parameter = []
+            for key in ("smpl_shape", "smpl_rotmat", "smpl_expression"):
+                term = _masked_smooth_l1_per_sample(
+                    pred_on.get(key), pred_off.get(key), event_mask
+                )
+                if term is not None:
+                    per_parameter.append(term)
+            if per_parameter:
+                human_terms.append(torch.stack(per_parameter).mean())
+
+    weighted_terms = []
+    details = {}
+    for name, terms, weight in (
+        ("self_pointmap_keep", self_terms, self_weight),
+        ("shared_pointmap", shared_terms, shared_weight),
+        ("human_param_keep", human_terms, human_weight),
+    ):
+        if not terms or weight <= 0.0:
+            continue
+        raw_loss = torch.stack(terms).mean()
+        weighted_loss = raw_loss * weight
+        weighted_terms.append(weighted_loss)
+        details[f"v14_1_{name}_loss"] = float(raw_loss.detach())
+        details[f"v14_1_{name}_loss_weighted"] = float(weighted_loss.detach())
+
+    if not weighted_terms:
+        return None, details
+    return torch.stack(weighted_terms).sum(), details
+
+
 def loss_of_one_batch(
     batch,
     model,
@@ -511,7 +735,10 @@ def loss_of_one_batch(
     if symmetrize_batch:
         batch = make_batch_symmetric(batch)
 
-    with torch.cuda.amp.autocast(enabled=not inference):
+    # Training/evaluation must honor the caller's precision choice.  Demo
+    # inference is FP32, so V14.1 can disable AMP and select checkpoints on the
+    # exact numerical path used for visualization.
+    with torch.cuda.amp.autocast(enabled=bool(use_amp) and not inference):
         if inference:
             output, state_args = model(batch, ret_state=True, inference=True)
             preds, batch = output.ress, output.views
@@ -540,10 +767,12 @@ def loss_of_one_batch(
                 model_batch = _make_v8_image_only_model_batch(gt_batch)
                 output = model(model_batch)
                 preds = output.ress
+                v14_1_preds_off = _compute_v14_1_event_off_preds(model_batch, model)
                 batch = gt_batch
             else:
                 output = model(batch)
                 preds, batch = output.ress, output.views
+                v14_1_preds_off = _compute_v14_1_event_off_preds(batch, model)
             # **========== V5 原始代码：训练 ShotToken 时计算 legacy shot auxiliary losses ==========**
             # preds_off = _compute_shot_off_preds(batch, model)
             # noop_loss, noop_details = _compute_shot_noop_loss(batch, preds, preds_off, model)
@@ -597,6 +826,14 @@ def loss_of_one_batch(
                 loss = _add_aux_loss(loss, noop_loss, noop_details)
                 loss = _add_aux_loss(loss, pointmap_keep_loss, pointmap_keep_details)
                 loss = _add_aux_loss(loss, pose_residual_loss, pose_residual_details)
+                v14_1_geometry_loss, v14_1_geometry_details = (
+                    _compute_v14_1_shadow_geometry_loss(
+                        batch, preds, v14_1_preds_off, model
+                    )
+                )
+                loss = _add_aux_loss(
+                    loss, v14_1_geometry_loss, v14_1_geometry_details
+                )
                 # **========== 结束 ==========**
                 loss[1].update(_collect_anchor_pose_details(preds))
 

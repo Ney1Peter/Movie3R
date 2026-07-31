@@ -1420,13 +1420,16 @@ def test_one_epoch(
     ):
         # eval loader 没有经过 accelerator.prepare，这里显式搬到当前 device。
         batch = todevice(batch, device)
+        eval_amp = getattr(args, "eval_amp", None)
+        if eval_amp is None:
+            eval_amp = args.amp
         result = loss_of_one_batch(
             batch,
             model,
             criterion,
             accelerator,
             symmetrize_batch=False,
-            use_amp=bool(args.amp),
+            use_amp=bool(eval_amp),
             smpl_model=smpl_model
         )
 
