@@ -1,0 +1,49 @@
+defaults:
+  - train_v14_1_cut_event_single_v9_event_only_geometry
+  - _self_
+
+# Four sources x 24 camera-pair-disjoint cuts.  This stage starts from the
+# formal V9 checkpoint, not from the ten-cut pilot, so the comparison measures
+# supervision scale rather than sequential fine-tuning history.
+v14_cross_manifest_root: /data/wangzheng/iJCV-CODE/Movie3R/versions/v14/cut_first_cross_source/manifests/train24ps
+
+train_datasets:
+  - name: avatarrex
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      24 @ AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=3, seed=14701, n_corres=0, manifest_path="${v14_cross_manifest_root}/avatarrex.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: thuman
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      24 @ AvatarReX_Pattern(allow_repeat=True, split='Training', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=3, seed=14702, n_corres=0, manifest_path="${v14_cross_manifest_root}/thuman.jsonl", load_da3_depth=False, raw_calibration_root=${avatarrex_raw_roots}, max_humans=1)
+  - name: mvhuman100
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      24 @ AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=3, seed=14703, n_corres=0, manifest_path="${v14_cross_manifest_root}/mvhuman100.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+  - name: mvhuman200
+    weight: 0.25
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      24 @ AvatarReX_Pattern(allow_repeat=True, split='Training/mvhuman', ROOT="${data_root}", aug_crop=0, resolution=512, resize_mode='human3r_demo', num_views=3, seed=14704, n_corres=0, manifest_path="${v14_cross_manifest_root}/mvhuman200.jsonl", load_da3_depth=False, raw_calibration_root=None, max_humans=1)
+
+train_mixed_epoch_steps: 96
+epochs: 12
+eval_freq: 0
+val_dataset: null
+test_dataset: null
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: true
+early_stopping_patience: 1000000
+
+exp_name: v14_cut_first_cross_source_24ps_e12
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/${exp_name}

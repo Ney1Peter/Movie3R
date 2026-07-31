@@ -1,0 +1,242 @@
+{
+  "frozen_eval_root": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v14_1_cut_event/ten",
+  "pair_disjoint_rule": "unordered (seqA, seqB), source-local",
+  "seed": 20260801,
+  "source_manifests": {
+    "avatarrex": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests/train_aabb_60k.jsonl",
+    "mvhuman100": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman100_angle60_manifests/train_aabb_60k.jsonl",
+    "mvhuman200": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_mvhuman200_angle60_manifests/train_aabb_60k.jsonl",
+    "thuman": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_thuman00_02_angle60_manifests/train_aabb_60k.jsonl"
+  },
+  "stages": {
+    "train10": {
+      "sources": {
+        "avatarrex": {
+          "angle_buckets": {
+            "060_090": 1,
+            "090_120": 1,
+            "120_150": 1
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "lbn2": 2,
+            "zzr": 1
+          },
+          "max_angle_deg": 132.853287,
+          "min_angle_deg": 84.7386,
+          "records": 3,
+          "unique_unordered_camera_pairs": 3
+        },
+        "mvhuman100": {
+          "angle_buckets": {
+            "060_090": 1,
+            "090_120": 1,
+            "120_150": 1
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "100003": 1,
+            "100004": 1,
+            "100005": 1
+          },
+          "max_angle_deg": 121.574061,
+          "min_angle_deg": 79.689569,
+          "records": 3,
+          "unique_unordered_camera_pairs": 3
+        },
+        "mvhuman200": {
+          "angle_buckets": {
+            "060_090": 1,
+            "090_120": 1
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "200002": 1,
+            "200005": 1
+          },
+          "max_angle_deg": 104.200322,
+          "min_angle_deg": 65.409865,
+          "records": 2,
+          "unique_unordered_camera_pairs": 2
+        },
+        "thuman": {
+          "angle_buckets": {
+            "060_090": 1,
+            "090_120": 1
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "thuman00": 1,
+            "thuman02": 1
+          },
+          "max_angle_deg": 90.616767,
+          "min_angle_deg": 89.232819,
+          "records": 2,
+          "unique_unordered_camera_pairs": 2
+        }
+      },
+      "stage": "train10",
+      "total_records": 10
+    },
+    "train24ps": {
+      "sources": {
+        "avatarrex": {
+          "angle_buckets": {
+            "060_090": 7,
+            "090_120": 6,
+            "120_150": 6,
+            "150_180": 5
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "lbn1": 9,
+            "lbn2": 9,
+            "zzr": 6
+          },
+          "max_angle_deg": 174.436811,
+          "min_angle_deg": 64.623905,
+          "records": 24,
+          "unique_unordered_camera_pairs": 24
+        },
+        "mvhuman100": {
+          "angle_buckets": {
+            "060_090": 6,
+            "090_120": 6,
+            "120_150": 6,
+            "150_180": 6
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "100001": 5,
+            "100002": 3,
+            "100003": 4,
+            "100004": 7,
+            "100005": 5
+          },
+          "max_angle_deg": 169.108519,
+          "min_angle_deg": 62.980913,
+          "records": 24,
+          "unique_unordered_camera_pairs": 24
+        },
+        "mvhuman200": {
+          "angle_buckets": {
+            "060_090": 9,
+            "090_120": 7,
+            "120_150": 8
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "200001": 5,
+            "200002": 6,
+            "200003": 2,
+            "200004": 5,
+            "200005": 6
+          },
+          "max_angle_deg": 139.206169,
+          "min_angle_deg": 63.525271,
+          "records": 24,
+          "unique_unordered_camera_pairs": 24
+        },
+        "thuman": {
+          "angle_buckets": {
+            "060_090": 6,
+            "090_120": 6,
+            "120_150": 6,
+            "150_180": 6
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "thuman00": 11,
+            "thuman02": 13
+          },
+          "max_angle_deg": 177.199149,
+          "min_angle_deg": 60.668309,
+          "records": 24,
+          "unique_unordered_camera_pairs": 24
+        }
+      },
+      "stage": "train24ps",
+      "total_records": 96
+    },
+    "train96ps": {
+      "sources": {
+        "avatarrex": {
+          "angle_buckets": {
+            "060_090": 25,
+            "090_120": 24,
+            "120_150": 23,
+            "150_180": 24
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "lbn1": 32,
+            "lbn2": 28,
+            "zzr": 36
+          },
+          "max_angle_deg": 176.630065,
+          "min_angle_deg": 60.442099,
+          "records": 96,
+          "unique_unordered_camera_pairs": 96
+        },
+        "mvhuman100": {
+          "angle_buckets": {
+            "060_090": 24,
+            "090_120": 24,
+            "120_150": 24,
+            "150_180": 24
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "100001": 22,
+            "100002": 16,
+            "100003": 15,
+            "100004": 18,
+            "100005": 25
+          },
+          "max_angle_deg": 169.108519,
+          "min_angle_deg": 60.50208,
+          "records": 96,
+          "unique_unordered_camera_pairs": 96
+        },
+        "mvhuman200": {
+          "angle_buckets": {
+            "060_090": 35,
+            "090_120": 31,
+            "120_150": 30
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "200001": 26,
+            "200002": 17,
+            "200003": 11,
+            "200004": 22,
+            "200005": 20
+          },
+          "max_angle_deg": 146.039476,
+          "min_angle_deg": 62.771613,
+          "records": 96,
+          "unique_unordered_camera_pairs": 96
+        },
+        "thuman": {
+          "angle_buckets": {
+            "060_090": 25,
+            "090_120": 23,
+            "120_150": 23,
+            "150_180": 25
+          },
+          "frozen_pair_overlap": 0,
+          "groups": {
+            "thuman00": 55,
+            "thuman02": 41
+          },
+          "max_angle_deg": 178.64625,
+          "min_angle_deg": 60.541905,
+          "records": 96,
+          "unique_unordered_camera_pairs": 96
+        }
+      },
+      "stage": "train96ps",
+      "total_records": 384
+    }
+  }
+}
