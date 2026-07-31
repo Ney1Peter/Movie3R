@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import copy
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 from scipy.spatial.transform import Rotation
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -16,10 +18,10 @@ from versions.v14.b0_person_triangulation import (
 )
 from versions.v14.b0_person_triangulation_orientation_kabsch import (
     kabsch_rotation,
+    orientation_candidate,
     refine_matched_people_orientation_kabsch,
 )
 from versions.v14.tests.test_b0_person_triangulation_strict_fagd import (
-    assert_geometry_exact,
     scene,
 )
 
@@ -83,8 +85,9 @@ def test_rejected_people_are_exact_b0():
     assert debug["accepted_count"] == 0
     assert debug["orientation_applied_count"] == 0
     for index, (actual, expected) in enumerate(zip(candidate, base)):
-        assert_geometry_exact(actual, expected)
-        assert_geometry_exact(actual, post[index])
+        for key in ("root", "joints", "vertices", "torso", "root_rotation"):
+            assert np.array_equal(actual[key], expected[key])
+            assert np.array_equal(actual[key], post[index][key])
 
 
 def test_unmatched_people_are_exact_b0():
@@ -94,5 +97,113 @@ def test_unmatched_people_are_exact_b0():
         pre_camera, post_camera, pre, post, [(0, 0)]
     )
     assert debug["orientation_applied_count"] == 1
-    assert_geometry_exact(candidate[1], base[1])
-    assert_geometry_exact(candidate[1], post[1])
+    for key in ("root", "joints", "vertices", "torso", "root_rotation"):
+        assert np.array_equal(candidate[1][key], base[1][key])
+        assert np.array_equal(candidate[1][key], post[1][key])
+
+
+def test_accepted_orientation_metadata_follows_applied_world_rotation():
+    pre_camera, post_camera, pre, post = rotated_scene(count=1)
+    base, _ = refine_matched_people(
+        pre_camera, post_camera, pre, post, [(0, 0)]
+    )
+    candidate, debug = refine_matched_people_orientation_kabsch(
+        pre_camera, post_camera, pre, post, [(0, 0)]
+    )
+    rotation = np.asarray(debug["people"][0]["orientation"]["rotation_world"])
+    assert debug["people"][0]["orientation"]["applied"] is True
+    assert np.array_equal(candidate[0]["root"], base[0]["root"])
+    assert np.allclose(candidate[0]["torso"], rotation @ base[0]["torso"])
+    assert np.allclose(
+        candidate[0]["root_rotation"], rotation @ base[0]["root_rotation"]
+    )
+
+
+def test_separate_orientation_state_preserves_brtc_root_and_controls_kabsch():
+    pre_camera, post_camera, pre, post = rotated_scene()
+    matches = [(0, 0), (1, 1)]
+    base, _ = refine_matched_people(
+        pre_camera, post_camera, pre, post, matches
+    )
+    orientation_pre = copy.deepcopy(pre)
+    inherited = Rotation.from_euler("z", 30.0, degrees=True).as_matrix()
+    for person in orientation_pre:
+        root = person["root"]
+        for key in ("joints", "vertices"):
+            person[key] = (person[key] - root) @ inherited.T + root
+        person["torso"] = inherited @ person["torso"]
+        person["root_rotation"] = inherited @ person["root_rotation"]
+
+    shared, _ = refine_matched_people_orientation_kabsch(
+        pre_camera, post_camera, pre, post, matches
+    )
+    separate, debug = refine_matched_people_orientation_kabsch(
+        pre_camera,
+        post_camera,
+        pre,
+        post,
+        matches,
+        orientation_pre_people=orientation_pre,
+    )
+    assert debug["orientation_pre_state"] == "separate_causal_orientation_state"
+    for index in range(len(post)):
+        expected, expected_debug = orientation_candidate(
+            orientation_pre[index], post[index], base[index]
+        )
+        assert expected_debug["applied"] is True
+        for key in ("root", "joints", "vertices", "torso", "root_rotation"):
+            assert np.allclose(separate[index][key], expected[key], atol=1e-12)
+        assert np.array_equal(separate[index]["root"], base[index]["root"])
+        assert not np.allclose(separate[index]["joints"], shared[index]["joints"])
+
+
+def test_omitting_orientation_state_is_backward_compatible():
+    pre_camera, post_camera, pre, post = rotated_scene()
+    matches = [(0, 0), (1, 1)]
+    implicit, implicit_debug = refine_matched_people_orientation_kabsch(
+        pre_camera, post_camera, pre, post, matches
+    )
+    explicit, explicit_debug = refine_matched_people_orientation_kabsch(
+        pre_camera,
+        post_camera,
+        pre,
+        post,
+        matches,
+        orientation_pre_people=pre,
+    )
+    assert implicit_debug["orientation_pre_state"] == (
+        "shared_with_brtc_translation_state"
+    )
+    assert explicit_debug["orientation_pre_state"] == (
+        "separate_causal_orientation_state"
+    )
+    for implicit_person, explicit_person in zip(implicit, explicit):
+        for key in ("root", "joints", "vertices", "torso", "root_rotation"):
+            assert np.array_equal(implicit_person[key], explicit_person[key])
+
+
+def test_separate_orientation_state_requires_same_length_and_track_indexing():
+    pre_camera, post_camera, pre, post = rotated_scene()
+    matches = [(0, 0), (1, 1)]
+    with pytest.raises(ValueError, match="same indexing"):
+        refine_matched_people_orientation_kabsch(
+            pre_camera,
+            post_camera,
+            pre,
+            post,
+            matches,
+            orientation_pre_people=pre[:1],
+        )
+
+    for index, person in enumerate(pre):
+        person["global_track_id"] = index
+    reversed_orientation = list(reversed(copy.deepcopy(pre)))
+    with pytest.raises(ValueError, match="global_track_id differs"):
+        refine_matched_people_orientation_kabsch(
+            pre_camera,
+            post_camera,
+            pre,
+            post,
+            matches,
+            orientation_pre_people=reversed_orientation,
+        )

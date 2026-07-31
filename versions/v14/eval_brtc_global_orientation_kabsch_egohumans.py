@@ -74,6 +74,7 @@ DEFAULT_DOC = (
     "V14_BRTC_GLOBAL_ORIENTATION_KABSCH_EGOHUMANS_20260801.md"
 )
 POINT_KEYS = ("root", "joints", "vertices")
+OPTIONAL_ORIENTATION_KEYS = ("torso", "root_rotation")
 REPORT_METRICS = (
     "w_mpjpe_mm",
     "wa_mpjpe_mm",
@@ -142,6 +143,19 @@ def maximum_geometry_delta(
     )
 
 
+def maximum_person_state_delta(
+    first: dict[str, Any], second: dict[str, Any]
+) -> float:
+    """Compare geometry plus any orientation metadata shared by both people."""
+
+    keys = POINT_KEYS + tuple(
+        key
+        for key in OPTIONAL_ORIENTATION_KEYS
+        if key in first and key in second
+    )
+    return maximum_geometry_delta(first, second, keys=keys)
+
+
 def debug_by_post_index(debug: dict[str, Any]) -> dict[int, dict[str, Any]]:
     return {int(row["post_index"]): row for row in debug["people"]}
 
@@ -202,7 +216,7 @@ def replay_brtc_then_orientation(
                 (index, int(post_index))
                 for index, (_, post_index) in enumerate(track_post_pairs)
             ]
-            corrected_first, brtc_debug = refine_matched_people(
+            brtc_first, brtc_debug = refine_matched_people(
                 np.asarray(reference_pre_frame["method_camera_c2w"], dtype=np.float64),
                 np.asarray(post_frames[0]["method_camera_c2w"], dtype=np.float64),
                 brtc_pre_people,
@@ -210,19 +224,44 @@ def replay_brtc_then_orientation(
                 matches,
                 DEFAULT_CONFIG,
             )
+            corrected_first, deployable_debug = (
+                deployable.refine_matched_people_orientation_kabsch(
+                    np.asarray(
+                        reference_pre_frame["method_camera_c2w"], dtype=np.float64
+                    ),
+                    np.asarray(
+                        post_frames[0]["method_camera_c2w"], dtype=np.float64
+                    ),
+                    brtc_pre_people,
+                    post_people,
+                    matches,
+                    DEFAULT_CONFIG,
+                    policy,
+                    orientation_pre_people=orientation_pre_people,
+                )
+            )
             if brtc_debug.get("camera_update") != "none":
                 raise ValueError("Frozen BRTC attempted a camera update")
             if int(brtc_debug["matched_count"]) != len(matches):
                 raise ValueError("Frozen BRTC returned inconsistent matched_count")
             if len(corrected_first) != len(post_people):
-                raise ValueError("Frozen BRTC changed post person count")
+                raise ValueError("Deployable runtime changed post person count")
+            if deployable_debug.get("orientation_pre_state") != (
+                "separate_causal_orientation_state"
+            ):
+                raise ValueError("Deployable runtime did not use its dual-state path")
+            for count_key in ("matched_count", "accepted_count"):
+                if int(deployable_debug[count_key]) != int(brtc_debug[count_key]):
+                    raise ValueError(
+                        f"Deployable runtime changed frozen BRTC {count_key}"
+                    )
 
             reference_first_by_native = {
                 int(person["native_track_id"]): person
                 for person in reference_post_frames[0]["people"]
             }
             brtc_first_parity = 0.0
-            for person in corrected_first:
+            for person in brtc_first:
                 native = int(person["native_track_id"])
                 brtc_first_parity = max(
                     brtc_first_parity,
@@ -231,11 +270,12 @@ def replay_brtc_then_orientation(
             if brtc_first_parity > 1e-12:
                 raise ValueError("Independent BRTC replay does not match frozen v1")
 
-            records = debug_by_post_index(brtc_debug)
+            records = debug_by_post_index(deployable_debug)
             action_by_native: dict[int, dict[str, Any]] = {}
             orientation_rows = []
+            deployable_first_propagation_parity = 0.0
             for post_index, (before, brtc_after) in enumerate(
-                zip(post_people, corrected_first)
+                zip(post_people, brtc_first)
             ):
                 native = int(before["native_track_id"])
                 shift = (
@@ -246,12 +286,8 @@ def replay_brtc_then_orientation(
                 accepted = bool(record is not None and record["accepted"])
                 if accepted:
                     pre_index = int(record["pre_index"])
-                    candidate_first, orient_debug = deployable.orientation_candidate(
-                        orientation_pre_people[pre_index],
-                        before,
-                        brtc_after,
-                        policy,
-                    )
+                    candidate_first = corrected_first[post_index]
+                    orient_debug = record["orientation"]
                     pair = {"pre": orientation_pre_people[pre_index], "post": before}
                     probe_first, probe_debug = orientation.orientation_candidate(
                         pair, brtc_after, probe_policy
@@ -286,15 +322,15 @@ def replay_brtc_then_orientation(
                     ):
                         raise ValueError("Deployable/probe causal orientation parity failed")
                 else:
-                    candidate_first = brtc_after
-                    orient_debug = {
-                        "applied": False,
-                        "reason": (
-                            "unmatched_exact_b0_fallback"
-                            if record is None
-                            else "brtc_rejected_exact_b0_fallback"
-                        ),
-                    }
+                    candidate_first = corrected_first[post_index]
+                    orient_debug = (
+                        record["orientation"]
+                        if record is not None
+                        else {
+                            "applied": False,
+                            "reason": "unmatched_exact_b0_fallback",
+                        }
+                    )
                     geometry_parity = {key: 0.0 for key in POINT_KEYS}
                     rotation_parity = 0.0
                     applied_parity = True
@@ -303,8 +339,23 @@ def replay_brtc_then_orientation(
                 )
                 if bool(orient_debug["applied"]) and not accepted:
                     raise ValueError("Kabsch acted on a non-accepted person")
-                if not accepted and maximum_geometry_delta(before, candidate_first) > 0.0:
+                if not accepted and maximum_person_state_delta(
+                    before, candidate_first
+                ) > 0.0:
                     raise ValueError("Rejected/unmatched first-post person is not exact B0")
+                propagated_first = (
+                    ego.shift_person(before, shift)
+                    if accepted
+                    else copy.deepcopy(before)
+                )
+                if bool(orient_debug["applied"]):
+                    propagated_first = rotate_person_around_root(
+                        propagated_first, rotation
+                    )
+                deployable_first_propagation_parity = max(
+                    deployable_first_propagation_parity,
+                    maximum_person_state_delta(candidate_first, propagated_first),
+                )
                 action_by_native[native] = {
                     "shift_world": shift,
                     "rotation_world": rotation,
@@ -324,6 +375,10 @@ def replay_brtc_then_orientation(
                             "applied_parity": applied_parity,
                         },
                     }
+                )
+            if deployable_first_propagation_parity > 1e-12:
+                raise ValueError(
+                    "Deployable first-frame output does not match shot propagation"
                 )
 
             fallback_max_abs_change = 0.0
@@ -363,7 +418,7 @@ def replay_brtc_then_orientation(
                         corrected = copy.deepcopy(person)
                         fallback_max_abs_change = max(
                             fallback_max_abs_change,
-                            maximum_geometry_delta(corrected, b0_by_native[native]),
+                            maximum_person_state_delta(corrected, b0_by_native[native]),
                         )
                     else:
                         propagated_accepted_frames += 1
@@ -408,9 +463,13 @@ def replay_brtc_then_orientation(
                     "cut_index": segment_index - 1,
                     "association": association,
                     "brtc": brtc_debug,
+                    "deployable_runtime": deployable_debug,
                     "orientation_people": orientation_rows,
                     "action_by_native_track": action_by_native,
                     "brtc_first_geometry_parity_max_abs_delta": brtc_first_parity,
+                    "deployable_first_propagation_parity_max_abs_delta": (
+                        deployable_first_propagation_parity
+                    ),
                     "rejected_unmatched_exact_b0_max_abs_change": fallback_max_abs_change,
                     "root_vs_v1_max_abs_delta": root_vs_v1_max_abs_delta,
                     "camera_vs_b0_max_abs_delta": camera_vs_b0_max_abs_delta,
@@ -594,9 +653,15 @@ def rotation_runtime_audit(rows: list[dict[str, Any]]) -> dict[str, Any]:
     probe_applied_parity = True
     inherited_nonzero = 0
     inherited_total = 0
+    dual_state_contract = True
     for row in rows:
         matched += int(row["brtc"]["matched_count"])
         accepted += int(row["brtc"]["accepted_count"])
+        dual_state_contract = bool(
+            dual_state_contract
+            and row["deployable_runtime"].get("orientation_pre_state")
+            == "separate_causal_orientation_state"
+        )
         for person in row["orientation_people"]:
             parity = person["runtime_probe_parity"]
             for key in POINT_KEYS:
@@ -680,6 +745,16 @@ def rotation_runtime_audit(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 default=0.0,
             )
         ),
+        "deployable_first_propagation_parity_max_abs_delta": float(
+            max(
+                (
+                    row["deployable_first_propagation_parity_max_abs_delta"]
+                    for row in rows
+                ),
+                default=0.0,
+            )
+        ),
+        "dual_state_runtime_contract_observed": dual_state_contract,
         "second_cut_inherited_orientation_nonzero_count": inherited_nonzero,
         "second_cut_inherited_orientation_track_count": inherited_total,
         "second_cut_inherited_orientation_observed": bool(inherited_nonzero > 0),
@@ -1008,6 +1083,8 @@ def self_test() -> None:
     assert np.array_equal(result["root"], root)
     assert np.allclose(result["joints"][1], root + [0.0, 1.0, 0.0])
     assert np.allclose(result["vertices"][0], root + [-1.0, 0.0, 0.0])
+    assert np.allclose(result["torso"], rotation)
+    assert np.allclose(result["root_rotation"], rotation)
     assert abs(np.linalg.det(rotation) - 1.0) <= 1e-12
     print("self-test passed")
 
@@ -1108,6 +1185,8 @@ def main() -> None:
         and runtime["root_vs_v1_max_abs_delta"] == 0.0
         and runtime["camera_vs_b0_max_abs_delta"] == 0.0
         and runtime["brtc_first_geometry_parity_max_abs_delta"] <= 1e-12
+        and runtime["deployable_first_propagation_parity_max_abs_delta"] <= 1e-12
+        and runtime["dual_state_runtime_contract_observed"]
         and geometry_vs_v1["max_abs_delta"]["root"] == 0.0
         and geometry_vs_v1["max_abs_delta"]["camera"] == 0.0
         and camera_vs_b0["bit_exact"]

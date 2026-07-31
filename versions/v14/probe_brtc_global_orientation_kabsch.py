@@ -395,6 +395,8 @@ def main() -> None:
             return
         else:
             frozen = json.loads(args.policy.read_text(encoding="utf-8"))
+            if common.canonical_sha256(frozen["policy"]) != frozen["policy_sha256"]:
+                raise ValueError("Frozen Kabsch policy checksum mismatch")
             policy = OrientationPolicy(**frozen["policy"])
             splits = {}
             all_safe = True

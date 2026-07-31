@@ -166,8 +166,16 @@ def refine_matched_people_orientation_kabsch(
     matches: Iterable[tuple[int, int]],
     config: PersonTriangulationConfig = DEFAULT_CONFIG,
     orientation_config: OrientationKabschConfig = DEFAULT_ORIENTATION_KABSCH_CONFIG,
+    orientation_pre_people: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Run frozen BRTC, then rotate only its accepted matched people."""
+    """Run frozen BRTC, then rotate only its accepted matched people.
+
+    ``pre_people`` is the frozen translation-state input consumed by BRTC.
+    A causal multi-cut deployment may additionally supply the already-rotated
+    last-pre state through ``orientation_pre_people``.  Keeping these states
+    separate prevents a previous orientation update from changing the next
+    cut's frozen BRTC roots while still letting Kabsch consume causal pose.
+    """
 
     materialized_matches = tuple(
         (int(pre_index), int(post_index)) for pre_index, post_index in matches
@@ -180,6 +188,26 @@ def refine_matched_people_orientation_kabsch(
         materialized_matches,
         config,
     )
+    orientation_pre = (
+        pre_people if orientation_pre_people is None else orientation_pre_people
+    )
+    if len(orientation_pre) != len(pre_people):
+        raise ValueError(
+            "orientation_pre_people must use the same indexing as pre_people"
+        )
+    for pre_index in {pre_index for pre_index, _ in materialized_matches}:
+        for identity_key in ("global_track_id", "native_track_id"):
+            translation_identity = pre_people[pre_index].get(identity_key)
+            orientation_identity = orientation_pre[pre_index].get(identity_key)
+            if (
+                translation_identity is not None
+                and orientation_identity is not None
+                and int(translation_identity) != int(orientation_identity)
+            ):
+                raise ValueError(
+                    "orientation_pre_people must use the same indexing as "
+                    f"pre_people ({identity_key} differs at index {pre_index})"
+                )
     records_by_post = {
         int(record["post_index"]): record for record in base_debug["people"]
     }
@@ -193,7 +221,7 @@ def refine_matched_people_orientation_kabsch(
             }
             continue
         corrected[post_index], orientation_by_post[post_index] = orientation_candidate(
-            pre_people[pre_index],
+            orientation_pre[pre_index],
             post_people[post_index],
             corrected[post_index],
             orientation_config,
@@ -210,6 +238,11 @@ def refine_matched_people_orientation_kabsch(
             "camera_update": "none",
             "root_update": "frozen BRTC only",
             "orientation_update": "person-local bounded torso4 Kabsch",
+            "orientation_pre_state": (
+                "shared_with_brtc_translation_state"
+                if orientation_pre_people is None
+                else "separate_causal_orientation_state"
+            ),
             "orientation_applied_count": int(
                 sum(bool(value["applied"]) for value in orientation_by_post.values())
             ),
