@@ -23,6 +23,9 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "manifests"
 FROZEN_ROOT = REPO_ROOT / "config/manifests/v14_1_cut_event/ten"
+FROZEN_180 = (
+    REPO_ROOT / "output/v10_candidate_selection/oracle_gt_4source/selected_records.jsonl"
+)
 SOURCE_MANIFESTS = {
     "avatarrex": REPO_ROOT
     / "config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests/train_aabb_60k.jsonl",
@@ -88,6 +91,15 @@ def frozen_pairs() -> dict[str, set[tuple[str, str]]]:
             for record in records
         }
     return output
+
+
+def frozen_180_pairs() -> dict[str, set[tuple[str, str]]]:
+    output: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    for record in read_jsonl(FROZEN_180):
+        output[str(record["source"])].add(
+            canonical_pair(record["seqA"], record["seqB"])
+        )
+    return dict(output)
 
 
 def stable_rank(record: dict[str, Any], source: str, seed: int) -> str:
@@ -221,13 +233,24 @@ def audit_stage(
 
 def main() -> None:
     args = parse_args()
-    excluded = frozen_pairs()
-    candidates = {
-        source: ordered_candidates(source, args.seed, excluded[source])
+    excluded_ten = frozen_pairs()
+    excluded_180 = frozen_180_pairs()
+    excluded_strict = {
+        source: excluded_ten[source] | excluded_180[source]
         for source in SOURCE_MANIFESTS
     }
-    max_required = max(max(counts.values()) for counts in STAGES.values())
-    for source, records in candidates.items():
+    candidates_ten = {
+        source: ordered_candidates(source, args.seed, excluded_ten[source])
+        for source in SOURCE_MANIFESTS
+    }
+    candidates_strict = {
+        source: ordered_candidates(source, args.seed, excluded_strict[source])
+        for source in SOURCE_MANIFESTS
+    }
+    for source, records in candidates_strict.items():
+        max_required = max(
+            counts[source] for stage, counts in STAGES.items() if stage != "train10"
+        )
         if len(records) < max_required:
             raise RuntimeError(
                 f"Only {len(records)} eligible records for {source}; need {max_required}"
@@ -237,10 +260,16 @@ def main() -> None:
         "seed": args.seed,
         "source_manifests": {key: str(value) for key, value in SOURCE_MANIFESTS.items()},
         "frozen_eval_root": str(FROZEN_ROOT),
-        "pair_disjoint_rule": "unordered (seqA, seqB), source-local",
+        "frozen_180_records": str(FROZEN_180),
+        "pair_disjoint_rule": {
+            "train10": "unordered pair disjoint from frozen ten; launched pilot retained unchanged",
+            "train24ps_and_train96ps": "unordered pair disjoint from frozen ten and frozen 180",
+        },
         "stages": {},
     }
     for stage, counts in STAGES.items():
+        candidates = candidates_ten if stage == "train10" else candidates_strict
+        excluded = excluded_ten if stage == "train10" else excluded_strict
         records_by_source = {
             source: [to_cut_event(row, source) for row in candidates[source][:count]]
             for source, count in counts.items()

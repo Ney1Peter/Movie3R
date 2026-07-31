@@ -1,6 +1,10 @@
 {
+  "frozen_180_records": "/data/wangzheng/iJCV-CODE/Movie3R/output/v10_candidate_selection/oracle_gt_4source/selected_records.jsonl",
   "frozen_eval_root": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v14_1_cut_event/ten",
-  "pair_disjoint_rule": "unordered (seqA, seqB), source-local",
+  "pair_disjoint_rule": {
+    "train10": "unordered pair disjoint from frozen ten; launched pilot retained unchanged",
+    "train24ps_and_train96ps": "unordered pair disjoint from frozen ten and frozen 180"
+  },
   "seed": 20260801,
   "source_manifests": {
     "avatarrex": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v9_4source_baseline_avatarrex_lbn1_lbn2_zzr_angle60_manifests/train_aabb_60k.jsonl",
@@ -89,9 +93,9 @@
           },
           "frozen_pair_overlap": 0,
           "groups": {
-            "lbn1": 9,
-            "lbn2": 9,
-            "zzr": 6
+            "lbn1": 10,
+            "lbn2": 7,
+            "zzr": 7
           },
           "max_angle_deg": 174.436811,
           "min_angle_deg": 64.623905,
@@ -146,8 +150,8 @@
           },
           "frozen_pair_overlap": 0,
           "groups": {
-            "thuman00": 11,
-            "thuman02": 13
+            "thuman00": 10,
+            "thuman02": 14
           },
           "max_angle_deg": 177.199149,
           "min_angle_deg": 60.668309,
@@ -163,18 +167,18 @@
         "avatarrex": {
           "angle_buckets": {
             "060_090": 25,
-            "090_120": 24,
-            "120_150": 23,
-            "150_180": 24
+            "090_120": 23,
+            "120_150": 25,
+            "150_180": 23
           },
           "frozen_pair_overlap": 0,
           "groups": {
             "lbn1": 32,
-            "lbn2": 28,
-            "zzr": 36
+            "lbn2": 26,
+            "zzr": 38
           },
           "max_angle_deg": 176.630065,
-          "min_angle_deg": 60.442099,
+          "min_angle_deg": 64.623905,
           "records": 96,
           "unique_unordered_camera_pairs": 96
         },
@@ -188,9 +192,9 @@
           "frozen_pair_overlap": 0,
           "groups": {
             "100001": 22,
-            "100002": 16,
+            "100002": 15,
             "100003": 15,
-            "100004": 18,
+            "100004": 19,
             "100005": 25
           },
           "max_angle_deg": 169.108519,
@@ -201,16 +205,16 @@
         "mvhuman200": {
           "angle_buckets": {
             "060_090": 35,
-            "090_120": 31,
-            "120_150": 30
+            "090_120": 30,
+            "120_150": 31
           },
           "frozen_pair_overlap": 0,
           "groups": {
-            "200001": 26,
+            "200001": 25,
             "200002": 17,
-            "200003": 11,
-            "200004": 22,
-            "200005": 20
+            "200003": 12,
+            "200004": 23,
+            "200005": 19
           },
           "max_angle_deg": 146.039476,
           "min_angle_deg": 62.771613,
@@ -219,15 +223,15 @@
         },
         "thuman": {
           "angle_buckets": {
-            "060_090": 25,
+            "060_090": 24,
             "090_120": 23,
-            "120_150": 23,
+            "120_150": 24,
             "150_180": 25
           },
           "frozen_pair_overlap": 0,
           "groups": {
-            "thuman00": 55,
-            "thuman02": 41
+            "thuman00": 56,
+            "thuman02": 40
           },
           "max_angle_deg": 178.64625,
           "min_angle_deg": 60.541905,
