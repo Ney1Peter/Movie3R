@@ -1,0 +1,32 @@
+defaults:
+  - train_v14_1_cut_event_single_v9_event_only_geometry
+  - _self_
+
+# One-source integration test for the camera-only adapter.  This is not a
+# candidate checkpoint and never participates in P0 selection.
+v14_multihuman_camera_manifest: /data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v14_multihuman_camera_supervision_20260803.json
+v14_multihuman_camera_root: /data/wangzheng/iJCV-CODE/data/MultiHuman/Real-World-Capture/extracted
+
+train_datasets:
+  - name: multihuman_camera
+    weight: 1.0
+    batch_size: 1
+    num_workers: 0
+    dataset: >-
+      1 @ MultiHumanCameraCut(allow_repeat=True, ROOT="${v14_multihuman_camera_root}", manifest_path="${v14_multihuman_camera_manifest}", manifest_split='train', aug_crop=0, resolution=512, num_views=3, seed=14905, n_corres=0, max_humans=1)
+
+train_mixed_epoch_steps: 1
+epochs: 1
+eval_freq: 0
+val_dataset: null
+test_dataset: null
+save_freq: 1000000
+keep_freq: 0
+save_last_checkpoint: false
+save_final_checkpoint: false
+early_stopping_patience: 1000000
+print_freq: 1
+
+exp_name: v14_multihuman_camera_smoke
+logdir: /data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/${exp_name}/logs
+output_dir: /data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/${exp_name}

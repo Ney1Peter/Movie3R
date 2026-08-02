@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "name": "v14_cross96_brtc_egohumans_confirmation_20260803",
+  "purpose": "Frozen external EgoHumans confirmation for the current cross96 B0 plus frozen BRTC-LC pipeline. These timestamps were not used to select any cross96, BRTC, Kabsch, VSP, camera-tail, or association policy.",
+  "dataset": "EgoHumans/EgoBody 001_legoassemble",
+  "stream_construction": "Each chain has three independently reset five-frame shots. Adjacent shots repeat the physical timestamp at the cut, giving a controlled cross-camera cut while preserving a strictly first-post-cut runtime action.",
+  "runtime_constraints": {
+    "causal": true,
+    "future_post_frames_for_boundary": 0,
+    "shadow_state_committed": false,
+    "external_pretrained_models": [],
+    "gt_used_at_runtime": false
+  },
+  "selection_audit": {
+    "cross96_training_sources": ["AvatarReX", "THuman", "MVHuman100", "MVHuman200"],
+    "policy_development_sources": ["MultiHuman three offset0 and prior frozen policies"],
+    "prior_small_egohumans_ranges_excluded": [[176, 188], [296, 308], [416, 428]],
+    "all_confirmation_frame_ranges": [[60, 72], [120, 132], [240, 252], [360, 372], [520, 532]]
+  },
+  "chains": [
+    {
+      "id": "ego_confirm_00",
+      "shots": [
+        {"camera": "cam01", "frames": [60, 61, 62, 63, 64]},
+        {"camera": "cam06", "frames": [64, 65, 66, 67, 68]},
+        {"camera": "cam07", "frames": [68, 69, 70, 71, 72]}
+      ]
+    },
+    {
+      "id": "ego_confirm_01",
+      "shots": [
+        {"camera": "cam02", "frames": [120, 121, 122, 123, 124]},
+        {"camera": "cam05", "frames": [124, 125, 126, 127, 128]},
+        {"camera": "cam08", "frames": [128, 129, 130, 131, 132]}
+      ]
+    },
+    {
+      "id": "ego_confirm_02",
+      "shots": [
+        {"camera": "cam03", "frames": [240, 241, 242, 243, 244]},
+        {"camera": "cam04", "frames": [244, 245, 246, 247, 248]},
+        {"camera": "cam01", "frames": [248, 249, 250, 251, 252]}
+      ]
+    },
+    {
+      "id": "ego_confirm_03",
+      "shots": [
+        {"camera": "cam04", "frames": [360, 361, 362, 363, 364]},
+        {"camera": "cam07", "frames": [364, 365, 366, 367, 368]},
+        {"camera": "cam02", "frames": [368, 369, 370, 371, 372]}
+      ]
+    },
+    {
+      "id": "ego_confirm_04",
+      "shots": [
+        {"camera": "cam05", "frames": [520, 521, 522, 523, 524]},
+        {"camera": "cam08", "frames": [524, 525, 526, 527, 528]},
+        {"camera": "cam03", "frames": [528, 529, 530, 531, 532]}
+      ]
+    }
+  ]
+}

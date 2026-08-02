@@ -4,6 +4,7 @@ from .arkitscenes import ARKitScenes_Multi  # noqa
 from .arkitscenes_highres import ARKitScenesHighRes_Multi
 from .bedlam import BEDLAM_Multi
 from .avatarrex import AvatarReX_AABB, AvatarReX_Pattern, AvatarReX_Video
+from .multihuman_camera import MultiHumanCameraCut
 from .blendedmvs import BlendedMVS_Multi  # noqa
 from .co3d import Co3d_Multi  # noqa
 from .cop3d import Cop3D_Multi

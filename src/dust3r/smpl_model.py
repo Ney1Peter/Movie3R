@@ -191,6 +191,20 @@ class SMPLModel(object):
         K = K.view(-1, *K.shape[2:])
         nhv = int(smpl_mask.sum())
         if nhv == 0:
+            # Camera-only cut supervision has valid RGB and calibrated camera
+            # targets but deliberately no SMPL target.  The V8 image-only
+            # forward still requires the Multi-HMR-sized image/K tensors;
+            # previously this early return omitted them and made a legitimate
+            # empty-human batch fail before the camera loss was evaluated.
+            imgs = torch.stack([view["img"] for view in views], dim=0)
+            imgs = imgs.view(-1, *imgs.shape[2:])
+            K_mhmr = resize_camera_intrinsics(K, *imgs.shape[2:], self.mhmr_img_res)
+            imgs_mhmr = pad_image(imgs, self.mhmr_img_res)
+            for view_index, view in enumerate(views):
+                start = view_index * batch_size
+                stop = start + batch_size
+                view["img_mhmr"] = imgs_mhmr[start:stop]
+                view["K_mhmr"] = K_mhmr[start:stop]
             target['has_smpl'] = False
             return target
 
@@ -387,8 +401,22 @@ class SMPLModel(object):
         K = K.view(-1, *K.shape[2:])
         nhv = int(smpl_mask.sum())
 
-        # If no valid SMPL humans in this batch, return empty target
+        # Camera-only cut supervision has valid RGB and calibrated camera
+        # targets but deliberately no SMPL target.  The V8 image-only forward
+        # still consumes ``img_mhmr``/``K_mhmr`` even when there is no human
+        # loss.  This standard (non-fast) path must therefore mirror the
+        # fast-path empty-human contract above instead of returning before
+        # those model inputs are attached.
         if nhv == 0:
+            imgs = torch.stack([view["img"] for view in views], dim=0)
+            imgs = imgs.view(-1, *imgs.shape[2:])
+            K_mhmr = resize_camera_intrinsics(K, *imgs.shape[2:], self.mhmr_img_res)
+            imgs_mhmr = pad_image(imgs, self.mhmr_img_res)
+            for view_index, view in enumerate(views):
+                start = view_index * batch_size
+                stop = start + batch_size
+                view["img_mhmr"] = imgs_mhmr[start:stop]
+                view["K_mhmr"] = K_mhmr[start:stop]
             target['has_smpl'] = False
             return target
 
