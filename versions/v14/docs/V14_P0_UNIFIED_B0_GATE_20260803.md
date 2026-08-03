@@ -179,6 +179,21 @@ P0.1 之后若仍不存在 fixed-human non-regression 的统一 B0，则停止 r
 root/layout residual、但不重写 camera 的可训练 typed correction；不能把结果包装为
 通用 end-to-end system。
 
+### 6.1 P0.1 启动记录（非候选结果）
+
+为避免把未完成运行误读为 negative result，P0.1 的启动历史固定如下：
+
+| Run | 状态 | 原因 / 处理 | 是否可用于比较 |
+|---|---|---|---|
+| `v14_cut_first_cross_source_multihuman_p0_r33_e6` | 中断于第 2 step | camera-only、全空 `smpl_mask` 的 standard path 没有构造 `img_mhmr/K_mhmr`；已由 P0 commit 的 data-path 修复解决 | 否：无 checkpoint |
+| `...p0_r33_retry1_e6` | 修复前中断 | 与上项相同的启动问题 | 否：无 checkpoint |
+| `...p0_r33_retry2_e6` | 运行被回收 | 已稳定到约 step 1040，但交互 PTY 在回合结束后被回收；未保存 final checkpoint，不能作为数值/选择结果 | 否：无 checkpoint |
+| `...p0_r33_persistent_e6` | 运行中 | 同一预注册 config、formal-V9 init 和 2880 updates；由独立持久 `screen` 会话运行 | **唯一有效 P0.1 candidate（完成前不作结论）** |
+
+这些启动失败没有产生可读取 checkpoint，因而既不构成 P0.1 的正证据，也不构成
+ratio-intervention 的 No-Go。只有最后一行成功写出 `checkpoint-final.pth` 后的 frozen
+selection 才能决定 P0.1。
+
 ## 7. 可复现产物
 
 ```text
