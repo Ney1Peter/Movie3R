@@ -241,7 +241,9 @@ def export_case(
     }
     for name, people in systems.items():
         labeled = [
-            (str(labels.get(int(person["detection_index"]), f"person{index}")), as_float(person["vertices"]))
+            # Keep runtime displays anonymous as well.  Evaluator identities
+            # remain confined to the JSON metric branch below.
+            (f"det{int(person['detection_index'])}", as_float(person["vertices"]))
             for index, person in enumerate(people)
         ]
         rendered = render_people(image, c2w, labeled, faces, intrinsic, size)
