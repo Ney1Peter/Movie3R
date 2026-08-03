@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export a CPU-only 10-frame, small-span three-person B0/BRTC-LC viewer.
+"""Export a CPU-only small-span three-person B0/BRTC-LC viewer.
 
 This is a display exporter, not a new training or evaluation run.  It replays
 the causal current-P0 transaction on RGB only:
@@ -260,7 +260,7 @@ def main() -> None:
         del layer, model
 
     manifest = {
-        "format": "standard demo.py --save compatible 10-frame payload",
+        "format": f"standard demo.py --save compatible {len(pre_paths) + len(post_paths)}-frame payload",
         "case": record,
         "frame_layout": {"pre": len(pre_paths), "post": len(post_paths), "cut_index": len(pre_paths)},
         "selection_from_frozen_three_person_report": selection,
