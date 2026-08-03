@@ -1,7 +1,7 @@
 # V14 P0：统一 B0 的跨域 Gate 结果与下一步
 
 日期：2026-08-03
-状态：**P0 部分成功；严格 universal-B0 Gate 为 NO-GO；启动唯一允许的 P0.1 数据比例干预。**
+状态：**P0 部分成功；P0 与 P0.1 的严格 universal-B0 Gate 均为 NO-GO；停止单纯 camera-only ratio sweep。**
 
 本报告执行 `MOVIE3R_ICLR_PAPER_BLUEPRINT_20260802.md` 和
 `V14_ICLR_PROGRESS_GATE_AND_BATCH_CONTROL_20260803.md` 的 P0，而不是把
@@ -188,11 +188,74 @@ root/layout residual、但不重写 camera 的可训练 typed correction；不�
 | `v14_cut_first_cross_source_multihuman_p0_r33_e6` | 中断于第 2 step | camera-only、全空 `smpl_mask` 的 standard path 没有构造 `img_mhmr/K_mhmr`；已由 P0 commit 的 data-path 修复解决 | 否：无 checkpoint |
 | `...p0_r33_retry1_e6` | 修复前中断 | 与上项相同的启动问题 | 否：无 checkpoint |
 | `...p0_r33_retry2_e6` | 运行被回收 | 已稳定到约 step 1040，但交互 PTY 在回合结束后被回收；未保存 final checkpoint，不能作为数值/选择结果 | 否：无 checkpoint |
-| `...p0_r33_persistent_e6` | 运行中 | 同一预注册 config、formal-V9 init 和 2880 updates；由独立持久 `screen` 会话运行 | **唯一有效 P0.1 candidate（完成前不作结论）** |
+| `...p0_r33_persistent_e6` | 完成 | 同一预注册 config、formal-V9 init、2880 updates 与 final-only selection；final SHA256 为 `fa312a111c25b9b981585bfd91884db5abb050cb155c2210d48efc4a3d8d33ab` | **唯一有效 P0.1 candidate** |
 
 这些启动失败没有产生可读取 checkpoint，因而既不构成 P0.1 的正证据，也不构成
 ratio-intervention 的 No-Go。只有最后一行成功写出 `checkpoint-final.pth` 后的 frozen
 selection 才能决定 P0.1。
+
+### 6.2 P0.1 结果：33% real-multi camera ratio 未通过统一 B0 gate
+
+P0.1 只改变每个 epoch 的事件配比：`[80,80,80,80,160]`，即 controlled `67%`、
+real-multi camera-only `33%`；P0 原为 `[96,96,96,96,96]`，即 `80%/20%`。架构、
+formal-V9 init、loss、routing、2880 updates、final-only checkpoint selection、runtime
+state contract 都没有变化。因此这一实验直接检验“更多真实多人相机覆盖能否同时保留
+controlled tail”的可证伪假设。
+
+训练完整运行 6 epochs，无 NaN/OOM/routing error，最终 train loss 为 `2.12686`。
+两个 selection evaluator 均完成且无 failure；raw-reset 在 P0/P0.1 之间逐 case
+max-abs delta 为 `0.0`，MultiHuman 的 shadow/B0 camera parity P95 为
+`1.11e-7`。故结果不是 raw Human3R、检测或 evaluator 分支变化。
+
+**Frozen four-source 180（B0 runtime，同一 P0.1 checkpoint）。**
+
+| Checkpoint | Composite | P90 | P95 | Catastrophic | Human head |
+|---|---:|---:|---:|---:|---:|
+| cross96 | 1.7333 | 3.9670 | 4.7186 | 86 | **1.2288** |
+| P0（20% real-multi） | **1.5838** | **3.3656** | **3.9362** | **79** | 1.3818 |
+| P0.1（33% real-multi） | 1.7622 | 3.8794 | 4.8569 | 86 | 1.3710 |
+
+P0.1 的 regression 并非只来自一个极端 source：AvatarReX mean/P95/cat 为
+`1.774/4.577/20 -> 2.321/5.753/23`，MVHuman100 为
+`1.849/3.480/30 -> 1.869/3.503/32`，MVHuman200 为
+`2.528/5.383/27 -> 2.630/5.607/29`；THuman P95 略降但不足以抵消总体 tail。
+
+**MultiHuman `three` pair/timestamp-disjoint 36-event development（B0 runtime）。**
+
+| Checkpoint | Camera composite | Root | Joint | Vertex | Pair vector | Cat. |
+|---|---:|---:|---:|---:|---:|---:|
+| old B0 | .3341 | .3435 | .3734 | .3514 | .1218 | 0 |
+| P0（20%） | .1462 | .3339 | .3638 | .3533 | **.1208** | 0 |
+| P0.1（33%） | **.1369** | **.3167** | **.3485** | **.3375** | .1210 | 0 |
+
+这给出一个有价值但不足以升级 checkpoint 的规律：增加全画幅真实多人相机监督确实令
+**同一** P0.1 checkpoint 在 held-out real-multi dev 的 camera 和 fixed-human 更好，
+但同时显著恶化 controlled source 的 camera tail。它是跨域 trade-off 的移动，而不是
+single-checkpoint unification。
+
+预注册 gate 的 12 项中，10 项通过；仅以下两项失败：
+
+```text
+four_p95_retains_p0:            4.856915 > 3.936213
+four_catastrophic_retains_p0:   86 > 79
+```
+
+因此严格决策为：
+
+```text
+NO_GO_P0.1_CAMERA_RATIO
+STOP_P0_CAMERA_RATIO_SWEEP
+```
+
+该失败是关于“单纯增加 camera-only real-multi 训练比例”的反例，不是对 MultiHuman
+数据、state–gauge decoupling 或 camera-invariant human refinement 的否定。由于 P0.1
+没有同时通过两个 selection set，冻结 EgoHumans 外部 confirmation **没有运行**；相应
+P0.1 external-output 目录为空。这避免将已读 confirmation 用于补救选择失败的 checkpoint。
+
+下一研究步骤不应继续扫描 `20% -> 33%` 的比例，或重新打开 BRTC/Kabsch/selector/VSP/
+latent SE(3) 这些已关闭分支。它必须直接观察 camera-relative human root/layout residual，
+保持 camera bit-exact，并使用与现有 latent/两帧 ray cue 正交的可验证信息；候选与 protocol
+须在新的 development split 上预注册后才运行。
 
 ## 7. 可复现产物
 
@@ -207,6 +270,12 @@ output/v14_cut_first_cross_source/eval_multihuman_p0_180/
 output/v14_cut_first_cross_source/eval_multihuman_camera_dev/{old_b0,cross96,p0_e6}/
 output/v14/fine_alignment_research/multihuman_p0_b0_egohumans_confirmation/
 output/v14/fine_alignment_research/multihuman_p0_brtc_egohumans_confirmation/
+
+output/v14_cut_first_cross_source/
+v14_cut_first_cross_source_multihuman_p0_r33_persistent_e6/checkpoint-final.pth
+output/v14_cut_first_cross_source/eval_multihuman_p0_r33_180/
+output/v14_cut_first_cross_source/eval_multihuman_camera_dev/p0_r33/
+versions/v14/cut_first_cross_source/check_p01_unified_b0_gate.py
 ```
 
 所有新的 cache、checkpoint、report 都位于 Movie3R workspace 下；没有向 `/root`、
