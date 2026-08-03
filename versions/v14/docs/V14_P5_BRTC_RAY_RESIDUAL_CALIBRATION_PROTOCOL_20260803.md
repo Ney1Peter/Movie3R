@@ -109,3 +109,83 @@ output/v14/fine_alignment_research/p5_brtc_ray_residual_calibration/
 intercept、`alpha=1.0` 和 `±0.30 m` cap。下一步只能以这一精确模型，在一个与 `three`
 P5 label 完全分离的 multi-human cache 上运行；不得据此修改 feature、alpha、cap 或重训
 范围。尤其不应把 timestamp-CV 误称为跨 capture 泛化或 Multi-THuMBS 对榜成绩。
+
+## 冻结 confirmation（执行前固定）
+
+confirmation manifest 固定为已有 MultiHuman `dance` / `box` protocol 中的 `offset=0`
+first-post rows：`14 + 15 = 29` boundaries。它们历史上已被其他 V14 diagnostics 打开，
+故是 **frozen replay confirmation** 而非 pristine test；但从不进入 P5 feature、alpha、cap
+或 Ridge fitting。所有 events 都用与 P5 development 相同的 P0 checkpoint 重新 forward，
+不复用旧 checkpoint 的 BRTC cache。
+
+模型只能读取已冻结的 `P5_FROZEN_MODEL_BEFORE_CONFIRM.json`，每个 BRTC accepted
+anonymous geometry match 都直接执行该 JSON 的 linear inference；不得利用 confirmation GT
+identity 筛掉 action。GT identity 仅在输出后给 correct-match 分层。
+
+冻结 confirmation promotion 条件：
+
+```text
+correct BRTC-accepted rows >= 24
+correct-match root/joint/vertex mean each improve >= 5 mm vs BRTC
+all geometry-pair root mean improves >= 5 mm
+all geometry-pair root harm >5 cm <= 10%
+camera bit-exact; unmatched/rejected exact fallback
+```
+
+任何条件失败则 `NO_GO_BRTC_RAY_RESIDUAL_CALIBRATION_CONFIRMATION`；不得在 dance/box
+上重训或改变 JSON。通过也只晋级为 current-P0 / MultiHuman 的 qualified person-root
+calibration candidate，仍需独立 real-capture confirmation、long-stream and official-style
+evaluation 才能成为 ICLR 主线。
+
+## 已完成 frozen replay confirmation（2026-08-03）
+
+确认判定：
+
+```text
+QUALIFIED_P5_BRTC_RAY_RESIDUAL_CALIBRATION
+```
+
+冻结 JSON 在 confirmation 开始前已存在，且此阶段只做其线性推理。以同一个 P0 checkpoint
+重新运行 `dance` / `box` 的 29 个 `offset=0` first-post boundaries，得到 58 个有 evaluator
+target 的 geometry rows；其中 `57` 个是 evaluator-only correct association 且 BRTC accepted，
+另一个 BRTC rejected row 保持 exact fallback。运行时没有读取这些 identity labels，也没有
+按它们筛掉任何 P5 action。
+
+| Stratum / method | N | Root (m) | Joint (m) | Vertex (m) |
+|---|---:|---:|---:|---:|
+| all geometry pairs: frozen BRTC | 58 | .2692 | .3019 | .2916 |
+| all geometry pairs: frozen P5 | 58 | **.2382** | **.2683** | **.2622** |
+| correct+BRTC accepted: frozen BRTC | 57 | .2674 | .3011 | .2903 |
+| correct+BRTC accepted: frozen P5 | 57 | **.2358** | **.2668** | **.2604** |
+
+正确关联 stratum 的 root/joint/vertex gain 为 `31.61/34.22/29.85 mm`；保留所有 geometry
+rows 后仍为 `31.07/33.63/29.34 mm`。相对 BRTC 的 `>5 cm` harm 为：all root/joint/vertex
+`1.72/0.00/1.72%`，correct stratum `1.75/0.00/1.75%`，均远小于 `10%` 的冻结上限。所有
+confirmation gate 均通过，29 个 event 的 B0 camera SHA256 均复核，camera max change=`0.0`，
+没有 future post frame、外部预训练模型或 shadow state commit。
+
+产物：
+
+```text
+config/manifests/v14_p5_brtc_ray_residual_confirm_20260803.json
+output/v14/fine_alignment_research/p5_brtc_ray_residual_confirmation_cache/
+output/v14/fine_alignment_research/p5_brtc_ray_residual_confirmation/
+  P5_CONFIRMATION_REPORT.json
+```
+
+所以当前可部署的人体 root 精对齐链可以明确写为：
+
+```text
+frozen B0 camera
+ -> geometry association
+ -> frozen BRTC-LC (explicit two-view ray proposal + layout consensus)
+ -> frozen 7-feature P5 Ridge residual along raw post root ray
+ -> rigid translation of that person's root/joints/vertices
+ -> exact fallback for unmatched or BRTC-rejected person
+```
+
+这是一条有价值、可训练但非常小的 **calibration**，不是把人重新端到端回归，也不修改
+B0。其证据目前覆盖 `three` timestamp-CV 加上已读 dance/box frozen replay；它尚未证明
+EgoHumans/general real capture 泛化、automatic WHO 完全解决、orientation/articulation、长
+stream temporal stability 或 Multi-THuMBS official comparison。因此可以晋级为当前主线的
+root residual module，但不能提前写成 ICLR 完整系统胜利。

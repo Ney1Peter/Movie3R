@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "created": "2026-08-03",
+  "purpose": "P5 frozen replay confirmation; current P0 forward, dance/box first-post offset0 only",
+  "source_reports": [
+    "output/v14/b0_identity_matching_extended/dance/v14_b0_identity_matching.json",
+    "output/v14/b0_identity_matching_extended/box/v14_b0_identity_matching.json"
+  ],
+  "confirm": [
+    {
+      "event_id": "confirm_dance_t0200_c1_c4_k0",
+      "sequence": "dance",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 200
+    },
+    {
+      "event_id": "confirm_dance_t0300_c0_c1_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 300
+    },
+    {
+      "event_id": "confirm_dance_t0300_c0_c3_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 300
+    },
+    {
+      "event_id": "confirm_dance_t0300_c1_c4_k0",
+      "sequence": "dance",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 300
+    },
+    {
+      "event_id": "confirm_dance_t0400_c0_c1_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 400
+    },
+    {
+      "event_id": "confirm_dance_t0400_c0_c3_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 400
+    },
+    {
+      "event_id": "confirm_dance_t0400_c1_c4_k0",
+      "sequence": "dance",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 400
+    },
+    {
+      "event_id": "confirm_dance_t0500_c0_c1_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 500
+    },
+    {
+      "event_id": "confirm_dance_t0500_c0_c3_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 500
+    },
+    {
+      "event_id": "confirm_dance_t0500_c1_c4_k0",
+      "sequence": "dance",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 500
+    },
+    {
+      "event_id": "confirm_dance_t0600_c0_c1_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 600
+    },
+    {
+      "event_id": "confirm_dance_t0600_c0_c3_k0",
+      "sequence": "dance",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 600
+    },
+    {
+      "event_id": "confirm_dance_t0600_c1_c4_k0",
+      "sequence": "dance",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 600
+    },
+    {
+      "event_id": "confirm_box_t0470_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 470
+    },
+    {
+      "event_id": "confirm_box_t0470_c0_c3_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 470
+    },
+    {
+      "event_id": "confirm_box_t0470_c1_c4_k0",
+      "sequence": "box",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 470
+    },
+    {
+      "event_id": "confirm_box_t0510_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 510
+    },
+    {
+      "event_id": "confirm_box_t0510_c0_c3_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 510
+    },
+    {
+      "event_id": "confirm_box_t0510_c1_c4_k0",
+      "sequence": "box",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 510
+    },
+    {
+      "event_id": "confirm_box_t0550_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 550
+    },
+    {
+      "event_id": "confirm_box_t0550_c0_c3_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 550
+    },
+    {
+      "event_id": "confirm_box_t0550_c1_c4_k0",
+      "sequence": "box",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 550
+    },
+    {
+      "event_id": "confirm_box_t0590_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 590
+    },
+    {
+      "event_id": "confirm_box_t0590_c0_c3_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 590
+    },
+    {
+      "event_id": "confirm_box_t0630_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 630
+    },
+    {
+      "event_id": "confirm_box_t0630_c0_c3_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 3,
+      "frame": 630
+    },
+    {
+      "event_id": "confirm_box_t0630_c1_c4_k0",
+      "sequence": "box",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 630
+    },
+    {
+      "event_id": "confirm_box_t0670_c0_c1_k0",
+      "sequence": "box",
+      "pre_camera": 0,
+      "post_camera": 1,
+      "frame": 670
+    },
+    {
+      "event_id": "confirm_box_t0670_c1_c4_k0",
+      "sequence": "box",
+      "pre_camera": 1,
+      "post_camera": 4,
+      "frame": 670
+    }
+  ]
+}
