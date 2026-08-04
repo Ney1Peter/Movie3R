@@ -1,0 +1,39 @@
+{
+  "name": "within_shot_static_gate_ema25_v1",
+  "status": "frozen_internal_candidate",
+  "date": "2026-08-04",
+  "scope": "post-boundary within-shot root stabilization after frozen B0+BRTC-LC",
+  "runtime_contract": {
+    "causal": true,
+    "uses_future_post_frames": false,
+    "uses_gt": false,
+    "uses_additional_pretrained_model": false,
+    "camera_update": "none",
+    "scene_pointmap_update": "none",
+    "fallback": "exact B0+BRTC-LC for moving, unknown, short-history, unmatched, or rejected tracks"
+  },
+  "policy": {
+    "name": "c1_ema25",
+    "filter_kind": "ema",
+    "alpha": 0.25,
+    "median_window": 1,
+    "warmup": 2,
+    "root_enter_m": 0.01,
+    "root_exit_m": 0.025,
+    "body_enter_m": 0.015,
+    "body_exit_m": 0.035,
+    "moving_hold_frames": 3,
+    "correction_cap_m": 0.15
+  },
+  "per_person_state": [
+    "previous camera-local root",
+    "last three camera-local root and body-deformation steps",
+    "filtered camera-local root",
+    "moving-until frame index",
+    "track age"
+  ],
+  "action": "Apply the bounded camera-local EMA residual as one identical world translation to this person's root, joints, and vertices. Never edit camera.",
+  "policy_source": "versions/v14/eval_streaming_within_shot_stability.py::POLICIES (predeclared fixed grid)",
+  "evidence": "versions/v14/docs/V14_WITHIN_SHOT_C1_STATIC_GATE_V1_20260804.md",
+  "promotion": "internal frozen candidate only; needs unified end-to-end large-scale benchmark before paper claim"
+}
