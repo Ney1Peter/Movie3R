@@ -25,6 +25,7 @@ import cv2
 import argparse
 import tempfile
 import shutil
+from pathlib import Path
 from copy import deepcopy
 from add_ckpt_path import add_path_to_dust3r
 import imageio.v2 as iio
@@ -290,6 +291,52 @@ def parse_args():
             "Zero-based frame indices marked as explicit camera-cut events. "
             "V14.1 applies correction only at these frames."
         ),
+    )
+    parser.add_argument(
+        "--adaptive_joint_mode",
+        choices=("none", "post", "detector"),
+        default="none",
+        help=(
+            "Adaptive shared human-camera boundary correction. 'post' evaluates "
+            "the human geometry gate at explicit --cut_indices; 'detector' first "
+            "predicts causal RGB-only cuts and then applies the same gate."
+        ),
+    )
+    parser.add_argument(
+        "--adaptive_joint_min_rotation_deg",
+        type=float,
+        default=20.0,
+        help="Minimum shared human residual rotation for an adaptive update.",
+    )
+    parser.add_argument(
+        "--adaptive_joint_max_vertex_rms_m",
+        type=float,
+        default=0.20,
+        help="Maximum shared human vertex RMS accepted by the adaptive gate.",
+    )
+    parser.add_argument(
+        "--adaptive_joint_max_normalized_rms",
+        type=float,
+        default=0.20,
+        help="Maximum body-scale-normalized RMS accepted by the adaptive gate.",
+    )
+    parser.add_argument(
+        "--adaptive_joint_alpha",
+        type=float,
+        default=1.0,
+        help="Identity-to-SE(3) interpolation strength for adaptive updates.",
+    )
+    parser.add_argument(
+        "--shot_detector_feature_csv",
+        type=str,
+        default="output/archive/20260721/v10_detector_probe/image_feature_round1/detector_pair_features.csv",
+        help="Saved CPU image-detector feature table used by detector mode.",
+    )
+    parser.add_argument(
+        "--shot_detector_threshold",
+        type=float,
+        default=0.5,
+        help="Positive probability threshold for detector mode.",
     )
     parser.add_argument(
         "--v14_1_dual_path_scene",
@@ -785,6 +832,125 @@ def prepare_output(
         msks
     )
 
+
+def apply_adaptive_joint_output(
+    pts3ds_other,
+    cam_dict,
+    all_smpl_verts,
+    output_dir,
+    boundary_indices,
+    args,
+    raw_camera_dict=None,
+    raw_smpl_verts=None,
+):
+    """Apply the causal shared-human gate to prepared demo outputs.
+
+    ``prepare_output`` has already converted every frame to the current world
+    gauge.  This function therefore only left-multiplies post-cut camera,
+    point-map and SMPL world arrays by the accepted residual.  Local depth and
+    SMPL parameters remain unchanged, which is exactly the shared-coordinate
+    contract used by the viewer and by saved payloads.
+    """
+    from src.dust3r.adaptive_joint import (
+        AdaptiveJointConfig,
+        apply_to_arrays,
+        apply_with_raw_reference,
+    )
+
+    cameras = np.tile(np.eye(4, dtype=np.float64), (len(cam_dict["R"]), 1, 1))
+    cameras[:, :3, :3] = np.asarray(cam_dict["R"], dtype=np.float64)
+    cameras[:, :3, 3] = np.asarray(cam_dict["t"], dtype=np.float64)
+    config = AdaptiveJointConfig(
+        min_rotation_deg=float(args.adaptive_joint_min_rotation_deg),
+        max_vertex_rms_m=float(args.adaptive_joint_max_vertex_rms_m),
+        max_normalized_rms=float(args.adaptive_joint_max_normalized_rms),
+        alpha=float(args.adaptive_joint_alpha),
+    )
+    mesh_values = [
+        value.detach().cpu().numpy() if torch.is_tensor(value) else np.asarray(value)
+        for value in all_smpl_verts
+    ]
+    point_values = [
+        value.detach().cpu().numpy() if torch.is_tensor(value) else np.asarray(value)
+        for value in pts3ds_other
+    ]
+    if raw_camera_dict is not None and raw_smpl_verts is not None:
+        raw_cameras = np.tile(np.eye(4, dtype=np.float64), (len(raw_camera_dict["R"]), 1, 1))
+        raw_cameras[:, :3, :3] = np.asarray(raw_camera_dict["R"], dtype=np.float64)
+        raw_cameras[:, :3, 3] = np.asarray(raw_camera_dict["t"], dtype=np.float64)
+        raw_mesh_values = [
+            value.detach().cpu().numpy() if torch.is_tensor(value) else np.asarray(value)
+            for value in raw_smpl_verts
+        ]
+        cameras_new, meshes_new, points_new, records = apply_with_raw_reference(
+            cameras,
+            mesh_values,
+            raw_cameras,
+            raw_mesh_values,
+            point_values,
+            boundary_indices,
+            config,
+        )
+    else:
+        cameras_new, meshes_new, points_new, records = apply_to_arrays(
+            cameras, mesh_values, point_values, boundary_indices, config
+        )
+    cam_dict["R"] = cameras_new[:, :3, :3].astype(np.float32)
+    cam_dict["t"] = cameras_new[:, :3, 3].astype(np.float32)
+    for index, value in enumerate(meshes_new):
+        original = all_smpl_verts[index]
+        all_smpl_verts[index] = torch.from_numpy(value).to(
+            device=original.device if torch.is_tensor(original) else "cpu",
+            dtype=original.dtype if torch.is_tensor(original) else torch.float32,
+        )
+    if points_new is not None:
+        for index, value in enumerate(points_new):
+            original = pts3ds_other[index]
+            pts3ds_other[index] = torch.from_numpy(value).to(
+                device=original.device if torch.is_tensor(original) else "cpu",
+                dtype=original.dtype if torch.is_tensor(original) else torch.float32,
+            )
+
+    # Persist the same world vertices as an explicit cache.  The original
+    # payload stores camera-local SMPL parameters; keeping verts_world makes
+    # the post-hoc auditor/viewer independent of a GPU SMPL forward pass.
+    if getattr(args, "save", False):
+        output_path = os.path.abspath(output_dir)
+        for index, pose in enumerate(cameras_new):
+            camera_path = os.path.join(output_path, "camera", f"{index:06d}.npz")
+            if os.path.isfile(camera_path):
+                with np.load(camera_path) as source:
+                    values = {key: source[key] for key in source.files}
+                values["pose"] = pose.astype(np.float32)
+                temporary = camera_path + ".adaptive_tmp"
+                with open(temporary, "wb") as handle:
+                    np.savez(handle, **values)
+                os.replace(temporary, camera_path)
+            smpl_path = os.path.join(output_path, "smpl", f"{index:06d}.npz")
+            if os.path.isfile(smpl_path):
+                with np.load(smpl_path, allow_pickle=True) as source:
+                    values = {key: source[key] for key in source.files}
+                values["verts_world"] = meshes_new[index].astype(np.float32)
+                temporary = smpl_path + ".adaptive_tmp"
+                with open(temporary, "wb") as handle:
+                    np.savez(handle, **values)
+                os.replace(temporary, smpl_path)
+        with open(os.path.join(output_path, "adaptive_joint_boundary.json"), "w", encoding="utf-8") as handle:
+            import json
+            json.dump(
+                {
+                    "method": f"demo_{args.adaptive_joint_mode}_adaptive_shared_human_camera_v1",
+                    "candidate_boundaries": [int(value) for value in boundary_indices],
+                    "records": records,
+                    "runtime_contract": "GT-free; pre frames unchanged; accepted residual held causally over post frames",
+                },
+                handle,
+                indent=2,
+                ensure_ascii=False,
+            )
+            handle.write("\n")
+    return records
+
 def parse_seq_path(p):
     if os.path.isdir(p):
         img_paths = sorted(glob.glob(f"{p}/*"))
@@ -855,6 +1021,33 @@ def run_inference(args):
 
     print(f"Found {len(img_paths)} images in {args.seq_path}.")
     img_mask = [True] * len(img_paths)
+
+    # The front placement is intentionally image-only and causal.  It runs
+    # before model loading/forward, so the predicted event labels can route
+    # V14.1 ShotToken and the recurrent reset exactly as an explicit label
+    # would.  Geometry is still checked after the model output below.
+    cut_indices = set(args.cut_indices or [])
+    detector_rows = []
+    if args.adaptive_joint_mode == "detector":
+        import sys
+        detector_scripts = os.path.join(os.path.dirname(__file__), "scripts")
+        if detector_scripts not in sys.path:
+            sys.path.insert(0, detector_scripts)
+        from v10_image_only_detector import StreamingImageOnlyShotDetector
+
+        detector = StreamingImageOnlyShotDetector(
+            Path(args.shot_detector_feature_csv),
+            threshold=float(args.shot_detector_threshold),
+        )
+        labels, detector_rows = detector.predict_sequence(
+            [Path(value) for value in img_paths]
+        )
+        detected_cut_indices = {index for index, label in enumerate(labels) if int(label)}
+        cut_indices.update(detected_cut_indices)
+        print(
+            "Adaptive detector proposed cuts: "
+            f"{sorted(detected_cut_indices)} (explicit={sorted(set(args.cut_indices or []))})"
+        )
 
     # Load and prepare the model.
     print(f"Loading model from {args.model_path}...")
@@ -941,7 +1134,6 @@ def run_inference(args):
         freeze_pose_memory_after=args.freeze_pose_memory_after,
         freeze_v9_history_after=args.freeze_v9_history_after,
     )
-    cut_indices = set(args.cut_indices or [])
     invalid_cut_indices = sorted(
         index for index in cut_indices if index < 0 or index >= len(views)
     )
@@ -994,18 +1186,23 @@ def run_inference(args):
     start_time = time.time()
     outputs, _ = inference_recurrent_lighter(
         views, model, device, use_ttt3r=args.use_ttt3r)
-    if args.v14_1_dual_path_scene:
+    shadow_outputs_for_adaptive = None
+    if args.v14_1_dual_path_scene or args.adaptive_joint_mode != "none":
         shadow_views = _make_v14_1_event_off_batch(deepcopy(views))
         shadow_outputs, _ = inference_recurrent_lighter(
             shadow_views, model, device, verbose=False, use_ttt3r=args.use_ttt3r
         )
-        outputs["pred"] = _compose_v14_1_dual_path_scene(
-            views, outputs["pred"], shadow_outputs["pred"]
-        )
-        print(
-            "V14.1 dual-path scene enabled: raw local pointmaps are composed "
-            "with corrected cut-frame camera poses."
-        )
+        shadow_outputs_for_adaptive = shadow_outputs
+        if args.v14_1_dual_path_scene:
+            outputs["pred"] = _compose_v14_1_dual_path_scene(
+                views, outputs["pred"], shadow_outputs["pred"]
+            )
+            print(
+                "V14.1 dual-path scene enabled: raw local pointmaps are composed "
+                "with corrected cut-frame camera poses."
+            )
+        elif args.adaptive_joint_mode != "none":
+            print("Adaptive joint mode: retained CPU shadow Human3R branch for root-ray camera refinement.")
     total_time = time.time() - start_time
     per_frame_time = total_time / len(views)
     print(
@@ -1023,10 +1220,51 @@ def run_inference(args):
         smpl_faces,
         smpl_id,
         msks,
-        ) = prepare_output(
+    ) = prepare_output(
         outputs, args.output_dir, 1, True, 
         args.save, args.render, args.render_video, img_res, args.subsample
     )
+
+    adaptive_records = []
+    if args.adaptive_joint_mode != "none" and cut_indices:
+        raw_camera_dict = None
+        raw_smpl_verts = None
+        if shadow_outputs_for_adaptive is not None:
+            (
+                _raw_pts3ds_other,
+                _raw_colors,
+                _raw_conf,
+                raw_camera_dict,
+                raw_smpl_verts,
+                _raw_faces,
+                _raw_ids,
+                _raw_msks,
+            ) = prepare_output(
+                shadow_outputs_for_adaptive,
+                args.output_dir,
+                1,
+                True,
+                False,
+                False,
+                False,
+                img_res,
+                args.subsample,
+            )
+        adaptive_records = apply_adaptive_joint_output(
+            pts3ds_other,
+            cam_dict,
+            all_smpl_verts,
+            args.output_dir,
+            sorted(cut_indices),
+            args,
+            raw_camera_dict=raw_camera_dict,
+            raw_smpl_verts=raw_smpl_verts,
+        )
+        accepted = [row for row in adaptive_records if row.get("accepted")]
+        print(
+            "Adaptive shared human-camera gate: "
+            f"{len(accepted)}/{len(adaptive_records)} boundary updates accepted."
+        )
 
     # Convert tensors to numpy arrays for visualization.
     pts3ds_to_vis = [p.cpu().numpy() for p in pts3ds_other]
