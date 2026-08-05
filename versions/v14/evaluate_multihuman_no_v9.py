@@ -120,6 +120,8 @@ def main() -> None:
     ]
     if (case / "no_v9_adaptive_joint").is_dir():
         methods.append("no_v9_adaptive_joint")
+    if (case / "no_v9_direct_adaptive_joint").is_dir():
+        methods.append("no_v9_direct_adaptive_joint")
 
     # Stable pre-shot row -> GT identity map.  This is only for offline
     # evaluation and is never used by any payload transform.

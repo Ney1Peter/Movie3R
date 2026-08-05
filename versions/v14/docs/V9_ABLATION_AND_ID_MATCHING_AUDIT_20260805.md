@@ -43,6 +43,8 @@ post 相机和 post 人体一起乘以 `G_raw`，得到不经过 V9/B0 的显式
 | 当前最终 adaptive joint | **0.011 m / 0.40°** | **0.054 m / 0.44°** | **0.100 m** | **0.123 m** |
 | no-V9 + 当前 adaptive gate | 0.548 m / 20.01° | 0.693 m / 24.11° | 0.715 m | 0.580 m |
 
+另外，将当前 gate 直接接在**原版 Human3R 原始 payload**（不先做 raw-SE(3)）上时，AvatarReX 的 gate 会拒绝该低置信边界并保持原版结果；这说明没有 B0 proposal 时，后处理没有可靠的相机候选可用。
+
 解释：单人低纹理中，原版相机估计没有可靠背景约束；仅做 raw SE(3) 会把错误相机继续传播。人体 residual 能改善人体的刚体误差，但不能把相机恢复到 GT。当前 adaptive joint 必须建立在较好的 B0 proposal 上，才能同时把 camera 和 human 拉回正确 gauge。因此该案例证明的是“V9/B0 是有用的粗初始化，但不是最终解”。
 
 完整 JSON：
@@ -61,6 +63,8 @@ post 相机和 post 人体一起乘以 `G_raw`，得到不经过 V9/B0 的显式
 | no-V9 raw SE(3) | 4.117 m / 173.89° | 4.265 m / 151.89° | 0.353 m | 0/14（显式 Kabsch remap 后） |
 | no-V9 raw SE(3) + human residual | 4.018 m / 143.58° | 4.005 m / 121.54° | 0.446 m | 0/14（显式 Kabsch remap 后） |
 | no-V9 + 当前 adaptive gate | 3.931 m / 143.58° | 3.883 m / 121.54° | 0.373 m | 0/14（显式 Kabsch remap 后） |
+
+更严格的“原版直接输出 + 当前 gate”对照为 **3.878 m / 121.54°**（25 帧平均），且 14/14 个三人帧仍发生几何 permutation；因此不是 raw-SE(3) 对照的构造单独造成退化。
 
 这里 no-V9 的相机错误接近 180°，说明原版 camera pose 的 shot gauge 不能直接用于跨 shot 对齐；后续人体优化即使能降低部分顶点误差，也无法替代正确的粗相机 proposal。B0 的作用不是“最终把人体完全对齐”，而是先把相机和人体送进正确的局部 gauge，使后面的 identity association 和 BRTC-LC 可观测。
 
@@ -99,4 +103,3 @@ post 相机和 post 人体一起乘以 `G_raw`，得到不经过 V9/B0 的显式
 2. **不要把 V9 写成最终精对齐。** 它的准确定位是 learned coarse gauge proposal、低纹理下的先验和 identity preconditioner；最终精修仍由 adaptive camera-human joint 和 BRTC-LC 完成。
 3. **加入人物 ID matching 作为独立贡献。** 主张“原版没有可靠 persistent cross-shot association”，并用 direct vs B0 的 41-cut 消融证明，而不是声称原版没有 `smpl_id` 字段。
 4. **下一步实验必须拆开三种因素：** `raw Human3R`、`raw + explicit ID association`、`B0 + ID association`、`B0 + BRTC`、`B0 + adaptive joint`。多人要报告 camera error、fixed-ID MPVPE、best-permutation MPVPE、ID switch/track continuity；单人要报告 camera-human joint error。
-
