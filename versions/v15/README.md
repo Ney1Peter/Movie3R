@@ -104,6 +104,8 @@ BRTC 只处理边界，C1 处理一个 shot 内的静止人体。它用 camera-l
 
 ## 批量运行
 
+运行前请使用项目原有、已安装 `torch`、`smplx`、OpenCV 和 SciPy 的 Python 环境；发布脚本会沿用当前解释器，但会强制 `CUDA_VISIBLE_DEVICES=""`。本次 smoke test 使用系统 `python3` 时因没有 `torch` 而停在模型导入，这是环境依赖，不是方法结果。
+
 先验证发布配置：
 
 ```bash
