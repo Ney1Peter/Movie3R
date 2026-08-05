@@ -31,6 +31,10 @@ def args() -> argparse.Namespace:
         "--anchor-root", action="store_true",
         help="After the shared camera/body update, preserve each post-frame predicted SMPL root.",
     )
+    p.add_argument(
+        "--remap-ids", action="store_true",
+        help="Commit the selected boundary permutation as a persistent smpl_id mapping.",
+    )
     p.add_argument("--overwrite", action="store_true")
     return p.parse_args()
 
@@ -125,6 +129,13 @@ def main() -> None:
     post, post_ids = load(source, boundary)
     boundary_human, diagnostics = choose_shared_boundary(pre, post)
     applied = residual_interp(boundary_human, float(a.alpha))
+    post_to_pre_id: dict[int, int] = {}
+    if a.remap_ids:
+        permutation = diagnostics["selected_permutation_post_index_by_pre_index"]
+        post_to_pre_id = {
+            int(post_ids[post_index]): int(pre_ids[pre_index])
+            for pre_index, post_index in enumerate(permutation)
+        }
 
     regressor = None
     if a.anchor_root:
@@ -158,6 +169,12 @@ def main() -> None:
                 after_roots = np.einsum("jv,nvk->njk", regressor[[0]], after_vertices)[:, 0]
                 after_vertices = after_vertices + (before_roots - after_roots)[:, None, :]
             values["verts_world"] = after_vertices.astype(np.float32)
+        if a.remap_ids and "smpl_id" in values:
+            ids = np.asarray(values["smpl_id"], dtype=np.int64).reshape(-1)
+            values["smpl_id"] = np.asarray(
+                [post_to_pre_id.get(int(value), int(value)) for value in ids],
+                dtype=np.int64,
+            )
         np.savez(smpl_path, **values)
 
     diagnostics.update({
@@ -169,6 +186,8 @@ def main() -> None:
         "post_native_ids": post_ids.tolist(),
         "alpha": float(np.clip(a.alpha, 0.0, 1.0)),
         "anchor_root": bool(a.anchor_root),
+        "remap_ids": bool(a.remap_ids),
+        "post_to_pre_id": {str(key): int(value) for key, value in post_to_pre_id.items()},
         "applied_rotation_deg": float(np.degrees(np.linalg.norm(Rotation.from_matrix(applied[:3, :3]).as_rotvec()))),
         "applied_translation_m": float(np.linalg.norm(applied[:3, 3])),
         "runtime_contract": "GT-free; one residual estimated at first post and reused causally for all post frames",
