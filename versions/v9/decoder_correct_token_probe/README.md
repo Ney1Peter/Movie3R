@@ -23,3 +23,11 @@ The staged stop rule is:
 4. four-source scale-up only if the ten-cut result remains positive.
 
 Artifacts are written below `output/v9_decoder_correct_token_probe/`.
+
+The completed experiment found that the final decoder pose token is more useful
+than the dedicated correction-token mean. A 175k role-preserving pose-relation
+head improved frozen mean and P90, but introduced one new catastrophic
+MVHuman200 error. It is therefore not promoted into V9/V14.
+
+See `FINAL_REPORT.md` for the complete protocol, metrics, safety audits, and
+final decision.

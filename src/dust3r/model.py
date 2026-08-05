@@ -923,6 +923,11 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_v9_pre_decoder_change_gate = False
         self.enable_v8_head_lora = False
         self.return_v7_pose_adapter_inputs = False
+        # Diagnostic-only, opt-in export.  Keeping encoder tokens separate
+        # from the decoder/state path is useful for read-only geometric
+        # verification at a camera-cut boundary.  It is false by default, so
+        # normal Human3R outputs and recurrent-state behavior are unchanged.
+        self.return_v14_encoder_tokens = False
         # **========== V6-C 原始代码备份：V6-B 只有 full-decoder anchor 开关 ==========**
         # self.enable_anchor_decoder_tokens = False
         # **========== 结束 ==========**
@@ -4104,6 +4109,9 @@ class ARCroco3DStereo(CroCoNet):
                 res.update(v8_pose_prompt_info)
             if v8_body_part_info is not None:
                 res.update(v8_body_part_info)
+            if getattr(self, "return_v14_encoder_tokens", False):
+                res["v14_encoder_image_tokens"] = feat_i.detach()
+                res["v14_encoder_image_positions"] = pos_i.detach()
             if human_latent_info is not None:
                 res.update(human_latent_info)
                 res = self._attach_v8_raw_human_smpl(res, raw_human_smpl_for_info)
@@ -5332,6 +5340,9 @@ class ARCroco3DStereo(CroCoNet):
                 res.update(v8_pose_prompt_info)
             if v8_body_part_info is not None:
                 res.update(v8_body_part_info)
+            if getattr(self, "return_v14_encoder_tokens", False):
+                res["v14_encoder_image_tokens"] = feat_i.detach()
+                res["v14_encoder_image_positions"] = pos_i.detach()
             if human_latent_info is not None:
                 res.update(human_latent_info)
                 res = self._attach_v8_raw_human_smpl(res, raw_human_smpl_for_info)

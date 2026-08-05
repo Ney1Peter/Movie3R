@@ -169,10 +169,12 @@ class TokenCapture:
                 capture.values[f"{prefix}_image_mean"].append(
                     tokens[:, image_start:image_end].mean(dim=1)
                 )
-                if human_count:
-                    capture.values[f"{prefix}_human_mean"].append(
-                        tokens[:, image_end:image_end + human_count].mean(dim=1)
-                    )
+                human_mean = (
+                    tokens[:, image_end:image_end + human_count].mean(dim=1)
+                    if human_count
+                    else torch.zeros_like(tokens[:, 0])
+                )
+                capture.values[f"{prefix}_human_mean"].append(human_mean)
 
             capture.handles.append(
                 model.dec_blocks[layer_index].register_forward_hook(decoder_hook)
@@ -225,10 +227,21 @@ def valid_record_index(records: list[dict], seed: int):
     return datasets, entries
 
 
-def extract(args: argparse.Namespace, records: list[dict], model, capture: TokenCapture) -> list[dict]:
+def extract(
+    args: argparse.Namespace,
+    records: list[dict],
+    model,
+    capture: TokenCapture,
+    partial_cache_path: Path | None = None,
+) -> list[dict]:
     datasets, entries = valid_record_index(records, args.seed)
-    rows = []
-    for global_index, (record, source, local_index) in enumerate(entries):
+    rows: list[dict] = []
+    if partial_cache_path is not None and partial_cache_path.is_file() and not args.overwrite_cache:
+        rows = torch.load(partial_cache_path, map_location="cpu", weights_only=False)
+        print(f"resuming {len(rows)} rows from {partial_cache_path}", flush=True)
+    completed = {row["pattern_id"] for row in rows}
+    pending_entries = [entry for entry in entries if entry[0]["pattern_id"] not in completed]
+    for pending_index, (record, source, local_index) in enumerate(pending_entries):
         gt_batch, model_batch = prepare_batch(datasets[source], local_index)
         capture.clear()
         started = time.perf_counter()
@@ -273,11 +286,15 @@ def extract(args: argparse.Namespace, records: list[dict], model, capture: Token
         }
         rows.append(row)
         print(
-            f"[{global_index + 1:03d}/{len(entries):03d}] {row['pattern_id']} "
+            f"[{len(completed) + pending_index + 1:03d}/{len(entries):03d}] {row['pattern_id']} "
             f"raw={row['raw_error']['composite']:.3f} full={row['full_error']['composite']:.3f} "
             f"{elapsed:.2f}s",
             flush=True,
         )
+        if partial_cache_path is not None and len(rows) % 25 == 0:
+            torch.save(rows, partial_cache_path)
+    if partial_cache_path is not None:
+        torch.save(rows, partial_cache_path)
     return rows
 
 
@@ -456,6 +473,7 @@ def main() -> None:
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     cache_path = args.output_dir / "token_cache.pt"
+    partial_cache_path = args.output_dir / "token_cache.partial.pt"
     train_records, eval_records = collect_records(args.train_per_source, args.seed)
     records = train_records + eval_records
     (args.output_dir / "protocol.json").write_text(
@@ -479,10 +497,11 @@ def main() -> None:
         configure_formal_v9(model)
         capture = TokenCapture.attach(model)
         try:
-            rows = extract(args, records, model, capture)
+            rows = extract(args, records, model, capture, partial_cache_path)
         finally:
             capture.close()
         torch.save(rows, cache_path)
+        partial_cache_path.unlink(missing_ok=True)
         del model
         if str(args.device).startswith("cuda"):
             torch.cuda.empty_cache()
