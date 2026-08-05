@@ -44,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--manifest", type=Path, default=None)
     p.add_argument("--images", type=Path, nargs="*", default=None)
     p.add_argument("--feature-csv", type=Path, default=DEFAULT_FEATURE_CSV)
+    p.add_argument("--detector-model", type=Path, default=None, help="Optional audited causal GRU artifact; legacy logistic remains default")
     p.add_argument("--detector-threshold", type=float, default=0.5)
     p.add_argument("--min-rotation-deg", type=float, default=20.0)
     p.add_argument("--max-vertex-rms-m", type=float, default=0.20)
@@ -68,7 +69,7 @@ def read_images(args: argparse.Namespace) -> list[Path]:
     return images
 
 
-def detect(images: list[Path], csv_path: Path, threshold: float) -> tuple[list[int], list[dict]]:
+def detect(images: list[Path], csv_path: Path, threshold: float, detector_model: Path | None = None) -> tuple[list[int], list[dict]]:
     # Keep the legacy detector isolated from the model import path.  It uses
     # only OpenCV/scikit-learn and never touches GPU/model weights.
     import sys
@@ -76,10 +77,16 @@ def detect(images: list[Path], csv_path: Path, threshold: float) -> tuple[list[i
     scripts_dir = Path(__file__).resolve().parents[2] / "scripts"
     if str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
-    from v10_image_only_detector import StreamingImageOnlyShotDetector
-
-    detector = StreamingImageOnlyShotDetector(csv_path, threshold=threshold)
+    if detector_model is None:
+        from v10_image_only_detector import StreamingImageOnlyShotDetector
+        detector = StreamingImageOnlyShotDetector(csv_path, threshold=threshold)
+        detector_kind = "legacy_logistic"
+    else:
+        from versions.v14.causal_image_detector import CausalGRUShotDetector
+        detector = CausalGRUShotDetector(detector_model, threshold=threshold)
+        detector_kind = "audited_causal_gru"
     labels, rows = detector.predict_sequence(images)
+    for row in rows: row["detector_kind"] = detector_kind
     return [i for i, label in enumerate(labels) if int(label) == 1], rows
 
 
@@ -88,7 +95,7 @@ def main() -> None:
     source = a.source.resolve()
     output = a.output.resolve()
     images = read_images(a)
-    cut_indices, detector_rows = detect(images, a.feature_csv.resolve(), a.detector_threshold)
+    cut_indices, detector_rows = detect(images, a.feature_csv.resolve(), a.detector_threshold, a.detector_model)
     if output.exists():
         if not a.overwrite:
             raise FileExistsError(f"Output exists; pass --overwrite: {output}")
@@ -142,6 +149,7 @@ def main() -> None:
         "frame_count": n,
         "detector": {
             "feature_csv": str(a.feature_csv.resolve()),
+            "model": str(a.detector_model.resolve()) if a.detector_model is not None else None,
             "threshold": float(a.detector_threshold),
             "predicted_cut_indices": cut_indices,
             "pairs": detector_rows,
