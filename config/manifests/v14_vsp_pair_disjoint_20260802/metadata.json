@@ -1,0 +1,41 @@
+{
+  "exclusion": [
+    "cross96 train pairs",
+    "frozen10 pairs",
+    "frozen180 pairs",
+    "dev/confirm mutual pairs"
+  ],
+  "per_source": 24,
+  "purpose": "VSP development/confirmation with camera-pair disjointness",
+  "seed": 20260802,
+  "sources": {
+    "avatarrex": {
+      "confirm_pairs": 24,
+      "confirm_records": 24,
+      "dev_pairs": 24,
+      "dev_records": 24,
+      "excluded_pair_count": 143
+    },
+    "mvhuman100": {
+      "confirm_pairs": 24,
+      "confirm_records": 24,
+      "dev_pairs": 24,
+      "dev_records": 24,
+      "excluded_pair_count": 147
+    },
+    "mvhuman200": {
+      "confirm_pairs": 24,
+      "confirm_records": 24,
+      "dev_pairs": 24,
+      "dev_records": 24,
+      "excluded_pair_count": 133
+    },
+    "thuman": {
+      "confirm_pairs": 24,
+      "confirm_records": 24,
+      "dev_pairs": 24,
+      "dev_records": 24,
+      "excluded_pair_count": 144
+    }
+  }
+}

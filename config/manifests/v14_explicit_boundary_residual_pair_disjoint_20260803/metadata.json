@@ -1,0 +1,61 @@
+{
+  "exclusion": [
+    "cross96 train96 pairs",
+    "frozen10 pairs",
+    "frozen180 pairs",
+    "VSP dev pairs",
+    "VSP confirm pairs"
+  ],
+  "per_source": 96,
+  "purpose": "new explicit-SE(3) residual training pairs, disjoint from B0 training/dev/confirm",
+  "seed": 20260803,
+  "sources": {
+    "avatarrex": {
+      "angle_buckets": {
+        "060_090": 32,
+        "090_120": 21,
+        "120_150": 20,
+        "150_180": 23
+      },
+      "excluded_pair_count": 191,
+      "pair_overlap_with_exclusion": 0,
+      "records": 96,
+      "unique_pairs": 70
+    },
+    "mvhuman100": {
+      "angle_buckets": {
+        "060_090": 24,
+        "090_120": 24,
+        "120_150": 24,
+        "150_180": 24
+      },
+      "excluded_pair_count": 195,
+      "pair_overlap_with_exclusion": 0,
+      "records": 96,
+      "unique_pairs": 96
+    },
+    "mvhuman200": {
+      "angle_buckets": {
+        "060_090": 34,
+        "090_120": 24,
+        "120_150": 38
+      },
+      "excluded_pair_count": 181,
+      "pair_overlap_with_exclusion": 0,
+      "records": 96,
+      "unique_pairs": 96
+    },
+    "thuman": {
+      "angle_buckets": {
+        "060_090": 24,
+        "090_120": 24,
+        "120_150": 26,
+        "150_180": 22
+      },
+      "excluded_pair_count": 192,
+      "pair_overlap_with_exclusion": 0,
+      "records": 96,
+      "unique_pairs": 96
+    }
+  }
+}
