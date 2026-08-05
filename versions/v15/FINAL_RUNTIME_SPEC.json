@@ -1,0 +1,164 @@
+{
+  "release": "Movie3R-v15-final",
+  "title": "Causal Adaptive Camera-Human Gauge Correction",
+  "status": "frozen_for_batch_experiments",
+  "created_at": "2026-08-05 Asia/Shanghai",
+  "repository_root": "/data/wangzheng/iJCV-CODE/Movie3R",
+  "output_policy": {
+    "all_generated_files_under": "output/v15",
+    "device": "cpu",
+    "cuda_visible_devices": "",
+    "gt_in_runtime": false,
+    "future_frames_at_boundary": 0,
+    "pre_cut_frames_mutated": false
+  },
+  "checkpoints": {
+    "primary_multihuman": {
+      "path": "output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+      "sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+      "role": "default end-to-end runtime for current multi-person exporter"
+    },
+    "cross_source": {
+      "path": "output/v14_cut_first_cross_source/v14_cut_first_cross_source_96ps_e6/checkpoint-final.pth",
+      "sha256": "05274f7b4841f6ebc73f2f5bdb419d63d272396724db886b6e10987d7210a144",
+      "role": "cross-source generalization and ablation checkpoint"
+    },
+    "original_human3r": {
+      "path": "src/human3r_896L.pth",
+      "sha256": null,
+      "role": "strict original Human3R comparison only"
+    }
+  },
+  "learned_components": {
+    "v9_b0": {
+      "implementation": "versions/v14/export_report_multihuman_comparison.py::movie3r",
+      "role": "shadow learned coarse gauge proposal and identity preconditioner",
+      "input": "pre-cut RGB sequence plus first post-cut RGB frame",
+      "output": "B0 camera-to-world transform, coarse post scene/body in pre-cut gauge",
+      "extra_pretrained_model": false,
+      "ablation_result": {
+        "avatarrex_single_low_texture": {
+          "raw_se3_camera_translation_m": 2.107,
+          "raw_se3_camera_rotation_deg": 64.53,
+          "adaptive_with_v9_camera_translation_m": 0.054,
+          "adaptive_with_v9_camera_rotation_deg": 0.44
+        },
+        "three_person_174_degree_cut": {
+          "raw_se3_camera_translation_m": 4.265,
+          "raw_se3_camera_rotation_deg": 151.89,
+          "b0_brtc_c1_camera_translation_m": 0.054,
+          "b0_brtc_c1_camera_rotation_deg": 1.82
+        }
+      }
+    },
+    "shot_detector": {
+      "kind": "audited_causal_gru",
+      "artifact": "output/v14/detector_learning_audit/SELECTED_MODEL.pt",
+      "sha256": "cb84b0da620878515e94f08b30d757206b41c4de82e2ff4091fe2a6e519e498f",
+      "input": "current RGB frame and causal image-pair features",
+      "output": "cut probability and event index proposal",
+      "metrics": {"f1": 0.982, "fpr": 0.031, "brier": 0.015},
+      "fallback": "geometry gate can abstain; known cut index may be supplied in batch manifest"
+    }
+  },
+  "geometry_modules": {
+    "identity_association": {
+      "method": "anonymous one-to-one root/torso/centered-joint shape matching",
+      "input": "last pre-cut and first post-cut B0 people",
+      "output": "persistent cross-shot permutation; unmatched tracks abstain",
+      "comparison": {
+        "original_human3r_direct_root_accuracy": 0.415,
+        "original_human3r_direct_torso_accuracy": 0.415,
+        "original_human3r_direct_root_torso_accuracy": 0.463,
+        "b0_matcher_accuracy": 1.0,
+        "comparison_cuts": 41
+      }
+    },
+    "brtc_lc": {
+      "name": "Camera-Frozen Boundary Ray Triangulation with Layout Consensus",
+      "implementation": "versions/v14/b0_person_triangulation.py",
+      "implementation_sha256": "98b839f4ae2ff130b0c6ecbc4e0e634ba626d2433f148bee3e55ac169aab3327",
+      "joint_ids": [0, 1, 2, 16, 17],
+      "joint_names": ["pelvis", "left_hip", "right_hip", "left_shoulder", "right_shoulder"],
+      "thresholds": {
+        "max_median_gap_m": 0.2,
+        "max_mad_m": 0.4,
+        "min_median_sine": 0.025,
+        "cap_m": 2.0,
+        "residual_lambda_grid": [0.0, 0.25, 0.5, 0.75, 1.0]
+      },
+      "camera_update": "none",
+      "fallback": "exact B0 for rejected or unmatched people",
+      "confirmation": {
+        "split": "MultiHuman three offset1",
+        "cuts": 42,
+        "people": 125,
+        "root_m": {"b0": 0.3779, "brtc_lc": 0.2314},
+        "joint_m": {"b0": 0.4117, "brtc_lc": 0.2745},
+        "vertex_m": {"b0": 0.3891, "brtc_lc": 0.2525},
+        "automatic_association_accuracy": 1.0,
+        "camera_max_change_m": 0.0
+      }
+    },
+    "c1_ema25": {
+      "name": "Causal Within-Shot Static Human Stabilization",
+      "implementation": "versions/v14/eval_streaming_within_shot_stability.py",
+      "implementation_sha256": "03dec014aab8c48dc9a12e9309d9f1e8617a6ad42bc0f02643d353dcc1433b10",
+      "parameters": {
+        "alpha": 0.25,
+        "warmup": 2,
+        "root_enter_m": 0.01,
+        "root_exit_m": 0.025,
+        "body_enter_m": 0.015,
+        "body_exit_m": 0.035,
+        "moving_hold_frames": 3,
+        "correction_cap_m": 0.15
+      },
+      "camera_update": "none",
+      "fallback": "exact B0+BRTC for moving, unknown, unmatched, or rejected tracks"
+    },
+    "adaptive_joint": {
+      "name": "Adaptive Shared Camera-Human Boundary Gate",
+      "implementation": "src/dust3r/adaptive_joint.py",
+      "implementation_sha256": "5b6010d5e616364c4e174baf3db809b1ca0f6568fc2b5526503de8cdcb3ac0df",
+      "parameters": {
+        "min_rotation_deg": 20.0,
+        "max_vertex_rms_m": 0.2,
+        "max_normalized_rms": 0.2,
+        "min_permutation_margin_m": 0.01,
+        "alpha": 1.0
+      },
+      "operation": "B0 body residual proposes rotation; raw shadow root rays and B0 root rays jointly propose camera translation; body rotates around BRTC root",
+      "accepted_update": "post-cut camera, human meshes, and any supplied world point map receive the same causal update",
+      "fallback": "reject/abstain and retain exact B0+BRTC+C1",
+      "camera_update": "allowed only after geometry gate acceptance"
+    }
+  },
+  "runtime_entrypoints": {
+    "single_case": "versions/v15/run_case.py",
+    "batch": "versions/v15/run_batch.py",
+    "release_validation": "versions/v15/validate_release.py",
+    "legacy_exporter": "versions/v14/export_report_multihuman_comparison.py",
+    "adaptive_post_gate": "versions/v14/adaptive_post_human_boundary.py",
+    "demo_payload_contract": "standard demo.py --save compatible directory",
+    "sha256": {
+      "single_case": "53230f5e780c2ac97ae9c91597cc1830edc4e06bfdc0aa5ecc437f89cb1f217f",
+      "batch": "02fb4e6668a594ba4fbb375442d8650f2a15eb36e65eb0222aabe12fba26a373",
+      "release_validation": "dbf720c010ce8cca6a99667764e8803365e91cad8b50996f236fe219530d03d2",
+      "legacy_exporter": "85f7ce232aeae39f70603aefee79d10f7af90f4f6e3783171fdd118aa27cc8bb",
+      "adaptive_post_gate": "f04457b1acc77327090b523e8f7e32b5f3e200f071fa163d55fe62a5e5c16d7c"
+    }
+  },
+  "case_contract": {
+    "required_fields": ["case_id", "sequence", "frame", "pre_camera", "post_camera"],
+    "optional_fields": ["pre_frames", "post_frames", "avatarrex_group", "checkpoint", "enable_adaptive_joint"],
+    "defaults": {"pre_frames": 5, "post_frames": 25, "enable_adaptive_joint": true},
+    "sequence_choices": ["avatarrex", "dance", "box", "three"],
+    "output_subdirectories": ["original_human3r", "movie3r_raw_current_human3r", "movie3r_b0_brtc_c1", "movie3r_final_adaptive_joint"]
+  },
+  "paper_reporting": {
+    "primary_metrics": ["camera_translation_error", "camera_rotation_error", "MPVPE", "root_error", "joint_error", "ID_continuity", "seam_jump", "within_shot_drift", "gate_acceptance", "CPU_runtime"],
+    "required_ablations": ["strict Human3R", "no V9/raw SE3", "B0 only", "B0+BRTC", "B0+BRTC+C1", "B0+BRTC+C1+adaptive joint", "oracle boundary vs causal detector"],
+    "known_limitations": ["new-person entry/exit and severe occlusion are not solved", "official Multi-THuMBS protocol is not yet fully reproduced", "adaptive joint is a frozen geometric module rather than a separately trained network", "do not mix checkpoints in one end-to-end table"]
+  }
+}

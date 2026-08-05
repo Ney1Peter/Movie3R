@@ -1,0 +1,3 @@
+{"case_id":"avatarrex_t1836_c22070935_c22053912","sequence":"avatarrex","frame":1836,"pre_camera":"22070935","post_camera":"22053912","pre_frames":5,"post_frames":25,"avatarrex_group":"lbn1","enable_adaptive_joint":true}
+{"case_id":"three_t1100_c1_c2","sequence":"three","frame":1100,"pre_camera":"1","post_camera":"2","pre_frames":5,"post_frames":25,"enable_adaptive_joint":true}
+{"case_id":"dance_t0400_c1_c4","sequence":"dance","frame":400,"pre_camera":"1","post_camera":"4","pre_frames":5,"post_frames":25,"enable_adaptive_joint":true}

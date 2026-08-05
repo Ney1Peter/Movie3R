@@ -330,10 +330,19 @@ def movie3r(args: argparse.Namespace, pre_paths: list[Path], post_paths: list[Pa
                     people.append(corrected)
                 post_final.append({**frame, "people": people})
 
+        # Preserve the same-checkpoint clean-reset post branch for the v15
+        # adaptive camera-human gate.  It is an audit artifact, not a third
+        # method result: the final viewer still comes from ``post_final``.
+        # Keeping it in the standard payload format lets the gate use raw
+        # body roots/rays without rerunning the expensive model forward.
+        raw_destination = destination.parent / "movie3r_raw_current_human3r"
+        write_demo_payload(raw_destination, pre_frames + raw_post, faces, bool(args.overwrite))
+
         write_demo_payload(destination, pre_frames + post_final, faces, bool(args.overwrite))
         return {
             "checkpoint": str(checkpoint), "checkpoint_flags": flags, "cpu_forward_seconds": elapsed,
             "runtime": "clean reset + shadow B0 + BRTC-LC + C1-EMA25",
+            "raw_shadow_payload": str(raw_destination),
             "b0_shadow_camera_max_abs_error": camera_parity,
             "association": {"pairs": association["pairs"], "matched_count": association["matched_count"]},
             "brtc": brtc_debug,
@@ -376,6 +385,7 @@ def main() -> None:
     }
     (case_root / "manifest.json").write_text(json.dumps(jsonable(manifest), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f">> original: {case_root / 'original_human3r'}")
+    print(f">> raw current shadow: {case_root / 'movie3r_raw_current_human3r'}")
     print(f">> movie3r: {case_root / 'movie3r_b0_brtc_c1'}")
     print(f">> manifest: {case_root / 'manifest.json'}")
 
