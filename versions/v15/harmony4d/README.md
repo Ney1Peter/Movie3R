@@ -22,6 +22,12 @@ Main entry points:
   prediction caches;
 - `aggregate_harmony.py`: clip/sequence/micro aggregation, bootstrap CI,
   paired tests, CSV, and LaTeX output;
+- `audit_test_results.py`: frozen-manifest, runtime-contract, cache-hash, and
+  explicit evaluator-unavailable audit;
+- `build_paper_artifacts.py`: stratified CSVs, LaTeX tables, runtime summaries,
+  paper-result JSON, and PDF/PNG figures;
+- `export_harmony_qualitative.py`: restores dense demo backgrounds from frozen
+  checkpoints while keeping formal-test camera/human geometry immutable;
 - `probe_temporal_identity.py`: train/dev-only identity-strategy audit.  Its
   selected single-boundary permutation is frozen in M13--M16; test data never
   enter strategy selection.

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
+import pytest
 
 from versions.v15.harmony4d.dataset import locate_sequence_root, load_exo_calibrations
 from versions.v15.harmony4d.protocol import (
@@ -17,8 +20,15 @@ GRAPPLING = (
 )
 
 
+def require_staged_data(path: str) -> Path:
+    staged = Path(path)
+    if not staged.exists():
+        pytest.skip("requires optional Harmony4D staging restored from Harmony4D.zip")
+    return staged
+
+
 def test_camera_round_trip_and_static_scatter() -> None:
-    root = locate_sequence_root(__import__("pathlib").Path(DATA))
+    root = locate_sequence_root(require_staged_data(DATA))
     cameras = load_exo_calibrations(root)
     assert len(cameras) == 22
     for camera in cameras.values():
@@ -34,7 +44,7 @@ def test_camera_round_trip_and_static_scatter() -> None:
 
 
 def test_protocol_pair_selection_is_deterministic() -> None:
-    root = locate_sequence_root(__import__("pathlib").Path(DATA))
+    root = locate_sequence_root(require_staged_data(DATA))
     cameras = load_exo_calibrations(root)
     first = select_balanced_pairs(cameras)
     second = select_balanced_pairs(cameras)
@@ -44,7 +54,7 @@ def test_protocol_pair_selection_is_deterministic() -> None:
 
 
 def test_missing_aria_transform_uses_annotation_pnp() -> None:
-    cameras = load_exo_calibrations(__import__("pathlib").Path(GRAPPLING))
+    cameras = load_exo_calibrations(require_staged_data(GRAPPLING))
     assert len(cameras) == 20
     for camera in cameras.values():
         assert camera.extrinsic_source == "published_smpl45_to_poses2d45_static_pnp"
