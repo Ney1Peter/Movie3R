@@ -19,6 +19,7 @@ import math
 import os
 import platform
 import resource
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -129,6 +130,24 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(16 * 1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def git_provenance() -> dict[str, Any]:
+    """Record the exact source state without making inference depend on Git."""
+
+    def query(*arguments: str) -> str | None:
+        completed = subprocess.run(
+            ["git", *arguments], cwd=REPO_ROOT, text=True, capture_output=True,
+        )
+        return completed.stdout.strip() if completed.returncode == 0 else None
+
+    status = query("status", "--porcelain", "--untracked-files=no")
+    return {
+        "commit": query("rev-parse", "HEAD"),
+        "tracked_worktree_dirty": None if status is None else bool(status),
+        "runner": str(Path(__file__).resolve()),
+        "runner_sha256": sha256(Path(__file__).resolve()),
+    }
 
 
 def verified_artifact_sha256(path: Path) -> str:
@@ -896,6 +915,14 @@ def main() -> None:
             "static_detector_training_csv_sha256": verified_artifact_sha256(STATIC_DETECTOR_CSV),
             "current_flags": flags,
         },
+        "provenance": {
+            **git_provenance(),
+            "manifest": str(args.manifest.resolve()) if args.manifest is not None else None,
+            "manifest_sha256": sha256(args.manifest.resolve()) if args.manifest is not None else None,
+            "manifest_line": int(args.line) if args.manifest is not None else None,
+            "protocol_seed": record.get("protocol_seed"),
+            "argv": sys.argv,
+        },
         "geometry": {**oracle_geometry, "detector_driven": detector_geometry},
         "topology": topology.metadata(),
         "environment": {
@@ -903,6 +930,7 @@ def main() -> None:
             "platform": platform.platform(),
             "torch": torch.__version__,
             "cuda": torch.version.cuda,
+            "cudnn": torch.backends.cudnn.version(),
             "device": str(device),
             "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None,
             "precision": "FP32",
