@@ -43,10 +43,11 @@ def case_rows(audit: dict[str, Any], split: str, pre_count: int, post_count: int
     if one_pair:
         pairs = pairs[:1]
     sequence = Path(str(audit["archive_entry"])).stem
+    capture = str(audit["sequence_root_name"])
     rows = []
     for pair in pairs:
         case_id = (
-            f"h4d_{split}_{sequence}_{pair['angle_stratum']}_"
+            f"h4d_{split}_{sequence}_{capture}_{pair['angle_stratum']}_"
             f"{pair['pre_camera']}_{pair['post_camera']}_b{boundary:05d}"
         )
         rows.append({
@@ -56,7 +57,10 @@ def case_rows(audit: dict[str, Any], split: str, pre_count: int, post_count: int
             "case_id": case_id,
             "archive_entry": audit["archive_entry"],
             "sequence": sequence,
-            "capture_relative": f"{audit['capture_group_name']}/{audit['sequence_root_name']}",
+            "capture": capture,
+            "capture_relative": audit.get(
+                "capture_relative", f"{audit['capture_group_name']}/{audit['sequence_root_name']}"
+            ),
             "pre_camera": pair["pre_camera"],
             "post_camera": pair["post_camera"],
             "pre_frame_numbers": pre,

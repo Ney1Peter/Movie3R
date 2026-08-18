@@ -18,8 +18,16 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from versions.v15.harmony4d.dataset import load_exo_calibrations, load_gt_people  # noqa: E402
+from versions.v15.harmony4d.dataset import (  # noqa: E402
+    load_exo_calibrations,
+    load_gt_people,
+    projected_visibility,
+)
 from versions.v15.harmony4d.topology import CommonTopology  # noqa: E402
+
+
+MIN_VISIBLE_VERTEX_FRACTION = 0.01
+MAX_ASSIGNMENT_COST_M = 2.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -140,7 +148,10 @@ def frame_assignment(
 
 
 def shared_initial_fit(
-    arrays: dict[str, np.ndarray], gt: dict[str, np.ndarray], assignments: list[list[tuple[int, int]]]
+    arrays: dict[str, np.ndarray],
+    gt: dict[str, np.ndarray],
+    assignments: list[list[tuple[int, int]]],
+    allow_scale: bool = True,
 ) -> tuple[float, np.ndarray, np.ndarray]:
     target, prediction = [], []
     for frame in range(min(2, len(assignments))):
@@ -149,11 +160,14 @@ def shared_initial_fit(
             prediction.append(arrays["joints_world"][frame, pred_index])
     if not target:
         raise ValueError("No initial matched people for shared world fit")
-    return fit_similarity(np.stack(target), np.stack(prediction), allow_scale=True)
+    return fit_similarity(np.stack(target), np.stack(prediction), allow_scale=allow_scale)
 
 
 def identity_metrics(
-    arrays: dict[str, np.ndarray], assignments: list[list[tuple[int, int]]], identities: list[str]
+    arrays: dict[str, np.ndarray],
+    assignments: list[list[tuple[int, int]]],
+    identities: list[str],
+    gt_visible: np.ndarray,
 ) -> dict[str, Any]:
     tracks: dict[int, list[int | None]] = {index: [None] * len(assignments) for index in range(len(identities))}
     confusion: dict[tuple[int, int], int] = {}
@@ -191,7 +205,7 @@ def identity_metrics(
         idtp = int(matrix[rows, columns].sum())
     else:
         idtp = 0
-    total_gt = len(assignments) * len(identities)
+    total_gt = int(np.asarray(gt_visible, dtype=bool).sum())
     total_pred = int(np.asarray(arrays["valid"]).sum())
     idfp, idfn = total_pred - idtp, total_gt - idtp
     idf1 = 2.0 * idtp / max(2 * idtp + idfp + idfn, 1)
@@ -204,6 +218,7 @@ def identity_metrics(
         "idtp": idtp,
         "idfp": int(idfp),
         "idfn": int(idfn),
+        "visible_gt_person_frames": total_gt,
     }
 
 
@@ -221,15 +236,21 @@ def evaluate_method(
     matched_count = 0
     for frame in range(frame_count):
         valid = np.flatnonzero(arrays["valid"][frame].astype(bool))
+        gt_valid = np.flatnonzero(gt["visible"][frame].astype(bool))
         pairs_local, costs = frame_assignment(
             arrays["cameras_c2w"][frame], arrays["joints_world"][frame, valid],
-            gt["cameras_c2w"][frame], gt["joints_world"][frame],
+            gt["cameras_c2w"][frame], gt["joints_world"][frame, gt_valid],
         )
-        pairs = [(int(valid[row]), column) for row, column in pairs_local]
+        pairs_local = [
+            (row, column) for row, column in pairs_local
+            if float(costs[row, column]) <= MAX_ASSIGNMENT_COST_M
+        ]
+        pairs = [(int(valid[row]), int(gt_valid[column])) for row, column in pairs_local]
         assignments.append(pairs)
         assignment_costs.extend(float(costs[row, column]) for row, column in pairs_local)
         matched_count += len(pairs)
     fit = shared_initial_fit(arrays, gt, assignments)
+    fit_initial_se3 = shared_initial_fit(arrays, gt, assignments, allow_scale=False)
     aligned_centre = apply_similarity(arrays["cameras_c2w"][:, :3, 3], fit)
     aligned_rotation = np.einsum("ij,tjk->tik", fit[1], arrays["cameras_c2w"][:, :3, :3])
     aligned_camera = np.repeat(np.eye(4)[None], frame_count, axis=0)
@@ -238,8 +259,14 @@ def evaluate_method(
 
     mpjpe, mpvpe = [], []
     fixed_root, fixed_joint, fixed_vertex = [], [], []
+    fixed_root_by_frame = [[] for _ in range(frame_count)]
+    fixed_joint_by_frame = [[] for _ in range(frame_count)]
+    fixed_vertex_by_frame = [[] for _ in range(frame_count)]
     chrge, orientation = [], []
+    chrge_by_frame = [[] for _ in range(frame_count)]
     pair_distance, pair_vector = [], []
+    pair_distance_by_frame = [[] for _ in range(frame_count)]
+    pair_vector_by_frame = [[] for _ in range(frame_count)]
     per_identity: dict[int, dict[str, list[Any]]] = {
         index: {"frames": [], "pred_joints": [], "gt_joints": [], "pred_vertices": [], "gt_vertices": []}
         for index in range(len(identities))
@@ -273,9 +300,13 @@ def evaluate_method(
             fixed_root.append(float(np.linalg.norm(pred_root_aligned - gt_root)))
             fixed_joint.append(float(np.linalg.norm(pred_joints_aligned - gt["joints_world"][frame, gt_index], axis=1).mean()))
             fixed_vertex.append(float(np.linalg.norm(pred_vertices_aligned - gt["vertices_world"][frame, gt_index], axis=1).mean()))
+            fixed_root_by_frame[frame].append(fixed_root[-1])
+            fixed_joint_by_frame[frame].append(fixed_joint[-1])
+            fixed_vertex_by_frame[frame].append(fixed_vertex[-1])
             q_pred = aligned_camera[frame, :3, :3].T @ (pred_root_aligned - aligned_camera[frame, :3, 3])
             q_gt = gt_camera[:3, :3].T @ (gt_root - gt_camera[:3, 3])
             chrge.append(float(np.linalg.norm(q_pred - q_gt)))
+            chrge_by_frame[frame].append(chrge[-1])
             pred_body = pred_joints_aligned - pred_root_aligned
             gt_body = gt["joints_world"][frame, gt_index] - gt_root
             covariance = pred_body.T @ gt_body
@@ -302,6 +333,8 @@ def evaluate_method(
                 gt_vector = pelvis(gt["joints_world"][frame, first]) - pelvis(gt["joints_world"][frame, second])
                 pair_distance.append(abs(float(np.linalg.norm(pred_vector) - np.linalg.norm(gt_vector))))
                 pair_vector.append(float(np.linalg.norm(pred_vector - gt_vector)))
+                pair_distance_by_frame[frame].append(pair_distance[-1])
+                pair_vector_by_frame[frame].append(pair_vector[-1])
         aligned_pred_root_by_frame.append(roots_this)
         aligned_pred_joint_by_frame.append(joints_this)
         aligned_pred_vertex_by_frame.append(vertices_this)
@@ -334,12 +367,29 @@ def evaluate_method(
             gt_roots = pelvis(target[post_mask])
             pred_net = float(np.linalg.norm(pred_roots[-1] - pred_roots[0]))
             gt_net = float(np.linalg.norm(gt_roots[-1] - gt_roots[0]))
+            pred_steps = np.linalg.norm(np.diff(pred_roots, axis=0), axis=1)
+            gt_steps = np.linalg.norm(np.diff(gt_roots, axis=0), axis=1)
+            pred_path = float(pred_steps.sum())
+            gt_path = float(gt_steps.sum())
+            pred_direction = pred_roots[-1] - pred_roots[0]
+            gt_direction = gt_roots[-1] - gt_roots[0]
+            direction_cosine = float(
+                np.dot(pred_direction, gt_direction)
+                / max(np.linalg.norm(pred_direction) * np.linalg.norm(gt_direction), 1e-9)
+            )
             label = "static" if gt_net <= 0.05 else ("moving" if gt_net >= 0.10 else "intermediate")
             motion_rows.append({
                 "identity": identities[gt_index], "label_evaluator_only": label,
                 "gt_net_displacement_m": gt_net, "pred_net_displacement_m": pred_net,
                 "motion_retention": pred_net / max(gt_net, 1e-9) if label == "moving" else None,
                 "pred_drift_m": pred_net if label == "static" else None,
+                "gt_path_length_m": gt_path,
+                "pred_path_length_m": pred_path,
+                "path_retention": pred_path / max(gt_path, 1e-9) if label == "moving" else None,
+                "trajectory_direction_cosine": direction_cosine if label == "moving" else None,
+                "pred_mean_speed_m_per_s": float(pred_steps.mean() * fps) if len(pred_steps) else None,
+                "gt_mean_speed_m_per_s": float(gt_steps.mean() * fps) if len(gt_steps) else None,
+                "pred_max_deviation_from_first_m": float(np.linalg.norm(pred_roots - pred_roots[0], axis=1).max()),
             })
 
     camera_translation = np.linalg.norm(aligned_centre - gt["cameras_c2w"][:, :3, 3], axis=1)
@@ -353,6 +403,16 @@ def evaluate_method(
     )
     ate_sim3 = np.linalg.norm(apply_similarity(arrays["cameras_c2w"][:, :3, 3], camera_fit_sim3) - gt["cameras_c2w"][:, :3, 3], axis=1)
     ate_se3 = np.linalg.norm(apply_similarity(arrays["cameras_c2w"][:, :3, 3], camera_fit_se3) - gt["cameras_c2w"][:, :3, 3], axis=1)
+    ate_metric_initial_se3 = np.linalg.norm(
+        apply_similarity(arrays["cameras_c2w"][:, :3, 3], fit_initial_se3)
+        - gt["cameras_c2w"][:, :3, 3], axis=1
+    )
+    camera_rpe_translation, camera_rpe_rotation = [], []
+    for frame in range(1, frame_count):
+        pred_relative = np.linalg.inv(aligned_camera[frame - 1]) @ aligned_camera[frame]
+        gt_relative = np.linalg.inv(gt["cameras_c2w"][frame - 1]) @ gt["cameras_c2w"][frame]
+        camera_rpe_translation.append(float(np.linalg.norm(pred_relative[:3, 3] - gt_relative[:3, 3])))
+        camera_rpe_rotation.append(rotation_error_deg(pred_relative, gt_relative))
 
     seam = {"available": boundary > 0 and boundary < frame_count}
     if seam["available"]:
@@ -379,8 +439,24 @@ def evaluate_method(
         seam["root_excess_m"] = float(np.mean(root_values)) if root_values else None
         seam["joint_excess_m"] = float(np.mean(joint_values)) if joint_values else None
         seam["vertex_excess_m"] = float(np.mean(vertex_values)) if vertex_values else None
+        relative_values = []
+        for gt_index in set(aligned_pred_root_by_frame[boundary - 1]).intersection(aligned_pred_root_by_frame[boundary]):
+            pred_before = aligned_camera[boundary - 1, :3, :3].T @ (
+                aligned_pred_root_by_frame[boundary - 1][gt_index] - aligned_camera[boundary - 1, :3, 3]
+            )
+            pred_after = aligned_camera[boundary, :3, :3].T @ (
+                aligned_pred_root_by_frame[boundary][gt_index] - aligned_camera[boundary, :3, 3]
+            )
+            gt_before = gt["cameras_c2w"][boundary - 1, :3, :3].T @ (
+                pelvis(gt["joints_world"][boundary - 1, gt_index]) - gt["cameras_c2w"][boundary - 1, :3, 3]
+            )
+            gt_after = gt["cameras_c2w"][boundary, :3, :3].T @ (
+                pelvis(gt["joints_world"][boundary, gt_index]) - gt["cameras_c2w"][boundary, :3, 3]
+            )
+            relative_values.append(float(np.linalg.norm((pred_after - pred_before) - (gt_after - gt_before))))
+        seam["camera_human_relative_excess_m"] = float(np.mean(relative_values)) if relative_values else None
 
-    visible_gt = frame_count * len(identities)
+    visible_gt = int(np.asarray(gt["visible"], dtype=bool).sum())
     predicted = int(arrays["valid"].sum())
     coverage = {
         "visible_gt_person_frames": visible_gt,
@@ -391,7 +467,24 @@ def evaluate_method(
         "coverage": matched_count / max(visible_gt, 1),
         "precision": matched_count / max(predicted, 1),
         "recall": matched_count / max(visible_gt, 1),
+        "minimum_visible_vertex_fraction": MIN_VISIBLE_VERTEX_FRACTION,
+        "maximum_assignment_cost_m": MAX_ASSIGNMENT_COST_M,
     }
+    visibility_strata = {}
+    fractions = np.asarray(gt["visible_fraction"], dtype=np.float64)
+    for name, mask in {
+        "high_visibility": fractions >= 0.50,
+        "partial_visibility": (fractions >= 0.10) & (fractions < 0.50),
+        "severe_occlusion_or_truncation": (fractions >= MIN_VISIBLE_VERTEX_FRACTION) & (fractions < 0.10),
+    }.items():
+        total = int(mask.sum())
+        matched = sum(bool(mask[frame, gt_index]) for frame, pairs in enumerate(assignments) for _, gt_index in pairs)
+        visibility_strata[name] = {
+            "visible_gt_person_frames": total,
+            "matched_person_frames": int(matched),
+            "coverage": matched / max(total, 1),
+        }
+    coverage["visibility_strata"] = visibility_strata
     return {
         "method": method,
         "multi_thumbs_named_provisional": {
@@ -404,32 +497,54 @@ def evaluate_method(
             "accel_physical_m_per_s2": summarize(accel_physical, 1.0),
             "ate_sim3_m": summarize(ate_sim3),
             "ate_se3_m": summarize(ate_se3),
+            "ate_metric_initial_se3_m": summarize(ate_metric_initial_se3),
         },
         "coverage": coverage,
-        "identity": identity_metrics(arrays, assignments, identities),
+        "identity": identity_metrics(arrays, assignments, identities, gt["visible"]),
         "camera": {
             "translation_m": summarize(camera_translation),
             "rotation_deg": summarize(camera_rotation),
             "first_post_translation_m": float(camera_translation[boundary]),
             "first_post_rotation_deg": float(camera_rotation[boundary]),
+            "post_translation_m": summarize(camera_translation[boundary:]),
+            "post_rotation_deg": summarize(camera_rotation[boundary:]),
+            "rpe_translation_m": summarize(camera_rpe_translation),
+            "rpe_rotation_deg": summarize(camera_rpe_rotation),
+            "boundary_rpe_translation_m": camera_rpe_translation[boundary - 1] if boundary > 0 else None,
+            "boundary_rpe_rotation_deg": camera_rpe_rotation[boundary - 1] if boundary > 0 else None,
         },
         "fixed_world": {
             "root_m": summarize(fixed_root),
             "joint_m": summarize(fixed_joint),
             "vertex_m": summarize(fixed_vertex),
+            "first_post_root_m": summarize(fixed_root_by_frame[boundary]),
+            "first_post_joint_m": summarize(fixed_joint_by_frame[boundary]),
+            "first_post_vertex_m": summarize(fixed_vertex_by_frame[boundary]),
+            "post_root_m": summarize([value for values in fixed_root_by_frame[boundary:] for value in values]),
+            "post_joint_m": summarize([value for values in fixed_joint_by_frame[boundary:] for value in values]),
+            "post_vertex_m": summarize([value for values in fixed_vertex_by_frame[boundary:] for value in values]),
         },
         "camera_human_relative": {
             "root_gauge_m": summarize(chrge),
             "body_orientation_deg": summarize(orientation),
+            "first_post_root_gauge_m": summarize(chrge_by_frame[boundary]),
+            "post_root_gauge_m": summarize([value for values in chrge_by_frame[boundary:] for value in values]),
         },
         "pairwise_layout": {
             "distance_m": summarize(pair_distance),
             "vector_m": summarize(pair_vector),
+            "first_post_distance_m": summarize(pair_distance_by_frame[boundary]),
+            "first_post_vector_m": summarize(pair_vector_by_frame[boundary]),
+            "post_distance_m": summarize([value for values in pair_distance_by_frame[boundary:] for value in values]),
+            "post_vector_m": summarize([value for values in pair_vector_by_frame[boundary:] for value in values]),
         },
         "cut_seam": seam,
         "within_shot_motion": motion_rows,
         "assignment_cost": summarize(assignment_costs),
         "shared_initial_sim3": {"scale": fit[0], "rotation": fit[1], "translation": fit[2]},
+        "shared_initial_se3": {
+            "scale": fit_initial_se3[0], "rotation": fit_initial_se3[1], "translation": fit_initial_se3[2]
+        },
     }
 
 
@@ -440,24 +555,32 @@ def load_gt(record: dict[str, Any], extracted_root: Path, topology: CommonTopolo
     cameras = [record["pre_camera"]] * len(record["pre_frame_numbers"]) + [record["post_camera"]] * len(record["post_frame_numbers"])
     first = load_gt_people(sequence_root, frames[0])
     identities = sorted(first)
-    vertices, joints = [], []
-    for frame in frames:
+    vertices, joints, visibility = [], [], []
+    for frame, camera_name in zip(frames, cameras):
         people = load_gt_people(sequence_root, int(frame))
         if sorted(people) != identities:
             raise ValueError(f"GT identity set changes at frame {frame}: {sorted(people)} vs {identities}")
         frame_vertices = np.stack([people[identity]["vertices"] for identity in identities])
         vertices.append(frame_vertices)
         joints.append(topology.joints_from_smpl(frame_vertices))
+        visibility.append([
+            projected_visibility(people[identity]["vertices"], calibrations[camera_name])["visible_vertex_fraction"]
+            for identity in identities
+        ])
+    visibility_fraction = np.asarray(visibility, dtype=np.float64)
     return {
         "cameras_c2w": np.stack([calibrations[camera].camera_to_world for camera in cameras]),
         "vertices_world": np.stack(vertices),
         "joints_world": np.stack(joints),
         "frames": np.asarray(frames),
+        "visible_fraction": visibility_fraction,
+        "visible": visibility_fraction >= MIN_VISIBLE_VERTEX_FRACTION,
     }, identities
 
 
-def detector_metrics(runtime: dict[str, Any], boundary: int) -> dict[str, Any]:
-    labels = np.asarray(runtime["runtime"]["causal_gru_detector"]["labels"], dtype=np.int64)
+def detector_metrics(runtime: dict[str, Any], boundary: int, detector_key: str) -> dict[str, Any]:
+    detector = runtime["runtime"][detector_key]
+    labels = np.asarray(detector["labels"], dtype=np.int64)
     target = np.zeros_like(labels)
     target[boundary] = 1
     tp = int(((labels == 1) & (target == 1)).sum())
@@ -465,7 +588,15 @@ def detector_metrics(runtime: dict[str, Any], boundary: int) -> dict[str, Any]:
     fn = int(((labels == 0) & (target == 1)).sum())
     future = np.flatnonzero(labels[boundary:])
     delay = int(future[0]) if len(future) else None
+    probabilities = np.zeros(len(labels), dtype=np.float64)
+    probability_valid = np.zeros(len(labels), dtype=bool)
+    for row in detector.get("rows", []):
+        index = int(row["pair_idx"])
+        probabilities[index] = float(row["prob"])
+        probability_valid[index] = True
+    brier = float(np.mean((probabilities[probability_valid] - target[probability_valid]) ** 2)) if probability_valid.any() else None
     return {
+        "kind": detector_key,
         "tp": tp, "fp": fp, "fn": fn,
         "precision": tp / max(tp + fp, 1),
         "recall": tp / max(tp + fn, 1),
@@ -473,6 +604,10 @@ def detector_metrics(runtime: dict[str, Any], boundary: int) -> dict[str, Any]:
         "false_positive_rate_per_noncut_pair": fp / max(len(labels) - 1, 1),
         "detection_delay_frames": delay,
         "boundary_detected": bool(labels[boundary]),
+        "first_positive_index": detector.get("first_positive_index"),
+        "first_positive_is_boundary": detector.get("first_positive_index") == boundary,
+        "brier": brier,
+        "latency_seconds": detector.get("seconds"),
     }
 
 
@@ -497,7 +632,7 @@ def self_test() -> None:
         "valid": np.ones((3, 2), dtype=np.uint8),
     }
     assignments = [[(0, 0), (1, 1)] for _ in range(3)]
-    identity = identity_metrics(arrays, assignments, ["a", "b"])
+    identity = identity_metrics(arrays, assignments, ["a", "b"], np.ones((3, 2), dtype=bool))
     assert identity["ids_total"] == 1
     assert 0 < identity["idf1"] < 1
     print("Harmony evaluator self-test passed")
@@ -546,7 +681,11 @@ def main() -> None:
         "record": record,
         "identities": identities,
         "methods": results,
-        "detector": detector_metrics(runtime, int(record["boundary_index"])),
+        "detector": detector_metrics(runtime, int(record["boundary_index"]), "causal_gru_detector"),
+        "detectors": {
+            "causal_gru": detector_metrics(runtime, int(record["boundary_index"]), "causal_gru_detector"),
+            "static_logistic": detector_metrics(runtime, int(record["boundary_index"]), "static_logistic_detector"),
+        },
         "adaptive_gate": {
             "accepted": accepted,
             "diagnostics": adaptive,

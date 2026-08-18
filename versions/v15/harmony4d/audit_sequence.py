@@ -34,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--extracted-root", type=Path, required=True)
     parser.add_argument("--archive-entry", required=True)
+    parser.add_argument(
+        "--capture-relative",
+        default=None,
+        help="Capture path relative to extracted root; required when an archive contains multiple captures",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--overlay-cameras", default="cam01,cam08,cam15")
     return parser.parse_args()
@@ -108,7 +113,15 @@ def overlay(path: Path, calibration, people: dict[str, dict], topology: CommonTo
 
 def main() -> None:
     args = parse_args()
-    sequence_root = locate_sequence_root(args.extracted_root.resolve())
+    extracted_root = args.extracted_root.resolve()
+    if args.capture_relative is None:
+        sequence_root = locate_sequence_root(extracted_root)
+    else:
+        sequence_root = (extracted_root / args.capture_relative).resolve()
+        if extracted_root not in sequence_root.parents or not (
+            sequence_root / "colmap/workplace/cameras.txt"
+        ).is_file():
+            raise ValueError(f"Invalid capture below extracted root: {args.capture_relative}")
     calibrations = load_exo_calibrations(sequence_root)
     frames = frame_numbers(sequence_root, sorted(calibrations))
     if len(frames) < 150:
@@ -148,12 +161,31 @@ def main() -> None:
             ),
         }
     selected_pairs = select_balanced_pairs(calibrations, visibility_score)
+    reprojection_medians = np.asarray(
+        [calibration.reprojection_median_px for calibration in calibrations.values()],
+        dtype=np.float64,
+    )
+    reprojection_p95s = np.asarray(
+        [calibration.reprojection_p95_px for calibration in calibrations.values()],
+        dtype=np.float64,
+    )
+    projection_thresholds = {"median_px": 5.0, "p95_px": 15.0}
+    projection_pass = bool(
+        np.isfinite(reprojection_medians).all()
+        and np.isfinite(reprojection_p95s).all()
+        and np.all(reprojection_medians <= projection_thresholds["median_px"])
+        and np.all(reprojection_p95s <= projection_thresholds["p95_px"])
+    )
     overlays = []
     requested = [value.strip() for value in args.overlay_cameras.split(",") if value.strip()]
     for name in requested:
         if name not in calibrations:
             continue
-        destination = args.output.resolve().parent / "overlays" / f"{Path(args.archive_entry).stem}_{name}_f{audit_frame:05d}.jpg"
+        destination = (
+            args.output.resolve().parent
+            / "overlays"
+            / f"{Path(args.archive_entry).stem}_{sequence_root.name}_{name}_f{audit_frame:05d}.jpg"
+        )
         overlay(image_path(sequence_root, name, audit_frame), calibrations[name], people, topology, destination)
         overlays.append(str(destination))
     report = {
@@ -161,6 +193,7 @@ def main() -> None:
         "archive_entry": args.archive_entry,
         "sequence_root_name": sequence_root.name,
         "capture_group_name": sequence_root.parent.name,
+        "capture_relative": str(sequence_root.relative_to(extracted_root)),
         "frame_count": len(frames),
         "frame_min": min(frames),
         "frame_max": max(frames),
@@ -172,6 +205,24 @@ def main() -> None:
         "audit_frame": audit_frame,
         "units": "metres",
         "camera_convention": "COLMAP world_to_camera; adapter also stores inverse camera_to_world",
+        "published_smpl_world_identity": sorted({camera.canonical_world for camera in calibrations.values()}),
+        "extrinsic_sources": {
+            source: sum(camera.extrinsic_source == source for camera in calibrations.values())
+            for source in sorted({camera.extrinsic_source for camera in calibrations.values()})
+        },
+        "projection_audit": {
+            "thresholds": projection_thresholds,
+            "camera_count": len(calibrations),
+            "pnp_fallback_count": sum(
+                camera.extrinsic_source.endswith("static_pnp")
+                for camera in calibrations.values()
+            ),
+            "median_px_across_cameras": float(np.median(reprojection_medians)),
+            "max_camera_median_px": float(np.max(reprojection_medians)),
+            "median_camera_p95_px": float(np.median(reprojection_p95s)),
+            "max_camera_p95_px": float(np.max(reprojection_p95s)),
+            "pass": projection_pass,
+        },
         "distortion_model": "OPENCV_FISHEYE",
         "gt_runtime_isolation": "index/evaluator only",
         "topology": topology.metadata(),
@@ -180,6 +231,12 @@ def main() -> None:
         "selected_protocol_pairs": selected_pairs,
         "overlays": overlays,
     }
+    if not projection_pass:
+        raise ValueError(
+            "Harmony4D projection audit failed: "
+            f"camera median max={np.max(reprojection_medians):.3f}px, "
+            f"camera P95 max={np.max(reprojection_p95s):.3f}px"
+        )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(finite(report), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({

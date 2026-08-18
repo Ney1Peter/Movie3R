@@ -98,5 +98,7 @@ def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     text = "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in rows)
     path.write_text(text, encoding="utf-8")
-    return manifest_sha256(rows)
-
+    # This digest is the checksum of the exact frozen artifact on disk.  The
+    # compact canonical-row digest remains available through
+    # ``manifest_sha256`` and is recorded separately by the manifest builder.
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()

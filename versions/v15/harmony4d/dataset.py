@@ -4,8 +4,10 @@
 The release stores static exocentric calibration as COLMAP text and SMPL GT
 as per-frame dictionaries.  COLMAP poses are world-to-camera.  Four sparse
 calibration frames are available per exocentric camera; this adapter averages
-camera centres and rotations and records their scatter instead of silently
-selecting one estimate.
+camera centres and rotations and records their scatter.  Because the release
+does not consistently use ``aria01`` as its published SMPL world, the adapter
+also audits all supplied Aria transforms and selects the one geometrically
+consistent with the released bodies.
 """
 
 from __future__ import annotations
@@ -34,6 +36,9 @@ class CameraCalibration:
     center_scatter_max_m: float
     rotation_scatter_max_deg: float
     canonical_world: str
+    extrinsic_source: str
+    reprojection_median_px: float
+    reprojection_p95_px: float
 
     def jsonable(self) -> dict[str, Any]:
         value = asdict(self)
@@ -143,8 +148,179 @@ def transform_points_similarity(transform: np.ndarray, points: np.ndarray) -> np
     return value @ np.asarray(transform, dtype=np.float64)[:3, :3].T + np.asarray(transform)[:3, 3]
 
 
+def _published_smpl_body_center(sequence_root: Path) -> np.ndarray:
+    files = sorted((sequence_root / "processed_data/smpl").glob("*.npy"))
+    if not files:
+        raise FileNotFoundError(sequence_root / "processed_data/smpl")
+    value = np.load(files[len(files) // 2], allow_pickle=True)
+    if value.shape != () or not isinstance(value.item(), dict) or not value.item():
+        raise ValueError(f"Unexpected Harmony4D SMPL payload: {files[len(files) // 2]}")
+    centres = [
+        np.asarray(person["vertices"], dtype=np.float64).mean(axis=0)
+        for person in value.item().values()
+    ]
+    return np.mean(np.stack(centres), axis=0)
+
+
+def select_published_world_identity(
+    sequence_root: Path,
+    image_pose_rows: list[dict[str, Any]],
+    aria_from_colmap: dict[str, np.ndarray],
+) -> tuple[str, dict[str, float]]:
+    """Select the Aria transform whose exocentric rig surrounds published SMPL.
+
+    Harmony4D captures are not all anchored to ``aria01``.  In several MMA
+    captures that transform is a >100 m localisation outlier, while the
+    released SMPL bodies are expressed in the ``aria02`` metric world.  The
+    release has no explicit canonical-world flag, so we choose among its own
+    supplied transforms using only GT-side coordinate consistency: the
+    median exocentric-camera distance to the published body centre.
+    """
+
+    body_center = _published_smpl_body_center(sequence_root)
+    exo_poses = [
+        row["camera_to_world"]
+        for row in image_pose_rows
+        if str(row["name"]).split("/")[0].startswith("cam")
+    ]
+    if not exo_poses:
+        raise ValueError(f"No exocentric COLMAP poses under {sequence_root}")
+    scores: dict[str, float] = {}
+    for identity, transform in sorted(aria_from_colmap.items()):
+        centres = np.stack([
+            transform_camera_similarity(transform, pose)[:3, 3]
+            for pose in exo_poses
+        ])
+        scores[identity] = float(np.median(np.linalg.norm(centres - body_center, axis=1)))
+    selected = min(scores, key=lambda identity: (scores[identity], identity))
+    if not np.isfinite(scores[selected]) or scores[selected] > 50.0:
+        raise ValueError(f"No plausible published SMPL world for {sequence_root}: {scores}")
+    return selected, scores
+
+
+def _annotation_frames(sequence_root: Path, count: int = 5) -> list[int]:
+    frames = sorted(
+        int(path.stem)
+        for path in (sequence_root / "processed_data/smpl").glob("*.npy")
+        if path.stem.isdigit()
+    )
+    if not frames:
+        return []
+    indices = np.linspace(0, len(frames) - 1, min(count, len(frames)), dtype=np.int64)
+    return [frames[int(index)] for index in np.unique(indices)]
+
+
+def _camera_annotation_correspondences(
+    sequence_root: Path, camera_name: str, frames: list[int]
+) -> tuple[np.ndarray, np.ndarray]:
+    points, pixels = [], []
+    for frame in frames:
+        smpl_path = sequence_root / "processed_data/smpl" / f"{frame:05d}.npy"
+        pose_path = sequence_root / "processed_data/poses2d" / camera_name / f"{frame:05d}.npy"
+        if not smpl_path.is_file() or not pose_path.is_file():
+            continue
+        smpl = np.load(smpl_path, allow_pickle=True).item()
+        poses2d = np.load(pose_path, allow_pickle=True).item()
+        for identity in sorted(set(smpl).intersection(poses2d)):
+            joints = np.asarray(smpl[identity]["joints"], dtype=np.float64)
+            image = np.asarray(poses2d[identity], dtype=np.float64)
+            number = min(len(joints), len(image))
+            joints, image = joints[:number], image[:number, :2]
+            valid = np.isfinite(joints).all(axis=1) & np.isfinite(image).all(axis=1)
+            points.extend(joints[valid])
+            pixels.extend(image[valid])
+    return np.asarray(points, dtype=np.float64), np.asarray(pixels, dtype=np.float64)
+
+
+def _reprojection_summary(
+    calibration: CameraCalibration,
+    points_world: np.ndarray,
+    pixels_gt: np.ndarray,
+) -> tuple[float, float]:
+    if len(points_world) < 6:
+        return float("inf"), float("inf")
+    pixels, valid = project_fisheye(points_world, calibration)
+    error = np.linalg.norm(pixels - pixels_gt, axis=1)
+    error = error[valid & np.isfinite(error)]
+    if not len(error):
+        return float("inf"), float("inf")
+    return float(np.median(error)), float(np.percentile(error, 95))
+
+
+def _solve_camera_from_published_annotations(
+    name: str,
+    table: dict[str, Any],
+    points_world: np.ndarray,
+    pixels: np.ndarray,
+) -> CameraCalibration:
+    if len(points_world) < 12:
+        raise ValueError(f"Not enough published 3D--2D correspondences for {name}")
+    intrinsic = np.asarray(table["intrinsic"], dtype=np.float64)
+    distortion = np.asarray(table["distortion"], dtype=np.float64)
+    normalized = cv2.fisheye.undistortPoints(
+        np.asarray(pixels, dtype=np.float64)[:, None, :], intrinsic, distortion
+    )[:, 0]
+    ok, rotation_vector, translation, inliers = cv2.solvePnPRansac(
+        np.asarray(points_world, dtype=np.float64),
+        normalized,
+        np.eye(3, dtype=np.float64),
+        None,
+        flags=cv2.SOLVEPNP_EPNP,
+        iterationsCount=2000,
+        reprojectionError=0.005,
+        confidence=0.999,
+    )
+    if not ok or inliers is None or len(inliers) < 12:
+        raise ValueError(f"PnP failed for Harmony4D camera {name}: inliers={inliers}")
+    indices = inliers[:, 0]
+    ok, rotation_vector, translation = cv2.solvePnP(
+        np.asarray(points_world, dtype=np.float64)[indices],
+        normalized[indices],
+        np.eye(3, dtype=np.float64),
+        None,
+        rotation_vector,
+        translation,
+        useExtrinsicGuess=True,
+        flags=cv2.SOLVEPNP_ITERATIVE,
+    )
+    if not ok:
+        raise ValueError(f"PnP refinement failed for Harmony4D camera {name}")
+    rotation, _ = cv2.Rodrigues(rotation_vector)
+    world_to_camera = np.eye(4, dtype=np.float64)
+    world_to_camera[:3, :3] = rotation
+    world_to_camera[:3, 3] = np.asarray(translation).reshape(3)
+    provisional = CameraCalibration(
+        name=name,
+        camera_id=int(table["camera_id"]),
+        width=int(table["width"]),
+        height=int(table["height"]),
+        model=str(table["model"]),
+        intrinsic=intrinsic,
+        distortion=distortion,
+        world_to_camera=world_to_camera,
+        camera_to_world=np.linalg.inv(world_to_camera),
+        calibration_views=int(len(indices)),
+        center_scatter_max_m=0.0,
+        rotation_scatter_max_deg=0.0,
+        canonical_world="published_smpl_world",
+        extrinsic_source="published_smpl45_to_poses2d45_static_pnp",
+        reprojection_median_px=float("nan"),
+        reprojection_p95_px=float("nan"),
+    )
+    median, p95 = _reprojection_summary(provisional, points_world, pixels)
+    if median > 5.0 or p95 > 15.0:
+        raise ValueError(f"PnP reprojection remains invalid for {name}: median={median}, p95={p95}")
+    return CameraCalibration(
+        **{
+            **provisional.__dict__,
+            "reprojection_median_px": median,
+            "reprojection_p95_px": p95,
+        }
+    )
+
+
 def load_exo_calibrations(
-    sequence_root: Path, canonical_identity: str = "aria01"
+    sequence_root: Path, canonical_identity: str | None = None
 ) -> dict[str, CameraCalibration]:
     workplace = sequence_root / "colmap/workplace"
     cameras = _camera_table(workplace / "cameras.txt")
@@ -154,10 +330,25 @@ def load_exo_calibrations(
         name = str(row["name"]).split("/")[0]
         if name.startswith("cam"):
             grouped.setdefault(name, []).append(row)
-    aria_from_colmap = _load_transform_dict(workplace / "aria_from_colmap_transforms.pkl")
-    if canonical_identity not in aria_from_colmap:
-        raise KeyError(f"Canonical identity {canonical_identity} absent from aria-from-COLMAP transforms")
-    canonical_from_colmap = aria_from_colmap[canonical_identity]
+    transform_path = workplace / "aria_from_colmap_transforms.pkl"
+    aria_from_colmap = _load_transform_dict(transform_path) if transform_path.is_file() else {}
+    if aria_from_colmap:
+        if canonical_identity is None:
+            canonical_identity, _ = select_published_world_identity(
+                sequence_root, rows, aria_from_colmap
+            )
+        if canonical_identity not in aria_from_colmap:
+            raise KeyError(
+                f"Canonical identity {canonical_identity} absent from aria-from-COLMAP transforms"
+            )
+        canonical_from_colmap = aria_from_colmap[canonical_identity]
+    else:
+        # Several official archives omit this optional transform but retain
+        # metric SMPL45 and matching poses2d45.  The evaluator can recover the
+        # same static exocentric calibration directly from those annotations.
+        canonical_identity = "published_smpl_world"
+        canonical_from_colmap = None
+    annotation_frames = _annotation_frames(sequence_root)
     output: dict[str, CameraCalibration] = {}
     for name, values in sorted(grouped.items()):
         camera_ids = {int(value["camera_id"]) for value in values}
@@ -165,6 +356,14 @@ def load_exo_calibrations(
             raise ValueError(f"Camera {name} maps to multiple COLMAP intrinsics: {camera_ids}")
         camera_id = next(iter(camera_ids))
         table = cameras[camera_id]
+        points, pixels = _camera_annotation_correspondences(
+            sequence_root, name, annotation_frames
+        )
+        if canonical_from_colmap is None:
+            output[name] = _solve_camera_from_published_annotations(
+                name, table, points, pixels
+            )
+            continue
         centres = np.stack([value["camera_to_world"][:3, 3] for value in values])
         rotations = Rotation.from_matrix(
             np.stack([value["camera_to_world"][:3, :3] for value in values])
@@ -186,7 +385,7 @@ def load_exo_calibrations(
             )
             for value in values
         ]
-        output[name] = CameraCalibration(
+        provisional = CameraCalibration(
             name=name,
             camera_id=camera_id,
             width=int(table["width"]),
@@ -200,7 +399,23 @@ def load_exo_calibrations(
             center_scatter_max_m=float(center_scatter.max(initial=0.0)),
             rotation_scatter_max_deg=float(max(rotation_scatter, default=0.0)),
             canonical_world=canonical_identity,
+            extrinsic_source=f"colmap_plus_{canonical_identity}_similarity",
+            reprojection_median_px=float("nan"),
+            reprojection_p95_px=float("nan"),
         )
+        median, p95 = _reprojection_summary(provisional, points, pixels)
+        if median <= 5.0 and p95 <= 15.0:
+            output[name] = CameraCalibration(
+                **{
+                    **provisional.__dict__,
+                    "reprojection_median_px": median,
+                    "reprojection_p95_px": p95,
+                }
+            )
+        else:
+            output[name] = _solve_camera_from_published_annotations(
+                name, table, points, pixels
+            )
     if not output:
         raise ValueError(f"No exocentric cameras found under {sequence_root}")
     return output
@@ -246,27 +461,20 @@ def image_path(sequence_root: Path, camera_name: str, frame: int) -> Path:
 
 
 def load_gt_people(
-    sequence_root: Path, frame: int, canonical_identity: str = "aria01"
+    sequence_root: Path, frame: int, canonical_identity: str | None = None
 ) -> dict[str, dict[str, np.ndarray]]:
     path = sequence_root / "processed_data/smpl" / f"{int(frame):05d}.npy"
     value = np.load(path, allow_pickle=True)
     if value.shape != () or not isinstance(value.item(), dict):
         raise ValueError(f"Unexpected Harmony4D SMPL payload: {path}")
-    workplace = sequence_root / "colmap/workplace"
-    aria_from_colmap = _load_transform_dict(workplace / "aria_from_colmap_transforms.pkl")
-    if canonical_identity not in aria_from_colmap:
-        raise KeyError(canonical_identity)
     output = {}
     for identity, person in value.item().items():
         identity = str(identity)
-        # Harmony4D's processed SMPL dictionaries are already fused into the
-        # primary (aria01) metric world, despite keys naming the two wearers.
-        # The per-Aria COLMAP transforms localise sensor trajectories; applying
-        # them again per person corrupts the second body.  We therefore move
-        # COLMAP exocentric cameras into aria01 above and keep all processed
-        # bodies in their published shared metric frame here.
-        if canonical_identity != "aria01":
-            raise ValueError("The public processed SMPL world is anchored to aria01")
+        # Processed SMPL dictionaries are already fused into one published
+        # metric world.  Keys name the wearers; they do not imply separate
+        # per-person frames.  The matching exocentric-camera world is selected
+        # once in ``load_exo_calibrations``.  Applying a per-person transform
+        # here would corrupt the shared two-person layout.
         canonical_from_identity = np.eye(4, dtype=np.float64)
         vertices = np.asarray(person["vertices"], dtype=np.float64)
         joints = np.asarray(person["joints"], dtype=np.float64)
