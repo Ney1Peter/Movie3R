@@ -1,0 +1,14 @@
+{
+  "protocol": "Movie3R-Harmony4D-CrossShot-v1",
+  "seed": 20260818,
+  "split": "test",
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v15/harmony4d/protocols/h4d_cs150_test_08_ballroom2.jsonl",
+  "manifest_sha256": "d2df8d4c735cb0ababac216a38bbf32595062a0535413484e84c266e9c56f8d1",
+  "case_count": 4,
+  "sequence_count": 1,
+  "clip_length": 150,
+  "boundary_index": 75,
+  "construction": "GT calibration/visibility only; no model result used",
+  "causal_boundary": "last pre plus first post and prior state; no future frame",
+  "rows_sha256_recomputed": "b9c97265b1f3401c1f55a9f266b949ea5f1cd156280d1d12beb0a3a1e83d1e60"
+}

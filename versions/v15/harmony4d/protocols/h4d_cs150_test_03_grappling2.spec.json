@@ -1,0 +1,14 @@
+{
+  "protocol": "Movie3R-Harmony4D-CrossShot-v1",
+  "seed": 20260818,
+  "split": "test",
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v15/harmony4d/protocols/h4d_cs150_test_03_grappling2.jsonl",
+  "manifest_sha256": "a9748540bec7443561ffcf5e94921afbea8b91705fdd7ece27298a79cd193065",
+  "case_count": 4,
+  "sequence_count": 1,
+  "clip_length": 150,
+  "boundary_index": 75,
+  "construction": "GT calibration/visibility only; no model result used",
+  "causal_boundary": "last pre plus first post and prior state; no future frame",
+  "rows_sha256_recomputed": "da4534cc44c02698e019b371743b7b8aba81e07ce563f0a1dfb3567882647645"
+}
