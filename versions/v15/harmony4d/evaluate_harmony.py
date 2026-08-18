@@ -674,6 +674,26 @@ def main() -> None:
         for component in path:
             first, second = first[component], second[component]
         gate_harm[key] = None if first is None or second is None else float(second - first)
+    safe_gate = runtime["geometry"].get("observability_safe_brtc", {})
+    safe_accepted = bool(safe_gate.get("accepted", False))
+    safe_parent = results["m4_b0_identity"]
+    safe_candidate = results.get("m10_observability_safe_oracle")
+    safe_harm = {}
+    if safe_candidate is not None:
+        for key, path in {
+            "w_mpjpe": ("multi_thumbs_named_provisional", "w_mpjpe_mm", "mean"),
+            "camera_translation": ("camera", "translation_m", "mean"),
+            "camera_rotation": ("camera", "rotation_deg", "mean"),
+            "fixed_root": ("fixed_world", "root_m", "mean"),
+            "fixed_vertex": ("fixed_world", "vertex_m", "mean"),
+            "pair_layout": ("pairwise_layout", "vector_m", "mean"),
+            "seam_root": ("cut_seam", "root_excess_m"),
+        }.items():
+            first: Any = safe_parent
+            second: Any = safe_candidate
+            for component in path:
+                first, second = first[component], second[component]
+            safe_harm[key] = None if first is None or second is None else float(second - first)
     report = {
         "schema_version": "Movie3R-Harmony4D-evaluation-v1",
         "protocol": record["protocol"],
@@ -691,6 +711,17 @@ def main() -> None:
             "diagnostics": adaptive,
             "harm_candidate_minus_parent": gate_harm,
             "harmful_accept": bool(accepted and any(value is not None and value > 0.05 for value in gate_harm.values())),
+        },
+        "observability_safe_gate": {
+            "accepted": safe_accepted,
+            "runtime_diagnostics": safe_gate,
+            "candidate_minus_b0_identity": safe_harm,
+            "any_metric_worse": bool(
+                safe_accepted and any(value is not None and value > 0.0 for value in safe_harm.values())
+            ),
+            "catastrophic_harm": bool(
+                safe_accepted and any(value is not None and value > 0.05 for value in safe_harm.values())
+            ),
         },
         "evaluation_contract": {
             "gt_used_only_in_evaluator": True,
