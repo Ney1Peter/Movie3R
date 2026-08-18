@@ -68,6 +68,10 @@ METHODS = (
     "m10_observability_safe_oracle",
     "m11_observability_safe_causal_gru",
     "m12_observability_safe_static_logistic",
+    "m13_b0_boundary_permutation_id",
+    "m14_safe_boundary_permutation_oracle",
+    "m15_safe_boundary_permutation_causal_gru",
+    "m16_safe_boundary_permutation_static_logistic",
 )
 KNOWN_VERIFIED_ARTIFACTS = {
     "src/human3r_896L.pth": (4670554642, "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"),
@@ -340,6 +344,64 @@ def persistent_post(
     return output, association_out
 
 
+def boundary_permutation_post(
+    pre_last: dict[str, Any],
+    b0_post: list[dict[str, Any]],
+    association: dict[str, Any],
+    shifts: dict[int, np.ndarray] | None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Permute slots once at the cut, then preserve causal backbone slots.
+
+    Human3R's recurrent state already keeps detection slots reasonably stable
+    inside a shot.  Re-solving a global assignment against the first post frame
+    at every timestep caused identity churn and silently dropped unmatched
+    detections under close interaction.  This branch uses B0 geometry for one
+    cross-shot permutation only; all later frames retain their native causal
+    slot, and every detection is preserved.
+    """
+
+    if not b0_post:
+        return [], {"native_slot_to_persistent_id": {}, "new_track_count": 0}
+    used = {int(person["persistent_id"]) for person in pre_last["people"]}
+    next_id = max(used, default=-1) + 1
+    native_to_persistent: dict[int, int] = {}
+    for pre_index, post_index in association.get("pairs", []):
+        native = int(b0_post[0]["people"][int(post_index)]["native_id"])
+        native_to_persistent[native] = int(
+            pre_last["people"][int(pre_index)]["persistent_id"]
+        )
+    output = []
+    new_slots = []
+    for frame_index, frame in enumerate(b0_post):
+        people = []
+        for person in frame["people"]:
+            value = copy.deepcopy(person)
+            native = int(value["native_id"])
+            if native not in native_to_persistent:
+                native_to_persistent[native] = next_id
+                new_slots.append({
+                    "frame_index": frame_index,
+                    "native_id": native,
+                    "persistent_id": next_id,
+                })
+                next_id += 1
+            persistent = native_to_persistent[native]
+            value["persistent_id"] = persistent
+            if shifts is not None and persistent in shifts:
+                value = shift_person(value, shifts[persistent])
+            people.append(value)
+        output.append({"camera": np.asarray(frame["camera"]).copy(), "people": people})
+    return output, {
+        "policy": "single_B0_boundary_permutation_then_causal_native_slot",
+        "native_slot_to_persistent_id": {
+            str(key): int(value) for key, value in sorted(native_to_persistent.items())
+        },
+        "new_slots": new_slots,
+        "new_track_count": next_id,
+        "detections_preserved": True,
+    }
+
+
 def apply_c1(b0_post: list[dict[str, Any]], brtc_post: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     counts = [len(frame["people"]) for frame in brtc_post]
     ids = [[int(person["persistent_id"]) for person in frame["people"]] for frame in brtc_post]
@@ -459,6 +521,10 @@ def compose_transaction(
     m3 = copy.deepcopy(pre + b0_post)
     identity_post, association = persistent_post(pre[-1], b0_post, shifts=None)
     m4 = copy.deepcopy(pre + identity_post)
+    boundary_post, boundary_identity_debug = boundary_permutation_post(
+        pre[-1], b0_post, association, shifts=None
+    )
+    m13 = copy.deepcopy(pre + boundary_post)
 
     brtc_first, brtc_debug = refine_matched_people(
         np.asarray(pre[-1]["camera"]), np.asarray(b0_post[0]["camera"]),
@@ -517,6 +583,40 @@ def compose_transaction(
                 person["joints"] = joints
                 person["root"] = joints[0]
 
+    boundary_brtc_post, _ = boundary_permutation_post(
+        pre[-1], b0_post, association, shifts=shifts
+    )
+    boundary_safe_brtc_post = (
+        boundary_brtc_post if safe_gate["accepted"] else boundary_post
+    )
+    boundary_safe_c1_post, boundary_safe_c1_debug = apply_c1(
+        boundary_post, boundary_safe_brtc_post
+    )
+    boundary_safe_base = copy.deepcopy(pre + boundary_safe_c1_post)
+    boundary_safe_cameras = np.stack([frame["camera"] for frame in boundary_safe_base])
+    boundary_safe_meshes = [
+        np.stack([person["vertices"] for person in frame["people"]])
+        for frame in boundary_safe_base
+    ]
+    boundary_safe_adaptive_cameras, boundary_safe_adaptive_meshes, _, boundary_safe_adaptive_debug = (
+        apply_with_raw_reference(
+            boundary_safe_cameras, boundary_safe_meshes, raw_cameras, raw_meshes,
+            None, [boundary], AdaptiveJointConfig()
+        )
+    )
+    m14 = copy.deepcopy(boundary_safe_base)
+    for frame_index, frame in enumerate(m14):
+        frame["camera"] = boundary_safe_adaptive_cameras[frame_index]
+        if len(frame["people"]) == len(boundary_safe_adaptive_meshes[frame_index]):
+            for person, vertices in zip(
+                frame["people"], boundary_safe_adaptive_meshes[frame_index]
+            ):
+                smpl = topology.smplx_vertices_to_smpl(np.asarray(vertices)[None])[0]
+                joints = topology.joints_from_smpl(smpl)
+                person["vertices"] = np.asarray(vertices)
+                person["joints"] = joints
+                person["root"] = joints[0]
+
     return {
         "m1_clean_reset": m1,
         "m2_no_v9_raw_se3": m2,
@@ -526,6 +626,8 @@ def compose_transaction(
         "m6_b0_identity_brtc_c1": m6,
         "m7_full_v15_oracle": m7,
         "m10_observability_safe_oracle": m10,
+        "m13_b0_boundary_permutation_id": m13,
+        "m14_safe_boundary_permutation_oracle": m14,
     }, {
         "raw_se3": raw_transform,
         "b0": b0_transform,
@@ -537,6 +639,9 @@ def compose_transaction(
         "observability_safe_brtc": safe_gate,
         "observability_safe_c1": safe_c1_debug,
         "observability_safe_adaptive": safe_adaptive_debug,
+        "boundary_permutation_identity": boundary_identity_debug,
+        "boundary_permutation_safe_c1": boundary_safe_c1_debug,
+        "boundary_permutation_safe_adaptive": boundary_safe_adaptive_debug,
     }
 
 
@@ -734,6 +839,7 @@ def main() -> None:
                     {
                         "m7_full_v15_oracle": frames,
                         "m10_observability_safe_oracle": frames,
+                        "m14_safe_boundary_permutation_oracle": frames,
                     },
                     {"event": None, "reason": "detector_emitted_no_positive"},
                     {"no_event_forward": forward_runtime},
@@ -754,6 +860,13 @@ def main() -> None:
         }[detector_name]
         methods[safe_method_name] = copy.deepcopy(
             candidate_methods["m10_observability_safe_oracle"]
+        )
+        boundary_safe_method_name = {
+            "causal_gru": "m15_safe_boundary_permutation_causal_gru",
+            "static_logistic": "m16_safe_boundary_permutation_static_logistic",
+        }[detector_name]
+        methods[boundary_safe_method_name] = copy.deepcopy(
+            candidate_methods["m14_safe_boundary_permutation_oracle"]
         )
         detector_geometry[detector_name] = {
             "first_positive_index": proposal,

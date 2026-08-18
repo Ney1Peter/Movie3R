@@ -31,6 +31,10 @@ METHOD_ORDER = (
     "m10_observability_safe_oracle",
     "m11_observability_safe_causal_gru",
     "m12_observability_safe_static_logistic",
+    "m13_b0_boundary_permutation_id",
+    "m14_safe_boundary_permutation_oracle",
+    "m15_safe_boundary_permutation_causal_gru",
+    "m16_safe_boundary_permutation_static_logistic",
 )
 
 # path, output label, higher-is-better
