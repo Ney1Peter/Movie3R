@@ -115,10 +115,13 @@ OS-BRTC 只读 runtime geometry，必须同时满足：
 |---|---:|---:|---:|---:|---:|
 | B0 native slot | 87 | 5.44 | 0.412 | 0.666 | 0.907 |
 | Adjacent unbounded | 85 | 5.31 | 0.505 | 0.758 | 0.907 |
-| **Boundary-Permutation ID** | **69** | **4.31** | **0.590** | **0.897** | **0.907** |
+| **Boundary-Permutation ID（runner exact）** | **70** | **4.38** | **0.585** | **0.886** | **0.907** |
 
-相对 B0 native，IDs total 下降 20.7%，IDF1 提升 0.178，coverage bit-exact。
-该模块符合 online、causal、无额外预训练模型的主线，因此晋升。
+相对 B0 native，IDs total 下降 19.5%，IDF1 提升 0.173，coverage bit-exact。
+该模块符合 online、causal、无额外预训练模型的主线，因此晋升。这里报告的是
+runner 实际沿用的 frozen `anonymous_match` boundary pairs；独立穷举 probe 得到 69、
+0.590、0.897，但有一个 MMA-extreme case 的 pair 与 runtime 不同，因此它只作为
+诊断上界，不作为冻结部署结果。
 
 ## 7. Test 前最终方法定义
 
