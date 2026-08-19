@@ -144,7 +144,12 @@ def assess_candidates(length_summary: dict[str, Any]) -> list[dict[str, Any]]:
                     first, second = finite(row["metrics"].get(metric)), finite(parent["metrics"].get(metric))
                     if first is None or second is None:
                         continue
-                    if not math.isclose(first, second, rel_tol=1e-9, abs_tol=1e-7):
+                    # The candidate and parent arrays are exact fallbacks, but
+                    # independent evaluator calls may differ at roughly
+                    # 1e-5--1e-4 after float32/float64 reductions.  One
+                    # thousandth of a reported metric unit is far below the
+                    # displayed precision while still detecting real changes.
+                    if not math.isclose(first, second, rel_tol=1e-6, abs_tol=1e-3):
                         fallback_exact = False
         constraints = {
             "ate_within_5pct": ratios.get("ATE_Sim3_m") is not None and ratios["ATE_Sim3_m"] <= 1.05,
@@ -233,13 +238,20 @@ def main() -> None:
     args.report.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     candidate = dict(selected["candidate"])
     candidate["name"] = "v18_dev_selected"
+    reference_candidate = dict(
+        summaries[args.main_length]["candidates"][REFERENCE]["candidate"]
+    )
+    reference_candidate["name"] = REFERENCE
     frozen = {
         "phase": "frozen after three-action train development and before independent train holdout",
         "selection_report": str(args.report.resolve()),
         "main_length": args.main_length,
         "recommended_low_latency_length": length_result["recommended_low_latency_length"],
         "source_candidate": selected_name,
-        "candidates": [{"name": PARENT}, candidate],
+        # Keep the exact v17 configuration in the holdout file.  The parent is
+        # needed to audit prediction-only fallbacks, while v17 is the actual
+        # promotion baseline for the development-selected candidate.
+        "candidates": [{"name": PARENT}, reference_candidate, candidate],
     }
     args.candidate_output.parent.mkdir(parents=True, exist_ok=True)
     args.candidate_output.write_text(json.dumps(frozen, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

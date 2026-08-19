@@ -1,0 +1,38 @@
+{
+  "phase": "frozen after three-action train development and before independent train holdout",
+  "selection_report": "/data/wangzheng/iJCV-CODE/Movie3R/output/v18_harmony4d/dev/selection.json",
+  "main_length": 150,
+  "recommended_low_latency_length": 150,
+  "source_candidate": "blend_075",
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry"
+    },
+    {
+      "name": "v17_reference",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "use_velocity_target": false,
+      "root_alpha": 0.5,
+      "root_beta": 0.02,
+      "gate_max_boundary_residual_m": 0.25,
+      "gate_min_matches": 2,
+      "gate_min_match_fraction": 0.0,
+      "gate_max_translation_m": 1.6
+    },
+    {
+      "name": "v18_dev_selected",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.75,
+      "use_velocity_target": false,
+      "root_alpha": 0.5,
+      "root_beta": 0.02,
+      "gate_max_boundary_residual_m": 0.25,
+      "gate_min_matches": 2,
+      "gate_min_match_fraction": 0.0,
+      "gate_max_translation_m": 1.6
+    }
+  ]
+}
