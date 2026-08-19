@@ -1,0 +1,16 @@
+{
+  "schema_version": "Movie3R-v16-Harmony4D-qualitative-selection-v1",
+  "selection_policy": "Best preregistered unseen accepted case by W-MPJPE gain; qualitative selection never changes aggregate metrics.",
+  "cases": [
+    {
+      "runtime": "output/v16_harmony4d/predictions/train09_line3/h4d_test_09_karate_015_karate_medium_cam05_cam09_b00101.runtime.json",
+      "extracted_root": "/data/wangzheng/iJCV-CODE/data/Harmony4D_work_v16/staging/train_09_karate",
+      "categories": [
+        "unseen_holdout",
+        "adaptive_accept_success",
+        "medium_angle",
+        "largest_absolute_w_mpjpe_gain"
+      ]
+    }
+  ]
+}
