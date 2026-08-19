@@ -273,13 +273,30 @@ def process_entry(
     prediction_root = OUTPUT / "predictions" / sequence
     report = OUTPUT / "per_sequence" / f"{sequence}.json"
     state_path = stage_meta / "state.json"
+    candidate_digest = sha256(candidate)
+    primary = primary_from_candidate(candidate)
+    if state_path.is_file() and report.is_file():
+        previous = read_json(state_path)
+        if (
+            previous.get("status") == "complete"
+            and previous.get("candidate_sha256") == candidate_digest
+            and previous.get("primary") == primary
+        ):
+            payload = validate_report(
+                report, int(previous["manifest_cases"]), primary,
+            )
+            print(json.dumps({
+                "entry": entry, "status": "already_complete",
+                "evaluable_cases": payload["complete_case_count"],
+                "evaluator_unavailable_cases": len(payload.get("skipped_cases", [])),
+            }), flush=True)
+            return
     state: dict[str, Any] = {
         "schema_version": "Movie3R-v17-Harmony4D-full-test-state-v1",
         "entry": entry, "sequence": sequence, "status": "started",
         "started_at": time.time(), "devices": devices,
-        "candidate": str(candidate.resolve()), "candidate_sha256": sha256(candidate),
+        "candidate": str(candidate.resolve()), "candidate_sha256": candidate_digest,
     }
-    primary = primary_from_candidate(candidate)
     state["primary"] = primary
     atomic_json(state_path, state)
     stage_command = [
