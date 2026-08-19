@@ -23,7 +23,7 @@ from select_development_candidate import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INPUT = REPO_ROOT / "output/v18_harmony4d/holdout/per_sequence"
 DEFAULT_OUTPUT = REPO_ROOT / "output/v18_harmony4d/holdout/decision.json"
-TARGET = "v18_dev_selected"
+DEFAULT_TARGET = "v18_dev_selected"
 CORE_SHORTFALLS = ("W-MPJPE_mm", "WA-MPJPE_mm", "Accel_mm_frame2")
 MIN_RELATIVE_GAIN = 0.001  # 0.1%; excludes reduction-level numerical noise.
 
@@ -33,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--length", type=int, default=150)
+    parser.add_argument("--target", default=DEFAULT_TARGET)
     return parser.parse_args()
 
 
@@ -44,14 +45,16 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def sequence_comparisons(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def sequence_comparisons(
+    reports: list[dict[str, Any]], target_name: str,
+) -> list[dict[str, Any]]:
     comparisons = []
     for payload in reports:
         by_candidate: dict[str, list[dict[str, Any]]] = {}
         for row in payload.get("rows", []):
             if row.get("status") == "complete":
                 by_candidate.setdefault(str(row["candidate"]), []).append(row)
-        if REFERENCE not in by_candidate or TARGET not in by_candidate:
+        if REFERENCE not in by_candidate or target_name not in by_candidate:
             continue
         metrics = {}
         for metric in CORE_SHORTFALLS:
@@ -59,7 +62,7 @@ def sequence_comparisons(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 finite(row["metrics"].get(metric)) for row in by_candidate[REFERENCE]
             ])
             target = mean([
-                finite(row["metrics"].get(metric)) for row in by_candidate[TARGET]
+                finite(row["metrics"].get(metric)) for row in by_candidate[target_name]
             ])
             ratio = None if reference in (None, 0) or target is None else target / reference
             metrics[metric] = {
@@ -88,10 +91,10 @@ def main() -> None:
     summary = summarize_length(reports)
     ranking = assess_candidates(summary)
     by_name = {row["name"]: row for row in ranking}
-    if TARGET not in by_name or REFERENCE not in by_name:
-        raise KeyError(f"required candidates missing: {REFERENCE}, {TARGET}")
-    target, reference = by_name[TARGET], by_name[REFERENCE]
-    comparisons = sequence_comparisons(reports)
+    if args.target not in by_name or REFERENCE not in by_name:
+        raise KeyError(f"required candidates missing: {REFERENCE}, {args.target}")
+    target, reference = by_name[args.target], by_name[REFERENCE]
+    comparisons = sequence_comparisons(reports, args.target)
     majority = math.floor(len(comparisons) / 2) + 1
 
     core = {}
@@ -139,6 +142,7 @@ def main() -> None:
         "schema_version": "Movie3R-v18-Harmony4D-independent-holdout-decision-v1",
         "decision_scope": "three preregistered Harmony4D train holdout actions; official test unused",
         "length": args.length,
+        "target_name": args.target,
         "promotion_rule": {
             "minimum_stable_core_improvements": 2,
             "core_metrics": list(CORE_SHORTFALLS),
@@ -174,4 +178,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
