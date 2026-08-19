@@ -31,7 +31,7 @@ STAGER = V15 / "stage_archive.py"
 AUDITOR = V15 / "audit_sequence.py"
 BUILDER = V15 / "build_manifest.py"
 RUN_CASE = V15 / "run_harmony_case.py"
-PROBE = V16 / "probe_causal_stabilization.py"
+PROBE = REPO_ROOT / "versions/v17/harmony4d/probe_parallel.py"
 AGGREGATE = V16 / "aggregate_multisequence.py"
 CANDIDATE = REPO_ROOT / "versions/v17/harmony4d/frozen_multicue_candidate.json"
 OUTER = Path("/data/wangzheng/iJCV-CODE/data/Harmony4D.zip")
@@ -299,6 +299,12 @@ def process_entry(
     }
     state["primary"] = primary
     atomic_json(state_path, state)
+    stage_ledger = stage_meta / "stage_ledger.json"
+    reusable_stage = bool(
+        staging.is_dir() and stage_ledger.is_file() and (stage_meta / "index.json").is_file()
+        and read_json(stage_ledger).get("status") == "staged_audited_manifest_frozen"
+        and read_json(stage_ledger).get("entry") == entry
+    )
     stage_command = [
         sys.executable, str(STAGER), "--outer", str(OUTER), "--entry", entry,
         "--work-root", str(WORK), "--audit-output", str(stage_meta / "seed_audit.json"),
@@ -307,7 +313,11 @@ def process_entry(
         "--ledger-output", str(stage_meta / "stage_ledger.json"),
         "--reserve-gib", str(reserve_gib),
     ]
-    returncode, seconds = run(stage_command, OUTPUT / "logs" / f"{sequence}.stage.log")
+    if reusable_stage:
+        returncode, seconds = 0, 0.0
+        state["stage_reused_after_resume"] = True
+    else:
+        returncode, seconds = run(stage_command, OUTPUT / "logs" / f"{sequence}.stage.log")
     state["stage_seconds"] = seconds
     if returncode:
         state.update(status="stage_error", returncode=returncode)
