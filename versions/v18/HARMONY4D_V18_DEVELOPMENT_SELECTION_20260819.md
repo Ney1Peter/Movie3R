@@ -70,5 +70,4 @@ versions/v18/harmony4d/frozen_dev_candidate.json
 SHA256 f02c63aaaba3ed61e87d64f0d1b09285043399a07c14605ef824ae463f3f1578
 ```
 
-下一步只在预注册且尚未参与选择的 `04_sword_part1`、`08_ballroom2`、`13_mma2` 上运行 150 帧验证。只有候选在至少两个核心短板指标上稳定优于 v17，同时保留 ATE、IDF1、MPJPE/MPVPE 和安全 fallback，才升级为 v18；否则最终方法继续冻结为 v17。
-
+下一步只在预注册且尚未参与选择的 `04_sword_part1`、`08_ballroom2`、`13_mma2` 上运行 150 帧验证。只有候选在 W、WA、Accel 中至少两项相对改善不低于 0.1%，且每项改善覆盖严格多数 holdout 动作，同时保留 ATE、IDF1、MPJPE/MPVPE、Seam 和安全 fallback，才升级为 v18；否则最终方法继续冻结为 v17。判定由 `evaluate_holdout_candidate.py` 自动执行，不按结果人工改变门槛。
