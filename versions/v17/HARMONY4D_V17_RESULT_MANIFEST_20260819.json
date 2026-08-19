@@ -1,0 +1,56 @@
+{
+  "schema_version": "Movie3R-v17-Harmony4D-result-manifest-v1",
+  "date": "2026-08-19",
+  "method": "Movie3R-v17 MultiCue-Safe",
+  "protocol": "150 frames, 75 pre + 75 post, clip macro, known boundary",
+  "artifacts": {
+    "candidate": {
+      "path": "versions/v17/harmony4d/frozen_multicue_candidate.json",
+      "sha256": "ae2bc503ca5abdb0735abea231b6b953c0463d2e33f96741469191ad71adbafe"
+    },
+    "v16_frozen_test_summary": {
+      "path": "output/v16_harmony4d/test_batch/paper/summary.json",
+      "sha256": "4a252d964a8d8042fb89a928be6bf28306617666b437a431990ae7b9e09a9af6"
+    },
+    "v17_seen_test_regression": {
+      "path": "output/v17_harmony4d/seen_test_regression/paper/summary.json",
+      "sha256": "19beb82e8b4cfb0b2638e5b581cf99c789be8588c8e0fc8974d6b870a2846e73"
+    },
+    "train10_manifest": {
+      "path": "output/v17_harmony4d/new_holdout/staging/10_karate2/generated_manifest.jsonl",
+      "sha256": "fc77e988169058265b19176dbc1d56f8331545e8cb59df1969d6a7691b83a7eb"
+    },
+    "train10_report": {
+      "path": "output/v17_harmony4d/new_holdout/per_sequence/10_karate2.json",
+      "sha256": "d478e3b7ffc1261ad4e7593497c8bf1658b414a6ceecf08aba5c36af0dadba1d"
+    },
+    "train11_manifest": {
+      "path": "output/v17_harmony4d/new_holdout/staging/11_karate3/generated_manifest.jsonl",
+      "sha256": "c0362b5592e539923c6afa53c6f2302241ed139b3e5cd5b221a10b46f45f1657"
+    },
+    "train11_report": {
+      "path": "output/v17_harmony4d/new_holdout/per_sequence/11_karate3.json",
+      "sha256": "d5032877071146177aaabb8daebcf4e5a7a80717ec15b2b3f55219859488c710"
+    },
+    "new_holdout_summary": {
+      "path": "output/v17_harmony4d/new_holdout/paper/summary.json",
+      "sha256": "bdcc4d2242bef5ef63915a837220095ed357c8a00db1df804f1ee3b47ce78c2a"
+    },
+    "new_holdout_case_csv": {
+      "path": "output/v17_harmony4d/new_holdout/paper/case_metrics.csv",
+      "sha256": "ce9abc1d836fb887a6e643d89c7374e4d5af417f8fc9fdc0f1a19737777b4e65"
+    },
+    "new_holdout_latex_table": {
+      "path": "output/v17_harmony4d/new_holdout/paper/main_table.tex",
+      "sha256": "9e6f3a385000cce887b385f8e1366cb4731b5770c79daf5b1d13575654ba8be8"
+    }
+  },
+  "counts": {
+    "frozen_test_preregistered": 28,
+    "frozen_test_evaluable": 25,
+    "frozen_test_evaluator_unavailable": 3,
+    "new_holdout_preregistered": 8,
+    "new_holdout_evaluable": 8,
+    "new_holdout_evaluator_unavailable": 0
+  }
+}
