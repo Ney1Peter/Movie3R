@@ -1,0 +1,31 @@
+{
+  "phase": "frozen after train01 exploration plus train03/train15-capture005 validation and before any v16 holdout evaluation",
+  "frozen_at": "2026-08-19",
+  "method_name": "Movie3R-v16-Harmony-Safe",
+  "gate_provenance": {
+    "development_sets": [
+      "Harmony4D train/01_hugging",
+      "Harmony4D train/03_grappling2 capture008",
+      "Harmony4D train/15_mma4 capture005"
+    ],
+    "unread_at_freeze": [
+      "Harmony4D train/15_mma4 capture014 under v16",
+      "Harmony4D train/09_karate under v16"
+    ],
+    "rule": "accept only when at least two predicted boundary matches yield <=0.25 m mean torso residual; otherwise return the exact M15 geometry"
+  },
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry"
+    },
+    {
+      "name": "v16_harmony_safe",
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "root_alpha": 0.5,
+      "root_beta": 0.02,
+      "gate_max_boundary_residual_m": 0.25,
+      "gate_min_matches": 2
+    }
+  ]
+}

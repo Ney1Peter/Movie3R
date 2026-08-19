@@ -1,0 +1,24 @@
+{
+  "phase": "train01-only composition after orthogonal round-1",
+  "frozen_before_validation": true,
+  "candidates": [
+    {"name": "v16_0_m15_geometry"},
+
+    {"name": "root_a0.5_b0.02", "root_alpha": 0.5, "root_beta": 0.02},
+    {"name": "root_a0.6_b0.02", "root_alpha": 0.6, "root_beta": 0.02},
+    {"name": "root_a0.6_b0.05", "root_alpha": 0.6, "root_beta": 0.05},
+    {"name": "root_a0.7_b0.05", "root_alpha": 0.7, "root_beta": 0.05},
+    {"name": "root_a0.8_b0.05", "root_alpha": 0.8, "root_beta": 0.05},
+
+    {"name": "hcbr_t1_root_a0.5_b0.02", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02},
+    {"name": "hcbr_t1_root_a0.6_b0.02", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.6, "root_beta": 0.02},
+    {"name": "hcbr_t1_root_a0.6_b0.05", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.6, "root_beta": 0.05},
+    {"name": "hcbr_t1_root_a0.7_b0.05", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.7, "root_beta": 0.05},
+    {"name": "hcbr_t1_vel_root_a0.6_b0.05", "boundary_kind": "translation", "boundary_blend": 1.0, "use_velocity_target": true, "root_alpha": 0.6, "root_beta": 0.05},
+
+    {"name": "csgs0_hcbr_t1_root_a0.6_b0.02", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.6, "root_beta": 0.02},
+    {"name": "csgs0_hcbr_t1_root_a0.6_b0.05", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.6, "root_beta": 0.05},
+    {"name": "csgs0_hcbr_t1_root_a0.7_b0.05", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.7, "root_beta": 0.05},
+    {"name": "csgs0_hcbr_t1_vel_root_a0.6_b0.05", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 1.0, "use_velocity_target": true, "root_alpha": 0.6, "root_beta": 0.05}
+  ]
+}
