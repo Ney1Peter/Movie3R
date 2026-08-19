@@ -1,0 +1,33 @@
+{
+  "phase": "orthogonal finite grid frozen before new train-development inference",
+  "frozen_at": "2026-08-19",
+  "source": "Movie3R-v17 MultiCue-Safe",
+  "candidates": [
+    {"name": "v16_0_m15_geometry"},
+    {"name": "v17_reference", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+
+    {"name": "gate_r015_t12", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.15, "gate_min_matches": 2, "gate_max_translation_m": 1.2},
+    {"name": "gate_r015_t14", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.15, "gate_min_matches": 2, "gate_max_translation_m": 1.4},
+    {"name": "gate_r015_t16", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.15, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "gate_r020_t12", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.20, "gate_min_matches": 2, "gate_max_translation_m": 1.2},
+    {"name": "gate_r020_t14", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.20, "gate_min_matches": 2, "gate_max_translation_m": 1.4},
+    {"name": "gate_r020_t16", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.20, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "gate_r025_t12", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.2},
+    {"name": "gate_r025_t14", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.4},
+
+    {"name": "blend_075", "boundary_kind": "translation", "boundary_blend": 0.75, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "blend_090", "boundary_kind": "translation", "boundary_blend": 0.90, "root_alpha": 0.5, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+
+    {"name": "root_a035_b000", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.35, "root_beta": 0.00, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a035_b002", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.35, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a035_b005", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.35, "root_beta": 0.05, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a050_b000", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.50, "root_beta": 0.00, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a050_b005", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.50, "root_beta": 0.05, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a065_b000", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.65, "root_beta": 0.00, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a065_b002", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.65, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a065_b005", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.65, "root_beta": 0.05, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a080_b000", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.80, "root_beta": 0.00, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a080_b002", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.80, "root_beta": 0.02, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6},
+    {"name": "root_a080_b005", "boundary_kind": "translation", "boundary_blend": 1.0, "root_alpha": 0.80, "root_beta": 0.05, "gate_max_boundary_residual_m": 0.25, "gate_min_matches": 2, "gate_max_translation_m": 1.6}
+  ]
+}
