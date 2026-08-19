@@ -51,6 +51,7 @@ SEQUENCES: tuple[dict[str, Any], ...] = (
     {
         "slug": "test_08_ballroom2", "entry": "test/08_ballroom2.zip",
         "prediction_roots": ("test_08_ballroom2",), "expected_cases": 4,
+        "minimum_complete_cases": 1,
     },
     {
         "slug": "test_16_mma5", "entry": "test/16_mma5.zip",
@@ -113,7 +114,7 @@ def disk_state(path: Path) -> dict[str, float]:
     }
 
 
-def valid_result(path: Path, expected_cases: int) -> bool:
+def valid_result(path: Path, expected_cases: int, minimum_complete_cases: int | None = None) -> bool:
     if not path.is_file():
         return False
     try:
@@ -127,7 +128,12 @@ def valid_result(path: Path, expected_cases: int) -> bool:
         row for row in payload.get("reference_rows", [])
         if row.get("status") == "complete"
     ]
-    if len(rows) != 2 * expected_cases or len(references) != len(REFERENCES) * expected_cases:
+    complete_cases = len({row["case_id"] for row in rows})
+    minimum = expected_cases if minimum_complete_cases is None else minimum_complete_cases
+    skipped = payload.get("skipped_cases", [])
+    if complete_cases < minimum or complete_cases + len(skipped) != expected_cases:
+        return False
+    if len(rows) != 2 * complete_cases or len(references) != len(REFERENCES) * complete_cases:
         return False
     return all(REQUIRED_METRICS <= set(row.get("metrics", {})) for row in rows + references)
 
@@ -192,7 +198,9 @@ def main() -> None:
             f"[{index}/{len(selected)}] {slug}: free={disk_state(args.work_root)['free_gib']:.1f} GiB",
             flush=True,
         )
-        if valid_result(result_path, int(spec["expected_cases"])):
+        if valid_result(
+            result_path, int(spec["expected_cases"]), spec.get("minimum_complete_cases")
+        ):
             state["sequences"][slug] = {
                 "status": "complete_cached", "result": str(result_path.resolve()),
                 "disk_after": disk_state(args.work_root),
@@ -244,7 +252,9 @@ def main() -> None:
         returncode, probe_seconds = run(
             probe_command, args.output_root / "logs" / f"{slug}.probe.log"
         )
-        complete = returncode == 0 and valid_result(result_path, int(spec["expected_cases"]))
+        complete = returncode == 0 and valid_result(
+            result_path, int(spec["expected_cases"]), spec.get("minimum_complete_cases")
+        )
         if not complete:
             error = f"probe_exit_{returncode}_or_incomplete_result"
             failures.append({"sequence": slug, "error": error})

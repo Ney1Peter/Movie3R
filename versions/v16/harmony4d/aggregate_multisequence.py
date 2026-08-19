@@ -237,7 +237,8 @@ def markdown_summary(result: dict[str, Any]) -> str:
     lines = [
         "# Movie3R-v16 Harmony4D frozen test summary", "",
         f"- Sequences: {result['sequence_count']}",
-        f"- Cases: {result['case_count']} (150 frames, 75+75)",
+        f"- Cases: {result['case_count']} evaluable / {result['manifest_case_count']} preregistered (150 frames, 75+75)",
+        f"- Evaluator-unavailable: {result['evaluator_unavailable_count']} (method-independent, IDs retained)",
         f"- Gate: {result['gate']['accepted']} accepted / {result['gate']['fallback']} fallback", "",
         "| Method | " + " | ".join(labels) + " |",
         "|---|" + "---:|" * len(labels),
@@ -269,11 +270,15 @@ def main() -> None:
     rng = np.random.default_rng(int(args.seed))
     rows_by_method: dict[str, list[dict[str, Any]]] = defaultdict(list)
     sources = []
+    skipped_cases = []
+    manifest_case_count = 0
     for path in files:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if payload.get("errors"):
             raise ValueError(f"Incomplete probe report: {path}: {payload['errors']}")
         sources.append(str(path))
+        manifest_case_count += int(payload.get("case_count", 0))
+        skipped_cases.extend(payload.get("skipped_cases", []))
         for row in payload.get("reference_rows", []):
             if row.get("status") == "complete":
                 rows_by_method[str(row["method"])].append(row)
@@ -351,7 +356,9 @@ def main() -> None:
     result = {
         "schema_version": "Movie3R-v16-Harmony4D-multisequence-summary-v1",
         "sources": sources, "method": PRIMARY, "parent": PARENT,
-        "case_count": len(case_ids), "sequence_count": len(sequences),
+        "case_count": len(case_ids), "manifest_case_count": manifest_case_count,
+        "evaluator_unavailable_count": len(skipped_cases),
+        "skipped_cases": skipped_cases, "sequence_count": len(sequences),
         "sequences": sorted(sequences),
         "protocol": {
             "frames": 150, "pre_frames": 75, "post_frames": 75,
@@ -359,6 +366,7 @@ def main() -> None:
             "uncertainty": "hierarchical sequence-then-clip bootstrap",
             "paired_test_unit": "sequence",
             "test_used_for_parameter_selection": False,
+            "exclusion_rule": "method-independent evaluator unavailable only",
         },
         "gate": {
             "accepted": len(accepted), "fallback": len(primary_rows) - len(accepted),

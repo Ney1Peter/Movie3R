@@ -331,6 +331,31 @@ def main() -> None:
                     "error": f"{type(error).__name__}: {error}",
                 })
                 errors.append(f"{case_id}:{candidate.name}:{type(error).__name__}:{error}")
+    all_evaluations = rows + reference_rows
+    by_case: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in all_evaluations:
+        by_case[str(row["case_id"])].append(row)
+    expected_per_case = len(candidates) + len(args.reference_methods)
+    evaluator_unavailable_message = "ValueError: No initial matched people for shared world fit"
+    skipped_cases = []
+    for case_id, values in sorted(by_case.items()):
+        if (
+            len(values) == expected_per_case
+            and all(row.get("status") == "error" for row in values)
+            and all(row.get("error") == evaluator_unavailable_message for row in values)
+        ):
+            skipped_cases.append({
+                "case_id": case_id,
+                "status": "evaluator_unavailable",
+                "reason": evaluator_unavailable_message,
+                "method_independent": True,
+                "evaluations_affected": expected_per_case,
+            })
+    skipped_ids = {row["case_id"] for row in skipped_cases}
+    errors = [
+        value for value in errors
+        if value.split(":", 1)[0] not in skipped_ids
+    ]
     aggregation = aggregate(rows, candidates)
     payload = {
         "schema_version": "Movie3R-v16-Harmony4D-causal-stabilization-probe-v1",
@@ -342,6 +367,10 @@ def main() -> None:
         "include_case_regex": args.include_case_regex,
         "candidate_count": len(candidates),
         "case_count": len({row["case_id"] for row in rows}),
+        "complete_case_count": len({
+            row["case_id"] for row in rows if row["status"] == "complete"
+        }),
+        "skipped_cases": skipped_cases,
         "errors": errors,
         "aggregate": aggregation,
         "rows": rows,
