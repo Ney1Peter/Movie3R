@@ -185,6 +185,7 @@ def exact_or_mc_sign_p(differences: np.ndarray, rng: np.random.Generator) -> dic
 def paired_sequence_test(
     primary: list[dict[str, Any]], baseline: list[dict[str, Any]], metric: str,
     higher: bool, rng: np.random.Generator,
+    zero_all_fallback_sequences: bool = False,
 ) -> dict[str, Any]:
     def means(rows: list[dict[str, Any]]) -> dict[str, float]:
         grouped: dict[str, list[float]] = defaultdict(list)
@@ -196,10 +197,26 @@ def paired_sequence_test(
 
     first, second = means(primary), means(baseline)
     sequences = sorted(set(first) & set(second))
-    delta = np.asarray([first[key] - second[key] for key in sequences], dtype=np.float64)
+    exact_fallback_sequences: set[str] = set()
+    if zero_all_fallback_sequences:
+        gate_by_sequence: dict[str, list[bool]] = defaultdict(list)
+        for row in primary:
+            accepted = bool(
+                row.get("diagnostics", {}).get("reliability_gate", {}).get("accepted")
+            )
+            gate_by_sequence[str(row["sequence"])].append(accepted)
+        exact_fallback_sequences = {
+            sequence for sequence, decisions in gate_by_sequence.items()
+            if decisions and not any(decisions)
+        }
+    delta = np.asarray([
+        0.0 if key in exact_fallback_sequences else first[key] - second[key]
+        for key in sequences
+    ], dtype=np.float64)
     oriented = delta if higher else -delta
     return {
         "unit": "sequence", "sequences": sequences,
+        "exact_fallback_zeroed_sequences": sorted(exact_fallback_sequences),
         "primary_minus_baseline_mean": float(delta.mean()) if len(delta) else None,
         "primary_better_fraction": float(np.mean(oriented > 0)) if len(oriented) else None,
         **exact_or_mc_sign_p(delta, rng),
@@ -349,7 +366,8 @@ def main() -> None:
             continue
         significance[method] = {
             metric: paired_sequence_test(
-                rows_by_method[primary], rows_by_method[method], metric, higher, rng
+                rows_by_method[primary], rows_by_method[method], metric, higher, rng,
+                zero_all_fallback_sequences=(method == parent),
             )
             for metric, _, higher in METRICS
         }

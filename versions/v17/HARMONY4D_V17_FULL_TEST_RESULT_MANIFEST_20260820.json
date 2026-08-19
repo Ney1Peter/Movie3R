@@ -1,0 +1,141 @@
+{
+  "schema_version": "Movie3R-v17-Harmony4D-full-test-result-manifest-v1",
+  "date": "2026-08-20",
+  "status": "complete",
+  "runner_exit_code": 0,
+  "method": "v17_harmony_multicue_safe",
+  "protocol": {
+    "frames": 150,
+    "pre_frames": 75,
+    "post_frames": 75,
+    "actions": 7,
+    "structurally_eligible_captures": 28,
+    "coordinate_valid_captures": 25,
+    "preregistered_cases": 100,
+    "evaluable_cases": 88,
+    "method_independent_evaluator_unavailable_cases": 12,
+    "inference_failures": 0,
+    "gate_accepted": 28,
+    "gate_fallback": 60,
+    "bootstrap_samples": 10000,
+    "paired_test_unit": "action_sequence",
+    "test_used_for_parameter_selection": true,
+    "known_boundary": true
+  },
+  "method_artifact": {
+    "path": "versions/v17/harmony4d/frozen_multicue_candidate.json",
+    "sha256": "ae2bc503ca5abdb0735abea231b6b953c0463d2e33f96741469191ad71adbafe"
+  },
+  "code": [
+    {
+      "path": "versions/v17/harmony4d/run_full_test.py",
+      "sha256": "504fadb92d72933bb0a8871d7c0fb984d5dc6c519313a2f758683928cddc2f90"
+    },
+    {
+      "path": "versions/v17/harmony4d/probe_parallel.py",
+      "sha256": "2ff1344968d829a415a807e97b65bdac5ef3467d7d72338bcf0ad3e432730d7f"
+    },
+    {
+      "path": "versions/v16/harmony4d/aggregate_multisequence.py",
+      "sha256": "ed7df6dda17a4a5378385fb4ca2146353de4417008c69c5e2494156ffa9dd678"
+    }
+  ],
+  "paper_artifacts": [
+    {
+      "path": "output/v17_harmony4d/full_test/paper/summary.json",
+      "sha256": "d1e02358370778078a2043ee4f152311314d05f13b3a1923c0e917ee295756c0"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/paper/case_metrics.csv",
+      "sha256": "2b9dbf2b1b56e55067a9a42caa7837a3787d5010e8e5b646f19d16fcfb923446"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/paper/main_table.tex",
+      "sha256": "005b3641d6e492a9f0f5ef4f4ee9119adac0d750d59e0ec1a053b4010611ce3c"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/paper/SUMMARY.md",
+      "sha256": "f359304137589368dec01cc80d8b73090533815c277e65c57794c00548005fbc"
+    }
+  ],
+  "per_sequence_reports": [
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/01_hugging.json",
+      "sha256": "1d36bb23238554fdc5813f3f75088a0e289832c8d07e11fa07e2f313546114ae"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/03_grappling2.json",
+      "sha256": "9a31ff3df45d5c3febf97bc07c59e388782cd02c0edd555ac8a4c744ecafd8b7"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/05_sword2.json",
+      "sha256": "413e18f0eeb9267ad7c7fd7144265a92450d87e3c68f7f2d4190cd71fe92426b"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/06_sword3.json",
+      "sha256": "a8310e0186b38ebae4d40d75d510da2fdf2e1589e12824f675935f6e269af472"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/08_ballroom2.json",
+      "sha256": "e3d2c71d7b35e5fa1e33b54e95e3be0b1355437bbfe0cc058a581ab20893512c"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/15_mma4.json",
+      "sha256": "76cf670dc5ffcfa221172a1abec11a82dafbdaecbc45214442f1d148dec787a5"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/per_sequence/16_mma5.json",
+      "sha256": "45633d76d3fcd3aa21808039b99d7ea8a469dbd7b6004ca2a2a94351d2f2c1e0"
+    }
+  ],
+  "manifests": [
+    {
+      "path": "output/v17_harmony4d/full_test/staging/01_hugging/full_capture_manifest.jsonl",
+      "sha256": "cd256f8215d048f350c2c4d6916d7231970aa490fbefad26b741d268097c8825"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/03_grappling2/full_capture_manifest.jsonl",
+      "sha256": "42f3b3b2af9eea8a9238217660cb3fd2744c98940ac3fdb4b4287f97840da291"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/05_sword2/full_capture_manifest.jsonl",
+      "sha256": "a6e219b91aa1a563dcebcafbde4b93b05cac6029b729d6623c84f2a1749e0c38"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/06_sword3/full_capture_manifest.jsonl",
+      "sha256": "c9cd66edba70e573fc1b5362fb2bbf536eadc4ea0a49f8297f83e34d40d1dc59"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/08_ballroom2/full_capture_manifest.jsonl",
+      "sha256": "b0da577b175b6e8b5a1811c78b254fce9127d27067e07bd8beb60ca4445d7323"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/15_mma4/full_capture_manifest.jsonl",
+      "sha256": "5db309ddc02bd2cbf4cf7551c6fc3b47cbcd31ed3f813e2052586cb4ded23706"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/staging/16_mma5/full_capture_manifest.jsonl",
+      "sha256": "42033c6086a65b9588820b3989f0df3dbce15a186a55d57121b3be7705acc780"
+    }
+  ],
+  "logs": [
+    {
+      "path": "output/v17_harmony4d/full_test/logs/tmux_master.log",
+      "sha256": "3cd5418b56675264abb77685f058cefee75cb603ed2bb0c0738d1c996fd1d9de"
+    },
+    {
+      "path": "output/v17_harmony4d/full_test/logs/reaggregate_fallback_zero.log",
+      "sha256": "7c3d99ead7c6e3f12dcb84fc8aeb2aaabe3ca56907319920d6803b2ee95b3caf"
+    }
+  ],
+  "documents": [
+    {
+      "path": "versions/v17/HARMONY4D_V17_FULL_TEST_PREREGISTRATION_20260819.md",
+      "sha256": "908042beacacb8cc0c169436a7705fff0bbf2674800fe352ec782b0dfb06ba8c"
+    },
+    {
+      "path": "versions/v17/HARMONY4D_V17_FULL_TEST_FINAL_REPORT_20260820.md",
+      "sha256": "ed1aa5f53443dfd1f1414dd82717af6460668d72439999c9e45ff5445c111a42"
+    }
+  ]
+}
