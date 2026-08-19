@@ -32,6 +32,8 @@ class Candidate:
     root_beta: float = 0.0
     gate_max_boundary_residual_m: float | None = None
     gate_min_matches: int = 0
+    gate_min_match_fraction: float = 0.0
+    gate_max_translation_m: float | None = None
 
 
 def clone_arrays(arrays: ArrayDict) -> ArrayDict:
@@ -216,6 +218,7 @@ def coupled_boundary_register(
     kind: RegistrationKind,
     blend: float,
     use_velocity_target: bool = False,
+    materialize: bool = True,
 ) -> tuple[ArrayDict, dict[str, Any]]:
     """Estimate one human-anchored SE(3) and move the entire post shot with it."""
 
@@ -230,6 +233,8 @@ def coupled_boundary_register(
         raise ValueError(f"boundary blend must be in [0, 1], got {blend}")
     if boundary <= 0 or boundary >= len(arrays["valid"]):
         return clone_arrays(arrays), {"policy": kind, "accepted": False, "reason": "boundary_out_of_range"}
+    pre_valid_count = int(np.asarray(arrays["valid"][boundary - 1]).astype(bool).sum())
+    post_valid_count = int(np.asarray(arrays["valid"][boundary]).astype(bool).sum())
     target_rows, source_rows, root_offsets = [], [], []
     accepted_pairs = []
     for pre_index, post_index in pairs:
@@ -247,6 +252,9 @@ def coupled_boundary_register(
     if not accepted_pairs:
         return clone_arrays(arrays), {
             "policy": kind, "accepted": False, "reason": "no_valid_boundary_pairs",
+            "pre_valid_count": pre_valid_count,
+            "post_valid_count": post_valid_count,
+            "match_fraction": 0.0,
             "camera_human_relative_geometry_invariant": True,
         }
     target = np.concatenate(target_rows, axis=0)
@@ -267,9 +275,10 @@ def coupled_boundary_register(
     transform = np.eye(4, dtype=np.float64)
     transform[:3, :3] = blended_rotation
     transform[:3, 3] = blended_translation
-    output = clone_arrays(arrays)
-    for frame in range(boundary, len(output["valid"])):
-        _transform_frame_inplace(output, frame, transform)
+    output = clone_arrays(arrays) if materialize else arrays
+    if materialize:
+        for frame in range(boundary, len(output["valid"])):
+            _transform_frame_inplace(output, frame, transform)
     residual_before = np.linalg.norm(source - target, axis=1)
     residual_after = np.linalg.norm(transform_points(transform, source) - target, axis=1)
     return output, {
@@ -277,6 +286,11 @@ def coupled_boundary_register(
         "accepted": True,
         "matched_pairs": accepted_pairs,
         "matched_count": len(accepted_pairs),
+        "pre_valid_count": pre_valid_count,
+        "post_valid_count": post_valid_count,
+        "match_fraction": float(
+            len(accepted_pairs) / max(pre_valid_count, post_valid_count, 1)
+        ),
         "blend": float(blend),
         "use_velocity_target": bool(use_velocity_target),
         "translation_m": float(np.linalg.norm(transform[:3, 3])),
@@ -287,6 +301,59 @@ def coupled_boundary_register(
         "torso_residual_after_m": float(residual_after.mean()),
         "camera_human_relative_geometry_invariant": True,
         "transform": transform.tolist(),
+        "materialized": bool(materialize),
+    }
+
+
+def reliability_gate_diagnostics(
+    boundary_debug: dict[str, Any], candidate: Candidate,
+) -> dict[str, Any]:
+    """Evaluate the prediction-only multi-cue trust gate without materializing geometry."""
+
+    gate_enabled = (
+        candidate.gate_max_boundary_residual_m is not None
+        or candidate.gate_min_matches > 0
+        or candidate.gate_min_match_fraction > 0.0
+        or candidate.gate_max_translation_m is not None
+    )
+    residual = boundary_debug.get("torso_residual_after_m")
+    matched_count = int(boundary_debug.get("matched_count", 0))
+    match_fraction = float(boundary_debug.get("match_fraction", 0.0))
+    translation = boundary_debug.get("translation_m")
+    gate_reasons = []
+    if not boundary_debug.get("accepted", False):
+        gate_reasons.append("boundary_registration_unavailable")
+    if matched_count < int(candidate.gate_min_matches):
+        gate_reasons.append("insufficient_boundary_matches")
+    if match_fraction < float(candidate.gate_min_match_fraction):
+        gate_reasons.append("insufficient_match_fraction")
+    if (
+        candidate.gate_max_boundary_residual_m is not None
+        and (residual is None or float(residual) > candidate.gate_max_boundary_residual_m)
+    ):
+        gate_reasons.append("boundary_residual_too_large")
+    if (
+        candidate.gate_max_translation_m is not None
+        and (
+            translation is None
+            or float(translation) > candidate.gate_max_translation_m
+        )
+    ):
+        gate_reasons.append("boundary_translation_outside_trust_region")
+    return {
+        "enabled": gate_enabled,
+        "accepted": not gate_enabled or not gate_reasons,
+        "max_boundary_residual_m": candidate.gate_max_boundary_residual_m,
+        "min_matches": int(candidate.gate_min_matches),
+        "min_match_fraction": float(candidate.gate_min_match_fraction),
+        "max_translation_m": candidate.gate_max_translation_m,
+        "observed_boundary_residual_m": residual,
+        "observed_matches": matched_count,
+        "observed_match_fraction": match_fraction,
+        "observed_translation_m": translation,
+        "reasons": gate_reasons,
+        "fallback": "exact_m15_geometry_after_boundary_permutation",
+        "gt_used": False,
     }
 
 
@@ -346,35 +413,8 @@ def apply_candidate(
         current, boundary, pairs, candidate.boundary_kind,
         candidate.boundary_blend, candidate.use_velocity_target,
     )
-    gate_enabled = (
-        candidate.gate_max_boundary_residual_m is not None
-        or candidate.gate_min_matches > 0
-    )
-    residual = boundary_debug.get("torso_residual_after_m")
-    matched_count = int(boundary_debug.get("matched_count", 0))
-    gate_reasons = []
-    if not boundary_debug.get("accepted", False):
-        gate_reasons.append("boundary_registration_unavailable")
-    if matched_count < int(candidate.gate_min_matches):
-        gate_reasons.append("insufficient_boundary_matches")
-    if (
-        candidate.gate_max_boundary_residual_m is not None
-        and (residual is None or float(residual) > candidate.gate_max_boundary_residual_m)
-    ):
-        gate_reasons.append("boundary_residual_too_large")
-    gate_accepted = not gate_enabled or not gate_reasons
-    gate_debug = {
-        "enabled": gate_enabled,
-        "accepted": gate_accepted,
-        "max_boundary_residual_m": candidate.gate_max_boundary_residual_m,
-        "min_matches": int(candidate.gate_min_matches),
-        "observed_boundary_residual_m": residual,
-        "observed_matches": matched_count,
-        "reasons": gate_reasons,
-        "fallback": "exact_m15_geometry_after_boundary_permutation",
-        "gt_used": False,
-    }
-    if gate_enabled and not gate_accepted:
+    gate_debug = reliability_gate_diagnostics(boundary_debug, candidate)
+    if gate_debug["enabled"] and not gate_debug["accepted"]:
         return exact_m15_fallback, {
             "candidate": candidate.__dict__,
             "identity": identity_debug,

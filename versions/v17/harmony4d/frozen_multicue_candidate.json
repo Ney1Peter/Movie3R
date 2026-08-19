@@ -1,0 +1,40 @@
+{
+  "phase": "post-v16 regression candidate; thresholds derived only from the pre-existing frozen development reports and requiring a new untouched holdout",
+  "frozen_at": "2026-08-19",
+  "method_name": "Movie3R-v17-MultiCue-Safe",
+  "development_evidence": {
+    "reports": [
+      "output/v16_harmony4d/frozen_dev/train01.json",
+      "output/v16_harmony4d/frozen_dev/train03.json",
+      "output/v16_harmony4d/frozen_dev/train15_capture005.json"
+    ],
+    "accepted_support_range": {
+      "minimum_bidirectional_match_fraction": 0.6666666666666666,
+      "maximum_boundary_translation_m": 1.5257806453811695
+    },
+    "active_rounded_prediction_only_limits": {
+      "maximum_boundary_translation_m": 1.6
+    },
+    "audited_but_not_activated": {
+      "minimum_bidirectional_match_fraction": 0.6,
+      "reason": "redundant with the displacement trust region and unnecessarily conservative in seen-test regression; not selected as a final threshold"
+    },
+    "test_set_role": "The already observed seven-sequence v16 test may be used only as a regression diagnostic, never as fresh v17 validation."
+  },
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry"
+    },
+    {
+      "name": "v17_harmony_multicue_safe",
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "root_alpha": 0.5,
+      "root_beta": 0.02,
+      "gate_max_boundary_residual_m": 0.25,
+      "gate_min_matches": 2,
+      "gate_min_match_fraction": 0.0,
+      "gate_max_translation_m": 1.6
+    }
+  ]
+}

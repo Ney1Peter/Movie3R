@@ -139,3 +139,26 @@ def test_reliability_gate_accepts_well_registered_boundary() -> None:
     assert debug["reliability_gate"]["accepted"]
     assert not debug["runtime_contract"]["exact_m15_fallback"]
     assert not np.allclose(gated["cameras_c2w"][3:], arrays["cameras_c2w"][3:])
+
+
+def test_multicue_gate_rejects_low_coverage_and_large_translation() -> None:
+    arrays = synthetic_arrays(people=3)
+    gated, debug = apply_candidate(
+        arrays, boundary=3, pairs=[(0, 0), (1, 1)],
+        candidate=Candidate(
+            "multicue_fallback",
+            boundary_kind="translation",
+            boundary_blend=1.0,
+            gate_max_boundary_residual_m=0.25,
+            gate_min_matches=2,
+            gate_min_match_fraction=0.75,
+            gate_max_translation_m=0.5,
+        ),
+    )
+    gate = debug["reliability_gate"]
+    assert not gate["accepted"]
+    assert gate["observed_match_fraction"] == 2.0 / 3.0
+    assert "insufficient_match_fraction" in gate["reasons"]
+    assert "boundary_translation_outside_trust_region" in gate["reasons"]
+    assert debug["runtime_contract"]["exact_m15_fallback"]
+    np.testing.assert_allclose(gated["cameras_c2w"], arrays["cameras_c2w"])

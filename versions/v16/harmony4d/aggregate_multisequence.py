@@ -71,6 +71,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bootstrap", type=int, default=10_000)
     parser.add_argument("--seed", type=int, default=20260819)
+    parser.add_argument("--primary", default=PRIMARY)
+    parser.add_argument("--parent", default=PARENT)
+    parser.add_argument("--primary-display-name")
+    parser.add_argument("--parent-display-name")
+    parser.add_argument("--title", default="Movie3R-v16 Harmony4D frozen test summary")
+    parser.add_argument("--test-used-for-parameter-selection", action="store_true")
     return parser.parse_args()
 
 
@@ -200,7 +206,9 @@ def paired_sequence_test(
     }
 
 
-def tex_table(summary: dict[str, Any]) -> str:
+def tex_table(
+    summary: dict[str, Any], method_order: tuple[str, ...], display_names: dict[str, str],
+) -> str:
     columns = (
         "W-MPJPE_mm", "WA-MPJPE_mm", "RTE_H3R_percent", "ATE_Sim3_m",
         "IDF1", "IDs", "Accel_mm_frame2",
@@ -212,7 +220,7 @@ def tex_table(summary: dict[str, Any]) -> str:
         "\\begin{tabular}{l" + "r" * len(columns) + "}", "\\toprule",
         "Method & " + " & ".join(labels) + row_end, "\\midrule",
     ]
-    for method in METHOD_ORDER:
+    for method in method_order:
         if method not in summary:
             continue
         values = []
@@ -226,16 +234,18 @@ def tex_table(summary: dict[str, Any]) -> str:
                 values.append(f"{value:.3f}")
             else:
                 values.append(f"{value:.1f}")
-        lines.append(DISPLAY_NAMES[method] + " & " + " & ".join(values) + row_end)
+        lines.append(display_names[method] + " & " + " & ".join(values) + row_end)
     lines.extend(("\\bottomrule", "\\end{tabular}", ""))
     return "\n".join(lines)
 
 
-def markdown_summary(result: dict[str, Any]) -> str:
+def markdown_summary(
+    result: dict[str, Any], method_order: tuple[str, ...], display_names: dict[str, str],
+) -> str:
     columns = ("W-MPJPE_mm", "WA-MPJPE_mm", "MPJPE_mm", "MPVPE_mm", "Accel_mm_frame2", "ATE_Sim3_m", "IDF1", "IDs")
     labels = ("W", "WA", "MPJPE", "MPVPE", "Accel", "ATE", "IDF1", "IDs")
     lines = [
-        "# Movie3R-v16 Harmony4D frozen test summary", "",
+        f"# {result['title']}", "",
         f"- Sequences: {result['sequence_count']}",
         f"- Cases: {result['case_count']} evaluable / {result['manifest_case_count']} preregistered (150 frames, 75+75)",
         f"- Evaluator-unavailable: {result['evaluator_unavailable_count']} (method-independent, IDs retained)",
@@ -243,7 +253,7 @@ def markdown_summary(result: dict[str, Any]) -> str:
         "| Method | " + " | ".join(labels) + " |",
         "|---|" + "---:|" * len(labels),
     ]
-    for method in METHOD_ORDER:
+    for method in method_order:
         if method not in result["methods"]:
             continue
         values = []
@@ -257,7 +267,7 @@ def markdown_summary(result: dict[str, Any]) -> str:
                 values.append(f"{value:.4f}")
             else:
                 values.append(f"{value:.1f}")
-        lines.append(f"| {DISPLAY_NAMES[method]} | " + " | ".join(values) + " |")
+        lines.append(f"| {display_names[method]} | " + " | ".join(values) + " |")
     lines.extend((
         "", "Multi-THuMBS literature values are stored only as protocol-different context; they are not treated as a same-manifest leaderboard comparison.", "",
     ))
@@ -266,6 +276,18 @@ def markdown_summary(result: dict[str, Any]) -> str:
 
 def main() -> None:
     args = parse_args()
+    primary = str(args.primary)
+    parent = str(args.parent)
+    method_order = (
+        "m0_strict_human3r",
+        "m15_safe_boundary_permutation_causal_gru",
+        parent,
+        primary,
+    )
+    method_order = tuple(dict.fromkeys(method_order))
+    display_names = dict(DISPLAY_NAMES)
+    display_names[parent] = args.parent_display_name or display_names.get(parent, parent)
+    display_names[primary] = args.primary_display_name or display_names.get(primary, primary)
     files = source_files(args.inputs)
     rng = np.random.default_rng(int(args.seed))
     rows_by_method: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -287,16 +309,16 @@ def main() -> None:
                 rows_by_method[str(row["candidate"])].append(row)
     case_ids = {row["case_id"] for rows in rows_by_method.values() for row in rows}
     sequences = {row["sequence"] for rows in rows_by_method.values() for row in rows}
-    for method in METHOD_ORDER:
+    for method in method_order:
         ids = [row["case_id"] for row in rows_by_method.get(method, [])]
         if len(ids) != len(case_ids) or len(ids) != len(set(ids)):
             raise ValueError(f"Method {method} has {len(ids)} rows for {len(case_ids)} cases")
 
     summary = {}
-    for method in METHOD_ORDER:
+    for method in method_order:
         rows = rows_by_method[method]
         summary[method] = {
-            "display_name": DISPLAY_NAMES[method],
+            "display_name": display_names[method],
             "case_count": len(rows), "sequence_count": len({row["sequence"] for row in rows}),
             "clip_macro": {
                 metric: distribution([
@@ -322,22 +344,22 @@ def main() -> None:
         }
 
     significance = {}
-    for method in METHOD_ORDER:
-        if method == PRIMARY:
+    for method in method_order:
+        if method == primary:
             continue
         significance[method] = {
             metric: paired_sequence_test(
-                rows_by_method[PRIMARY], rows_by_method[method], metric, higher, rng
+                rows_by_method[primary], rows_by_method[method], metric, higher, rng
             )
             for metric, _, higher in METRICS
         }
 
-    primary_rows = rows_by_method[PRIMARY]
+    primary_rows = rows_by_method[primary]
     accepted = [
         row for row in primary_rows
         if bool(row.get("diagnostics", {}).get("reliability_gate", {}).get("accepted"))
     ]
-    parent_by_case = {row["case_id"]: row for row in rows_by_method[PARENT]}
+    parent_by_case = {row["case_id"]: row for row in rows_by_method[parent]}
     gate_strata = {}
     for name, rows in (("accepted", accepted), ("fallback", [row for row in primary_rows if row not in accepted])):
         gate_strata[name] = {
@@ -355,7 +377,8 @@ def main() -> None:
 
     result = {
         "schema_version": "Movie3R-v16-Harmony4D-multisequence-summary-v1",
-        "sources": sources, "method": PRIMARY, "parent": PARENT,
+        "sources": sources, "method": primary, "parent": parent,
+        "title": str(args.title),
         "case_count": len(case_ids), "manifest_case_count": manifest_case_count,
         "evaluator_unavailable_count": len(skipped_cases),
         "skipped_cases": skipped_cases, "sequence_count": len(sequences),
@@ -365,7 +388,7 @@ def main() -> None:
             "aggregation_primary": "clip_macro",
             "uncertainty": "hierarchical sequence-then-clip bootstrap",
             "paired_test_unit": "sequence",
-            "test_used_for_parameter_selection": False,
+            "test_used_for_parameter_selection": bool(args.test_used_for_parameter_selection),
             "exclusion_rule": "method-independent evaluator unavailable only",
         },
         "gate": {
@@ -392,7 +415,7 @@ def main() -> None:
     with (args.output / "case_metrics.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
-        for method in METHOD_ORDER:
+        for method in method_order:
             for row in sorted(rows_by_method[method], key=lambda value: value["case_id"]):
                 writer.writerow({
                     "case_id": row["case_id"], "sequence": row["sequence"],
@@ -400,13 +423,17 @@ def main() -> None:
                     "person_count": row.get("person_count"), "method": method,
                     **{key: row["metrics"].get(key) for key, _, _ in METRICS},
                 })
-    (args.output / "main_table.tex").write_text(tex_table(summary), encoding="utf-8")
-    (args.output / "SUMMARY.md").write_text(markdown_summary(result), encoding="utf-8")
+    (args.output / "main_table.tex").write_text(
+        tex_table(summary, method_order, display_names), encoding="utf-8"
+    )
+    (args.output / "SUMMARY.md").write_text(
+        markdown_summary(result, method_order, display_names), encoding="utf-8"
+    )
     print(json.dumps({
         "output": str(args.output.resolve()), "cases": len(case_ids),
         "sequences": len(sequences), "gate_accepts": len(accepted),
-        "W_primary": summary[PRIMARY]["clip_macro"]["W-MPJPE_mm"],
-        "W_parent": summary[PARENT]["clip_macro"]["W-MPJPE_mm"],
+        "W_primary": summary[primary]["clip_macro"]["W-MPJPE_mm"],
+        "W_parent": summary[parent]["clip_macro"]["W-MPJPE_mm"],
     }, indent=2, ensure_ascii=False))
 
 
