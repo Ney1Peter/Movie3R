@@ -94,6 +94,74 @@ def pelvis(joints: np.ndarray) -> np.ndarray:
     return np.asarray(joints)[..., [1, 2], :].mean(axis=-2)
 
 
+def procrustes_mpjpe(target: np.ndarray, prediction: np.ndarray) -> float:
+    """Per-frame PA-MPJPE in metres, following Human3R's local protocol."""
+
+    target = np.asarray(target, dtype=np.float64)
+    prediction = np.asarray(prediction, dtype=np.float64)
+    fit = fit_similarity(target, prediction, allow_scale=True)
+    return float(np.linalg.norm(apply_similarity(prediction, fit) - target, axis=-1).mean())
+
+
+def human3r_rte_percent(target_roots: np.ndarray, prediction_roots: np.ndarray) -> np.ndarray:
+    """Human3R/WHAM RTE: rigid alignment and GT path-length normalization.
+
+    This is the NumPy equivalent of ``eval/global_human/utils.py::compute_rte``:
+    the full root trajectory is aligned without scale, per-frame translation
+    error is divided by the sum of consecutive GT root displacements, and the
+    result is reported in percent.
+    """
+
+    target = np.asarray(target_roots, dtype=np.float64).reshape(-1, 3)
+    prediction = np.asarray(prediction_roots, dtype=np.float64).reshape(-1, 3)
+    if len(target) < 3 or target.shape != prediction.shape:
+        return np.empty(0, dtype=np.float64)
+    aligned = apply_similarity(
+        prediction, fit_similarity(target, prediction, allow_scale=False)
+    )
+    displacement = float(np.linalg.norm(np.diff(target, axis=0), axis=1).sum())
+    if displacement <= 1e-12:
+        return np.empty(0, dtype=np.float64)
+    return 100.0 * np.linalg.norm(target - aligned, axis=1) / displacement
+
+
+def human3r_jitter(joints: np.ndarray, fps: float) -> np.ndarray:
+    """Human3R/WHAM third-difference jitter in their ``m/s^3 / 10`` unit."""
+
+    value = np.asarray(joints, dtype=np.float64)
+    if len(value) < 4:
+        return np.empty(0, dtype=np.float64)
+    third = value[3:] - 3.0 * value[2:-1] + 3.0 * value[1:-2] - value[:-3]
+    return np.linalg.norm(third * float(fps) ** 3, axis=-1).mean(axis=-1) / 10.0
+
+
+def foot_sliding_cm(
+    target_vertices: np.ndarray,
+    prediction_vertices: np.ndarray,
+    contact_threshold_m_per_frame: float = 1e-2,
+) -> np.ndarray:
+    """WHAM/Human3R four-vertex foot sliding, expressed in centimetres.
+
+    GT consecutive foot displacement below 1 cm/frame defines contact.  The
+    reported error is the predicted displacement at those same contacts.  The
+    common Harmony4D topology is SMPL-6890, so the official SMPL foot indices
+    are directly applicable.
+    """
+
+    target = np.asarray(target_vertices, dtype=np.float64)
+    prediction = np.asarray(prediction_vertices, dtype=np.float64)
+    if target.shape != prediction.shape or len(target) < 2 or target.shape[-2] != 6890:
+        return np.empty(0, dtype=np.float64)
+    foot_indices = np.asarray([3216, 3387, 6617, 6787], dtype=np.int64)
+    target_step = np.linalg.norm(
+        np.diff(target[:, foot_indices], axis=0), axis=-1
+    )
+    prediction_step = np.linalg.norm(
+        np.diff(prediction[:, foot_indices], axis=0), axis=-1
+    )
+    return 100.0 * prediction_step[target_step < float(contact_threshold_m_per_frame)]
+
+
 def summarize(values: list[float] | np.ndarray, scale: float = 1.0) -> dict[str, Any]:
     array = np.asarray(values, dtype=np.float64).reshape(-1)
     array = array[np.isfinite(array)] * float(scale)
@@ -257,7 +325,7 @@ def evaluate_method(
     aligned_camera[:, :3, :3] = aligned_rotation
     aligned_camera[:, :3, 3] = aligned_centre
 
-    mpjpe, mpvpe = [], []
+    mpjpe, pa_mpjpe, mpvpe = [], [], []
     fixed_root, fixed_joint, fixed_vertex = [], [], []
     fixed_root_by_frame = [[] for _ in range(frame_count)]
     fixed_joint_by_frame = [[] for _ in range(frame_count)]
@@ -289,6 +357,10 @@ def evaluate_method(
                 (pred_camera_joints[pred_index] - pred_pelvis)
                 - (gt_camera_joints[gt_index] - gt_pelvis), axis=1
             ).mean()))
+            pa_mpjpe.append(procrustes_mpjpe(
+                gt_camera_joints[gt_index] - gt_pelvis,
+                pred_camera_joints[pred_index] - pred_pelvis,
+            ))
             mpvpe.append(float(np.linalg.norm(
                 (pred_camera_vertices[pred_index] - pred_pelvis)
                 - (gt_camera_vertices[gt_index] - gt_pelvis), axis=1
@@ -340,6 +412,7 @@ def evaluate_method(
         aligned_pred_vertex_by_frame.append(vertices_this)
 
     w_errors, w_one_errors, wa_errors, accel_discrete, accel_physical = [], [], [], [], []
+    rte_h3r, jitter_h3r, sliding_cm = [], [], []
     motion_rows = []
     for gt_index, track in per_identity.items():
         if not track["frames"]:
@@ -353,6 +426,7 @@ def evaluate_method(
         w_errors.extend(np.linalg.norm(apply_similarity(prediction, initial_fit) - target, axis=2).mean(axis=1))
         w_one_errors.extend(np.linalg.norm(apply_similarity(prediction, one_fit) - target, axis=2).mean(axis=1))
         wa_errors.extend(np.linalg.norm(apply_similarity(prediction, full_fit) - target, axis=2).mean(axis=1))
+        rte_h3r.extend(human3r_rte_percent(pelvis(target), pelvis(prediction)))
         aligned = apply_similarity(prediction, initial_fit)
         if len(frames) >= 3:
             contiguous = (frames[1:-1] - frames[:-2] == 1) & (frames[2:] - frames[1:-1] == 1)
@@ -361,6 +435,26 @@ def evaluate_method(
             values = np.linalg.norm(pred_acc - gt_acc, axis=2).mean(axis=1)[contiguous]
             accel_discrete.extend(values)
             accel_physical.extend(values * fps**2)
+        if len(frames) >= 4:
+            contiguous4 = (
+                (frames[1:-2] - frames[:-3] == 1)
+                & (frames[2:-1] - frames[1:-2] == 1)
+                & (frames[3:] - frames[2:-1] == 1)
+            )
+            jitter_h3r.extend(human3r_jitter(prediction, fps)[contiguous4])
+        if len(frames) >= 2:
+            contiguous2 = frames[1:] - frames[:-1] == 1
+            predicted_vertices = np.stack(track["pred_vertices"])
+            target_vertices = np.stack(track["gt_vertices"])
+            # Evaluate each contiguous run so a detection gap is never treated
+            # as one physical video frame by the contact test.
+            starts = np.flatnonzero(np.r_[True, ~contiguous2])
+            ends = np.r_[starts[1:], len(frames)]
+            for start, end in zip(starts, ends):
+                if end - start >= 2:
+                    sliding_cm.extend(foot_sliding_cm(
+                        target_vertices[start:end], predicted_vertices[start:end]
+                    ))
         post_mask = frames >= boundary
         if int(post_mask.sum()) >= 2:
             pred_roots = pelvis(aligned[post_mask])
@@ -492,9 +586,17 @@ def evaluate_method(
             "w_mpjpe_one_frame_fit_mm": summarize(w_one_errors, 1000.0),
             "wa_mpjpe_mm": summarize(wa_errors, 1000.0),
             "mpjpe_mm": summarize(mpjpe, 1000.0),
+            "pa_mpjpe_mm": summarize(pa_mpjpe, 1000.0),
             "mpvpe_mm": summarize(mpvpe, 1000.0),
             "accel_delta2_mm_per_frame2": summarize(accel_discrete, 1000.0),
             "accel_physical_m_per_s2": summarize(accel_physical, 1.0),
+            "rte_h3r_percent": summarize(rte_h3r),
+            # Compact Harmony caches do not retain SMPL root-orientation
+            # parameters.  This prediction/GT torso Kabsch angle is therefore
+            # an explicit joint-derived proxy, not an official HumanMM ROE.
+            "roe_joint_proxy_deg": summarize(orientation),
+            "jitter_h3r_m_per_s3_div10": summarize(jitter_h3r),
+            "foot_sliding_cm": summarize(sliding_cm),
             "ate_sim3_m": summarize(ate_sim3),
             "ate_se3_m": summarize(ate_se3),
             "ate_metric_initial_se3_m": summarize(ate_metric_initial_se3),
@@ -635,6 +737,12 @@ def self_test() -> None:
     identity = identity_metrics(arrays, assignments, ["a", "b"], np.ones((3, 2), dtype=bool))
     assert identity["ids_total"] == 1
     assert 0 < identity["idf1"] < 1
+    np.testing.assert_allclose(procrustes_mpjpe(target[0], source[0]), 0.0, atol=1e-10)
+    straight = np.stack([np.arange(5), np.zeros(5), np.zeros(5)], axis=1)
+    np.testing.assert_allclose(human3r_rte_percent(straight, straight), 0.0, atol=1e-10)
+    np.testing.assert_allclose(human3r_jitter(np.repeat(straight[:, None], 24, axis=1), 30), 0.0)
+    feet = np.zeros((3, 6890, 3), dtype=np.float64)
+    np.testing.assert_allclose(foot_sliding_cm(feet, feet), 0.0)
     print("Harmony evaluator self-test passed")
 
 

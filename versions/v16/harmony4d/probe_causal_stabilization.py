@@ -44,8 +44,13 @@ METRICS = {
     "W-MPJPE_mm": ("multi_thumbs_named_provisional", "w_mpjpe_mm", "mean"),
     "WA-MPJPE_mm": ("multi_thumbs_named_provisional", "wa_mpjpe_mm", "mean"),
     "MPJPE_mm": ("multi_thumbs_named_provisional", "mpjpe_mm", "mean"),
+    "PA-MPJPE_mm": ("multi_thumbs_named_provisional", "pa_mpjpe_mm", "mean"),
     "MPVPE_mm": ("multi_thumbs_named_provisional", "mpvpe_mm", "mean"),
     "Accel_mm_frame2": ("multi_thumbs_named_provisional", "accel_delta2_mm_per_frame2", "mean"),
+    "RTE_H3R_percent": ("multi_thumbs_named_provisional", "rte_h3r_percent", "mean"),
+    "ROE_joint_proxy_deg": ("multi_thumbs_named_provisional", "roe_joint_proxy_deg", "mean"),
+    "Jitter_H3R": ("multi_thumbs_named_provisional", "jitter_h3r_m_per_s3_div10", "mean"),
+    "Foot_sliding_cm": ("multi_thumbs_named_provisional", "foot_sliding_cm", "mean"),
     "ATE_Sim3_m": ("multi_thumbs_named_provisional", "ate_sim3_m", "mean"),
     "ATE_SE3_m": ("multi_thumbs_named_provisional", "ate_se3_m", "mean"),
     "Boundary_camera_t_m": ("camera", "first_post_translation_m"),
@@ -72,6 +77,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--candidate-json", type=Path)
     parser.add_argument("--source-method", default=SOURCE_METHOD)
+    parser.add_argument(
+        "--reference-methods", nargs="*", default=[],
+        help="Cache methods evaluated unchanged under the same GT/evaluator pass.",
+    )
     parser.add_argument(
         "--include-case-regex",
         help="Evaluate only case IDs matching this regular expression.",
@@ -241,6 +250,7 @@ def main() -> None:
     candidates = load_candidates(args.candidate_json)
     topology = CommonTopology.load()
     rows = []
+    reference_rows = []
     errors = []
     for runtime_path in runtime_paths(args.prediction_roots):
         runtime = json.loads(runtime_path.read_text(encoding="utf-8"))
@@ -251,9 +261,42 @@ def main() -> None:
         cache_path = cache_for_runtime(runtime_path, runtime)
         with np.load(cache_path, allow_pickle=False) as cache:
             source = method_arrays(cache, args.source_method)
+            references = {
+                method: method_arrays(cache, method) for method in args.reference_methods
+            }
         geometry = runtime.get("geometry", {})
         pairs = [tuple(map(int, pair)) for pair in geometry.get("association", {}).get("pairs", [])]
         gt, identities = load_gt(record, args.extracted_root, topology)
+        for method, arrays in references.items():
+            print(f">> {case_id} reference:{method}", flush=True)
+            try:
+                result = evaluate_method(
+                    method, arrays, gt, identities,
+                    int(record["boundary_index"]), float(record["fps"]),
+                )
+                reference_rows.append({
+                    "case_id": case_id,
+                    "sequence": record["sequence"],
+                    "capture": record.get("capture", Path(record["capture_relative"]).name),
+                    "angle_stratum": record["angle_stratum"],
+                    "person_count": record.get("person_count_evaluator_only"),
+                    "method": method,
+                    "status": "complete",
+                    "metrics": metric_row(result),
+                    "within_shot_motion": result["within_shot_motion"],
+                })
+            except Exception as error:
+                reference_rows.append({
+                    "case_id": case_id,
+                    "sequence": record["sequence"],
+                    "capture": record.get("capture", Path(record["capture_relative"]).name),
+                    "angle_stratum": record["angle_stratum"],
+                    "person_count": record.get("person_count_evaluator_only"),
+                    "method": method,
+                    "status": "error",
+                    "error": f"{type(error).__name__}: {error}",
+                })
+                errors.append(f"{case_id}:{method}:{type(error).__name__}:{error}")
         for candidate in candidates:
             print(f">> {case_id} {candidate.name}", flush=True)
             try:
@@ -267,7 +310,9 @@ def main() -> None:
                 rows.append({
                     "case_id": case_id,
                     "sequence": record["sequence"],
+                    "capture": record.get("capture", Path(record["capture_relative"]).name),
                     "angle_stratum": record["angle_stratum"],
+                    "person_count": record.get("person_count_evaluator_only"),
                     "candidate": candidate.name,
                     "status": "complete",
                     "metrics": metric_row(result),
@@ -278,7 +323,9 @@ def main() -> None:
                 rows.append({
                     "case_id": case_id,
                     "sequence": record["sequence"],
+                    "capture": record.get("capture", Path(record["capture_relative"]).name),
                     "angle_stratum": record["angle_stratum"],
+                    "person_count": record.get("person_count_evaluator_only"),
                     "candidate": candidate.name,
                     "status": "error",
                     "error": f"{type(error).__name__}: {error}",
@@ -288,6 +335,7 @@ def main() -> None:
     payload = {
         "schema_version": "Movie3R-v16-Harmony4D-causal-stabilization-probe-v1",
         "source_method": args.source_method,
+        "reference_methods": list(args.reference_methods),
         "prediction_roots": [str(path.resolve()) for path in args.prediction_roots],
         "extracted_root": str(args.extracted_root.resolve()),
         "candidate_source": str(args.candidate_json.resolve()) if args.candidate_json else "frozen_exploration_grid_in_code",
@@ -297,6 +345,7 @@ def main() -> None:
         "errors": errors,
         "aggregate": aggregation,
         "rows": rows,
+        "reference_rows": reference_rows,
         "contract": {
             "candidate_runtime_uses_gt": False,
             "gt_scope": "frozen evaluator only",
