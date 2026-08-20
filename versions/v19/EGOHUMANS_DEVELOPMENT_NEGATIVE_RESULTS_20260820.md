@@ -28,9 +28,9 @@ Parent 的三例均值为 IDF1 0.365、IDs 29.67、Coverage 0.681。有限 ident
 
 ## 3. SE(3) versus translation-only boundary correction
 
-在前四个 development 动作、15 个可评 case 上，完整 translation 的核心五指标几何均值比 parent 为 0.641，并通过全部 development 安全门槛；完整 SE(3) 为 0.662，但因最坏 case 安全条件未通过而被否决。translation 的 W/ATE-SE3 更稳，SE(3) 虽偶尔改善 seam 或 WA，却更容易把人体方向噪声传播到整段 post-shot。
+在前四个 development 动作、15 个可评 case 上，完整 translation 的核心五指标几何均值比 parent 为 0.641，并一度通过全部安全门槛；完整 SE(3) 为 0.662，但最坏 case 安全条件未通过。加入 tagging、tennis、volleyball 后共有 25 个可评 case，full translation 在 `tagging-small` 的 W-MPJPE 从 677.9 恶化到 1129.1 mm，最坏比例 1.67，最终被否决。translation blend 0.5 的 7-action 核心比为 0.838，最坏比例 1.196，成为最强安全候选；blend 0.25 的最坏比例约 1.09，作为更保守的独立 holdout 候选。translation 的整体 W/ATE-SE3 更稳，SE(3) 虽偶尔改善 seam 或 WA，却更容易把人体方向噪声传播到整段 post-shot。
 
-结论：EgoHumans 的 development 证据支持先只校正共享平移 gauge；旋转保留 parent 的因果估计。后续只在预注册的 shared-translation 与 causal root filter 组合中选择。
+结论：EgoHumans 的 development 证据支持只校正共享平移 gauge，并用 blend 控制单例风险；旋转保留 parent 的因果估计。独立 holdout 只接收冻结的 blend 0.5、保守 blend 0.25 和 v17 fallback。
 
 中间聚合：`output/v19_egohumans/development/interim_four_actions/`。
 
