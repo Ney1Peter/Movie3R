@@ -266,7 +266,10 @@ def decode_frame(
     import roma
 
     camera = camera_matrix(prediction).astype(np.float64)
-    count = int(prediction["smpl_transl"].shape[1])
+    # Human3R legitimately omits every SMPL field when no person is detected
+    # in a frame.  Treat that as an empty prediction so coverage/evaluator
+    # logic can account for it; it is not an inference-process failure.
+    count = prediction_person_count(prediction)
     people = []
     native = prediction.get("smpl_id")
     native_ids = (
@@ -304,6 +307,11 @@ def decode_frame(
                 "torso": camera[:3, :3] @ gt_helpers.torso_frame(joints_camera[index]),
             })
     return {"camera": camera, "people": people}
+
+
+def prediction_person_count(prediction: dict[str, Any]) -> int:
+    translation = prediction.get("smpl_transl")
+    return 0 if translation is None else int(translation.shape[1])
 
 
 def decode_sequence(predictions, returned, debug, layer, topology) -> list[dict[str, Any]]:
