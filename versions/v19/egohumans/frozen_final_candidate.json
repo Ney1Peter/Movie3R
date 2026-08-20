@@ -1,0 +1,193 @@
+{
+  "schema_version": "Movie3R-v19-EgoHumans-final-candidate-v1",
+  "protocol": "Movie3R-EgoHumans-CS100-v1",
+  "frozen_before_test": true,
+  "test_metrics_read": false,
+  "source_candidate_name": "hcbr_translation_b0.5",
+  "final_method_name": "v19_egohumans_frozen",
+  "qualified_holdout_candidates": [
+    "hcbr_translation_b0.5",
+    "csgs0_hcbr_translation_b0.25_vel"
+  ],
+  "fallback_used": false,
+  "decisions": {
+    "hcbr_translation_b0.5": {
+      "passed": true,
+      "checks": {
+        "all_required_metrics_defined": true,
+        "three_core_directions_consistent_with_development": true,
+        "holdout_core_improvement_ge_2pct": true,
+        "mpjpe_noninferior_2pct": true,
+        "mpvpe_noninferior_2pct": true,
+        "coverage_drop_le_1pp": true,
+        "idf1_drop_le_0p01": true,
+        "five_available_actions_nonworse_after_structural_exclusions": true,
+        "worst_case_w_harm_le_20pct": true
+      },
+      "holdout_ratios_to_parent": {
+        "MPVPE_mm": 1.000000006816151,
+        "Accel_mm_frame2": 0.9826820291346517,
+        "WA-MPJPE_mm": 0.9202262154922161,
+        "MPJPE_mm": 1.000000009776032,
+        "W-MPJPE_mm": 0.8799754812716142,
+        "Seam_root_m": 0.7520657159223677,
+        "ATE_SE3_m": 0.765544609659256
+      },
+      "holdout_core_geometric_mean_ratio": 0.8554623416057041,
+      "consistent_improved_core_metrics": [
+        "W-MPJPE_mm",
+        "WA-MPJPE_mm",
+        "Accel_mm_frame2",
+        "ATE_SE3_m",
+        "Seam_root_m"
+      ],
+      "action_safety": {
+        "action_core_geomean_ratio": {
+          "badminton": 0.8599649052158812,
+          "basketball": 0.920115473636511,
+          "legoassemble": 0.8873007441661186,
+          "tagging": 0.8531855359947527,
+          "volleyball": 0.9090393602678175
+        },
+        "nonworse_actions": 5,
+        "available_action_count": 5,
+        "comparable_candidate_action_count": 5,
+        "candidate_missing_actions": [],
+        "at_least_five_available_nonworse": true,
+        "structural_exclusion_tolerant_denominator": true,
+        "worst_case_w_ratio": 1.1676983616745717,
+        "worst_case_w_harm_le_20pct": true
+      }
+    },
+    "csgs0_hcbr_translation_b0.25_vel": {
+      "passed": true,
+      "checks": {
+        "all_required_metrics_defined": true,
+        "three_core_directions_consistent_with_development": true,
+        "holdout_core_improvement_ge_2pct": true,
+        "mpjpe_noninferior_2pct": true,
+        "mpvpe_noninferior_2pct": true,
+        "coverage_drop_le_1pp": true,
+        "idf1_drop_le_0p01": true,
+        "five_available_actions_nonworse_after_structural_exclusions": true,
+        "worst_case_w_harm_le_20pct": true
+      },
+      "holdout_ratios_to_parent": {
+        "MPVPE_mm": 1.0000000153765494,
+        "Accel_mm_frame2": 0.9894594171779133,
+        "WA-MPJPE_mm": 0.9503440658100738,
+        "MPJPE_mm": 1.0000000031105105,
+        "W-MPJPE_mm": 0.949196618903,
+        "Seam_root_m": 0.8413822714319691,
+        "ATE_SE3_m": 0.8779898349611688
+      },
+      "holdout_core_geometric_mean_ratio": 0.9200757326003557,
+      "consistent_improved_core_metrics": [
+        "W-MPJPE_mm",
+        "WA-MPJPE_mm",
+        "Accel_mm_frame2",
+        "ATE_SE3_m",
+        "Seam_root_m"
+      ],
+      "action_safety": {
+        "action_core_geomean_ratio": {
+          "badminton": 0.935582919847485,
+          "basketball": 0.8816235399127292,
+          "legoassemble": 0.6971095550642742,
+          "tagging": 0.9035955715444179,
+          "volleyball": 0.9553619941104585
+        },
+        "nonworse_actions": 5,
+        "available_action_count": 5,
+        "comparable_candidate_action_count": 5,
+        "candidate_missing_actions": [],
+        "at_least_five_available_nonworse": true,
+        "structural_exclusion_tolerant_denominator": true,
+        "worst_case_w_ratio": 1.1050388433589462,
+        "worst_case_w_harm_le_20pct": true
+      }
+    },
+    "v17_harmony_multicue_safe": {
+      "passed": false,
+      "checks": {
+        "all_required_metrics_defined": true,
+        "three_core_directions_consistent_with_development": true,
+        "holdout_core_improvement_ge_2pct": false,
+        "mpjpe_noninferior_2pct": true,
+        "mpvpe_noninferior_2pct": true,
+        "coverage_drop_le_1pp": true,
+        "idf1_drop_le_0p01": true,
+        "five_available_actions_nonworse_after_structural_exclusions": false,
+        "worst_case_w_harm_le_20pct": false
+      },
+      "holdout_ratios_to_parent": {
+        "MPVPE_mm": 0.9999999939613903,
+        "Accel_mm_frame2": 0.981268872865287,
+        "WA-MPJPE_mm": 0.9976899403288466,
+        "MPJPE_mm": 1.0000000004341616,
+        "W-MPJPE_mm": 1.0114599891560012,
+        "Seam_root_m": 0.9433616030444908,
+        "ATE_SE3_m": 1.0056492188122383
+      },
+      "holdout_core_geometric_mean_ratio": 0.9875780028659629,
+      "consistent_improved_core_metrics": [
+        "WA-MPJPE_mm",
+        "Accel_mm_frame2",
+        "Seam_root_m"
+      ],
+      "action_safety": {
+        "action_core_geomean_ratio": {
+          "badminton": 0.9999999852764434,
+          "basketball": 1.0000000104647604,
+          "legoassemble": 1.0154661552975512,
+          "tagging": 1.000000032327611,
+          "volleyball": 0.9999999828770473
+        },
+        "nonworse_actions": 2,
+        "available_action_count": 5,
+        "comparable_candidate_action_count": 5,
+        "candidate_missing_actions": [],
+        "at_least_five_available_nonworse": false,
+        "structural_exclusion_tolerant_denominator": true,
+        "worst_case_w_ratio": 1.6720554565865817,
+        "worst_case_w_harm_le_20pct": false
+      }
+    }
+  },
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry",
+      "geometry": {
+        "name": "v16_0_m15_geometry"
+      },
+      "identity": null
+    },
+    {
+      "name": "v19_egohumans_frozen",
+      "geometry": {
+        "name": "v19_egohumans_frozen",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5,
+        "use_velocity_target": false,
+        "root_alpha": null,
+        "root_beta": 0.0,
+        "gate_max_boundary_residual_m": null,
+        "gate_min_matches": 0,
+        "gate_min_match_fraction": 0.0,
+        "gate_max_translation_m": null
+      },
+      "identity": null
+    }
+  ],
+  "provenance": {
+    "development_summary": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/development/summary/summary.json",
+    "development_summary_sha256": "7883c5dcce0e86064aedd10177cd11b66b06b783a3499759f5ee98bef9e50366",
+    "holdout_summary": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/holdout/summary/summary.json",
+    "holdout_summary_sha256": "20a44c6d0dfb39a6a4fcba68faedab9bf334c43428885d9e65984b0eefc79d6a",
+    "holdout_case_metrics": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/holdout/summary/case_metrics.csv",
+    "holdout_case_metrics_sha256": "67c091a561f674e6af8f2419328dd394f1e63023fa73db01f36bf8233be23024",
+    "holdout_candidates": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v19/egohumans/frozen_holdout_candidates.json",
+    "holdout_candidates_sha256": "62b13fe570f7216b82f28293f2ebd025694224a612a6f8dfdf496f46f24b96ef"
+  }
+}
