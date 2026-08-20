@@ -91,6 +91,28 @@ def read_cases(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def protocol_counts(summary_dir: Path, summary: dict[str, Any]) -> dict[str, int]:
+    """Return protocol-level counts without conflating inference and evaluation."""
+    state_path = summary_dir.parent / "protocol_state.json"
+    state = load(state_path)
+    captures = state.get("captures", {})
+    statuses: dict[str, int] = defaultdict(int)
+    for value in captures.values():
+        statuses[str(value.get("status", "unknown"))] += 1
+    planned_captures = len(state.get("entries", []))
+    completed_captures = statuses.get("complete", 0)
+    camera_pair_cases_per_capture = 4
+    return {
+        "planned_captures": planned_captures,
+        "completed_captures": completed_captures,
+        "structural_exclusions": statuses.get("structural_error", 0),
+        "inferred_cases": completed_captures * camera_pair_cases_per_capture,
+        "evaluable_captures": int(summary["capture_count"]),
+        "evaluable_cases": int(summary["case_count"]),
+        "evaluator_unavailable_cases": int(summary["evaluator_unavailable_count"]),
+    }
+
+
 def grouped_table(
     rows: list[dict[str, str]], methods: list[str], group: str
 ) -> list[dict[str, Any]]:
@@ -205,6 +227,81 @@ def runtime_summary(final_method: str, test_root: Path) -> dict[str, Any]:
     }
 
 
+def detector_summary(test_root: Path) -> list[dict[str, Any]]:
+    output = []
+    for name, key in (
+        ("causal_gru", "causal_gru_detector"),
+        ("static_logistic", "static_logistic_detector"),
+    ):
+        case_count = true_positive = false_positive = false_negative = exact = 0
+        absolute_offsets: list[int] = []
+        for path in sorted((test_root.parent / "predictions").rglob("*.runtime.json")):
+            payload = load(path)
+            boundary = int(payload["record"]["boundary_index"])
+            detector = payload.get("runtime", {}).get(key)
+            if detector is None:
+                continue
+            labels = [bool(value) for value in detector["labels"]]
+            first = detector.get("first_positive_index")
+            case_count += 1
+            true_positive += int(labels[boundary])
+            false_negative += int(not labels[boundary])
+            false_positive += sum(value for index, value in enumerate(labels) if index != boundary)
+            exact += int(first == boundary)
+            if first is not None:
+                absolute_offsets.append(abs(int(first) - boundary))
+        precision = (
+            true_positive / (true_positive + false_positive)
+            if true_positive + false_positive
+            else None
+        )
+        recall = (
+            true_positive / (true_positive + false_negative)
+            if true_positive + false_negative
+            else None
+        )
+        f1 = (
+            2.0 * precision * recall / (precision + recall)
+            if precision is not None and recall is not None and precision + recall
+            else None
+        )
+        output.append(
+            {
+                "detector": name,
+                "case_count": case_count,
+                "true_positive": true_positive,
+                "false_positive": false_positive,
+                "false_negative": false_negative,
+                "frame_precision": precision,
+                "frame_recall": recall,
+                "frame_f1": f1,
+                "first_positive_exact_rate": exact / case_count if case_count else None,
+                "boundary_mae_frames_given_positive": avg(absolute_offsets),
+            }
+        )
+    return output
+
+
+def detector_latex(rows: list[dict[str, Any]]) -> str:
+    lines = [
+        "% Auto-generated boundary-detector diagnostics on all inferred Test cases.",
+        r"\begin{tabular}{lrrrrrr}",
+        r"\toprule",
+        r"Detector & Cases & Precision & Recall & F1 & Exact & MAE (frames) \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        label = str(row["detector"]).replace("_", r"\_")
+        lines.append(
+            f"{label} & {row['case_count']} & "
+            f"{float(row['frame_precision']):.3f} & {float(row['frame_recall']):.3f} & "
+            f"{float(row['frame_f1']):.3f} & {float(row['first_positive_exact_rate']):.3f} & "
+            f"{float(row['boundary_mae_frames_given_positive']):.1f} " + r"\\"
+        )
+    lines.extend((r"\bottomrule", r"\end{tabular}", ""))
+    return "\n".join(lines)
+
+
 def metric_line(name: str, metric: str, value: Any, ci: dict[str, Any] | None = None) -> str:
     rendered = fmt(value, metric)
     if ci and finite(ci.get("low")) is not None and finite(ci.get("high")) is not None:
@@ -218,6 +315,9 @@ def main() -> None:
     holdout_path = args.holdout / "summary.json"
     test_path = args.test / "summary.json"
     dev, holdout, test, frozen = load(dev_path), load(holdout_path), load(test_path), load(args.final_candidate)
+    dev_counts = protocol_counts(args.development, dev)
+    holdout_counts = protocol_counts(args.holdout, holdout)
+    test_counts = protocol_counts(args.test, test)
     final_method = str(frozen["final_method_name"])
     parent = str(test["parent"])
     strict = "m0_strict_human3r"
@@ -243,8 +343,11 @@ def main() -> None:
             "vs_parent_fraction": relative(final_metrics.get(metric), parent_metrics.get(metric), metric in HIGHER),
         }
     runtime = runtime_summary(final_method, args.test)
+    detectors = detector_summary(args.test)
     (args.output / "runtime_summary.json").write_text(json.dumps(runtime, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (args.output / "improvements.json").write_text(json.dumps(improvements, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_csv(args.output / "detector_metrics.csv", detectors)
+    (args.output / "detector_table.tex").write_text(detector_latex(detectors), encoding="utf-8")
 
     worst = []
     by_key = {(row["case_id"], row["method"]): row for row in cases}
@@ -281,7 +384,10 @@ def main() -> None:
         "## Frozen protocol and selection",
         "",
         "- Protocol: `Movie3R-EgoHumans-CS100-v1`, 100 frames (50 pre + 50 post), 20 FPS.",
-        f"- Split: {dev['capture_count']} development / {holdout['capture_count']} holdout / {test['capture_count']} test captures; four fixed camera-angle strata per capture.",
+        f"- Pre-registered split: {dev_counts['planned_captures']} development / {holdout_counts['planned_captures']} holdout / {test_counts['planned_captures']} test capture archives; four fixed camera-angle strata per capture.",
+        f"- Completed capture inference: {dev_counts['completed_captures']} development / {holdout_counts['completed_captures']} holdout / {test_counts['completed_captures']} test; the holdout has {holdout_counts['structural_exclusions']} pre-specified structural exclusion.",
+        f"- Evaluable camera-pair cases: {dev_counts['evaluable_cases']} development / {holdout_counts['evaluable_cases']} holdout / {test_counts['evaluable_cases']} test. The corresponding method-independent evaluator-unavailable counts are {dev_counts['evaluator_unavailable_cases']} / {holdout_counts['evaluator_unavailable_cases']} / {test_counts['evaluator_unavailable_cases']}.",
+        f"- Test accounting: {test_counts['inferred_cases']} camera-pair cases were inferred; the main table uses {test_counts['evaluable_cases']} cases from {test_counts['evaluable_captures']} captures after {test_counts['evaluator_unavailable_cases']} evaluator-unavailable cases. No structurally valid Test capture was removed.",
         f"- Final method: `{final_method}`; source candidate: `{frozen['source_candidate_name']}`; holdout fallback used: `{frozen['fallback_used']}`.",
         "- GT SMPL, calibration and identity are evaluator-only. Runtime uses RGB, model predictions and causal history.",
         "- Test was read only after the final candidate was frozen. Difficult but structurally valid cases remain in the results.",
@@ -325,11 +431,17 @@ def main() -> None:
         f"- Peak process RSS across test cases: {fmt(runtime['process_peak_rss_gib_max'], 'ATE_SE3_m')} GiB.",
         "- Timings are wall-clock diagnostics on a shared server and must not be presented as hardware-normalized throughput.",
         "",
+        "## Causal boundary detector check",
+        "",
+        f"- The causal GRU first triggers at the pre-registered cut in {int(detectors[0]['true_positive'])}/{int(detectors[0]['case_count'])} Test cases, with {int(detectors[0]['false_positive'])} off-boundary positives and {fmt(detectors[0]['boundary_mae_frames_given_positive'], 'IDs')} frame MAE.",
+        "- The v19 postprocessor consumes the pre-registered cut index in this implementation. Because the causal proposal equals that index for every Test case, substituting the online proposal is boundary- and output-equivalent on CS100; this does not establish detector generalization beyond the constructed cross-camera protocol.",
+        "",
         "## Interpretation and limitations",
         "",
         "- The main claim is causal multi-shot world consistency: camera gauge, human continuity, identity and within-shot stability are evaluated jointly.",
         "- MPJPE/MPVPE check that global correction does not buy alignment by damaging local body reconstruction.",
         "- Angle- and action-stratified tables are provided for generalization and failure analysis; the worst-case CSV is retained rather than hiding hard sequences.",
+        f"- Evaluator availability is reported separately from the method Coverage metric. Test has {test_counts['evaluator_unavailable_cases']}/{test_counts['inferred_cases']} method-independent evaluator-unavailable camera pairs because no initial GT/predicted person match exists for the shared-world fit; these pairs are not silently counted as successful reconstructions.",
         "- Development-only identity re-tracking, per-person translation and unsafe SE(3) branches are documented in `versions/v19/EGOHUMANS_DEVELOPMENT_NEGATIVE_RESULTS_20260820.md` and are not tuned on holdout/test.",
         "- Multi-THuMBS values are literature-scale context only until an official manifest/evaluator becomes available.",
         "",
@@ -339,6 +451,7 @@ def main() -> None:
         "- `angle_metrics.csv`, `angle_table.tex`: small/medium/large/extreme results.",
         "- `action_metrics.csv`, `action_table.tex`: seven-action appendix results.",
         "- `worst_cases_by_final_W.csv`: retained hard cases.",
+        "- `detector_metrics.csv`, `detector_table.tex`: automatic-boundary diagnostics over all 116 inferred Test cases.",
         "- `runtime_summary.json`, `improvements.json`: runtime and relative-effect sources.",
         "- Development, holdout and test directories each retain `summary.json`, `case_metrics.csv`, `main_table.tex` and `SUMMARY.md`.",
         "",
