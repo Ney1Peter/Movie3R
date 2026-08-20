@@ -293,6 +293,9 @@ def apply_with_raw_reference(
                     record["later_shape_fallback_index"] = index
                     continue
                 current_vertices = meshes_out[index]
+                if current_vertices.shape[0] == 0:
+                    record.setdefault("later_empty_prediction_indices", []).append(index)
+                    continue
                 roots_current = _roots(current_vertices, regressor)
                 root_raw = _roots(raw_values[index], regressor) if index < len(raw_values) else roots_current.copy()
                 raw_perm, _, _ = _match_raw_people(current_vertices, raw_values[index]) if index < len(raw_values) and raw_values[index].shape == current_vertices.shape else (tuple(range(current_vertices.shape[0])), 0.0, 0.0)

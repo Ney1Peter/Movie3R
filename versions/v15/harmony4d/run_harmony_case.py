@@ -314,6 +314,13 @@ def prediction_person_count(prediction: dict[str, Any]) -> int:
     return 0 if translation is None else int(translation.shape[1])
 
 
+def frame_people_vertices(frame: dict[str, Any]) -> np.ndarray:
+    people = frame["people"]
+    if not people:
+        return np.empty((0, 0, 3), dtype=np.float64)
+    return np.stack([person["vertices"] for person in people])
+
+
 def decode_sequence(predictions, returned, debug, layer, topology) -> list[dict[str, Any]]:
     frames = []
     for prediction, view in zip(predictions, returned):
@@ -570,10 +577,10 @@ def compose_transaction(
     m6 = copy.deepcopy(pre + c1_post)
 
     m6_cameras = np.stack([frame["camera"] for frame in m6])
-    m6_meshes = [np.stack([person["vertices"] for person in frame["people"]]) for frame in m6]
+    m6_meshes = [frame_people_vertices(frame) for frame in m6]
     raw_reference = pre + raw_post
     raw_cameras = np.stack([frame["camera"] for frame in raw_reference])
-    raw_meshes = [np.stack([person["vertices"] for person in frame["people"]]) for frame in raw_reference]
+    raw_meshes = [frame_people_vertices(frame) for frame in raw_reference]
     adaptive_cameras, adaptive_meshes, _, adaptive_debug = apply_with_raw_reference(
         m6_cameras, m6_meshes, raw_cameras, raw_meshes, None, [boundary], AdaptiveJointConfig()
     )
@@ -595,7 +602,7 @@ def compose_transaction(
     safe_c1_post, safe_c1_debug = apply_c1(identity_post, safe_brtc_post)
     safe_base = copy.deepcopy(pre + safe_c1_post)
     safe_cameras = np.stack([frame["camera"] for frame in safe_base])
-    safe_meshes = [np.stack([person["vertices"] for person in frame["people"]]) for frame in safe_base]
+    safe_meshes = [frame_people_vertices(frame) for frame in safe_base]
     safe_adaptive_cameras, safe_adaptive_meshes, _, safe_adaptive_debug = apply_with_raw_reference(
         safe_cameras, safe_meshes, raw_cameras, raw_meshes, None, [boundary], AdaptiveJointConfig()
     )
@@ -621,10 +628,7 @@ def compose_transaction(
     )
     boundary_safe_base = copy.deepcopy(pre + boundary_safe_c1_post)
     boundary_safe_cameras = np.stack([frame["camera"] for frame in boundary_safe_base])
-    boundary_safe_meshes = [
-        np.stack([person["vertices"] for person in frame["people"]])
-        for frame in boundary_safe_base
-    ]
+    boundary_safe_meshes = [frame_people_vertices(frame) for frame in boundary_safe_base]
     boundary_safe_adaptive_cameras, boundary_safe_adaptive_meshes, _, boundary_safe_adaptive_debug = (
         apply_with_raw_reference(
             boundary_safe_cameras, boundary_safe_meshes, raw_cameras, raw_meshes,
