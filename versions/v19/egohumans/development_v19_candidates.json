@@ -1,0 +1,64 @@
+{
+  "schema_version": "Movie3R-v19-EgoHumans-development-candidates-v1",
+  "frozen_before_full_development_evaluation": true,
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry",
+      "geometry": {"name": "v16_0_m15_geometry"},
+      "identity": null
+    },
+    {
+      "name": "v19_csgs0_t075_vel_id050",
+      "geometry": {"name": "v19_csgs0_t075_vel_id050", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75, "use_velocity_target": true},
+      "identity": {"max_cost_m": 0.5, "max_gap_frames": 5, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_t075_vel_id100",
+      "geometry": {"name": "v19_csgs0_t075_vel_id100", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75, "use_velocity_target": true},
+      "identity": {"max_cost_m": 1.0, "max_gap_frames": 5, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_t075_vel_id150",
+      "geometry": {"name": "v19_csgs0_t075_vel_id150", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75, "use_velocity_target": true},
+      "identity": {"max_cost_m": 1.5, "max_gap_frames": 5, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_t075_vel_id200",
+      "geometry": {"name": "v19_csgs0_t075_vel_id200", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75, "use_velocity_target": true},
+      "identity": {"max_cost_m": 2.0, "max_gap_frames": 10, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_t075_vel_id300",
+      "geometry": {"name": "v19_csgs0_t075_vel_id300", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75, "use_velocity_target": true},
+      "identity": {"max_cost_m": 3.0, "max_gap_frames": 10, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_t075_id100",
+      "geometry": {"name": "v19_csgs0_t075_id100", "camera_alpha": 0.0, "boundary_kind": "translation", "boundary_blend": 0.75},
+      "identity": {"max_cost_m": 1.0, "max_gap_frames": 5, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_t075_id100",
+      "geometry": {"name": "v19_t075_id100", "camera_alpha": 1.0, "boundary_kind": "translation", "boundary_blend": 0.75},
+      "identity": {"max_cost_m": 1.0, "max_gap_frames": 5, "body_weight": 0.25, "velocity_alpha": 0.5}
+    },
+    {
+      "name": "v19_csgs0_person_b050",
+      "geometry": {"name": "v19_csgs0_person_b050", "camera_alpha": 0.0},
+      "identity": {"max_cost_m": 1.5, "max_gap_frames": 10, "body_weight": 0.25, "velocity_alpha": 0.5},
+      "person": {"blend": 0.5, "use_velocity_target": true, "velocity_horizon": 4, "max_shift_m": 5.0}
+    },
+    {
+      "name": "v19_csgs0_person_b075",
+      "geometry": {"name": "v19_csgs0_person_b075", "camera_alpha": 0.0},
+      "identity": {"max_cost_m": 1.5, "max_gap_frames": 10, "body_weight": 0.25, "velocity_alpha": 0.5},
+      "person": {"blend": 0.75, "use_velocity_target": true, "velocity_horizon": 4, "max_shift_m": 5.0}
+    },
+    {
+      "name": "v19_csgs0_person_b100",
+      "geometry": {"name": "v19_csgs0_person_b100", "camera_alpha": 0.0},
+      "identity": {"max_cost_m": 1.5, "max_gap_frames": 10, "body_weight": 0.25, "velocity_alpha": 0.5},
+      "person": {"blend": 1.0, "use_velocity_target": true, "velocity_horizon": 4, "max_shift_m": 5.0}
+    }
+  ]
+}
