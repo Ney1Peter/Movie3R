@@ -1,0 +1,75 @@
+{
+  "schema_version": "Movie3R-v19-EgoHumans-holdout-candidates-v1",
+  "protocol": "Movie3R-EgoHumans-CS100-v1",
+  "source_split": "development",
+  "development_summary": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/development/summary/summary.json",
+  "development_summary_sha256": "7883c5dcce0e86064aedd10177cd11b66b06b783a3499759f5ee98bef9e50366",
+  "selection_rule": "pre-registered passing candidates in composite rank order; prefer distinct boundary-kind/camera-alpha/velocity signatures; reserve one slot for the frozen v17 exact-fallback reference; at most three",
+  "selected_names": [
+    "hcbr_translation_b0.5",
+    "csgs0_hcbr_translation_b0.25_vel",
+    "v17_harmony_multicue_safe"
+  ],
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry",
+      "geometry": {
+        "name": "v16_0_m15_geometry"
+      },
+      "identity": null
+    },
+    {
+      "name": "hcbr_translation_b0.5",
+      "geometry": {
+        "name": "hcbr_translation_b0.5",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5,
+        "use_velocity_target": false,
+        "root_alpha": null,
+        "root_beta": 0.0,
+        "gate_max_boundary_residual_m": null,
+        "gate_min_matches": 0,
+        "gate_min_match_fraction": 0.0,
+        "gate_max_translation_m": null
+      },
+      "identity": null
+    },
+    {
+      "name": "csgs0_hcbr_translation_b0.25_vel",
+      "geometry": {
+        "name": "csgs0_hcbr_translation_b0.25_vel",
+        "camera_alpha": 0.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.25,
+        "use_velocity_target": true,
+        "root_alpha": null,
+        "root_beta": 0.0,
+        "gate_max_boundary_residual_m": null,
+        "gate_min_matches": 0,
+        "gate_min_match_fraction": 0.0,
+        "gate_max_translation_m": null
+      },
+      "identity": null
+    },
+    {
+      "name": "v17_harmony_multicue_safe",
+      "geometry": {
+        "name": "v17_harmony_multicue_safe",
+        "boundary_kind": "translation",
+        "boundary_blend": 1.0,
+        "root_alpha": 0.5,
+        "root_beta": 0.02,
+        "gate_max_boundary_residual_m": 0.25,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 0.0,
+        "gate_max_translation_m": 1.6
+      },
+      "identity": null
+    }
+  ],
+  "frozen_before_holdout": true,
+  "holdout_or_test_metrics_read": false,
+  "fallback_source": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v17/harmony4d/frozen_multicue_candidate.json",
+  "fallback_source_sha256": "ae2bc503ca5abdb0735abea231b6b953c0463d2e33f96741469191ad71adbafe"
+}
