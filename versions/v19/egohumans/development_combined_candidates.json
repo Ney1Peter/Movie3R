@@ -1,0 +1,43 @@
+{
+  "schema_version": "Movie3R-v19-EgoHumans-combined-development-candidates-v1",
+  "frozen_before_remaining_five_development_actions": true,
+  "evidence_scope": "basketball and badminton development captures only; no holdout/test read",
+  "rationale": "shared translation corrects the cross-shot gauge while the causal alpha-beta root filter targets orthogonal within-shot acceleration",
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry"
+    },
+    {
+      "name": "v19_t100_root090",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "root_alpha": 0.9,
+      "root_beta": 0.02
+    },
+    {
+      "name": "v19_t100_root080",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "root_alpha": 0.8,
+      "root_beta": 0.05
+    },
+    {
+      "name": "v19_csgs0_t100_root090",
+      "camera_alpha": 0.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0,
+      "root_alpha": 0.9,
+      "root_beta": 0.02
+    },
+    {
+      "name": "v19_csgs0_t075_root090",
+      "camera_alpha": 0.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.75,
+      "root_alpha": 0.9,
+      "root_beta": 0.02
+    }
+  ]
+}
