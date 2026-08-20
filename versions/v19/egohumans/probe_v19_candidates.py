@@ -8,6 +8,7 @@ import json
 import math
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -128,6 +129,7 @@ def main() -> None:
         for candidate in candidates:
             name = str(candidate["name"])
             try:
+                postprocess_started = time.perf_counter()
                 geometry_spec = dict(candidate.get("geometry") or {"name": BASELINE})
                 geometry_spec["name"] = name
                 arrays, geometry_debug = apply_candidate(
@@ -151,6 +153,7 @@ def main() -> None:
                         pairs,
                         PersonCorrectionConfig(**candidate["person"]),
                     )
+                postprocess_seconds = time.perf_counter() - postprocess_started
                 result = evaluate_method(name, arrays, gt, identities, int(record["boundary_index"]), float(record["fps"]))
                 rows.append(
                     {
@@ -168,6 +171,8 @@ def main() -> None:
                             "candidate": candidate,
                             "causal_identity": identity_debug,
                             "person_correction": person_debug,
+                            "postprocess_seconds": postprocess_seconds,
+                            "postprocess_frames": int(len(arrays["valid"])),
                         },
                     }
                 )
