@@ -330,6 +330,7 @@ def main() -> None:
         "- The main claim is causal multi-shot world consistency: camera gauge, human continuity, identity and within-shot stability are evaluated jointly.",
         "- MPJPE/MPVPE check that global correction does not buy alignment by damaging local body reconstruction.",
         "- Angle- and action-stratified tables are provided for generalization and failure analysis; the worst-case CSV is retained rather than hiding hard sequences.",
+        "- Development-only identity re-tracking, per-person translation and unsafe SE(3) branches are documented in `versions/v19/EGOHUMANS_DEVELOPMENT_NEGATIVE_RESULTS_20260820.md` and are not tuned on holdout/test.",
         "- Multi-THuMBS values are literature-scale context only until an official manifest/evaluator becomes available.",
         "",
         "## Artifacts",
@@ -356,6 +357,7 @@ def main() -> None:
         REPO_ROOT / "versions/v19/egohumans/frozen_holdout_candidates.json",
         REPO_ROOT / "versions/v19/egohumans/development_combined_candidates.json",
         REPO_ROOT / "versions/v19/EGOHUMANS_ICLR_EXPERIMENT_PLAN_20260820.md",
+        REPO_ROOT / "versions/v19/EGOHUMANS_DEVELOPMENT_NEGATIVE_RESULTS_20260820.md",
     ]
     manifest = {
         "schema_version": "Movie3R-v19-EgoHumans-final-artifacts-v1",
