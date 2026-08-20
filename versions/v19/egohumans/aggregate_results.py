@@ -206,20 +206,36 @@ def hierarchical_bootstrap(
     actions = sorted(action for action, captures in hierarchy.items() if captures)
     if not actions:
         return {"low": None, "high": None, "samples": samples, "unit": "action_capture_case"}
-    estimates = np.empty(samples, dtype=np.float64)
-    for index in range(samples):
-        chosen_actions = rng.choice(np.asarray(actions, dtype=object), size=len(actions), replace=True)
-        action_means = []
-        for action_value in chosen_actions:
-            action = str(action_value)
+    # Draw the same action -> capture -> camera-pair hierarchy in batches.
+    # The former sample-wise Python loop was exact but made a 10k bootstrap
+    # dominate the complete experiment runtime.  Each repeated action/capture
+    # draw below still receives an independent lower-level resample.
+    action_indices = rng.integers(0, len(actions), size=(samples, len(actions)))
+    action_draws = np.empty((samples, len(actions)), dtype=np.float64)
+    for draw_position in range(len(actions)):
+        for action_index, action in enumerate(actions):
+            sample_rows = np.flatnonzero(action_indices[:, draw_position] == action_index)
+            if not len(sample_rows):
+                continue
             captures = sorted(hierarchy[action])
-            chosen_captures = rng.choice(np.asarray(captures, dtype=object), size=len(captures), replace=True)
-            capture_means = []
-            for capture_value in chosen_captures:
-                values = hierarchy[action][str(capture_value)]
-                capture_means.append(float(rng.choice(values, size=len(values), replace=True).mean()))
-            action_means.append(float(np.mean(capture_means)))
-        estimates[index] = float(np.mean(action_means))
+            capture_indices = rng.integers(
+                0, len(captures), size=(len(sample_rows), len(captures))
+            )
+            capture_draws = np.empty_like(capture_indices, dtype=np.float64)
+            for capture_position in range(len(captures)):
+                for capture_index, capture in enumerate(captures):
+                    selected = np.flatnonzero(
+                        capture_indices[:, capture_position] == capture_index
+                    )
+                    if not len(selected):
+                        continue
+                    values = hierarchy[action][capture]
+                    case_indices = rng.integers(
+                        0, len(values), size=(len(selected), len(values))
+                    )
+                    capture_draws[selected, capture_position] = values[case_indices].mean(axis=1)
+            action_draws[sample_rows, draw_position] = capture_draws.mean(axis=1)
+    estimates = action_draws.mean(axis=1)
     return {
         "low": float(np.percentile(estimates, 2.5)),
         "high": float(np.percentile(estimates, 97.5)),
