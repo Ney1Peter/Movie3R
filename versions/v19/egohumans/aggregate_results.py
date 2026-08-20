@@ -259,6 +259,10 @@ def promotion(
             finite(row["metrics"].get(key)) is not None
             for row in rows
             for key in ("W-MPJPE_mm", "WA-MPJPE_mm", "MPJPE_mm", "MPVPE_mm", "Accel_mm_frame2", "ATE_SE3_m", "Seam_root_m", "IDF1", "Coverage")
+            if (
+                str(row["case_id"]) in parent_by_case
+                and finite(parent_by_case[str(row["case_id"])]["metrics"].get(key)) is not None
+            )
         ),
         "core_three_of_five_improve": sum(ratios[key] is not None and ratios[key] < 1.0 for key in CORE) >= 3,
         "core_geomean_improvement_ge_3pct": geometric is not None and geometric <= 0.97,

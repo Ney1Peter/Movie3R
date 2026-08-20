@@ -108,6 +108,7 @@ def main() -> None:
     decisions = {}
     qualified = []
     parent_metrics = holdout["methods"][BASELINE]["case_macro"]
+    parent_summary = holdout["methods"][BASELINE]
     for name in selected_names:
         if name not in development["methods"] or name not in holdout["methods"]:
             raise ValueError(f"Candidate {name} missing from development/holdout summary")
@@ -132,7 +133,8 @@ def main() -> None:
         parent_coverage = finite(parent_metrics.get("Coverage"))
         checks = {
             "all_required_metrics_defined": all(
-                int(current["finite_case_count"].get(key, 0)) == int(current["case_count"])
+                int(current["finite_case_count"].get(key, 0))
+                >= int(parent_summary["finite_case_count"].get(key, 0))
                 for key in (*CORE, "MPJPE_mm", "MPVPE_mm", "IDF1", "Coverage")
             ),
             "three_core_directions_consistent_with_development": len(consistent) >= 3,

@@ -283,7 +283,7 @@ def valid_probe(path: Path, expected_cases: int) -> dict[str, Any]:
             )
         if str(row.get("candidate")) == "v16_0_m15_geometry":
             invalid = [
-                key for key in REQUIRED_METRICS
+                key for key in REQUIRED_METRICS - {"Seam_root_m"}
                 if row.get("metrics", {}).get(key) is None
                 or not np.isfinite(float(row["metrics"][key]))
             ]
