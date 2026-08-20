@@ -12,6 +12,8 @@ from typing import Any
 
 
 BASELINE = "v16_0_m15_geometry"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_FALLBACK = REPO_ROOT / "versions/v17/harmony4d/frozen_multicue_candidate.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--development-summary", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-candidates", type=int, default=3)
+    parser.add_argument("--fallback-candidate", type=Path, default=DEFAULT_FALLBACK)
     return parser.parse_args()
 
 
@@ -70,23 +73,35 @@ def main() -> None:
         normalized.append(normalize(name, config))
     selected = []
     seen_signatures = set()
-    for candidate in normalized:
-        key = signature(candidate)
-        if key in seen_signatures:
-            continue
-        selected.append(candidate)
-        seen_signatures.add(key)
-        if len(selected) == int(args.max_candidates):
-            break
-    if len(selected) < int(args.max_candidates):
+    innovation_limit = max(0, int(args.max_candidates) - 1)
+    if innovation_limit:
+        for candidate in normalized:
+            key = signature(candidate)
+            if key in seen_signatures:
+                continue
+            selected.append(candidate)
+            seen_signatures.add(key)
+            if len(selected) == innovation_limit:
+                break
+    if len(selected) < innovation_limit:
         selected_names = {row["name"] for row in selected}
         for candidate in normalized:
             if candidate["name"] in selected_names:
                 continue
             selected.append(candidate)
             selected_names.add(candidate["name"])
-            if len(selected) == int(args.max_candidates):
+            if len(selected) == innovation_limit:
                 break
+    fallback_payload = json.loads(args.fallback_candidate.read_text(encoding="utf-8"))
+    fallback_rows = [
+        row for row in fallback_payload.get("candidates", [])
+        if str(row.get("name")) != BASELINE
+    ]
+    if len(fallback_rows) != 1:
+        raise ValueError(f"Expected one v17 fallback in {args.fallback_candidate}")
+    fallback = normalize(str(fallback_rows[0]["name"]), fallback_rows[0])
+    if fallback["name"] not in {row["name"] for row in selected}:
+        selected.append(fallback)
     baseline = {
         "name": BASELINE,
         "geometry": {"name": BASELINE},
@@ -100,12 +115,15 @@ def main() -> None:
         "development_summary_sha256": sha256(args.development_summary),
         "selection_rule": (
             "pre-registered passing candidates in composite rank order; prefer distinct "
-            "boundary-kind/camera-alpha/velocity signatures; at most three"
+            "boundary-kind/camera-alpha/velocity signatures; reserve one slot for the "
+            "frozen v17 exact-fallback reference; at most three"
         ),
         "selected_names": [row["name"] for row in selected],
         "candidates": [baseline, *selected],
         "frozen_before_holdout": True,
         "holdout_or_test_metrics_read": False,
+        "fallback_source": str(args.fallback_candidate.resolve()),
+        "fallback_source_sha256": sha256(args.fallback_candidate),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     partial = args.output.with_suffix(args.output.suffix + ".partial")
