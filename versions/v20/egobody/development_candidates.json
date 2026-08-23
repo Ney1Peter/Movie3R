@@ -1,0 +1,96 @@
+{
+  "schema_version": "Bridge3R-EgoBody-development-candidates-v1",
+  "protocol": "Bridge3R-EgoBody-CS150-v1",
+  "frozen_before_development_inference": true,
+  "selection_order": "development ranks the finite set; official val is an untouched holdout; official test is run once after freezing",
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry",
+      "geometry": {"name": "v16_0_m15_geometry"},
+      "identity": null
+    },
+    {
+      "name": "v17_harmony_multicue_safe",
+      "geometry": {
+        "name": "v17_harmony_multicue_safe",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 1.0,
+        "root_alpha": 0.5,
+        "root_beta": 0.02,
+        "gate_max_boundary_residual_m": 0.25,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 0.0,
+        "gate_max_translation_m": 1.6
+      },
+      "identity": null
+    },
+    {
+      "name": "v19_ungated_translation_b050",
+      "geometry": {
+        "name": "v19_ungated_translation_b050",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5
+      },
+      "identity": null
+    },
+    {
+      "name": "v20_gate_r025_t075_b050",
+      "geometry": {
+        "name": "v20_gate_r025_t075_b050",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5,
+        "gate_max_boundary_residual_m": 0.25,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 1.0,
+        "gate_max_translation_m": 0.75
+      },
+      "identity": null
+    },
+    {
+      "name": "v20_gate_r025_t100_b100",
+      "geometry": {
+        "name": "v20_gate_r025_t100_b100",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 1.0,
+        "gate_max_boundary_residual_m": 0.25,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 1.0,
+        "gate_max_translation_m": 1.0
+      },
+      "identity": null
+    },
+    {
+      "name": "v20_gate_r015_t050_b050",
+      "geometry": {
+        "name": "v20_gate_r015_t050_b050",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5,
+        "gate_max_boundary_residual_m": 0.15,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 1.0,
+        "gate_max_translation_m": 0.5
+      },
+      "identity": null
+    },
+    {
+      "name": "v20_gate_vel_r025_t075_b050",
+      "geometry": {
+        "name": "v20_gate_vel_r025_t075_b050",
+        "camera_alpha": 1.0,
+        "boundary_kind": "translation",
+        "boundary_blend": 0.5,
+        "use_velocity_target": true,
+        "gate_max_boundary_residual_m": 0.25,
+        "gate_min_matches": 2,
+        "gate_min_match_fraction": 1.0,
+        "gate_max_translation_m": 0.75
+      },
+      "identity": null
+    }
+  ]
+}
