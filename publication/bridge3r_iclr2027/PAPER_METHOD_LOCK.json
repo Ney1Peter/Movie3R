@@ -1,0 +1,97 @@
+{
+  "schema_version": "Bridge3R-paper-method-lock-v1",
+  "created_at": "2026-08-25",
+  "status": "scientific contract locked; unified executable entry and causality-contract tests remain required before release",
+  "method": {
+    "name": "Bridge3R",
+    "task": "causal online multi-person 4D reconstruction across a viewpoint cut within one physical scene",
+    "scope": {
+      "primary_outputs": [
+        "camera trajectory",
+        "world-space multi-person reconstruction",
+        "persistent anonymous identity"
+      ],
+      "backbone": "Human3R-derived scene-aware recurrent reconstruction backbone",
+      "not_claimed": [
+        "dense scene-geometry improvement",
+        "arbitrary cross-scene video editing",
+        "unrestricted long-stream reconstruction",
+        "backbone-agnostic validation"
+      ]
+    },
+    "boundary_transaction": [
+      "propose a cut causally from observed RGB history",
+      "start a clean reset branch that owns post-cut recurrent state",
+      "retain the pre-cut state only as a read-only shadow for a coarse B0 gauge proposal",
+      "associate people under a one-to-one permutation-aware rule",
+      "apply one shared post-shot translation in the pre-cut world gauge"
+    ],
+    "fixed_parameters": {
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.5,
+      "reliability_gate": false,
+      "root_filter": false
+    },
+    "inactive_or_historical_components": [
+      "dataset-specific reliability gates",
+      "root alpha-beta filters",
+      "BRTC/C1/adaptive-joint as the final publication path",
+      "dataset-specific blend or threshold selection"
+    ],
+    "causality_contract": {
+      "future_post_frames_used_by_correction": 0,
+      "pre_cut_predictions_rewritten": false,
+      "post_cut_state_owner": "clean reset branch",
+      "shadow_branch": "read-only",
+      "required_release_tests": [
+        "no-cut bit-exactness",
+        "prefix equivalence",
+        "future-suffix perturbation",
+        "pre-cut history immutability",
+        "clean-state lineage",
+        "formal/deployment numerical equivalence",
+        "multi-cut state composition"
+      ]
+    }
+  },
+  "checkpoint_contract": {
+    "bridge3r_human3r_derived_checkpoint_sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+    "strict_human3r_checkpoint_sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377",
+    "causal_cut_detector_sha256": "cb84b0da620878515e94f08b30d757206b41c4de82e2ff4091fe2a6e519e498f"
+  },
+  "frozen_result_bindings": [
+    {
+      "dataset": "EgoBody-CS150",
+      "publication_method_id": "v19_ungated_translation_b050",
+      "result_summary": "output/v20_egobody/formal/test/aggregate/summary.json",
+      "result_summary_sha256": "91f0830b7859d678ae4d1afd3d21b053fa6db073b60416f5c7fdcdf1eea26a18",
+      "historical_candidate": "data/EgoBody_work_v20/frozen/frozen_final_candidate.json",
+      "historical_candidate_sha256": "9d9f4c21b37fb3b53f889bd445a540a037c5f03e3f54f4beffa10580d9ddf58e",
+      "publication_config": "publication/bridge3r_iclr2027/configs/egobody_reconstructed_publication_config.json",
+      "contract_status": "the original data-workspace candidate was removed after artifact retention; this explicit configuration is reconstructed from its immutable artifact manifest and test candidate report, not presented as the original file"
+    },
+    {
+      "dataset": "EgoHumans-CS100",
+      "publication_method_id": "v19_egohumans_frozen",
+      "result_summary": "output/v19_egohumans/test/summary/summary.json",
+      "result_summary_sha256": "2515b3d9dc4f77e4358be3c99193a50cdd3d8b1e83909ea3dbfdbd6666e436fc",
+      "historical_candidate": "versions/v19/egohumans/frozen_final_candidate.json",
+      "historical_candidate_sha256": "404fdae52c9e1cb57e06d2527c97f819c8d03f5f4aa2d145a4513bad92991375",
+      "contract_status": "final candidate itself contains the locked half-translation geometry"
+    },
+    {
+      "dataset": "Harmony4D-CS150",
+      "publication_method_id": "bridge3r_unified_half_translation",
+      "result_summary": "output/v17_harmony4d/unified_half_translation_audit/paper/summary.json",
+      "result_summary_sha256": "51ebde2f0ca2d70e54bd3ba948ab4ea47bc2821aabc6dd34b4ec34728520b7da",
+      "historical_candidate": "versions/v17/harmony4d/unified_half_translation_audit_candidate.json",
+      "historical_candidate_sha256": "6c66c57ceaa35c2358b91a5cafcda9f03b83315f98f52fa1e6df8aa1c3d30358",
+      "contract_status": "post-hoc method-unification audit using frozen m3_b0_only caches; its Test manifest was used for parameter selection and is a disclosed stress test, not an untouched held-out claim"
+    }
+  ],
+  "historical_integrity": {
+    "repository_commit_before_publication_lock": "8867f996e8e932bf9fc4623055be4996200930ea",
+    "policy": "This lock defines the final paper method. It never changes or relabels the original candidate files, cached predictions, frozen manifests, or historical result hashes."
+  }
+}

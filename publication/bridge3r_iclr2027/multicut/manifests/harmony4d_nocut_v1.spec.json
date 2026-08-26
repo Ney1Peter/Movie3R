@@ -1,0 +1,12 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-NoCut-manifest-v1",
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1-NoCutControl",
+  "seed": 20260825,
+  "case_count": 4,
+  "clip_length": 150,
+  "boundaries": [],
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/manifests/harmony4d_nocut_v1.jsonl",
+  "manifest_sha256": "963cbb7acfebf896438b83ae53337b98453dce7848e86345e188bf420c056e4c",
+  "construction": "first selected multi-cut camera and identical frame interval; no model result used",
+  "runtime_gt_access": false
+}

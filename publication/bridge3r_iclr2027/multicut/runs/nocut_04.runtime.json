@@ -1,0 +1,2679 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-multicut-runtime-v1",
+  "record": {
+    "archive_entry": "train/15_mma4.zip",
+    "boundaries": [],
+    "camera": "cam01",
+    "capture": "006_mma4",
+    "capture_relative": "15_mma4/006_mma4",
+    "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20_nocut",
+    "clip_length": 150,
+    "fps": 30.0,
+    "frame_numbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150
+    ],
+    "gt_available_to_runtime": false,
+    "identities_evaluator_only": [
+      "aria01",
+      "aria02"
+    ],
+    "protocol": "Bridge3R-Harmony4D-MultiCut-v1-NoCutControl",
+    "protocol_seed": 20260825,
+    "selection": {
+      "control_rule": "reuse the first selected multi-cut camera and the same contiguous 150-frame interval; no model result consulted",
+      "source_audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/audit_006_mma4.json",
+      "source_audit_sha256": "1b7f70db57f03a3a0a75ffbbaf112783d4e77633bfaffcc2795c5d7ff63867ac",
+      "source_multicut_case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20"
+    },
+    "selection_depends_on_model_result": false,
+    "sequence": "15_mma4"
+  },
+  "methods": [
+    "strict_human3r",
+    "bridge3r_nocut"
+  ],
+  "runtime": {
+    "causal_gru_detector": {
+      "seconds": 113.89134639967233,
+      "labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "pair_idx": 1,
+          "pred": 0,
+          "prob": 0.005443481262773275,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 2,
+          "pred": 0,
+          "prob": 0.004930479452013969,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 3,
+          "pred": 0,
+          "prob": 0.004623102024197578,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 4,
+          "pred": 0,
+          "prob": 0.004605858586728573,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 5,
+          "pred": 0,
+          "prob": 0.004572279751300812,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 6,
+          "pred": 0,
+          "prob": 0.004545216448605061,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 7,
+          "pred": 0,
+          "prob": 0.004556029569357634,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 8,
+          "pred": 0,
+          "prob": 0.004511464852839708,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 9,
+          "pred": 0,
+          "prob": 0.004500855226069689,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 10,
+          "pred": 0,
+          "prob": 0.004513002932071686,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 11,
+          "pred": 0,
+          "prob": 0.004529112949967384,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 12,
+          "pred": 0,
+          "prob": 0.004542865324765444,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 13,
+          "pred": 0,
+          "prob": 0.00454446766525507,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 14,
+          "pred": 0,
+          "prob": 0.004553880076855421,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 15,
+          "pred": 0,
+          "prob": 0.00454674381762743,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 16,
+          "pred": 0,
+          "prob": 0.004528958350419998,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 17,
+          "pred": 0,
+          "prob": 0.004551710560917854,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 18,
+          "pred": 0,
+          "prob": 0.004512364510446787,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 19,
+          "pred": 0,
+          "prob": 0.0045448970049619675,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 20,
+          "pred": 0,
+          "prob": 0.0045491596683859825,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 21,
+          "pred": 0,
+          "prob": 0.004601235035806894,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 22,
+          "pred": 0,
+          "prob": 0.004559014458209276,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 23,
+          "pred": 0,
+          "prob": 0.004581599496304989,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 24,
+          "pred": 0,
+          "prob": 0.004538457840681076,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 25,
+          "pred": 0,
+          "prob": 0.0045737773180007935,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 26,
+          "pred": 0,
+          "prob": 0.004647590685635805,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 27,
+          "pred": 0,
+          "prob": 0.004692353308200836,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 28,
+          "pred": 0,
+          "prob": 0.00468501215800643,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 29,
+          "pred": 0,
+          "prob": 0.004722401965409517,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 30,
+          "pred": 0,
+          "prob": 0.004735332913696766,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 31,
+          "pred": 0,
+          "prob": 0.004775569308549166,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 32,
+          "pred": 0,
+          "prob": 0.004742858465760946,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 33,
+          "pred": 0,
+          "prob": 0.004728131461888552,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 34,
+          "pred": 0,
+          "prob": 0.004733104258775711,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 35,
+          "pred": 0,
+          "prob": 0.004745492246001959,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 36,
+          "pred": 0,
+          "prob": 0.004651998169720173,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 37,
+          "pred": 0,
+          "prob": 0.0046804118901491165,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 38,
+          "pred": 0,
+          "prob": 0.004818994086235762,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 39,
+          "pred": 0,
+          "prob": 0.004831901751458645,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 40,
+          "pred": 0,
+          "prob": 0.0049175382591784,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 41,
+          "pred": 0,
+          "prob": 0.004799403715878725,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 42,
+          "pred": 0,
+          "prob": 0.004817185457795858,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 43,
+          "pred": 0,
+          "prob": 0.004810967016965151,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 44,
+          "pred": 0,
+          "prob": 0.004754620138555765,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 45,
+          "pred": 0,
+          "prob": 0.004739078227430582,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 46,
+          "pred": 0,
+          "prob": 0.004751730710268021,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 47,
+          "pred": 0,
+          "prob": 0.004710124805569649,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 48,
+          "pred": 0,
+          "prob": 0.004657996352761984,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 49,
+          "pred": 0,
+          "prob": 0.004646602552384138,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 50,
+          "pred": 0,
+          "prob": 0.00462384382262826,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 51,
+          "pred": 0,
+          "prob": 0.004667680710554123,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 52,
+          "pred": 0,
+          "prob": 0.004650457296520472,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 53,
+          "pred": 0,
+          "prob": 0.0046760509721934795,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 54,
+          "pred": 0,
+          "prob": 0.004653135314583778,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 55,
+          "pred": 0,
+          "prob": 0.004662867169827223,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 56,
+          "pred": 0,
+          "prob": 0.004597585182636976,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 57,
+          "pred": 0,
+          "prob": 0.004652450326830149,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 58,
+          "pred": 0,
+          "prob": 0.004615097772330046,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 59,
+          "pred": 0,
+          "prob": 0.0046737948432564735,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 60,
+          "pred": 0,
+          "prob": 0.004720896016806364,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 61,
+          "pred": 0,
+          "prob": 0.0046890852972865105,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 62,
+          "pred": 0,
+          "prob": 0.0046941908076405525,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 63,
+          "pred": 0,
+          "prob": 0.004665222484618425,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 64,
+          "pred": 0,
+          "prob": 0.004728173837065697,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 65,
+          "pred": 0,
+          "prob": 0.004642606247216463,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 66,
+          "pred": 0,
+          "prob": 0.004683458246290684,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 67,
+          "pred": 0,
+          "prob": 0.004742655903100967,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 68,
+          "pred": 0,
+          "prob": 0.004659092985093594,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 69,
+          "pred": 0,
+          "prob": 0.0046728141605854034,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 70,
+          "pred": 0,
+          "prob": 0.0046436064876616,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 71,
+          "pred": 0,
+          "prob": 0.0046864645555615425,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 72,
+          "pred": 0,
+          "prob": 0.004608377814292908,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 73,
+          "pred": 0,
+          "prob": 0.004586987197399139,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 74,
+          "pred": 0,
+          "prob": 0.004649927373975515,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 75,
+          "pred": 0,
+          "prob": 0.004546327516436577,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 76,
+          "pred": 0,
+          "prob": 0.004573929123580456,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 77,
+          "pred": 0,
+          "prob": 0.004564185161143541,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 78,
+          "pred": 0,
+          "prob": 0.004495653789490461,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 79,
+          "pred": 0,
+          "prob": 0.0045158229768276215,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 80,
+          "pred": 0,
+          "prob": 0.0045145112089812756,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 81,
+          "pred": 0,
+          "prob": 0.004503924399614334,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 82,
+          "pred": 0,
+          "prob": 0.004494964610785246,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 83,
+          "pred": 0,
+          "prob": 0.0045150876976549625,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 84,
+          "pred": 0,
+          "prob": 0.00447738915681839,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 85,
+          "pred": 0,
+          "prob": 0.00451452424749732,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 86,
+          "pred": 0,
+          "prob": 0.004517765250056982,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 87,
+          "pred": 0,
+          "prob": 0.004559691995382309,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 88,
+          "pred": 0,
+          "prob": 0.004549500998109579,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 89,
+          "pred": 0,
+          "prob": 0.004574354737997055,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 90,
+          "pred": 0,
+          "prob": 0.004514899104833603,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 91,
+          "pred": 0,
+          "prob": 0.0045200372114777565,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 92,
+          "pred": 0,
+          "prob": 0.004478220362216234,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 93,
+          "pred": 0,
+          "prob": 0.004485869314521551,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 94,
+          "pred": 0,
+          "prob": 0.0044584874995052814,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 95,
+          "pred": 0,
+          "prob": 0.004497101064771414,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 96,
+          "pred": 0,
+          "prob": 0.004487839061766863,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 97,
+          "pred": 0,
+          "prob": 0.004541976843029261,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 98,
+          "pred": 0,
+          "prob": 0.004572739824652672,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 99,
+          "pred": 0,
+          "prob": 0.004578143358230591,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 100,
+          "pred": 0,
+          "prob": 0.004599381238222122,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 101,
+          "pred": 0,
+          "prob": 0.004601846914738417,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 102,
+          "pred": 0,
+          "prob": 0.004571095108985901,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 103,
+          "pred": 0,
+          "prob": 0.004635498858988285,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 104,
+          "pred": 0,
+          "prob": 0.004610972944647074,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 105,
+          "pred": 0,
+          "prob": 0.004573873244225979,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 106,
+          "pred": 0,
+          "prob": 0.004523039795458317,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 107,
+          "pred": 0,
+          "prob": 0.00455681886523962,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 108,
+          "pred": 0,
+          "prob": 0.004565296694636345,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 109,
+          "pred": 0,
+          "prob": 0.004554578568786383,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 110,
+          "pred": 0,
+          "prob": 0.004568671807646751,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 111,
+          "pred": 0,
+          "prob": 0.0045865909196436405,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 112,
+          "pred": 0,
+          "prob": 0.004559354390949011,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 113,
+          "pred": 0,
+          "prob": 0.004566414747387171,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 114,
+          "pred": 0,
+          "prob": 0.004546506330370903,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 115,
+          "pred": 0,
+          "prob": 0.004592143464833498,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 116,
+          "pred": 0,
+          "prob": 0.00458954181522131,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 117,
+          "pred": 0,
+          "prob": 0.0046921661123633385,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 118,
+          "pred": 0,
+          "prob": 0.004687071777880192,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 119,
+          "pred": 0,
+          "prob": 0.004730213899165392,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 120,
+          "pred": 0,
+          "prob": 0.004691457841545343,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 121,
+          "pred": 0,
+          "prob": 0.004693281836807728,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 122,
+          "pred": 0,
+          "prob": 0.0046856640838086605,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 123,
+          "pred": 0,
+          "prob": 0.004744224715977907,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 124,
+          "pred": 0,
+          "prob": 0.0047399080358445644,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 125,
+          "pred": 0,
+          "prob": 0.004727723076939583,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 126,
+          "pred": 0,
+          "prob": 0.004741388838738203,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 127,
+          "pred": 0,
+          "prob": 0.004725062754005194,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 128,
+          "pred": 0,
+          "prob": 0.004691471345722675,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 129,
+          "pred": 0,
+          "prob": 0.004649302922189236,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 130,
+          "pred": 0,
+          "prob": 0.004643053747713566,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 131,
+          "pred": 0,
+          "prob": 0.004664861597120762,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 132,
+          "pred": 0,
+          "prob": 0.0046295709908008575,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 133,
+          "pred": 0,
+          "prob": 0.004641757812350988,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 134,
+          "pred": 0,
+          "prob": 0.004713758826255798,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 135,
+          "pred": 0,
+          "prob": 0.004667667206376791,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 136,
+          "pred": 0,
+          "prob": 0.004718516953289509,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 137,
+          "pred": 0,
+          "prob": 0.004728068597614765,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 138,
+          "pred": 0,
+          "prob": 0.0046471781097352505,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 139,
+          "pred": 0,
+          "prob": 0.004671964794397354,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 140,
+          "pred": 0,
+          "prob": 0.004678990226238966,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 141,
+          "pred": 0,
+          "prob": 0.004731880035251379,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 142,
+          "pred": 0,
+          "prob": 0.004725078120827675,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 143,
+          "pred": 0,
+          "prob": 0.004676765762269497,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 144,
+          "pred": 0,
+          "prob": 0.00461927242577076,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 145,
+          "pred": 0,
+          "prob": 0.004610204603523016,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 146,
+          "pred": 0,
+          "prob": 0.004534801002591848,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 147,
+          "pred": 0,
+          "prob": 0.004604944959282875,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 148,
+          "pred": 0,
+          "prob": 0.004568901844322681,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 149,
+          "pred": 0,
+          "prob": 0.004607231821864843,
+          "threshold": 0.5
+        }
+      ],
+      "first_positive_index": null
+    },
+    "static_logistic_detector": {
+      "seconds": 37.39068800210953,
+      "labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "pair_idx": 1,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00001.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00002.jpg",
+          "pred": 0,
+          "prob": 1.5894563373599931e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 2,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00002.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00003.jpg",
+          "pred": 0,
+          "prob": 1.3805408317128876e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 3,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00003.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00004.jpg",
+          "pred": 0,
+          "prob": 1.1462709069285875e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 4,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00004.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00005.jpg",
+          "pred": 0,
+          "prob": 1.1184824919917378e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 5,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00005.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00006.jpg",
+          "pred": 0,
+          "prob": 9.57147133452921e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 6,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00006.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00007.jpg",
+          "pred": 0,
+          "prob": 8.583723528927708e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 7,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00007.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00008.jpg",
+          "pred": 0,
+          "prob": 9.896141333588082e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 8,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00008.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00009.jpg",
+          "pred": 0,
+          "prob": 8.367188854228065e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 9,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00009.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00010.jpg",
+          "pred": 0,
+          "prob": 7.635002817248901e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 10,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00010.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00011.jpg",
+          "pred": 0,
+          "prob": 7.666410371368867e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 11,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00011.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00012.jpg",
+          "pred": 0,
+          "prob": 8.50852685746208e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 12,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00012.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00013.jpg",
+          "pred": 0,
+          "prob": 9.12110326574864e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 13,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00013.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00014.jpg",
+          "pred": 0,
+          "prob": 9.320166243348216e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 14,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00014.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00015.jpg",
+          "pred": 0,
+          "prob": 1.0158289189559198e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 15,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00015.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00016.jpg",
+          "pred": 0,
+          "prob": 9.767747009756134e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 16,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00016.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00017.jpg",
+          "pred": 0,
+          "prob": 8.492181314179784e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 17,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00017.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00018.jpg",
+          "pred": 0,
+          "prob": 9.749924491457375e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 18,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00018.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00019.jpg",
+          "pred": 0,
+          "prob": 7.97249454230195e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 19,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00019.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00020.jpg",
+          "pred": 0,
+          "prob": 9.036401683120971e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 20,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00020.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00021.jpg",
+          "pred": 0,
+          "prob": 8.687750473205025e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 21,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00021.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00022.jpg",
+          "pred": 0,
+          "prob": 1.0922221216085415e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 22,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00022.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00023.jpg",
+          "pred": 0,
+          "prob": 8.97098590034666e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 23,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00023.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00024.jpg",
+          "pred": 0,
+          "prob": 1.0764577978288788e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 24,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00024.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00025.jpg",
+          "pred": 0,
+          "prob": 8.953389107932342e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 25,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00025.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00026.jpg",
+          "pred": 0,
+          "prob": 1.0582126821659633e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 26,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00026.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00027.jpg",
+          "pred": 0,
+          "prob": 1.4384164916734232e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 27,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00027.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00028.jpg",
+          "pred": 0,
+          "prob": 1.6512962331973273e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 28,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00028.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00029.jpg",
+          "pred": 0,
+          "prob": 1.542986270378306e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 29,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00029.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00030.jpg",
+          "pred": 0,
+          "prob": 1.727304654251296e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 30,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00030.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00031.jpg",
+          "pred": 0,
+          "prob": 1.7200408404334778e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 31,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00031.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00032.jpg",
+          "pred": 0,
+          "prob": 1.690158763444237e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 32,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00032.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00033.jpg",
+          "pred": 0,
+          "prob": 1.4542660110167673e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 33,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00033.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00034.jpg",
+          "pred": 0,
+          "prob": 1.4044078108524074e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 34,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00034.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00035.jpg",
+          "pred": 0,
+          "prob": 1.5236438812904655e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 35,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00035.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00036.jpg",
+          "pred": 0,
+          "prob": 1.696172175563629e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 36,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00036.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00037.jpg",
+          "pred": 0,
+          "prob": 1.0508302841609105e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 37,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00037.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00038.jpg",
+          "pred": 0,
+          "prob": 1.0784130631274704e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 38,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00038.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00039.jpg",
+          "pred": 0,
+          "prob": 1.5480196662531888e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 39,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00039.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00040.jpg",
+          "pred": 0,
+          "prob": 1.7368022768807307e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 40,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00040.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00041.jpg",
+          "pred": 0,
+          "prob": 2.718239833400109e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 41,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00041.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00042.jpg",
+          "pred": 0,
+          "prob": 1.3636160492044511e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 42,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00042.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00043.jpg",
+          "pred": 0,
+          "prob": 1.5384888919621936e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 43,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00043.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00044.jpg",
+          "pred": 0,
+          "prob": 1.5530642390922232e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 44,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00044.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00045.jpg",
+          "pred": 0,
+          "prob": 1.3058319691760394e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 45,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00045.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00046.jpg",
+          "pred": 0,
+          "prob": 1.2758376801631991e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 46,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00046.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00047.jpg",
+          "pred": 0,
+          "prob": 1.420848008856592e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 47,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00047.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00048.jpg",
+          "pred": 0,
+          "prob": 1.1548932749418806e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 48,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00048.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00049.jpg",
+          "pred": 0,
+          "prob": 9.269511531120908e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 49,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00049.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00050.jpg",
+          "pred": 0,
+          "prob": 9.951808527472347e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 50,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00050.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00051.jpg",
+          "pred": 0,
+          "prob": 9.721667219143639e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 51,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00051.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00052.jpg",
+          "pred": 0,
+          "prob": 1.3136101832304974e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 52,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00052.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00053.jpg",
+          "pred": 0,
+          "prob": 1.1982924740588546e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 53,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00053.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00054.jpg",
+          "pred": 0,
+          "prob": 1.3272600130059636e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 54,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00054.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00055.jpg",
+          "pred": 0,
+          "prob": 1.1510358101663716e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 55,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00055.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00056.jpg",
+          "pred": 0,
+          "prob": 1.2417597096805583e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 56,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00056.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00057.jpg",
+          "pred": 0,
+          "prob": 9.83650948808431e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 57,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00057.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00058.jpg",
+          "pred": 0,
+          "prob": 1.2043689599426096e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 58,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00058.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00059.jpg",
+          "pred": 0,
+          "prob": 1.0293728398785336e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 59,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00059.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00060.jpg",
+          "pred": 0,
+          "prob": 1.2853177229017948e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 60,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00060.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00061.jpg",
+          "pred": 0,
+          "prob": 1.5671311967441213e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 61,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00061.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00062.jpg",
+          "pred": 0,
+          "prob": 1.174173603431888e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 62,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00062.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00063.jpg",
+          "pred": 0,
+          "prob": 1.3518602455904334e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 63,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00063.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00064.jpg",
+          "pred": 0,
+          "prob": 1.1137922266495334e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 64,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00064.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00065.jpg",
+          "pred": 0,
+          "prob": 1.5084585134992135e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 65,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00065.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00066.jpg",
+          "pred": 0,
+          "prob": 1.205329540236987e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 66,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00066.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00067.jpg",
+          "pred": 0,
+          "prob": 1.2540065214130163e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 67,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00067.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00068.jpg",
+          "pred": 0,
+          "prob": 1.5457453243765264e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 68,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00068.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00069.jpg",
+          "pred": 0,
+          "prob": 1.1563348355482653e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 69,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00069.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00070.jpg",
+          "pred": 0,
+          "prob": 1.1860640552136288e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 70,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00070.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00071.jpg",
+          "pred": 0,
+          "prob": 1.0630116150060583e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 71,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00071.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00072.jpg",
+          "pred": 0,
+          "prob": 1.3002746274984957e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 72,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00072.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00073.jpg",
+          "pred": 0,
+          "prob": 9.452096635396943e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 73,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00073.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00074.jpg",
+          "pred": 0,
+          "prob": 8.70715968545172e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 74,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00074.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00075.jpg",
+          "pred": 0,
+          "prob": 1.6776058379172659e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 75,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00075.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00076.jpg",
+          "pred": 0,
+          "prob": 8.143249215830704e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 76,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00076.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00077.jpg",
+          "pred": 0,
+          "prob": 1.0055809899941568e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 77,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00077.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00078.jpg",
+          "pred": 0,
+          "prob": 8.842457005070316e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 78,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00078.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00079.jpg",
+          "pred": 0,
+          "prob": 6.60407242997017e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 79,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00079.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00080.jpg",
+          "pred": 0,
+          "prob": 7.367693419630617e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 80,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00080.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00081.jpg",
+          "pred": 0,
+          "prob": 7.61495784178155e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 81,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00081.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00082.jpg",
+          "pred": 0,
+          "prob": 7.211981992897441e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 82,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00082.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00083.jpg",
+          "pred": 0,
+          "prob": 6.923882847541512e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 83,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00083.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00084.jpg",
+          "pred": 0,
+          "prob": 7.384651367985028e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 84,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00084.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00085.jpg",
+          "pred": 0,
+          "prob": 6.265171433705731e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 85,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00085.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00086.jpg",
+          "pred": 0,
+          "prob": 7.467455517102671e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 86,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00086.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00087.jpg",
+          "pred": 0,
+          "prob": 7.733541645630118e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 87,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00087.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00088.jpg",
+          "pred": 0,
+          "prob": 9.56882235543077e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 88,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00088.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00089.jpg",
+          "pred": 0,
+          "prob": 8.688962611872693e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 89,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00089.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00090.jpg",
+          "pred": 0,
+          "prob": 9.324938603216616e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 90,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00090.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00091.jpg",
+          "pred": 0,
+          "prob": 6.844954467448424e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 91,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00091.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00092.jpg",
+          "pred": 0,
+          "prob": 6.734631381662209e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 92,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00092.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00093.jpg",
+          "pred": 0,
+          "prob": 5.524212624100091e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 93,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00093.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00094.jpg",
+          "pred": 0,
+          "prob": 6.21496344994607e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 94,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00094.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00095.jpg",
+          "pred": 0,
+          "prob": 5.382646621677442e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 95,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00095.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00096.jpg",
+          "pred": 0,
+          "prob": 6.442705661246592e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 96,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00096.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00097.jpg",
+          "pred": 0,
+          "prob": 6.295284105102167e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 97,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00097.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00098.jpg",
+          "pred": 0,
+          "prob": 7.9659241515319e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 98,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00098.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00099.jpg",
+          "pred": 0,
+          "prob": 9.478765619164377e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 99,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00099.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00100.jpg",
+          "pred": 0,
+          "prob": 8.949060201685121e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 100,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00100.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00101.jpg",
+          "pred": 0,
+          "prob": 1.0609304080621928e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 101,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00101.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00102.jpg",
+          "pred": 0,
+          "prob": 1.021880372320284e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 102,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00102.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00103.jpg",
+          "pred": 0,
+          "prob": 9.031777792386147e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 103,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00103.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00104.jpg",
+          "pred": 0,
+          "prob": 1.1543020229802304e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 104,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00104.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00105.jpg",
+          "pred": 0,
+          "prob": 9.453462547374101e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 105,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00105.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00106.jpg",
+          "pred": 0,
+          "prob": 8.096928396517877e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 106,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00106.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00107.jpg",
+          "pred": 0,
+          "prob": 6.387123351918978e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 107,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00107.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00108.jpg",
+          "pred": 0,
+          "prob": 8.339788586961035e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 108,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00108.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00109.jpg",
+          "pred": 0,
+          "prob": 7.814766611330637e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 109,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00109.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00110.jpg",
+          "pred": 0,
+          "prob": 7.683245034698756e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 110,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00110.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00111.jpg",
+          "pred": 0,
+          "prob": 8.371043335211517e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 111,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00111.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00112.jpg",
+          "pred": 0,
+          "prob": 9.356538666184308e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 112,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00112.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00113.jpg",
+          "pred": 0,
+          "prob": 8.565058973892423e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 113,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00113.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00114.jpg",
+          "pred": 0,
+          "prob": 9.175322181241964e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 114,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00114.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00115.jpg",
+          "pred": 0,
+          "prob": 7.410601130797461e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 115,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00115.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00116.jpg",
+          "pred": 0,
+          "prob": 9.122690984177631e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 116,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00116.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00117.jpg",
+          "pred": 0,
+          "prob": 9.423649870222272e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 117,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00117.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00118.jpg",
+          "pred": 0,
+          "prob": 1.3250749335005974e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 118,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00118.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00119.jpg",
+          "pred": 0,
+          "prob": 1.3196959173026823e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 119,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00119.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00120.jpg",
+          "pred": 0,
+          "prob": 1.5748604751448314e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 120,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00120.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00121.jpg",
+          "pred": 0,
+          "prob": 1.3080594787215268e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 121,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00121.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00122.jpg",
+          "pred": 0,
+          "prob": 1.3138493530134337e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 122,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00122.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00123.jpg",
+          "pred": 0,
+          "prob": 1.260830626480083e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 123,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00123.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00124.jpg",
+          "pred": 0,
+          "prob": 1.5800808079099392e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 124,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00124.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00125.jpg",
+          "pred": 0,
+          "prob": 1.4875991115619977e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 125,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00125.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00126.jpg",
+          "pred": 0,
+          "prob": 1.3988167874760495e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 126,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00126.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00127.jpg",
+          "pred": 0,
+          "prob": 1.3668104760923315e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 127,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00127.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00128.jpg",
+          "pred": 0,
+          "prob": 1.4285139940081213e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 128,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00128.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00129.jpg",
+          "pred": 0,
+          "prob": 1.1936638066120655e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 129,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00129.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00130.jpg",
+          "pred": 0,
+          "prob": 1.0192743896775388e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 130,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00130.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00131.jpg",
+          "pred": 0,
+          "prob": 1.0692967346727422e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 131,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00131.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00132.jpg",
+          "pred": 0,
+          "prob": 1.2222754702453442e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 132,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00132.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00133.jpg",
+          "pred": 0,
+          "prob": 1.1193440150793553e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 133,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00133.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00134.jpg",
+          "pred": 0,
+          "prob": 1.2187006999791967e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 134,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00134.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00135.jpg",
+          "pred": 0,
+          "prob": 1.6491274918456808e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 135,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00135.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00136.jpg",
+          "pred": 0,
+          "prob": 1.5157669749401087e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 136,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00136.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00137.jpg",
+          "pred": 0,
+          "prob": 1.8616068070909372e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 137,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00137.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00138.jpg",
+          "pred": 0,
+          "prob": 1.80107745904583e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 138,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00138.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00139.jpg",
+          "pred": 0,
+          "prob": 1.190300263308731e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 139,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00139.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00140.jpg",
+          "pred": 0,
+          "prob": 1.3621735912880654e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 140,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00140.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00141.jpg",
+          "pred": 0,
+          "prob": 1.3836709065588534e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 141,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00141.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00142.jpg",
+          "pred": 0,
+          "prob": 1.607503522062128e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 142,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00142.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00143.jpg",
+          "pred": 0,
+          "prob": 1.581431729690584e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 143,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00143.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00144.jpg",
+          "pred": 0,
+          "prob": 1.3410259178039652e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 144,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00144.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00145.jpg",
+          "pred": 0,
+          "prob": 1.1723962968976255e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 145,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00145.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00146.jpg",
+          "pred": 0,
+          "prob": 1.0495396852814247e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 146,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00146.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00147.jpg",
+          "pred": 0,
+          "prob": 7.323252008135926e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 147,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00147.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00148.jpg",
+          "pred": 0,
+          "prob": 9.75832903158876e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 148,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00148.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00149.jpg",
+          "pred": 0,
+          "prob": 8.594292333607274e-07,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 149,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00149.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4/15_mma4/006_mma4/exo/cam01/images/00150.jpg",
+          "pred": 0,
+          "prob": 1.0843969735527319e-06,
+          "threshold": 0.5
+        }
+      ],
+      "first_positive_index": null
+    }
+  },
+  "strict_forward": {
+    "frames": 150,
+    "seconds": 42.67617155238986,
+    "fps": 3.5148419959803077,
+    "peak_vram_bytes": 5727184896.0
+  },
+  "bridge3r": {
+    "no_cut": {
+      "publication_method": "Bridge3R",
+      "cut_applied": false,
+      "state_lineage": {
+        "pre_cut_state": "unchanged",
+        "post_cut_state": "not_started",
+        "shadow_state": "not_read"
+      },
+      "runtime_contract": {
+        "gt_used": false,
+        "future_frames_used": 0,
+        "pre_frames_rewritten_after_emission": false,
+        "no_cut_bit_exact": true
+      }
+    },
+    "no_cut_array_equal": {
+      "cameras_c2w": true,
+      "joints_world": true,
+      "vertices_world": true,
+      "valid": true,
+      "native_ids": true,
+      "persistent_ids": true
+    },
+    "clean_forward": {
+      "frames": 150,
+      "seconds": 59.32451947685331,
+      "fps": 2.5284654864929097,
+      "peak_vram_bytes": 5799410176.0
+    }
+  },
+  "checkpoint": {
+    "current": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+    "current_sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+    "original": "/data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth",
+    "original_sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377",
+    "detector": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14/detector_learning_audit/SELECTED_MODEL.pt",
+    "detector_sha256": "cb84b0da620878515e94f08b30d757206b41c4de82e2ff4091fe2a6e519e498f",
+    "current_flags": {
+      "enable_v8_pose_prompt": true,
+      "enable_v8_human_latent_corr": true,
+      "enable_v8_human_trans_corr": false,
+      "enable_v8_head_lora": true,
+      "v9_oracle_correction_gate_enabled": true,
+      "v9_oracle_correction_cache_enabled": false,
+      "v14_1_event_only_head_lora": true
+    }
+  },
+  "provenance": {
+    "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/manifests/harmony4d_nocut_v1.jsonl",
+    "manifest_sha256": "963cbb7acfebf896438b83ae53337b98453dce7848e86345e188bf420c056e4c",
+    "manifest_line": 4,
+    "runner": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/run_harmony4d_multicut.py",
+    "runner_sha256": "bdecf3eebe28ea0ccc4a1faf216aeea0c9cd7cc0c5c1bce5b60a3a2bccab29a5",
+    "argv": [
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/run_harmony4d_multicut.py",
+      "--manifest",
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/manifests/harmony4d_nocut_v1.jsonl",
+      "--line",
+      "4",
+      "--extracted-root",
+      "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4",
+      "--output",
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_04.npz",
+      "--device",
+      "cuda:0",
+      "--no-cut"
+    ]
+  },
+  "runtime_contract": {
+    "gt_used": false,
+    "pre_cut_frames_mutated": false,
+    "no_cut": true,
+    "boundaries": []
+  },
+  "environment": {
+    "python": "3.10.19 (main, Dec  9 2025, 19:03:08) [Clang 21.1.4 ]",
+    "platform": "Linux-5.15.0-130-generic-x86_64-with-glibc2.35",
+    "torch": "2.4.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda:0",
+    "gpu": "NVIDIA L20"
+  },
+  "cache": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_04.npz",
+  "cache_sha256": "ab6af1dd99ef7e9171ba09fff67175fbe7300770b61841e5640b9c6d1f843dda"
+}

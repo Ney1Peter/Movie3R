@@ -1,0 +1,90 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-multicut-summary-v1",
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+  "case_count": 4,
+  "boundaries_per_case": 2,
+  "methods": {
+    "strict_human3r": {
+      "W-MPJPE_mm": 2091.9210680597607,
+      "WA-MPJPE_mm": 719.447159335728,
+      "ATE-Sim3_m": 1.618051900031133,
+      "IDF1": 0.37695351051274717,
+      "Coverage": 0.9358333333333334,
+      "Seam-root_m": 4.538762006701163
+    },
+    "bridge3r": {
+      "W-MPJPE_mm": 1304.8423980765717,
+      "WA-MPJPE_mm": 651.1982070052593,
+      "ATE-Sim3_m": 1.7001293203809626,
+      "IDF1": 0.4342706297166453,
+      "Coverage": 0.9358333333333334,
+      "Seam-root_m": 1.7248703094654636
+    }
+  },
+  "multicut_detector": {
+    "causal_gru": {
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_positive_rate_per_noncut_pair": 0.0,
+      "brier_macro": 0.00014611253055395808
+    },
+    "static_logistic": {
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_positive_rate_per_noncut_pair": 0.0,
+      "brier_macro": 9.103640236340356e-11
+    }
+  },
+  "no_cut_controls": {
+    "causal_gru_detector": {
+      "case_count": 4,
+      "positive_count": 0,
+      "frame_pair_count": 600,
+      "false_positive_rate_per_pair": 0.0,
+      "first_positive_indices": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "no_cut_array_checks": 24,
+      "no_cut_array_checks_all_exact": true
+    },
+    "static_logistic_detector": {
+      "case_count": 4,
+      "positive_count": 0,
+      "frame_pair_count": 600,
+      "false_positive_rate_per_pair": 0.0,
+      "first_positive_indices": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "no_cut_array_checks": 24,
+      "no_cut_array_checks_all_exact": true
+    }
+  },
+  "case_reports": [
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_01.evaluation.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_02.evaluation.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_03.evaluation.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_04.evaluation.json"
+  ],
+  "no_cut_runtime_reports": [
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_01.runtime.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_02.runtime.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_03.runtime.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_04.runtime.json"
+  ],
+  "selection": "all four pre-registered cases retained; no result-based exclusion",
+  "caveat": "Auxiliary same-scene three-shot evidence only. It does not alter the primary single-cut protocol or support cross-scene claims."
+}

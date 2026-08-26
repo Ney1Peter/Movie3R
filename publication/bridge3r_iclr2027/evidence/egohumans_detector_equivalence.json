@@ -1,0 +1,939 @@
+{
+  "schema_version": "Bridge3R-EgoHumans-detector-equivalence-audit-v1",
+  "protocol": "Movie3R-EgoHumans-CS100-v1",
+  "runtime_report_count": 116,
+  "matched_first_positive_count": 116,
+  "mismatch_count": 0,
+  "conclusion": "detector-driven boundary is numerically identical to the evaluated boundary for every frozen runtime report",
+  "rows": [
+    {
+      "case_id": "ego_test_badminton_001_badminton_extreme_cam01_cam13_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_extreme_cam01_cam13_b00301.runtime.json",
+      "runtime_report_sha256": "cf79d41fcf69b0244e2391de81d79f671f4cd7766d84b64cbb5657b28101d91c"
+    },
+    {
+      "case_id": "ego_test_badminton_001_badminton_large_cam11_cam15_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_large_cam11_cam15_b00301.runtime.json",
+      "runtime_report_sha256": "c889b01f2ba4aa593b6a3dfd34d4d32ad79c7e4b6125ca13da1f3aafdadd1792"
+    },
+    {
+      "case_id": "ego_test_badminton_001_badminton_medium_cam02_cam15_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_medium_cam02_cam15_b00301.runtime.json",
+      "runtime_report_sha256": "aa9fb844e1f3119596396eeafedc8af4101ba90844aadec2b46920dfb1da718e"
+    },
+    {
+      "case_id": "ego_test_badminton_001_badminton_small_cam06_cam02_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_small_cam06_cam02_b00301.runtime.json",
+      "runtime_report_sha256": "b3faa6a5613b83df5a0dc77bbc58fbcb996e8bbe562609ef265fab7c85fcbebe"
+    },
+    {
+      "case_id": "ego_test_badminton_005_badminton_extreme_cam13_cam01_b00326",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__005_badminton-005/ego_test_badminton_005_badminton_extreme_cam13_cam01_b00326.runtime.json",
+      "runtime_report_sha256": "65998820bb3ba10b213cd377668f5ea2568bb8078c2da1a3f175b1128b764f97"
+    },
+    {
+      "case_id": "ego_test_badminton_005_badminton_large_cam11_cam15_b00326",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__005_badminton-005/ego_test_badminton_005_badminton_large_cam11_cam15_b00326.runtime.json",
+      "runtime_report_sha256": "69a6819b650531199fdf728022d8434898891ac38a14187c0dc9b6497be469a1"
+    },
+    {
+      "case_id": "ego_test_badminton_005_badminton_medium_cam02_cam15_b00326",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__005_badminton-005/ego_test_badminton_005_badminton_medium_cam02_cam15_b00326.runtime.json",
+      "runtime_report_sha256": "61edbe825ab5bfeaab380e6ade626cb4a720faecd5046ada58be160e686e497f"
+    },
+    {
+      "case_id": "ego_test_badminton_005_badminton_small_cam02_cam06_b00326",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/badminton__005_badminton-005/ego_test_badminton_005_badminton_small_cam02_cam06_b00326.runtime.json",
+      "runtime_report_sha256": "b8e003c6dcfb66b20cabca42ce71e364fbe2a90e5ff71ac4bbdae28c05c4a649"
+    },
+    {
+      "case_id": "ego_test_basketball_001_basketball_extreme_cam05_cam04_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__001_basketball-002/ego_test_basketball_001_basketball_extreme_cam05_cam04_b00301.runtime.json",
+      "runtime_report_sha256": "f8f637cc77100225f153df28e9dcc47f1a421ad931d71d56ba5801df3725d485"
+    },
+    {
+      "case_id": "ego_test_basketball_001_basketball_large_cam05_cam01_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__001_basketball-002/ego_test_basketball_001_basketball_large_cam05_cam01_b00301.runtime.json",
+      "runtime_report_sha256": "9d36560332e0ca1f07df90bedada45bc3560326c9856dc7f530ba9b190825d75"
+    },
+    {
+      "case_id": "ego_test_basketball_001_basketball_medium_cam01_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__001_basketball-002/ego_test_basketball_001_basketball_medium_cam01_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "4c640dd90176a71a894fde24488823caa727df77eafd30a8a4e2b0ee0e380077"
+    },
+    {
+      "case_id": "ego_test_basketball_001_basketball_small_cam06_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__001_basketball-002/ego_test_basketball_001_basketball_small_cam06_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "7e1c38cf7af35b28bf7b67dac3b1cd0f492ce8b39ab7f1a412756b201826e32b"
+    },
+    {
+      "case_id": "ego_test_basketball_002_basketball_extreme_cam04_cam05_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__002_basketball-001/ego_test_basketball_002_basketball_extreme_cam04_cam05_b00301.runtime.json",
+      "runtime_report_sha256": "139571ac8dda52fa802656d59cf3674dea507d6036449f9b4bedd60ec2aaa8eb"
+    },
+    {
+      "case_id": "ego_test_basketball_002_basketball_large_cam01_cam05_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__002_basketball-001/ego_test_basketball_002_basketball_large_cam01_cam05_b00301.runtime.json",
+      "runtime_report_sha256": "5ceac3eab45b1144297df9546e2fd86e4d044367329a2432479ce710b985e0af"
+    },
+    {
+      "case_id": "ego_test_basketball_002_basketball_medium_cam03_cam01_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__002_basketball-001/ego_test_basketball_002_basketball_medium_cam03_cam01_b00301.runtime.json",
+      "runtime_report_sha256": "570b8a131c409ce2edfb279fdad723c36af078b4163abd33526ab95bd7fd52e5"
+    },
+    {
+      "case_id": "ego_test_basketball_002_basketball_small_cam06_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__002_basketball-001/ego_test_basketball_002_basketball_small_cam06_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "c5b31cbafd3cb53aa80888addd2905e6907c3f8a53ad9bd3f451c8a58eab59cd"
+    },
+    {
+      "case_id": "ego_test_basketball_003_basketball_extreme_cam05_cam04_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__003_basketball-004/ego_test_basketball_003_basketball_extreme_cam05_cam04_b00286.runtime.json",
+      "runtime_report_sha256": "6833d1eaed24d2fdbdedfb1fbabbdfab0b9a152b9ac233b490551acfbd3fa25b"
+    },
+    {
+      "case_id": "ego_test_basketball_003_basketball_large_cam05_cam01_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__003_basketball-004/ego_test_basketball_003_basketball_large_cam05_cam01_b00286.runtime.json",
+      "runtime_report_sha256": "69c69c928495aa03999f01cc631bdefed214a7c7aba0eaaae82513586ba1293d"
+    },
+    {
+      "case_id": "ego_test_basketball_003_basketball_medium_cam03_cam01_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__003_basketball-004/ego_test_basketball_003_basketball_medium_cam03_cam01_b00286.runtime.json",
+      "runtime_report_sha256": "3452a6830af90d6234a6d37b199903bc2f29e04d56075f7c594e00da463c0698"
+    },
+    {
+      "case_id": "ego_test_basketball_003_basketball_small_cam03_cam06_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/basketball__003_basketball-004/ego_test_basketball_003_basketball_small_cam03_cam06_b00286.runtime.json",
+      "runtime_report_sha256": "9a2cdaacf745947ed1fb826e8b8e47eecd337897c65a1faae6de667c05780679"
+    },
+    {
+      "case_id": "ego_test_fencing_001_fencing_extreme_cam10_cam07_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__001_fencing-005/ego_test_fencing_001_fencing_extreme_cam10_cam07_b00301.runtime.json",
+      "runtime_report_sha256": "6ca3f22aa4ceee3d25c2bb7b44a3bdf9378bfede525d6320d1670d06a34bf700"
+    },
+    {
+      "case_id": "ego_test_fencing_001_fencing_large_cam14_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__001_fencing-005/ego_test_fencing_001_fencing_large_cam14_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "67c53fdbbb0ca16c7bb1f07c19c9ff9dc7357d41cfedfaaa07954b8e6863335d"
+    },
+    {
+      "case_id": "ego_test_fencing_001_fencing_medium_cam13_cam10_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__001_fencing-005/ego_test_fencing_001_fencing_medium_cam13_cam10_b00301.runtime.json",
+      "runtime_report_sha256": "7707e481019b416a03364de62df3bcea2e89f71cbd33c1c0a0a839308df25966"
+    },
+    {
+      "case_id": "ego_test_fencing_001_fencing_small_cam15_cam04_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__001_fencing-005/ego_test_fencing_001_fencing_small_cam15_cam04_b00301.runtime.json",
+      "runtime_report_sha256": "3eb36ca2842327673067f7143ebfd3812f5539dcf6be517f5355c3e07c6f85b9"
+    },
+    {
+      "case_id": "ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301.runtime.json",
+      "runtime_report_sha256": "b9d01ca932baf98fdcc43fcdd21b42927c9a6eb9cbbec4dbb2530743fd0155ce"
+    },
+    {
+      "case_id": "ego_test_fencing_002_fencing_large_cam11_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_large_cam11_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "14e4f3f3dbe19e79801902121c7b84241f46460f752418dc60367870ab93faf1"
+    },
+    {
+      "case_id": "ego_test_fencing_002_fencing_medium_cam01_cam08_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_medium_cam01_cam08_b00301.runtime.json",
+      "runtime_report_sha256": "930f203f521c52115a7bbabd3abfa8d548049c46438c80ff1b3ddbd85ff3067a"
+    },
+    {
+      "case_id": "ego_test_fencing_002_fencing_small_cam03_cam13_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.runtime.json",
+      "runtime_report_sha256": "b7142de2e1cf1215dbe8599db28df4d5caeb6d1bf0dfb73d4e7dcfd2c8bbac66"
+    },
+    {
+      "case_id": "ego_test_fencing_003_fencing_extreme_cam10_cam07_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__003_fencing-003/ego_test_fencing_003_fencing_extreme_cam10_cam07_b00301.runtime.json",
+      "runtime_report_sha256": "075d391fe9f46d5e09b349fbaa2c04685ee4cf67ba1b323cb838caccfe1675d1"
+    },
+    {
+      "case_id": "ego_test_fencing_003_fencing_large_cam11_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__003_fencing-003/ego_test_fencing_003_fencing_large_cam11_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "4a6788dba1bf75c1a02fb6deec0b141e22aa4604923e13d3537d48bdf9c64852"
+    },
+    {
+      "case_id": "ego_test_fencing_003_fencing_medium_cam08_cam01_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__003_fencing-003/ego_test_fencing_003_fencing_medium_cam08_cam01_b00301.runtime.json",
+      "runtime_report_sha256": "cbf3a9efac955c23ed3509caabe011ed3e65fa63ecbfde9aedd5cfc5f20fc702"
+    },
+    {
+      "case_id": "ego_test_fencing_003_fencing_small_cam13_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/fencing__003_fencing-003/ego_test_fencing_003_fencing_small_cam13_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "d9970bb7c9773ff8dd53cc83dd2e32f258537cd649976c2de4d19702e51d041d"
+    },
+    {
+      "case_id": "ego_test_legoassemble_002_legoassemble_extreme_cam04_cam03_b00226",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__002_legoassemble-001/ego_test_legoassemble_002_legoassemble_extreme_cam04_cam03_b00226.runtime.json",
+      "runtime_report_sha256": "81893072132b5ec601f6fa54cf035ea3bbe6377efdc220e7d874b535cd5d3c37"
+    },
+    {
+      "case_id": "ego_test_legoassemble_002_legoassemble_large_cam01_cam05_b00226",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__002_legoassemble-001/ego_test_legoassemble_002_legoassemble_large_cam01_cam05_b00226.runtime.json",
+      "runtime_report_sha256": "43b4df1f1cd19de27e215189d55081d338a55e96d95416793c59d7b7e19a83c0"
+    },
+    {
+      "case_id": "ego_test_legoassemble_002_legoassemble_medium_cam07_cam05_b00226",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__002_legoassemble-001/ego_test_legoassemble_002_legoassemble_medium_cam07_cam05_b00226.runtime.json",
+      "runtime_report_sha256": "94389e95149ed01aa24f7e740b4a8560afcf770cc9f6e29a2e04b023101f9ad3"
+    },
+    {
+      "case_id": "ego_test_legoassemble_002_legoassemble_small_cam03_cam05_b00226",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__002_legoassemble-001/ego_test_legoassemble_002_legoassemble_small_cam03_cam05_b00226.runtime.json",
+      "runtime_report_sha256": "fecec24d07129004fed6fd063415645cd9b6940ff9d6936ada1752c47be1847e"
+    },
+    {
+      "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301.runtime.json",
+      "runtime_report_sha256": "1c4f38414df96301f2f478e7a9dd147120cfb57ffbbcaa5d9ee9d74df6ff68fc"
+    },
+    {
+      "case_id": "ego_test_legoassemble_003_legoassemble_large_cam05_cam01_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_large_cam05_cam01_b00301.runtime.json",
+      "runtime_report_sha256": "c7bef35e6a497a5afc02842334211fa73bab1072d81c282a041896149ace8668"
+    },
+    {
+      "case_id": "ego_test_legoassemble_003_legoassemble_medium_cam05_cam07_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_medium_cam05_cam07_b00301.runtime.json",
+      "runtime_report_sha256": "8d88842611ae9444b8da24051f1bf28e23cbaa02b7b19cfbac75d75f1b9af540"
+    },
+    {
+      "case_id": "ego_test_legoassemble_003_legoassemble_small_cam05_cam03_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_small_cam05_cam03_b00301.runtime.json",
+      "runtime_report_sha256": "5f69def9e17a20a538ac0912b87fd78d51e741d125434f9624a66a20e124a3e7"
+    },
+    {
+      "case_id": "ego_test_legoassemble_004_legoassemble_extreme_cam03_cam04_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__004_legoassemble-003/ego_test_legoassemble_004_legoassemble_extreme_cam03_cam04_b00301.runtime.json",
+      "runtime_report_sha256": "644666b8cc3f6e50a78c51b90ae7d3a97113d8cfa2d299d2f2c68bc525f41e50"
+    },
+    {
+      "case_id": "ego_test_legoassemble_004_legoassemble_large_cam05_cam01_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__004_legoassemble-003/ego_test_legoassemble_004_legoassemble_large_cam05_cam01_b00301.runtime.json",
+      "runtime_report_sha256": "c95a0bd1180613e1a6812bf781f4661f911ae27209dd139a766f1c6211a4506f"
+    },
+    {
+      "case_id": "ego_test_legoassemble_004_legoassemble_medium_cam07_cam05_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__004_legoassemble-003/ego_test_legoassemble_004_legoassemble_medium_cam07_cam05_b00301.runtime.json",
+      "runtime_report_sha256": "b1ae735d7ce89cd3111c246e3c8d398a11eaca759ff9e50b917c39852e886696"
+    },
+    {
+      "case_id": "ego_test_legoassemble_004_legoassemble_small_cam03_cam05_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/legoassemble__004_legoassemble-003/ego_test_legoassemble_004_legoassemble_small_cam03_cam05_b00301.runtime.json",
+      "runtime_report_sha256": "719e4a1a4c68d58edf48ddf339eb4ef5c8ad73df1d47e3a6726d47f656b28038"
+    },
+    {
+      "case_id": "ego_test_tagging_001_tagging_extreme_cam05_cam06_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__001_tagging-002/ego_test_tagging_001_tagging_extreme_cam05_cam06_b00301.runtime.json",
+      "runtime_report_sha256": "182ae3e660cd3b9241468c3956db0574ed7fe3893be0c1736faaa254e72e60cb"
+    },
+    {
+      "case_id": "ego_test_tagging_001_tagging_large_cam08_cam07_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__001_tagging-002/ego_test_tagging_001_tagging_large_cam08_cam07_b00301.runtime.json",
+      "runtime_report_sha256": "0b43a2c269a77335c813c0e2416d966c370bad7de2f67758465b81be6fd713ee"
+    },
+    {
+      "case_id": "ego_test_tagging_001_tagging_medium_cam04_cam02_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__001_tagging-002/ego_test_tagging_001_tagging_medium_cam04_cam02_b00301.runtime.json",
+      "runtime_report_sha256": "0b90936c63fba919350867e6ae8842ccf05ca5f3d84b993d779b8fc9eca9b494"
+    },
+    {
+      "case_id": "ego_test_tagging_001_tagging_small_cam02_cam06_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__001_tagging-002/ego_test_tagging_001_tagging_small_cam02_cam06_b00301.runtime.json",
+      "runtime_report_sha256": "ae82a0fc1f9114392e63009f51abcccbff1331b5da9e1fe7703d8561bef79393"
+    },
+    {
+      "case_id": "ego_test_tagging_002_tagging_extreme_cam06_cam05_b00111",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__002_tagging/ego_test_tagging_002_tagging_extreme_cam06_cam05_b00111.runtime.json",
+      "runtime_report_sha256": "3e2796b1aa3bbf8d1da6505bb60199908d759b03ff850b9951d9041bce3293ac"
+    },
+    {
+      "case_id": "ego_test_tagging_002_tagging_large_cam07_cam08_b00111",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__002_tagging/ego_test_tagging_002_tagging_large_cam07_cam08_b00111.runtime.json",
+      "runtime_report_sha256": "193349706fbcd25ea6d28c46f8d8c58e76971cdefa82a73cd817f57dbb6d31fb"
+    },
+    {
+      "case_id": "ego_test_tagging_002_tagging_medium_cam02_cam04_b00111",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__002_tagging/ego_test_tagging_002_tagging_medium_cam02_cam04_b00111.runtime.json",
+      "runtime_report_sha256": "3c403e2e6920b0635500f0a78e5d4c7dc1dd700d2c26d65000e76cedae239e8c"
+    },
+    {
+      "case_id": "ego_test_tagging_002_tagging_small_cam02_cam06_b00111",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__002_tagging/ego_test_tagging_002_tagging_small_cam02_cam06_b00111.runtime.json",
+      "runtime_report_sha256": "d9a3fa797abf14e79bae201bcbd8fa9219dd477fb93c1574bfd9bd64b0de1616"
+    },
+    {
+      "case_id": "ego_test_tagging_003_tagging_extreme_cam05_cam06_b00156",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__003_tagging-001/ego_test_tagging_003_tagging_extreme_cam05_cam06_b00156.runtime.json",
+      "runtime_report_sha256": "6d7d99f0ccedac3f62424dc9755c3539302db2eb35c176d9335bdc1b6326ae04"
+    },
+    {
+      "case_id": "ego_test_tagging_003_tagging_large_cam07_cam08_b00156",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__003_tagging-001/ego_test_tagging_003_tagging_large_cam07_cam08_b00156.runtime.json",
+      "runtime_report_sha256": "03ed5109306c812e101b14682d4f90b02496abe7dac13f82e458e39515f5a3b6"
+    },
+    {
+      "case_id": "ego_test_tagging_003_tagging_medium_cam04_cam02_b00156",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__003_tagging-001/ego_test_tagging_003_tagging_medium_cam04_cam02_b00156.runtime.json",
+      "runtime_report_sha256": "a7422d541b9a842a67dd35f4e9c870d37ef2461c014765a3e4f3da49e9a8b659"
+    },
+    {
+      "case_id": "ego_test_tagging_003_tagging_small_cam06_cam02_b00156",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__003_tagging-001/ego_test_tagging_003_tagging_small_cam06_cam02_b00156.runtime.json",
+      "runtime_report_sha256": "716c748508ae306277d52a153c3a9f2e0f90268623b9a8e366b7d476ef08ffd7"
+    },
+    {
+      "case_id": "ego_test_tagging_005_tagging_extreme_cam05_cam06_b00221",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__005_tagging-003/ego_test_tagging_005_tagging_extreme_cam05_cam06_b00221.runtime.json",
+      "runtime_report_sha256": "2e6ee6243884c65ab4117a35019395c2d1eff2eedc1e7f2b9045f0f2da5e1159"
+    },
+    {
+      "case_id": "ego_test_tagging_005_tagging_large_cam07_cam08_b00221",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__005_tagging-003/ego_test_tagging_005_tagging_large_cam07_cam08_b00221.runtime.json",
+      "runtime_report_sha256": "945031deff0e091551dc20a872ed22131c6439aa62223b89c1427e97a2d9676a"
+    },
+    {
+      "case_id": "ego_test_tagging_005_tagging_medium_cam02_cam04_b00221",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__005_tagging-003/ego_test_tagging_005_tagging_medium_cam02_cam04_b00221.runtime.json",
+      "runtime_report_sha256": "920051c473d766defd32f0275b170361f5628d5f87bbdfeeabda00c18eced9b1"
+    },
+    {
+      "case_id": "ego_test_tagging_005_tagging_small_cam02_cam06_b00221",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__005_tagging-003/ego_test_tagging_005_tagging_small_cam02_cam06_b00221.runtime.json",
+      "runtime_report_sha256": "8d51786cee69585e3bf50ae7ab2340178c0b8dbbb673e3628d27bff6c524f6a1"
+    },
+    {
+      "case_id": "ego_test_tagging_006_tagging_extreme_cam05_cam06_b00186",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__006_tagging/ego_test_tagging_006_tagging_extreme_cam05_cam06_b00186.runtime.json",
+      "runtime_report_sha256": "84f9eb3df5ef960d796b8ac2201d00dfc4b5628958a9be6ce4de952523173a7d"
+    },
+    {
+      "case_id": "ego_test_tagging_006_tagging_large_cam08_cam07_b00186",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__006_tagging/ego_test_tagging_006_tagging_large_cam08_cam07_b00186.runtime.json",
+      "runtime_report_sha256": "34e2c7d24924b6bd54c81fcd1c9ffe3d208fab6d781deb5b3f8c12c01dc75bf4"
+    },
+    {
+      "case_id": "ego_test_tagging_006_tagging_medium_cam02_cam04_b00186",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__006_tagging/ego_test_tagging_006_tagging_medium_cam02_cam04_b00186.runtime.json",
+      "runtime_report_sha256": "97830288f27e2ed3eeb889d680a3b4d83870c70ae75e9f818486fcff64926edb"
+    },
+    {
+      "case_id": "ego_test_tagging_006_tagging_small_cam02_cam06_b00186",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__006_tagging/ego_test_tagging_006_tagging_small_cam02_cam06_b00186.runtime.json",
+      "runtime_report_sha256": "ea864f9feb7ba6cc5c2d1de322c5c28f5a97292f61834708214b1b0245170f73"
+    },
+    {
+      "case_id": "ego_test_tagging_007_tagging_extreme_cam06_cam05_b00359",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__007_tagging-001/ego_test_tagging_007_tagging_extreme_cam06_cam05_b00359.runtime.json",
+      "runtime_report_sha256": "182464a689302c7a8604431e64783ba14081b0e9493d055ece5e60f12f19bb00"
+    },
+    {
+      "case_id": "ego_test_tagging_007_tagging_large_cam08_cam07_b00359",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__007_tagging-001/ego_test_tagging_007_tagging_large_cam08_cam07_b00359.runtime.json",
+      "runtime_report_sha256": "b3855033bf8109f6394079bfef80f701194a09719241dd73786ce376364c1e90"
+    },
+    {
+      "case_id": "ego_test_tagging_007_tagging_medium_cam04_cam02_b00359",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__007_tagging-001/ego_test_tagging_007_tagging_medium_cam04_cam02_b00359.runtime.json",
+      "runtime_report_sha256": "9079254fa0487170ce5a681acd6bc3032e709f05a13e5e8a945a2a9103a867b0"
+    },
+    {
+      "case_id": "ego_test_tagging_007_tagging_small_cam02_cam06_b00359",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__007_tagging-001/ego_test_tagging_007_tagging_small_cam02_cam06_b00359.runtime.json",
+      "runtime_report_sha256": "958c8dd9deddc4a33ef9de11dc61e0192d038981ac6d7a731dda4cbbc5288a8f"
+    },
+    {
+      "case_id": "ego_test_tagging_009_tagging_extreme_cam06_cam05_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__009_tagging-002/ego_test_tagging_009_tagging_extreme_cam06_cam05_b00286.runtime.json",
+      "runtime_report_sha256": "9114c29f121e9c3fb38fcc6414151f4447188b6fa21fa939818d41412dcdf4af"
+    },
+    {
+      "case_id": "ego_test_tagging_009_tagging_large_cam07_cam08_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__009_tagging-002/ego_test_tagging_009_tagging_large_cam07_cam08_b00286.runtime.json",
+      "runtime_report_sha256": "608510d77f3e7e1f9f844458349f43724cd311519168711f1aa64c1542f5808d"
+    },
+    {
+      "case_id": "ego_test_tagging_009_tagging_medium_cam04_cam02_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__009_tagging-002/ego_test_tagging_009_tagging_medium_cam04_cam02_b00286.runtime.json",
+      "runtime_report_sha256": "22f2da961e3b78e3ef1064b58d7da406570cbe45ea98897ca1ff087f04f9fb6f"
+    },
+    {
+      "case_id": "ego_test_tagging_009_tagging_small_cam06_cam02_b00286",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__009_tagging-002/ego_test_tagging_009_tagging_small_cam06_cam02_b00286.runtime.json",
+      "runtime_report_sha256": "a07c76077dee311bedc243bc481c1979f114a85a8828ec7204fc0b6cbd11bdc0"
+    },
+    {
+      "case_id": "ego_test_tagging_010_tagging_extreme_cam06_cam05_b00211",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__010_tagging-004/ego_test_tagging_010_tagging_extreme_cam06_cam05_b00211.runtime.json",
+      "runtime_report_sha256": "58129a367598e7d51c244dcbb4a3d89c792d19542043a0b4e43652da29bd50a9"
+    },
+    {
+      "case_id": "ego_test_tagging_010_tagging_large_cam07_cam08_b00211",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__010_tagging-004/ego_test_tagging_010_tagging_large_cam07_cam08_b00211.runtime.json",
+      "runtime_report_sha256": "6c20988eaa90657a8dd0f3cc33fb918d2749d1e818877fe5572b926dabb51947"
+    },
+    {
+      "case_id": "ego_test_tagging_010_tagging_medium_cam02_cam04_b00211",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__010_tagging-004/ego_test_tagging_010_tagging_medium_cam02_cam04_b00211.runtime.json",
+      "runtime_report_sha256": "c356943bb680a5c7c73689018b6294d824a7d69e8083ccacd68bc62d6e12bfd2"
+    },
+    {
+      "case_id": "ego_test_tagging_010_tagging_small_cam02_cam06_b00211",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tagging__010_tagging-004/ego_test_tagging_010_tagging_small_cam02_cam06_b00211.runtime.json",
+      "runtime_report_sha256": "094459c21a79ea08333a05676bd525203726fee82ff86941009073fe9e6d5aab"
+    },
+    {
+      "case_id": "ego_test_tennis_002_tennis_extreme_cam05_cam15_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__002_tennis-004/ego_test_tennis_002_tennis_extreme_cam05_cam15_b00601.runtime.json",
+      "runtime_report_sha256": "4bdee78b723e16443979f1f045fe48d83f9a1e5f0ee16bbb2e25831255728cc4"
+    },
+    {
+      "case_id": "ego_test_tennis_002_tennis_large_cam11_cam20_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__002_tennis-004/ego_test_tennis_002_tennis_large_cam11_cam20_b00601.runtime.json",
+      "runtime_report_sha256": "6f31a80dbceb6503dd2c763f12b848ae52e407ee9ee4e39380102d26438504dc"
+    },
+    {
+      "case_id": "ego_test_tennis_002_tennis_medium_cam13_cam17_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__002_tennis-004/ego_test_tennis_002_tennis_medium_cam13_cam17_b00601.runtime.json",
+      "runtime_report_sha256": "807a5e73b5df6c3eb3e768c28daed8ae9e940d42e847ddce0c9d7bc8edc204d0"
+    },
+    {
+      "case_id": "ego_test_tennis_002_tennis_small_cam09_cam10_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__002_tennis-004/ego_test_tennis_002_tennis_small_cam09_cam10_b00601.runtime.json",
+      "runtime_report_sha256": "49b885a07c718e522ed46767ab6988fa718c7809246788131be6ebf91ec077d3"
+    },
+    {
+      "case_id": "ego_test_tennis_004_tennis_extreme_cam15_cam05_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__004_tennis-001/ego_test_tennis_004_tennis_extreme_cam15_cam05_b00601.runtime.json",
+      "runtime_report_sha256": "0ffd084c3c23d71ea86284af95ad98719b597c006f9e88b7ae706344cb10700c"
+    },
+    {
+      "case_id": "ego_test_tennis_004_tennis_large_cam01_cam07_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__004_tennis-001/ego_test_tennis_004_tennis_large_cam01_cam07_b00601.runtime.json",
+      "runtime_report_sha256": "35dccc09563d80c8b119c40944d5355c5cce588eb6ea88ea35ffa396c8b4cda7"
+    },
+    {
+      "case_id": "ego_test_tennis_004_tennis_medium_cam02_cam15_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__004_tennis-001/ego_test_tennis_004_tennis_medium_cam02_cam15_b00601.runtime.json",
+      "runtime_report_sha256": "42d725218a1c7db8ca2c6f2c09f42030e7eb2190bb522f541a546632537cfcfb"
+    },
+    {
+      "case_id": "ego_test_tennis_004_tennis_small_cam09_cam10_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__004_tennis-001/ego_test_tennis_004_tennis_small_cam09_cam10_b00601.runtime.json",
+      "runtime_report_sha256": "f0c03aa2ed5ee4898058022e1ba4f0714a43960c9b7422430aec5991b9e80bc7"
+    },
+    {
+      "case_id": "ego_test_tennis_005_tennis_extreme_cam15_cam05_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__005_tennis-001/ego_test_tennis_005_tennis_extreme_cam15_cam05_b00601.runtime.json",
+      "runtime_report_sha256": "adf9e58e0bdf932c0a3311167672b01c5ba7e7adaf2c7f9f6154246be0974f97"
+    },
+    {
+      "case_id": "ego_test_tennis_005_tennis_large_cam01_cam07_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__005_tennis-001/ego_test_tennis_005_tennis_large_cam01_cam07_b00601.runtime.json",
+      "runtime_report_sha256": "aa37e26c204ef6d252630d3e476ecbda4cb27576881582eddecfbadd79b74538"
+    },
+    {
+      "case_id": "ego_test_tennis_005_tennis_medium_cam02_cam15_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__005_tennis-001/ego_test_tennis_005_tennis_medium_cam02_cam15_b00601.runtime.json",
+      "runtime_report_sha256": "3e1d8b34b66a632fd7e21d3523207ae81e74aa7814b448690b09491d120e5903"
+    },
+    {
+      "case_id": "ego_test_tennis_005_tennis_small_cam10_cam09_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__005_tennis-001/ego_test_tennis_005_tennis_small_cam10_cam09_b00601.runtime.json",
+      "runtime_report_sha256": "d556539bc572c3c90923683c2b7b015a8d5eb0820185cb73919ea0a0bf61e6dc"
+    },
+    {
+      "case_id": "ego_test_tennis_006_tennis_extreme_cam15_cam05_b00651",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__006_tennis/ego_test_tennis_006_tennis_extreme_cam15_cam05_b00651.runtime.json",
+      "runtime_report_sha256": "a037c2d1a13cd55df258034f090a9391bd9ed846bf923ed221896745abb8479c"
+    },
+    {
+      "case_id": "ego_test_tennis_006_tennis_large_cam01_cam07_b00651",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__006_tennis/ego_test_tennis_006_tennis_large_cam01_cam07_b00651.runtime.json",
+      "runtime_report_sha256": "72da70cb0fd6fe994aa487b0f78404d9c8e723c6191f3746ab6e2d48b44a1e27"
+    },
+    {
+      "case_id": "ego_test_tennis_006_tennis_medium_cam11_cam07_b00651",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__006_tennis/ego_test_tennis_006_tennis_medium_cam11_cam07_b00651.runtime.json",
+      "runtime_report_sha256": "1202bf0db766f05e4f84db06439ef046164239706b7a4c469763ac6cf4cbcd6d"
+    },
+    {
+      "case_id": "ego_test_tennis_006_tennis_small_cam18_cam15_b00651",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__006_tennis/ego_test_tennis_006_tennis_small_cam18_cam15_b00651.runtime.json",
+      "runtime_report_sha256": "5dfa99fec770825fafb5342e604970f0602b6e8f77c91ce9f71ede4960d60505"
+    },
+    {
+      "case_id": "ego_test_tennis_007_tennis_extreme_cam15_cam05_b00776",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__007_tennis-003/ego_test_tennis_007_tennis_extreme_cam15_cam05_b00776.runtime.json",
+      "runtime_report_sha256": "c4c3af28d077927204ceec7c2b4448fb7790d01c7ed36fab8230a371a1ec4074"
+    },
+    {
+      "case_id": "ego_test_tennis_007_tennis_large_cam07_cam01_b00776",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__007_tennis-003/ego_test_tennis_007_tennis_large_cam07_cam01_b00776.runtime.json",
+      "runtime_report_sha256": "25f9d626d40328093be465c7d8540b99c8953161f946dc90b05232d9f42d2c91"
+    },
+    {
+      "case_id": "ego_test_tennis_007_tennis_medium_cam15_cam02_b00776",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__007_tennis-003/ego_test_tennis_007_tennis_medium_cam15_cam02_b00776.runtime.json",
+      "runtime_report_sha256": "f84704464582739a7c21200e29035ed7065fe56e3965edaf4d93ad8d29624e33"
+    },
+    {
+      "case_id": "ego_test_tennis_007_tennis_small_cam09_cam10_b00776",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__007_tennis-003/ego_test_tennis_007_tennis_small_cam09_cam10_b00776.runtime.json",
+      "runtime_report_sha256": "f56128610b54f2f277219a109b1c225dbc71a8aca9c0468c73787abd3b540027"
+    },
+    {
+      "case_id": "ego_test_tennis_008_tennis_extreme_cam05_cam15_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__008_tennis-004/ego_test_tennis_008_tennis_extreme_cam05_cam15_b00601.runtime.json",
+      "runtime_report_sha256": "330544ce03ab0ce9beafcccb0da8aab396dc7233ea50c582f2c316db93b7ca00"
+    },
+    {
+      "case_id": "ego_test_tennis_008_tennis_large_cam01_cam07_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__008_tennis-004/ego_test_tennis_008_tennis_large_cam01_cam07_b00601.runtime.json",
+      "runtime_report_sha256": "5aefeada9df609f98f26952b6e3ff6ff6a41114cea8636396a4f83996d399895"
+    },
+    {
+      "case_id": "ego_test_tennis_008_tennis_medium_cam11_cam07_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__008_tennis-004/ego_test_tennis_008_tennis_medium_cam11_cam07_b00601.runtime.json",
+      "runtime_report_sha256": "ff4f733522b9f19fd9635f7dcd40770e27698a1d3522e01cad3804e14147bfa3"
+    },
+    {
+      "case_id": "ego_test_tennis_008_tennis_small_cam20_cam17_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__008_tennis-004/ego_test_tennis_008_tennis_small_cam20_cam17_b00601.runtime.json",
+      "runtime_report_sha256": "2cdb67f26e028067f572c5da04c805ca1cd212614c5aec9e30cc8ea7fd1bcb3e"
+    },
+    {
+      "case_id": "ego_test_tennis_009_tennis_extreme_cam05_cam15_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__009_tennis-002/ego_test_tennis_009_tennis_extreme_cam05_cam15_b00601.runtime.json",
+      "runtime_report_sha256": "4480c6f7a416ec86472bcb05ab857e8be7f312e471a57a98bfd24aebf9a88008"
+    },
+    {
+      "case_id": "ego_test_tennis_009_tennis_large_cam01_cam07_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__009_tennis-002/ego_test_tennis_009_tennis_large_cam01_cam07_b00601.runtime.json",
+      "runtime_report_sha256": "6fab3d2563167db53c3e51e7ee56067cd53142d9370d136927eba5050df62d01"
+    },
+    {
+      "case_id": "ego_test_tennis_009_tennis_medium_cam15_cam02_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__009_tennis-002/ego_test_tennis_009_tennis_medium_cam15_cam02_b00601.runtime.json",
+      "runtime_report_sha256": "3ca735c9d8e6e1571cdd22fc8977fa32079aa7569f915b2322c401691884e823"
+    },
+    {
+      "case_id": "ego_test_tennis_009_tennis_small_cam09_cam10_b00601",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/tennis__009_tennis-002/ego_test_tennis_009_tennis_small_cam09_cam10_b00601.runtime.json",
+      "runtime_report_sha256": "49b4443831e04b563bc03cb6dba234eb612c86297f6c04156fc8dc80b667210e"
+    },
+    {
+      "case_id": "ego_test_volleyball_001_volleyball_extreme_cam02_cam09_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__001_volleyball-002/ego_test_volleyball_001_volleyball_extreme_cam02_cam09_b00301.runtime.json",
+      "runtime_report_sha256": "20c2112cc4020434a0faa1ab6d05d924b84225a8d6257391adf93b164b770dec"
+    },
+    {
+      "case_id": "ego_test_volleyball_001_volleyball_large_cam15_cam08_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__001_volleyball-002/ego_test_volleyball_001_volleyball_large_cam15_cam08_b00301.runtime.json",
+      "runtime_report_sha256": "914e799fa014080c69a404779bd4fbf01de42eae6b6684b2df4b395866cf92c0"
+    },
+    {
+      "case_id": "ego_test_volleyball_001_volleyball_medium_cam12_cam06_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__001_volleyball-002/ego_test_volleyball_001_volleyball_medium_cam12_cam06_b00301.runtime.json",
+      "runtime_report_sha256": "02d3a8ba19aab283fb10ec1048c2508e60727406542c417687cebc849d60540b"
+    },
+    {
+      "case_id": "ego_test_volleyball_001_volleyball_small_cam11_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__001_volleyball-002/ego_test_volleyball_001_volleyball_small_cam11_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "eebd8adb59101a32c404606f6ed3c4ea8c66adb4e9dfba98f443828b5172df65"
+    },
+    {
+      "case_id": "ego_test_volleyball_002_volleyball_extreme_cam09_cam02_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__002_volleyball-005/ego_test_volleyball_002_volleyball_extreme_cam09_cam02_b00301.runtime.json",
+      "runtime_report_sha256": "fa1bfcfc4e2d34e0324de3092d285e26701be34ba83d171670b4dfd2541d7fc1"
+    },
+    {
+      "case_id": "ego_test_volleyball_002_volleyball_large_cam08_cam15_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__002_volleyball-005/ego_test_volleyball_002_volleyball_large_cam08_cam15_b00301.runtime.json",
+      "runtime_report_sha256": "a78c238ed513050b5255c79e0b4d15571ee190a2deb511616b63ad94c0a788a8"
+    },
+    {
+      "case_id": "ego_test_volleyball_002_volleyball_medium_cam06_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__002_volleyball-005/ego_test_volleyball_002_volleyball_medium_cam06_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "6da08efa0f5877dc6ad4dbebe3c290b6e7c6ef48037bce5bba7eefb19e41fe7e"
+    },
+    {
+      "case_id": "ego_test_volleyball_002_volleyball_small_cam11_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__002_volleyball-005/ego_test_volleyball_002_volleyball_small_cam11_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "53cba0d90a4a323705115b05c2c8f16ba80706f6d1be6080ade58fe6f3adfb19"
+    },
+    {
+      "case_id": "ego_test_volleyball_004_volleyball_extreme_cam02_cam09_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__004_volleyball-003/ego_test_volleyball_004_volleyball_extreme_cam02_cam09_b00301.runtime.json",
+      "runtime_report_sha256": "9131b50b3b62c1a1bd399a3166e3e8d7e9ffd64966ec157b008f2b6dacef09d5"
+    },
+    {
+      "case_id": "ego_test_volleyball_004_volleyball_large_cam15_cam08_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__004_volleyball-003/ego_test_volleyball_004_volleyball_large_cam15_cam08_b00301.runtime.json",
+      "runtime_report_sha256": "f60bc9b98c85ef9e9876a58d724bb52b84c024702c2c2a0a1458ce400d5a0c25"
+    },
+    {
+      "case_id": "ego_test_volleyball_004_volleyball_medium_cam12_cam06_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__004_volleyball-003/ego_test_volleyball_004_volleyball_medium_cam12_cam06_b00301.runtime.json",
+      "runtime_report_sha256": "6d9772f096755bb4e8ee88affbaa857e72e54c153efcfd06477e05ca89cb9f82"
+    },
+    {
+      "case_id": "ego_test_volleyball_004_volleyball_small_cam11_cam12_b00301",
+      "expected_boundary": 50,
+      "causal_first_positive": 50,
+      "match": true,
+      "runtime_report": "output/v19_egohumans/test/predictions/volleyball__004_volleyball-003/ego_test_volleyball_004_volleyball_small_cam11_cam12_b00301.runtime.json",
+      "runtime_report_sha256": "0225e4abbde775c3104a7e24cfb8871304bb49563560ef199d8999f63edd9d32"
+    }
+  ],
+  "mismatches": []
+}

@@ -1,0 +1,14 @@
+{
+  "protocol": "Movie3R-Harmony4D-CrossShot-v1",
+  "seed": 20260818,
+  "split": "test",
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/twoshot_manifest.jsonl",
+  "manifest_sha256": "fc77e988169058265b19176dbc1d56f8331545e8cb59df1969d6a7691b83a7eb",
+  "case_count": 4,
+  "sequence_count": 1,
+  "clip_length": 150,
+  "boundary_index": 75,
+  "construction": "GT calibration/visibility only; no model result used",
+  "causal_boundary": "last pre plus first post and prior state; no future frame",
+  "rows_sha256_recomputed": "2d8402f2817c77ad46da389e05248ad7cbbf9938d85e06e2a66c18784102e45a"
+}

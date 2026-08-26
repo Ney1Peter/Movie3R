@@ -1,0 +1,1322 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-boundary-association-v1",
+  "method": "m3_b0_only",
+  "runtime_signal": "frozen geometry.association.pairs",
+  "runtime_gt_access": false,
+  "future_post_frames_used_by_association": 0,
+  "prediction_roots": [],
+  "runtime_manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/harmony4d_boundary_association/final_runtime_manifest_v1.jsonl",
+  "extracted_root": "/data/wangzheng/iJCV-CODE/data/Bridge3R_harmony4d_association_full/staging/test_03_grappling2",
+  "evaluator": {
+    "assignment": "existing Harmony4D camera--joint Hungarian assignment",
+    "maximum_assignment_cost_m": 2.0,
+    "oracle": "framewise evaluator GT identity labels; never provided to runtime"
+  },
+  "bootstrap": {
+    "samples": 10000,
+    "seed": 20260825,
+    "unit": "case"
+  },
+  "summary": {
+    "case_count": 28,
+    "first_post_cut_correspondence": {
+      "pair_micro_accuracy": 0.9318181818181818,
+      "correct_pair_count": 41,
+      "evaluable_pair_count": 44,
+      "case_macro_accuracy": {
+        "count": 28,
+        "mean": 0.8928571428571429,
+        "ci95_low": 0.75,
+        "ci95_high": 1.0
+      },
+      "correct_continuation_coverage": 0.7321428571428571,
+      "gt_continuation_count": 56,
+      "runtime_abstention_rate": 0.0,
+      "runtime_abstention_count": 0,
+      "maximum_runtime_pair_count": 70,
+      "evaluator_excluded_pair_count": 26
+    },
+    "identity": {
+      "cache_reconstructed_idf1_diagnostic": {
+        "count": 28,
+        "mean": 0.6049694111679846,
+        "ci95_low": 0.5274752919673865,
+        "ci95_high": 0.6786187665227437
+      },
+      "final_audit_idf1": {
+        "count": 28,
+        "mean": 0.6055542064896221,
+        "ci95_low": 0.5313907000316941,
+        "ci95_high": 0.6802631883003553
+      },
+      "oracle_framewise_idf1_upper_bound": {
+        "count": 28,
+        "mean": 0.715093355808088,
+        "ci95_low": 0.6691738606309799,
+        "ci95_high": 0.7614490109162916
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "h4d_test_03_grappling2_028_grappling2_extreme_cam14_cam16_b00076",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_extreme_cam14_cam16_b00076.npz",
+      "cache_sha256": "010ee402542507e5e9cd0d3c4e360038d6250de38527c4e6445a566710695a52",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_extreme_cam14_cam16_b00076.runtime.json",
+      "runtime_sha256": "fef05c5eae8768a01293f25eed361a60e49aa25e4af878b2e8b0b7c57efdc383",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 5,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7522935779816514,
+        "final_audit_idf1": 0.7522935779816514,
+        "oracle_framewise_idf1_upper_bound": 0.765399737876802,
+        "runtime_ids_total": 4,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_028_grappling2_large_cam11_cam15_b00076",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_large_cam11_cam15_b00076.npz",
+      "cache_sha256": "ffc016b497b932645ea0e450ec4239c5c52c689ac1f0d20b32a0015b669df2e7",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_large_cam11_cam15_b00076.runtime.json",
+      "runtime_sha256": "2fe829919f96048ab70ef65534f4a9972d583a57c6940fdd35f65669b88144a2",
+      "endpoint": {
+        "runtime_pair_count": 1,
+        "maximum_runtime_pair_count": 1,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.5349397590361445,
+        "final_audit_idf1": 0.5349397590361445,
+        "oracle_framewise_idf1_upper_bound": 0.708433734939759,
+        "runtime_ids_total": 2,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_028_grappling2_medium_cam10_cam16_b00076",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_medium_cam10_cam16_b00076.npz",
+      "cache_sha256": "f037b500558e4e472e413607b883585a7604460ca8953c282ecb3a2844ae5ee1",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_medium_cam10_cam16_b00076.runtime.json",
+      "runtime_sha256": "b92ee4a074bbb539ac773a2894c44c33ec51ed9b2f4b5c20124766b2a0fa1e00",
+      "endpoint": {
+        "runtime_pair_count": 5,
+        "maximum_runtime_pair_count": 5,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 4,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 2,
+            "post_position": 5,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 3,
+            "post_position": 3,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 4,
+            "post_position": 4,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.4755700325732899,
+        "final_audit_idf1": 0.4755700325732899,
+        "oracle_framewise_idf1_upper_bound": 0.6232356134636265,
+        "runtime_ids_total": 5,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_028_grappling2_small_cam05_cam08_b00076",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_small_cam05_cam08_b00076.npz",
+      "cache_sha256": "3e30911b43a5d5437897314926972aefb52391121ae7a2ac791f5c3b39eaebbc",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2/h4d_test_03_grappling2_028_grappling2_small_cam05_cam08_b00076.runtime.json",
+      "runtime_sha256": "5b30840f691c88ed2f946d2a26abf6c2a601d225fc1532a6c2e4f41d553f8541",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7584,
+        "final_audit_idf1": 0.7584,
+        "oracle_framewise_idf1_upper_bound": 0.7808,
+        "runtime_ids_total": 11,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_030_grappling2_extreme_cam14_cam16_b00151",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_extreme_cam14_cam16_b00151.npz",
+      "cache_sha256": "ea73c2d3a9b0df6f1889a6376adff77ed70bc50a0a32435529d5454301642d9d",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_extreme_cam14_cam16_b00151.runtime.json",
+      "runtime_sha256": "f2de454571d2acde9c8ffe977f296bdd53f6ab7b311495cd55f3235340022000",
+      "endpoint": {
+        "runtime_pair_count": 4,
+        "maximum_runtime_pair_count": 4,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 3,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 3,
+            "post_position": 4,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.5689277899343544,
+        "final_audit_idf1": 0.5689277899343544,
+        "oracle_framewise_idf1_upper_bound": 0.5754923413566739,
+        "runtime_ids_total": 6,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_030_grappling2_large_cam01_cam14_b00151",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_large_cam01_cam14_b00151.npz",
+      "cache_sha256": "482338cc1105d100e8ea4e56ac6bd1e84b15a93c7eee2f26cade43c8ec79b9c1",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_large_cam01_cam14_b00151.runtime.json",
+      "runtime_sha256": "b3297dd14d83bec862a450e8661173c541c070bf87e0a902f9d8bf72ab7ba287",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 2,
+            "post_position": 3,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7582562747688243,
+        "final_audit_idf1": 0.7582562747688243,
+        "oracle_framewise_idf1_upper_bound": 0.7582562747688243,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_030_grappling2_medium_cam10_cam16_b00151",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_medium_cam10_cam16_b00151.npz",
+      "cache_sha256": "67c8f9e3bb3720499d0eef7951a31c8f671042fdd4432c792784d52c4e14ec33",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_medium_cam10_cam16_b00151.runtime.json",
+      "runtime_sha256": "8be77c8848125125844ecca4952858a49f568110ae202c916df41359cee44299",
+      "endpoint": {
+        "runtime_pair_count": 4,
+        "maximum_runtime_pair_count": 4,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 3,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 4,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 2,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 3,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.3974706413730804,
+        "final_audit_idf1": 0.3974706413730804,
+        "oracle_framewise_idf1_upper_bound": 0.5076784101174345,
+        "runtime_ids_total": 2,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_030_grappling2_small_cam05_cam08_b00151",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_small_cam05_cam08_b00151.npz",
+      "cache_sha256": "e3c64cc3452b6c98cc7195077f7b3c5ffbd34676b2afe565feb6aeaf439b4230",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_030_grappling2_small_cam05_cam08_b00151.runtime.json",
+      "runtime_sha256": "b6feb75186bd81358d74263ae431c33ede664e04f0409f044a497b969d420994",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.6594761171032357,
+        "final_audit_idf1": 0.6594761171032357,
+        "oracle_framewise_idf1_upper_bound": 0.8166409861325116,
+        "runtime_ids_total": 12,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_033_grappling2_extreme_cam14_cam16_b00087",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_extreme_cam14_cam16_b00087.npz",
+      "cache_sha256": "c9f08efda9fd41e3491df63e20f69c2a55ba31ca45a4c88c9f345dcd73b2beba",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_extreme_cam14_cam16_b00087.runtime.json",
+      "runtime_sha256": "9426f26dbe3c31131e9936ea184a068aecb95bf954e510c398b5602eed1e3797",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": 0.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 2,
+            "evaluable": true,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.29005847953216374,
+        "final_audit_idf1": 0.3064327485380117,
+        "oracle_framewise_idf1_upper_bound": 0.552046783625731,
+        "runtime_ids_total": 14,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_033_grappling2_large_cam01_cam14_b00087",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_large_cam01_cam14_b00087.npz",
+      "cache_sha256": "767139ae7b330dd866ac7b60d778867b9e97833f3334e5fb97663e925d362b80",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_large_cam01_cam14_b00087.runtime.json",
+      "runtime_sha256": "fe734ab9ce6b6bc7d9317255054ea1ff52862e5f17dcf6cab3f02265527b2d07",
+      "endpoint": {
+        "runtime_pair_count": 1,
+        "maximum_runtime_pair_count": 1,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": 0.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 2,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.32114882506527415,
+        "final_audit_idf1": 0.32114882506527415,
+        "oracle_framewise_idf1_upper_bound": 0.6501305483028721,
+        "runtime_ids_total": 12,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_033_grappling2_medium_cam10_cam16_b00087",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_medium_cam10_cam16_b00087.npz",
+      "cache_sha256": "438373fb037746b6d735c71b0a61da4467b838bc0b2cad25a6f4f7802d82812c",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_medium_cam10_cam16_b00087.runtime.json",
+      "runtime_sha256": "e8f573e191df810e06a243e25d524075eb0487c7c5108d41d277f8d41982a1b7",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 4,
+            "post_position": 2,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.22862286228622863,
+        "final_audit_idf1": 0.22862286228622863,
+        "oracle_framewise_idf1_upper_bound": 0.45724572457245727,
+        "runtime_ids_total": 9,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_033_grappling2_small_cam05_cam08_b00087",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_small_cam05_cam08_b00087.npz",
+      "cache_sha256": "430f7c231ce7c523534a2df452bd2b9753b514276218ad294f03bf4ddb180560",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_033_grappling2_small_cam05_cam08_b00087.runtime.json",
+      "runtime_sha256": "fa50b205ac9951f8ed31f53a01732a5a3bff8a8b6aa3620f191f17d03b767b6f",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 2,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.32448377581120946,
+        "final_audit_idf1": 0.32448377581120946,
+        "oracle_framewise_idf1_upper_bound": 0.6460176991150443,
+        "runtime_ids_total": 14,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_038_grappling2_extreme_cam14_cam16_b00148",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_extreme_cam14_cam16_b00148.npz",
+      "cache_sha256": "a2cef25f1c725ec9126e051efa243f7d5bbb40e77b36f20b97f25901ac5d026c",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_extreme_cam14_cam16_b00148.runtime.json",
+      "runtime_sha256": "c65bffbb4952f5d6f56e9ed623b94ee79425c301d82acec095e3b09a722ad171",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 2,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.9204368174726989,
+        "final_audit_idf1": 0.9204368174726989,
+        "oracle_framewise_idf1_upper_bound": 0.9235569422776911,
+        "runtime_ids_total": 2,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_038_grappling2_large_cam11_cam15_b00148",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_large_cam11_cam15_b00148.npz",
+      "cache_sha256": "066c5d06f867edb7b05fbf1fa4c452203284c021c3ee3239c877106a315cd518",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_large_cam11_cam15_b00148.runtime.json",
+      "runtime_sha256": "6d55a660c73fd653d06db570e0bd6b40db8e7fdd74f87cfe56c5ff5051a091a8",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7055771725032426,
+        "final_audit_idf1": 0.7055771725032426,
+        "oracle_framewise_idf1_upper_bound": 0.7055771725032426,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_038_grappling2_medium_cam10_cam16_b00148",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_medium_cam10_cam16_b00148.npz",
+      "cache_sha256": "646fb5a97b7ef507d741d267be5b5e2417fd8e92bc5041f7ec8125b119a533c4",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_medium_cam10_cam16_b00148.runtime.json",
+      "runtime_sha256": "380e128caeae3bc6192ec7ed813befe57f9a20f1bd331393678ccd8d37ee9970",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 3,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.4560327198364008,
+        "final_audit_idf1": 0.4560327198364008,
+        "oracle_framewise_idf1_upper_bound": 0.5807770961145194,
+        "runtime_ids_total": 1,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_038_grappling2_small_cam05_cam08_b00148",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_small_cam05_cam08_b00148.npz",
+      "cache_sha256": "417137aa79ea11b3f6b8fe726b24d1b9650bc262e22a8ad9294eace8e630117f",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_038_grappling2_small_cam05_cam08_b00148.runtime.json",
+      "runtime_sha256": "969aa3092fa4b81e63bf63db32c31a9f7f1daae5fed719c71903dd51048ac4bf",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.9266547406082289,
+        "final_audit_idf1": 0.9266547406082289,
+        "oracle_framewise_idf1_upper_bound": 0.9266547406082289,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_040_grappling2_extreme_cam14_cam16_b00260",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_extreme_cam14_cam16_b00260.npz",
+      "cache_sha256": "5c2f917e2af49471dd94d316cbc13530ae78d9888e4f3c4e7cb8494b0d9f8784",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_extreme_cam14_cam16_b00260.runtime.json",
+      "runtime_sha256": "82210e8831357eca488527ecdbf3e13e66bebca10868cb023380570c51fb6ed8",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.3124128312412831,
+        "final_audit_idf1": 0.3124128312412831,
+        "oracle_framewise_idf1_upper_bound": 0.6387726638772664,
+        "runtime_ids_total": 11,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_040_grappling2_large_cam01_cam14_b00260",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_large_cam01_cam14_b00260.npz",
+      "cache_sha256": "336d126048951d42f463fb56979859a94089952eb145a5aa2d13d876da223b51",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_large_cam01_cam14_b00260.runtime.json",
+      "runtime_sha256": "55e795fabad981358c8623f446524029f47ee5eaafc97ea7a4f04be603fdef75",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.8205928237129485,
+        "final_audit_idf1": 0.8205928237129485,
+        "oracle_framewise_idf1_upper_bound": 0.8268330733229329,
+        "runtime_ids_total": 2,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_040_grappling2_medium_cam10_cam16_b00260",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_medium_cam10_cam16_b00260.npz",
+      "cache_sha256": "b219dacf37c2bd410af7c8204f67c661e705d3b6988d1ba4430d0ec59fd463d6",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_medium_cam10_cam16_b00260.runtime.json",
+      "runtime_sha256": "b7f1b8da81e2501aa26bf601ae9e7f1030db5ebba0b9d6b909d2d09a64c6af72",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 3,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.4785005512679162,
+        "final_audit_idf1": 0.4785005512679162,
+        "oracle_framewise_idf1_upper_bound": 0.5843439911797134,
+        "runtime_ids_total": 5,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_040_grappling2_small_cam05_cam08_b00260",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_small_cam05_cam08_b00260.npz",
+      "cache_sha256": "427023264ce75794c79561af4b3d1d7288c3af51c0e95ebaed83557808f8787f",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_040_grappling2_small_cam05_cam08_b00260.runtime.json",
+      "runtime_sha256": "3dcaf85bf965d74dddcd66c35b1a663a0f52d9132f543a82725c1698c4666cf2",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7620751341681574,
+        "final_audit_idf1": 0.7620751341681574,
+        "oracle_framewise_idf1_upper_bound": 0.9087656529516994,
+        "runtime_ids_total": 1,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_041_grappling2_extreme_cam14_cam16_b00224",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_extreme_cam14_cam16_b00224.npz",
+      "cache_sha256": "575a3615a041598a84990820280c58c665de7b96e284196f73c9bdf9fafa0796",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_extreme_cam14_cam16_b00224.runtime.json",
+      "runtime_sha256": "33c8f0f0ab0a9463698306c4aa1db76a583542164f9cba13684d684d5aca8d1e",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.8764705882352941,
+        "final_audit_idf1": 0.8764705882352941,
+        "oracle_framewise_idf1_upper_bound": 0.8764705882352941,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_041_grappling2_large_cam11_cam15_b00224",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_large_cam11_cam15_b00224.npz",
+      "cache_sha256": "3d556fae119420f04a2eee74dc3fae81ad75078171026d15f71107f7a10b71ae",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_large_cam11_cam15_b00224.runtime.json",
+      "runtime_sha256": "bc1d1f704842d0212b5cffc504e6be0c19ec47b3e5cb66407b26a435334bbf5d",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.5128205128205128,
+        "final_audit_idf1": 0.5128205128205128,
+        "oracle_framewise_idf1_upper_bound": 0.6538461538461539,
+        "runtime_ids_total": 4,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_041_grappling2_medium_cam10_cam16_b00224",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_medium_cam10_cam16_b00224.npz",
+      "cache_sha256": "027dbb4a9348f13bd156ce0b6fb2d8a8bfa0979e0a74bcdf0149f50ac5aa6fd4",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_medium_cam10_cam16_b00224.runtime.json",
+      "runtime_sha256": "ea98ca57ff55a9ed49060473d6a4fec20e28ca14efccb27be9d3720a8629f2f3",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.6658653846153846,
+        "final_audit_idf1": 0.6658653846153846,
+        "oracle_framewise_idf1_upper_bound": 0.6658653846153846,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_041_grappling2_small_cam05_cam08_b00224",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_small_cam05_cam08_b00224.npz",
+      "cache_sha256": "b2cb652dcba76484744bdc365b4c9335b522e8bb8ac710e98aaed877e4c8ce3f",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_041_grappling2_small_cam05_cam08_b00224.runtime.json",
+      "runtime_sha256": "eafefdcae27bd7e72b33945d9bd8aa3e7b4d62274cae3781c59207dbb880e62b",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.8875739644970414,
+        "final_audit_idf1": 0.8875739644970414,
+        "oracle_framewise_idf1_upper_bound": 0.8875739644970414,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_043_grappling2_extreme_cam14_cam16_b00164",
+      "sequence": "03_grappling2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_extreme_cam14_cam16_b00164.npz",
+      "cache_sha256": "6495e3651a49d666c261667e3921e1f4f7e2142cb92377d6af7c05eb3eed6bb3",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_extreme_cam14_cam16_b00164.runtime.json",
+      "runtime_sha256": "e0e026ceb139a807f1bf4e179ad7c2ee48d52c286759303165046652e44378ad",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 1,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.5,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 2,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.5975773889636609,
+        "final_audit_idf1": 0.5975773889636609,
+        "oracle_framewise_idf1_upper_bound": 0.7940780619111709,
+        "runtime_ids_total": 3,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_043_grappling2_large_cam11_cam15_b00164",
+      "sequence": "03_grappling2",
+      "angle_stratum": "large",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_large_cam11_cam15_b00164.npz",
+      "cache_sha256": "d4b568df78c662661694eadfe2bad8a82c57ab86167879e9c1fc09566e47ae8d",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_large_cam11_cam15_b00164.runtime.json",
+      "runtime_sha256": "b1eff6955e61a06044e36e99bce6babdd79ac7b0fe0dac6f6ed8b94ae325605b",
+      "endpoint": {
+        "runtime_pair_count": 1,
+        "maximum_runtime_pair_count": 1,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 1,
+        "evaluator_excluded_pair_count": 0,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": 0.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.5411471321695761,
+        "final_audit_idf1": 0.5411471321695761,
+        "oracle_framewise_idf1_upper_bound": 0.6882793017456359,
+        "runtime_ids_total": 4,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_043_grappling2_medium_cam10_cam16_b00164",
+      "sequence": "03_grappling2",
+      "angle_stratum": "medium",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_medium_cam10_cam16_b00164.npz",
+      "cache_sha256": "a99f326e1bd00f3f351b7a494dafea516aa5449e45b92b24d8e2613c198c58b3",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_medium_cam10_cam16_b00164.runtime.json",
+      "runtime_sha256": "22892694d00f5880735e8d16c83974e5076d78d8c568eb13bd4f0bf3f8362908",
+      "endpoint": {
+        "runtime_pair_count": 4,
+        "maximum_runtime_pair_count": 4,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 1,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 3,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 4,
+            "post_position": 3,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.6080206985769728,
+        "final_audit_idf1": 0.6080206985769728,
+        "oracle_framewise_idf1_upper_bound": 0.7192755498059509,
+        "runtime_ids_total": 3,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_03_grappling2_043_grappling2_small_cam05_cam08_b00164",
+      "sequence": "03_grappling2",
+      "angle_stratum": "small",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_small_cam05_cam08_b00164.npz",
+      "cache_sha256": "d70d309740ab5001c21cd83f78fba9f975aecc84dcda4580182c2dc2726227cb",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/03_grappling2/h4d_test_03_grappling2_043_grappling2_small_cam05_cam08_b00164.runtime.json",
+      "runtime_sha256": "a649434f3b52e6fcbec01af25877de54723d73ec13a5862016b54321218b1496",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 2,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 2,
+        "correspondence_accuracy": 1.0,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 1.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 1,
+            "post_position": 3,
+            "evaluable": true,
+            "correct": true
+          },
+          {
+            "pre_position": 2,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.7977369165487977,
+        "final_audit_idf1": 0.7977369165487977,
+        "oracle_framewise_idf1_upper_bound": 0.8005657708628006,
+        "runtime_ids_total": 2,
+        "oracle_ids_total": 0
+      }
+    }
+  ]
+}

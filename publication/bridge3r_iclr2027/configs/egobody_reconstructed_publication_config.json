@@ -1,0 +1,28 @@
+{
+  "schema_version": "Bridge3R-EgoBody-publication-config-reconstruction-v1",
+  "created_at": "2026-08-25",
+  "status": "reconstructed publication copy; not a replacement for the deleted historical frozen candidate",
+  "method_id": "v19_ungated_translation_b050",
+  "protocol": "Bridge3R-EgoBody-CS150",
+  "geometry": {
+    "camera_alpha": 1.0,
+    "boundary_kind": "translation",
+    "boundary_blend": 0.5,
+    "reliability_gate_enabled": false,
+    "root_filter_enabled": false,
+    "fallback_to_parent": false,
+    "parent_reuse_trigger": "detector_miss_only"
+  },
+  "causal_contract": {
+    "cut_source": "causal detector in the formal runtime protocol",
+    "future_post_frames_used_by_correction": 0,
+    "pre_cut_predictions_rewritten": false
+  },
+  "historical_provenance": {
+    "deleted_original_path": "data/EgoBody_work_v20/frozen/frozen_final_candidate.json",
+    "deleted_original_sha256": "9d9f4c21b37fb3b53f889bd445a540a037c5f03e3f54f4beffa10580d9ddf58e",
+    "evidence_manifest": "../../../../ICLR-paper/bridge3r_iclr2027/versions/v002_20260824_harmony4d_final/manuscript/artifacts/egobody_v20/artifact_manifest.json",
+    "evidence_manifest_sha256": "bbc04442e934727ff1a5ac7f9b8c571f06513d4eef9ab5d7e356efdd2ca37363",
+    "test_candidate_report": "../../../../Movie3R/output/v20_egobody/formal/test/candidate_reports/frozen_final_candidate_9d9f4c21b37f.json"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "staged_audited_manifest_frozen",
+  "entry": "train/15_mma4.zip",
+  "published_size": 10646863176,
+  "published_sha256": "51d7b92192f992e35ac76bc2a980814ef80d4e78f8e2ce00f06a5171510f016a",
+  "inner_uncompressed_bytes": 11812562305,
+  "inner_crc_pass": true,
+  "staging": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_15_mma4",
+  "index": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/index.json",
+  "capture_selection_rule": "first projection-valid capture in frozen SHA256 structural order; no Movie3R prediction or test metric observed",
+  "selected_audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/audit_006_mma4.json",
+  "attempts": [
+    {
+      "capture_relative": "15_mma4/006_mma4",
+      "audit_output": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/audit_006_mma4.json",
+      "returncode": 0,
+      "stderr_tail": ""
+    }
+  ],
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/twoshot_manifest.jsonl",
+  "manifest_sha256": "6f7e6d3196e43910ebbadfb9c2feda318350dbe68fa0c010c698113887f67340",
+  "case_count": 4,
+  "outer_preserved": "/data/wangzheng/iJCV-CODE/data/Harmony4D.zip",
+  "temporary_nested_zip_deleted": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/tmp/train/15_mma4.zip",
+  "elapsed_seconds": 217.28781652450562
+}

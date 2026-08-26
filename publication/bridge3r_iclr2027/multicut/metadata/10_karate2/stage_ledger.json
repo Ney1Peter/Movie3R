@@ -1,0 +1,26 @@
+{
+  "status": "staged_audited_manifest_frozen",
+  "entry": "train/10_karate2.zip",
+  "published_size": 13308714387,
+  "published_sha256": "9fa170d49378a830ec15a9b7d01d5251355130fe759a365e84926dcc73f8639e",
+  "inner_uncompressed_bytes": 16020787114,
+  "inner_crc_pass": true,
+  "staging": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_10_karate2",
+  "index": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/index.json",
+  "capture_selection_rule": "first projection-valid capture in frozen SHA256 structural order; no Movie3R prediction or test metric observed",
+  "selected_audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/audit_001_karate2.json",
+  "attempts": [
+    {
+      "capture_relative": "10_karate2/001_karate2",
+      "audit_output": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/audit_001_karate2.json",
+      "returncode": 0,
+      "stderr_tail": ""
+    }
+  ],
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/twoshot_manifest.jsonl",
+  "manifest_sha256": "fc77e988169058265b19176dbc1d56f8331545e8cb59df1969d6a7691b83a7eb",
+  "case_count": 4,
+  "outer_preserved": "/data/wangzheng/iJCV-CODE/data/Harmony4D.zip",
+  "temporary_nested_zip_deleted": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/tmp/train/10_karate2.zip",
+  "elapsed_seconds": 266.47566843032837
+}

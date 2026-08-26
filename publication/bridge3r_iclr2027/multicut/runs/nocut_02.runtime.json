@@ -1,0 +1,2679 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-multicut-runtime-v1",
+  "record": {
+    "archive_entry": "train/11_karate3.zip",
+    "boundaries": [],
+    "camera": "cam18",
+    "capture": "001_karate3",
+    "capture_relative": "11_karate3/001_karate3",
+    "case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19_nocut",
+    "clip_length": 150,
+    "fps": 30.0,
+    "frame_numbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150
+    ],
+    "gt_available_to_runtime": false,
+    "identities_evaluator_only": [
+      "aria01",
+      "aria02"
+    ],
+    "protocol": "Bridge3R-Harmony4D-MultiCut-v1-NoCutControl",
+    "protocol_seed": 20260825,
+    "selection": {
+      "control_rule": "reuse the first selected multi-cut camera and the same contiguous 150-frame interval; no model result consulted",
+      "source_audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/11_karate3/audit_001_karate3.json",
+      "source_audit_sha256": "39adbd071ee713a0af6167ce18133272cb1350b8c57a95c64a70fb4dbd4ee783",
+      "source_multicut_case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19"
+    },
+    "selection_depends_on_model_result": false,
+    "sequence": "11_karate3"
+  },
+  "methods": [
+    "strict_human3r",
+    "bridge3r_nocut"
+  ],
+  "runtime": {
+    "causal_gru_detector": {
+      "seconds": 45.88676556106657,
+      "labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "pair_idx": 1,
+          "pred": 0,
+          "prob": 0.006084543187171221,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 2,
+          "pred": 0,
+          "prob": 0.005901482421904802,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 3,
+          "pred": 0,
+          "prob": 0.006066149566322565,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 4,
+          "pred": 0,
+          "prob": 0.005807201843708754,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 5,
+          "pred": 0,
+          "prob": 0.005968334618955851,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 6,
+          "pred": 0,
+          "prob": 0.006301440764218569,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 7,
+          "pred": 0,
+          "prob": 0.006849493831396103,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 8,
+          "pred": 0,
+          "prob": 0.0066111949272453785,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 9,
+          "pred": 0,
+          "prob": 0.007937490940093994,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 10,
+          "pred": 0,
+          "prob": 0.007584563456475735,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 11,
+          "pred": 0,
+          "prob": 0.008245575241744518,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 12,
+          "pred": 0,
+          "prob": 0.006838169880211353,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 13,
+          "pred": 0,
+          "prob": 0.0063430918380618095,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 14,
+          "pred": 0,
+          "prob": 0.0059988852590322495,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 15,
+          "pred": 0,
+          "prob": 0.005813112948089838,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 16,
+          "pred": 0,
+          "prob": 0.005921599455177784,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 17,
+          "pred": 0,
+          "prob": 0.006138208322227001,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 18,
+          "pred": 0,
+          "prob": 0.005458759609609842,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 19,
+          "pred": 0,
+          "prob": 0.005679790861904621,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 20,
+          "pred": 0,
+          "prob": 0.005901876837015152,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 21,
+          "pred": 0,
+          "prob": 0.005694772582501173,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 22,
+          "pred": 0,
+          "prob": 0.005371113307774067,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 23,
+          "pred": 0,
+          "prob": 0.005363285541534424,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 24,
+          "pred": 0,
+          "prob": 0.00566673930734396,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 25,
+          "pred": 0,
+          "prob": 0.005809790454804897,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 26,
+          "pred": 0,
+          "prob": 0.005633501801639795,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 27,
+          "pred": 0,
+          "prob": 0.00549359479919076,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 28,
+          "pred": 0,
+          "prob": 0.005642748437821865,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 29,
+          "pred": 0,
+          "prob": 0.005602478981018066,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 30,
+          "pred": 0,
+          "prob": 0.0063515822403132915,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 31,
+          "pred": 0,
+          "prob": 0.006396849639713764,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 32,
+          "pred": 0,
+          "prob": 0.007893063127994537,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 33,
+          "pred": 0,
+          "prob": 0.008163832128047943,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 34,
+          "pred": 0,
+          "prob": 0.010512962937355042,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 35,
+          "pred": 0,
+          "prob": 0.010595238767564297,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 36,
+          "pred": 0,
+          "prob": 0.011712505482137203,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 37,
+          "pred": 0,
+          "prob": 0.01125086098909378,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 38,
+          "pred": 0,
+          "prob": 0.015032895840704441,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 39,
+          "pred": 0,
+          "prob": 0.015455083921551704,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 40,
+          "pred": 0,
+          "prob": 0.0180680975317955,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 41,
+          "pred": 0,
+          "prob": 0.020698098465800285,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 42,
+          "pred": 0,
+          "prob": 0.018330281600356102,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 43,
+          "pred": 0,
+          "prob": 0.019077587872743607,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 44,
+          "pred": 0,
+          "prob": 0.018501760438084602,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 45,
+          "pred": 0,
+          "prob": 0.012560577131807804,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 46,
+          "pred": 0,
+          "prob": 0.015568439848721027,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 47,
+          "pred": 0,
+          "prob": 0.01081251073628664,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 48,
+          "pred": 0,
+          "prob": 0.008840149268507957,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 49,
+          "pred": 0,
+          "prob": 0.010948356240987778,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 50,
+          "pred": 0,
+          "prob": 0.015642408281564713,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 51,
+          "pred": 0,
+          "prob": 0.015167958103120327,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 52,
+          "pred": 0,
+          "prob": 0.016784710809588432,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 53,
+          "pred": 0,
+          "prob": 0.016582077369093895,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 54,
+          "pred": 0,
+          "prob": 0.01813151128590107,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 55,
+          "pred": 0,
+          "prob": 0.01438597310334444,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 56,
+          "pred": 0,
+          "prob": 0.014069665223360062,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 57,
+          "pred": 0,
+          "prob": 0.011969344690442085,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 58,
+          "pred": 0,
+          "prob": 0.012516899034380913,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 59,
+          "pred": 0,
+          "prob": 0.010139529593288898,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 60,
+          "pred": 0,
+          "prob": 0.008631189353764057,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 61,
+          "pred": 0,
+          "prob": 0.00848991796374321,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 62,
+          "pred": 0,
+          "prob": 0.0073806121945381165,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 63,
+          "pred": 0,
+          "prob": 0.00645621819421649,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 64,
+          "pred": 0,
+          "prob": 0.007099288050085306,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 65,
+          "pred": 0,
+          "prob": 0.007596973795443773,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 66,
+          "pred": 0,
+          "prob": 0.007377724163234234,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 67,
+          "pred": 0,
+          "prob": 0.007686509285122156,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 68,
+          "pred": 0,
+          "prob": 0.008293774910271168,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 69,
+          "pred": 0,
+          "prob": 0.007809982635080814,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 70,
+          "pred": 0,
+          "prob": 0.006711039692163467,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 71,
+          "pred": 0,
+          "prob": 0.006227639503777027,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 72,
+          "pred": 0,
+          "prob": 0.006176427938044071,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 73,
+          "pred": 0,
+          "prob": 0.0066739460453391075,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 74,
+          "pred": 0,
+          "prob": 0.007009823806583881,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 75,
+          "pred": 0,
+          "prob": 0.006682280451059341,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 76,
+          "pred": 0,
+          "prob": 0.005706413183361292,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 77,
+          "pred": 0,
+          "prob": 0.005743756424635649,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 78,
+          "pred": 0,
+          "prob": 0.005446045193821192,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 79,
+          "pred": 0,
+          "prob": 0.0057760197669267654,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 80,
+          "pred": 0,
+          "prob": 0.0059100124053657055,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 81,
+          "pred": 0,
+          "prob": 0.0057645137421786785,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 82,
+          "pred": 0,
+          "prob": 0.005763983353972435,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 83,
+          "pred": 0,
+          "prob": 0.005579687189310789,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 84,
+          "pred": 0,
+          "prob": 0.00530904158949852,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 85,
+          "pred": 0,
+          "prob": 0.0052649760618805885,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 86,
+          "pred": 0,
+          "prob": 0.0051885927096009254,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 87,
+          "pred": 0,
+          "prob": 0.005335552152246237,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 88,
+          "pred": 0,
+          "prob": 0.005196105223149061,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 89,
+          "pred": 0,
+          "prob": 0.005091325845569372,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 90,
+          "pred": 0,
+          "prob": 0.005045433063060045,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 91,
+          "pred": 0,
+          "prob": 0.0050011929124593735,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 92,
+          "pred": 0,
+          "prob": 0.004902234300971031,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 93,
+          "pred": 0,
+          "prob": 0.004962247330695391,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 94,
+          "pred": 0,
+          "prob": 0.0049932170659303665,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 95,
+          "pred": 0,
+          "prob": 0.00504290871322155,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 96,
+          "pred": 0,
+          "prob": 0.004987669177353382,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 97,
+          "pred": 0,
+          "prob": 0.005064184311777353,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 98,
+          "pred": 0,
+          "prob": 0.005041277036070824,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 99,
+          "pred": 0,
+          "prob": 0.0050614941865205765,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 100,
+          "pred": 0,
+          "prob": 0.005116699263453484,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 101,
+          "pred": 0,
+          "prob": 0.0050218552350997925,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 102,
+          "pred": 0,
+          "prob": 0.0049950056709349155,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 103,
+          "pred": 0,
+          "prob": 0.004977754317224026,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 104,
+          "pred": 0,
+          "prob": 0.004950700793415308,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 105,
+          "pred": 0,
+          "prob": 0.005003468599170446,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 106,
+          "pred": 0,
+          "prob": 0.005028650164604187,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 107,
+          "pred": 0,
+          "prob": 0.005119758658111095,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 108,
+          "pred": 0,
+          "prob": 0.005302384961396456,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 109,
+          "pred": 0,
+          "prob": 0.0053133186884224415,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 110,
+          "pred": 0,
+          "prob": 0.0052557517774403095,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 111,
+          "pred": 0,
+          "prob": 0.00511857820674777,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 112,
+          "pred": 0,
+          "prob": 0.005161067470908165,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 113,
+          "pred": 0,
+          "prob": 0.005157070700079203,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 114,
+          "pred": 0,
+          "prob": 0.005010322667658329,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 115,
+          "pred": 0,
+          "prob": 0.0050345822237432,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 116,
+          "pred": 0,
+          "prob": 0.004964510910212994,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 117,
+          "pred": 0,
+          "prob": 0.004861642140895128,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 118,
+          "pred": 0,
+          "prob": 0.004921597428619862,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 119,
+          "pred": 0,
+          "prob": 0.005013282876461744,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 120,
+          "pred": 0,
+          "prob": 0.004946133587509394,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 121,
+          "pred": 0,
+          "prob": 0.004960202146321535,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 122,
+          "pred": 0,
+          "prob": 0.005028382875025272,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 123,
+          "pred": 0,
+          "prob": 0.005073560867458582,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 124,
+          "pred": 0,
+          "prob": 0.004916996695101261,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 125,
+          "pred": 0,
+          "prob": 0.004913547541946173,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 126,
+          "pred": 0,
+          "prob": 0.004897463601082563,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 127,
+          "pred": 0,
+          "prob": 0.0049303811974823475,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 128,
+          "pred": 0,
+          "prob": 0.004933767020702362,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 129,
+          "pred": 0,
+          "prob": 0.005020161624997854,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 130,
+          "pred": 0,
+          "prob": 0.0051958560943603516,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 131,
+          "pred": 0,
+          "prob": 0.005303650628775358,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 132,
+          "pred": 0,
+          "prob": 0.0052550784312188625,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 133,
+          "pred": 0,
+          "prob": 0.005215044599026442,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 134,
+          "pred": 0,
+          "prob": 0.005196903832256794,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 135,
+          "pred": 0,
+          "prob": 0.005126087460666895,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 136,
+          "pred": 0,
+          "prob": 0.0053194668143987656,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 137,
+          "pred": 0,
+          "prob": 0.00563387293368578,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 138,
+          "pred": 0,
+          "prob": 0.005312704015523195,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 139,
+          "pred": 0,
+          "prob": 0.005129415076225996,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 140,
+          "pred": 0,
+          "prob": 0.005142576526850462,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 141,
+          "pred": 0,
+          "prob": 0.005227484740316868,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 142,
+          "pred": 0,
+          "prob": 0.005153273232281208,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 143,
+          "pred": 0,
+          "prob": 0.0054036034271121025,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 144,
+          "pred": 0,
+          "prob": 0.005293778609484434,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 145,
+          "pred": 0,
+          "prob": 0.005568380001932383,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 146,
+          "pred": 0,
+          "prob": 0.005639463663101196,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 147,
+          "pred": 0,
+          "prob": 0.0057977172546088696,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 148,
+          "pred": 0,
+          "prob": 0.0056739686988294125,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 149,
+          "pred": 0,
+          "prob": 0.005494340322911739,
+          "threshold": 0.5
+        }
+      ],
+      "first_positive_index": null
+    },
+    "static_logistic_detector": {
+      "seconds": 40.629290639422834,
+      "labels": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "pair_idx": 1,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00001.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00002.jpg",
+          "pred": 0,
+          "prob": 1.4266673731498829e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 2,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00002.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00003.jpg",
+          "pred": 0,
+          "prob": 1.4603641502801373e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 3,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00003.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00004.jpg",
+          "pred": 0,
+          "prob": 1.07753430357231e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 4,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00004.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00005.jpg",
+          "pred": 0,
+          "prob": 1.1496568871581012e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 5,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00005.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00006.jpg",
+          "pred": 0,
+          "prob": 1.318888711264555e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 6,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00006.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00007.jpg",
+          "pred": 0,
+          "prob": 1.7341128895007378e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 7,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00007.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00008.jpg",
+          "pred": 0,
+          "prob": 2.784772844950909e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 8,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00008.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00009.jpg",
+          "pred": 0,
+          "prob": 1.769672695642653e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 9,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00009.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00010.jpg",
+          "pred": 0,
+          "prob": 5.307325949052862e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 10,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00010.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00011.jpg",
+          "pred": 0,
+          "prob": 2.296523769694826e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 11,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00011.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00012.jpg",
+          "pred": 0,
+          "prob": 1.6611451608156785e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 12,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00012.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00013.jpg",
+          "pred": 0,
+          "prob": 1.7858453067609483e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 13,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00013.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00014.jpg",
+          "pred": 0,
+          "prob": 2.1297835018650033e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 14,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00014.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00015.jpg",
+          "pred": 0,
+          "prob": 1.3289985819620873e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 15,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00015.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00016.jpg",
+          "pred": 0,
+          "prob": 1.1740990473470914e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 16,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00016.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00017.jpg",
+          "pred": 0,
+          "prob": 1.041433178424169e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 17,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00017.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00018.jpg",
+          "pred": 0,
+          "prob": 1.6742967458928838e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 18,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00018.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00019.jpg",
+          "pred": 0,
+          "prob": 1.1056953439123553e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 19,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00019.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00020.jpg",
+          "pred": 0,
+          "prob": 1.1984388848562248e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 20,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00020.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00021.jpg",
+          "pred": 0,
+          "prob": 1.5361696595292903e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 21,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00021.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00022.jpg",
+          "pred": 0,
+          "prob": 2.1297818723758385e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 22,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00022.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00023.jpg",
+          "pred": 0,
+          "prob": 1.2698905373648552e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 23,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00023.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00024.jpg",
+          "pred": 0,
+          "prob": 1.0688325656081162e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 24,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00024.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00025.jpg",
+          "pred": 0,
+          "prob": 1.6156043845286359e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 25,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00025.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00026.jpg",
+          "pred": 0,
+          "prob": 1.8689806007052538e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 26,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00026.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00027.jpg",
+          "pred": 0,
+          "prob": 1.1483715249905194e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 27,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00027.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00028.jpg",
+          "pred": 0,
+          "prob": 1.247704902185851e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 28,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00028.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00029.jpg",
+          "pred": 0,
+          "prob": 1.1915981710653945e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 29,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00029.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00030.jpg",
+          "pred": 0,
+          "prob": 1.1985585109167549e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 30,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00030.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00031.jpg",
+          "pred": 0,
+          "prob": 2.4101949842747583e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 31,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00031.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00032.jpg",
+          "pred": 0,
+          "prob": 3.092904039079405e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 32,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00032.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00033.jpg",
+          "pred": 0,
+          "prob": 4.4589980083544515e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 33,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00033.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00034.jpg",
+          "pred": 0,
+          "prob": 5.619764894084153e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 34,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00034.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00035.jpg",
+          "pred": 0,
+          "prob": 1.0048796879920653e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 35,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00035.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00036.jpg",
+          "pred": 0,
+          "prob": 1.0960490742757005e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 36,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00036.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00037.jpg",
+          "pred": 0,
+          "prob": 1.1920333867128747e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 37,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00037.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00038.jpg",
+          "pred": 0,
+          "prob": 1.466753759901494e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 38,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00038.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00039.jpg",
+          "pred": 0,
+          "prob": 2.1573338065067248e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 39,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00039.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00040.jpg",
+          "pred": 0,
+          "prob": 4.2403766873227566e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 40,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00040.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00041.jpg",
+          "pred": 0,
+          "prob": 2.746596515001394e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 41,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00041.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00042.jpg",
+          "pred": 0,
+          "prob": 5.6567489118395894e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 42,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00042.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00043.jpg",
+          "pred": 0,
+          "prob": 2.1206743616373806e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 43,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00043.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00044.jpg",
+          "pred": 0,
+          "prob": 1.7266566656015205e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 44,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00044.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00045.jpg",
+          "pred": 0,
+          "prob": 2.1585490490227004e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 45,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00045.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00046.jpg",
+          "pred": 0,
+          "prob": 1.8913645183908947e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 46,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00046.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00047.jpg",
+          "pred": 0,
+          "prob": 2.129305318438802e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 47,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00047.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00048.jpg",
+          "pred": 0,
+          "prob": 1.7304744239255177e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 48,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00048.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00049.jpg",
+          "pred": 0,
+          "prob": 1.487002659345643e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 49,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00049.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00050.jpg",
+          "pred": 0,
+          "prob": 3.220892988716675e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 50,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00050.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00051.jpg",
+          "pred": 0,
+          "prob": 3.302629899203608e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 51,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00051.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00052.jpg",
+          "pred": 0,
+          "prob": 3.394802538817407e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 52,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00052.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00053.jpg",
+          "pred": 0,
+          "prob": 1.9313301253969256e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 53,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00053.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00054.jpg",
+          "pred": 0,
+          "prob": 1.4087596250578066e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 54,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00054.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00055.jpg",
+          "pred": 0,
+          "prob": 1.1791726374582476e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 55,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00055.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00056.jpg",
+          "pred": 0,
+          "prob": 1.8209451609932533e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 56,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00056.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00057.jpg",
+          "pred": 0,
+          "prob": 1.6720147200946957e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 57,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00057.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00058.jpg",
+          "pred": 0,
+          "prob": 3.066115762486366e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 58,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00058.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00059.jpg",
+          "pred": 0,
+          "prob": 2.8155987440254397e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 59,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00059.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00060.jpg",
+          "pred": 0,
+          "prob": 1.9736183108286077e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 60,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00060.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00061.jpg",
+          "pred": 0,
+          "prob": 1.5870803491195086e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 61,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00061.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00062.jpg",
+          "pred": 0,
+          "prob": 7.139836546686138e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 62,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00062.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00063.jpg",
+          "pred": 0,
+          "prob": 5.157204911330606e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 63,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00063.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00064.jpg",
+          "pred": 0,
+          "prob": 4.252577202269553e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 64,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00064.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00065.jpg",
+          "pred": 0,
+          "prob": 5.313191321283059e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 65,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00065.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00066.jpg",
+          "pred": 0,
+          "prob": 1.0598214516021031e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 66,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00066.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00067.jpg",
+          "pred": 0,
+          "prob": 1.956429830892485e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 67,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00067.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00068.jpg",
+          "pred": 0,
+          "prob": 2.2056519241641305e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 68,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00068.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00069.jpg",
+          "pred": 0,
+          "prob": 1.3474478721662507e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 69,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00069.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00070.jpg",
+          "pred": 0,
+          "prob": 9.12905886674524e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 70,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00070.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00071.jpg",
+          "pred": 0,
+          "prob": 5.985366327029637e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 71,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00071.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00072.jpg",
+          "pred": 0,
+          "prob": 7.958682053773114e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 72,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00072.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00073.jpg",
+          "pred": 0,
+          "prob": 6.730035127195029e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 73,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00073.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00074.jpg",
+          "pred": 0,
+          "prob": 8.285282650632218e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 74,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00074.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00075.jpg",
+          "pred": 0,
+          "prob": 1.0284402742551308e-05,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 75,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00075.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00076.jpg",
+          "pred": 0,
+          "prob": 8.404054479751442e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 76,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00076.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00077.jpg",
+          "pred": 0,
+          "prob": 3.8785118740954546e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 77,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00077.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00078.jpg",
+          "pred": 0,
+          "prob": 2.879051461976149e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 78,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00078.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00079.jpg",
+          "pred": 0,
+          "prob": 3.396377139870031e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 79,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00079.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00080.jpg",
+          "pred": 0,
+          "prob": 4.85657766566941e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 80,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00080.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00081.jpg",
+          "pred": 0,
+          "prob": 6.07730382961065e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 81,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00081.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00082.jpg",
+          "pred": 0,
+          "prob": 5.606916325204835e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 82,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00082.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00083.jpg",
+          "pred": 0,
+          "prob": 4.271950896434847e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 83,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00083.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00084.jpg",
+          "pred": 0,
+          "prob": 3.891227259493723e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 84,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00084.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00085.jpg",
+          "pred": 0,
+          "prob": 2.9727157611488587e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 85,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00085.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00086.jpg",
+          "pred": 0,
+          "prob": 2.1852375216108432e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 86,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00086.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00087.jpg",
+          "pred": 0,
+          "prob": 1.6819367716179171e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 87,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00087.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00088.jpg",
+          "pred": 0,
+          "prob": 2.0887798481087776e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 88,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00088.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00089.jpg",
+          "pred": 0,
+          "prob": 1.7157375141302718e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 89,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00089.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00090.jpg",
+          "pred": 0,
+          "prob": 1.3831586389362194e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 90,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00090.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00091.jpg",
+          "pred": 0,
+          "prob": 1.2614748443391765e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 91,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00091.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00092.jpg",
+          "pred": 0,
+          "prob": 1.4420837027566618e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 92,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00092.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00093.jpg",
+          "pred": 0,
+          "prob": 1.152499245910344e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 93,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00093.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00094.jpg",
+          "pred": 0,
+          "prob": 1.3503816880536406e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 94,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00094.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00095.jpg",
+          "pred": 0,
+          "prob": 1.758679151884025e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 95,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00095.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00096.jpg",
+          "pred": 0,
+          "prob": 1.5105806789925837e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 96,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00096.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00097.jpg",
+          "pred": 0,
+          "prob": 1.2479213686653452e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 97,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00097.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00098.jpg",
+          "pred": 0,
+          "prob": 1.232584414498561e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 98,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00098.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00099.jpg",
+          "pred": 0,
+          "prob": 1.4678514771872299e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 99,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00099.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00100.jpg",
+          "pred": 0,
+          "prob": 2.017866753176256e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 100,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00100.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00101.jpg",
+          "pred": 0,
+          "prob": 1.5869808525977363e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 101,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00101.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00102.jpg",
+          "pred": 0,
+          "prob": 1.2253857829958275e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 102,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00102.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00103.jpg",
+          "pred": 0,
+          "prob": 1.3926646158071782e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 103,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00103.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00104.jpg",
+          "pred": 0,
+          "prob": 1.5654041862134665e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 104,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00104.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00105.jpg",
+          "pred": 0,
+          "prob": 1.159087313951874e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 105,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00105.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00106.jpg",
+          "pred": 0,
+          "prob": 1.5041398468601296e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 106,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00106.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00107.jpg",
+          "pred": 0,
+          "prob": 1.6697650695495748e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 107,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00107.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00108.jpg",
+          "pred": 0,
+          "prob": 2.4246114992118217e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 108,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00108.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00109.jpg",
+          "pred": 0,
+          "prob": 2.267245622003246e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 109,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00109.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00110.jpg",
+          "pred": 0,
+          "prob": 2.3492341519738298e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 110,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00110.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00111.jpg",
+          "pred": 0,
+          "prob": 2.4645317927288617e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 111,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00111.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00112.jpg",
+          "pred": 0,
+          "prob": 2.0871704800228476e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 112,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00112.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00113.jpg",
+          "pred": 0,
+          "prob": 2.1598102931827423e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 113,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00113.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00114.jpg",
+          "pred": 0,
+          "prob": 2.342514271060017e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 114,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00114.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00115.jpg",
+          "pred": 0,
+          "prob": 1.4226914414783374e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 115,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00115.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00116.jpg",
+          "pred": 0,
+          "prob": 1.9278830288471003e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 116,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00116.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00117.jpg",
+          "pred": 0,
+          "prob": 1.351819167340075e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 117,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00117.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00118.jpg",
+          "pred": 0,
+          "prob": 1.1803189079224555e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 118,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00118.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00119.jpg",
+          "pred": 0,
+          "prob": 1.2217936357193806e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 119,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00119.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00120.jpg",
+          "pred": 0,
+          "prob": 1.3379572327488083e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 120,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00120.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00121.jpg",
+          "pred": 0,
+          "prob": 1.1665866357424651e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 121,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00121.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00122.jpg",
+          "pred": 0,
+          "prob": 1.203554221994977e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 122,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00122.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00123.jpg",
+          "pred": 0,
+          "prob": 1.260935846689673e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 123,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00123.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00124.jpg",
+          "pred": 0,
+          "prob": 1.7370936532993584e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 124,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00124.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00125.jpg",
+          "pred": 0,
+          "prob": 1.3974878569353767e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 125,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00125.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00126.jpg",
+          "pred": 0,
+          "prob": 1.4093789680873534e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 126,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00126.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00127.jpg",
+          "pred": 0,
+          "prob": 1.3411455190812582e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 127,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00127.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00128.jpg",
+          "pred": 0,
+          "prob": 1.206932089673759e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 128,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00128.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00129.jpg",
+          "pred": 0,
+          "prob": 1.2462579887364194e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 129,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00129.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00130.jpg",
+          "pred": 0,
+          "prob": 1.4488965311539932e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 130,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00130.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00131.jpg",
+          "pred": 0,
+          "prob": 1.8347369696100373e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 131,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00131.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00132.jpg",
+          "pred": 0,
+          "prob": 2.265471180465727e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 132,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00132.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00133.jpg",
+          "pred": 0,
+          "prob": 1.75254592263681e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 133,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00133.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00134.jpg",
+          "pred": 0,
+          "prob": 1.8933937770735914e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 134,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00134.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00135.jpg",
+          "pred": 0,
+          "prob": 1.5412413415333437e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 135,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00135.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00136.jpg",
+          "pred": 0,
+          "prob": 1.2891796327628856e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 136,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00136.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00137.jpg",
+          "pred": 0,
+          "prob": 1.4225986188209894e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 137,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00137.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00138.jpg",
+          "pred": 0,
+          "prob": 1.7698366808675454e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 138,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00138.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00139.jpg",
+          "pred": 0,
+          "prob": 1.5857591349889922e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 139,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00139.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00140.jpg",
+          "pred": 0,
+          "prob": 1.4323957813216172e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 140,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00140.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00141.jpg",
+          "pred": 0,
+          "prob": 1.1222117478732662e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 141,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00141.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00142.jpg",
+          "pred": 0,
+          "prob": 1.220809742048121e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 142,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00142.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00143.jpg",
+          "pred": 0,
+          "prob": 1.698301535016515e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 143,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00143.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00144.jpg",
+          "pred": 0,
+          "prob": 1.9226958497333187e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 144,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00144.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00145.jpg",
+          "pred": 0,
+          "prob": 1.495278808913716e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 145,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00145.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00146.jpg",
+          "pred": 0,
+          "prob": 2.2628460057891777e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 146,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00146.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00147.jpg",
+          "pred": 0,
+          "prob": 2.9455646038868675e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 147,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00147.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00148.jpg",
+          "pred": 0,
+          "prob": 3.2503826111439587e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 148,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00148.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00149.jpg",
+          "pred": 0,
+          "prob": 3.6833877382822483e-06,
+          "threshold": 0.5
+        },
+        {
+          "pair_idx": 149,
+          "prev_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00149.jpg",
+          "cur_image": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00150.jpg",
+          "pred": 0,
+          "prob": 3.824920950585643e-06,
+          "threshold": 0.5
+        }
+      ],
+      "first_positive_index": null
+    }
+  },
+  "strict_forward": {
+    "frames": 150,
+    "seconds": 50.95255527459085,
+    "fps": 2.943915161695578,
+    "peak_vram_bytes": 5727071232.0
+  },
+  "bridge3r": {
+    "no_cut": {
+      "publication_method": "Bridge3R",
+      "cut_applied": false,
+      "state_lineage": {
+        "pre_cut_state": "unchanged",
+        "post_cut_state": "not_started",
+        "shadow_state": "not_read"
+      },
+      "runtime_contract": {
+        "gt_used": false,
+        "future_frames_used": 0,
+        "pre_frames_rewritten_after_emission": false,
+        "no_cut_bit_exact": true
+      }
+    },
+    "no_cut_array_equal": {
+      "cameras_c2w": true,
+      "joints_world": true,
+      "vertices_world": true,
+      "valid": true,
+      "native_ids": true,
+      "persistent_ids": true
+    },
+    "clean_forward": {
+      "frames": 150,
+      "seconds": 47.583150322549045,
+      "fps": 3.152376397594611,
+      "peak_vram_bytes": 5797795840.0
+    }
+  },
+  "checkpoint": {
+    "current": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+    "current_sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+    "original": "/data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth",
+    "original_sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377",
+    "detector": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14/detector_learning_audit/SELECTED_MODEL.pt",
+    "detector_sha256": "cb84b0da620878515e94f08b30d757206b41c4de82e2ff4091fe2a6e519e498f",
+    "current_flags": {
+      "enable_v8_pose_prompt": true,
+      "enable_v8_human_latent_corr": true,
+      "enable_v8_human_trans_corr": false,
+      "enable_v8_head_lora": true,
+      "v9_oracle_correction_gate_enabled": true,
+      "v9_oracle_correction_cache_enabled": false,
+      "v14_1_event_only_head_lora": true
+    }
+  },
+  "provenance": {
+    "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/manifests/harmony4d_nocut_v1.jsonl",
+    "manifest_sha256": "963cbb7acfebf896438b83ae53337b98453dce7848e86345e188bf420c056e4c",
+    "manifest_line": 2,
+    "runner": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/run_harmony4d_multicut.py",
+    "runner_sha256": "bdecf3eebe28ea0ccc4a1faf216aeea0c9cd7cc0c5c1bce5b60a3a2bccab29a5",
+    "argv": [
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/run_harmony4d_multicut.py",
+      "--manifest",
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/manifests/harmony4d_nocut_v1.jsonl",
+      "--line",
+      "2",
+      "--extracted-root",
+      "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3",
+      "--output",
+      "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_02.npz",
+      "--device",
+      "cuda:2",
+      "--no-cut"
+    ]
+  },
+  "runtime_contract": {
+    "gt_used": false,
+    "pre_cut_frames_mutated": false,
+    "no_cut": true,
+    "boundaries": []
+  },
+  "environment": {
+    "python": "3.10.19 (main, Dec  9 2025, 19:03:08) [Clang 21.1.4 ]",
+    "platform": "Linux-5.15.0-130-generic-x86_64-with-glibc2.35",
+    "torch": "2.4.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda:2",
+    "gpu": "NVIDIA L20"
+  },
+  "cache": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/nocut_02.npz",
+  "cache_sha256": "55485291631f06f698c1c763d0adda86ff16e7f7a1fa5afe9ba2e81dee0a78be"
+}

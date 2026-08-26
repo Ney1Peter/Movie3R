@@ -1,0 +1,1283 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-multicut-evaluation-v1",
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+  "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20",
+  "record": {
+    "archive_entry": "train/15_mma4.zip",
+    "boundaries": [
+      50,
+      100
+    ],
+    "camera_transitions_evaluator_only": [
+      {
+        "baseline_m": 9.984977898368777,
+        "rotation_deg": 174.92007958963416
+      },
+      {
+        "baseline_m": 9.399378259875535,
+        "rotation_deg": 177.01583396093963
+      }
+    ],
+    "capture": "006_mma4",
+    "capture_relative": "15_mma4/006_mma4",
+    "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20",
+    "clip_length": 150,
+    "fps": 30.0,
+    "gt_available_to_runtime": false,
+    "identities_evaluator_only": [
+      "aria01",
+      "aria02"
+    ],
+    "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+    "protocol_seed": 20260825,
+    "selection": {
+      "audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/15_mma4/audit_006_mma4.json",
+      "audit_sha256": "1b7f70db57f03a3a0a75ffbbaf112783d4e77633bfaffcc2795c5d7ff63867ac",
+      "camera_rule": "maximum minimum adjacent rotation, then maximum minimum adjacent baseline, then lexicographic camera names; calibration and visibility only",
+      "capture_rule": "first coordinate-valid capture in pre-existing SHA256 structural order",
+      "minimum_visible_vertex_fraction": 0.01
+    },
+    "selection_depends_on_model_result": false,
+    "sequence": "15_mma4",
+    "shot_cameras": [
+      "cam01",
+      "cam11",
+      "cam20"
+    ],
+    "shot_frame_numbers": [
+      [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100
+      ],
+      [
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150
+      ]
+    ]
+  },
+  "identities": [
+    "aria01",
+    "aria02"
+  ],
+  "methods": {
+    "strict_human3r": {
+      "method": "strict_human3r",
+      "multi_thumbs_named_provisional": {
+        "w_mpjpe_mm": {
+          "count": 267,
+          "mean": 2141.7067096538426,
+          "median": 1423.9743342278964,
+          "p90": 4745.676397838555,
+          "p95": 5802.803626787534,
+          "std": 1806.9748979126393
+        },
+        "w_mpjpe_one_frame_fit_mm": {
+          "count": 267,
+          "mean": 2153.430999000421,
+          "median": 1416.794650888064,
+          "p90": 4787.044482748785,
+          "p95": 5899.0442506544405,
+          "std": 1834.1280166516583
+        },
+        "wa_mpjpe_mm": {
+          "count": 267,
+          "mean": 661.3310769494794,
+          "median": 607.5020420674995,
+          "p90": 863.9391638962137,
+          "p95": 944.8760488345913,
+          "std": 204.8675620866544
+        },
+        "mpjpe_mm": {
+          "count": 267,
+          "mean": 90.25266246089343,
+          "median": 75.61756952297081,
+          "p90": 134.1955943314315,
+          "p95": 157.77984191680798,
+          "std": 58.23310322310138
+        },
+        "pa_mpjpe_mm": {
+          "count": 267,
+          "mean": 65.06437473412225,
+          "median": 58.4138486835336,
+          "p90": 105.92596951355183,
+          "p95": 123.59359869443473,
+          "std": 29.54908348660423
+        },
+        "mpvpe_mm": {
+          "count": 267,
+          "mean": 113.65763768560339,
+          "median": 94.5668923917238,
+          "p90": 167.7589487657057,
+          "p95": 198.6135857289888,
+          "std": 75.84219172853595
+        },
+        "accel_delta2_mm_per_frame2": {
+          "count": 251,
+          "mean": 378.5148563962306,
+          "median": 92.80045153546423,
+          "p90": 537.2146363021392,
+          "p95": 1217.2008946666317,
+          "std": 1098.2591527666805
+        },
+        "accel_physical_m_per_s2": {
+          "count": 251,
+          "mean": 340.6633707566075,
+          "median": 83.52040638191781,
+          "p90": 483.49317267192527,
+          "p95": 1095.4808051999685,
+          "std": 988.4332374900124
+        },
+        "rte_h3r_percent": {
+          "count": 267,
+          "mean": 44.364147143798114,
+          "median": 31.513376117638497,
+          "p90": 85.6258611990807,
+          "p95": 115.6269158439628,
+          "std": 33.71726570730383
+        },
+        "roe_joint_proxy_deg": {
+          "count": 267,
+          "mean": 19.56333264530891,
+          "median": 14.165248470277827,
+          "p90": 26.307217917663912,
+          "p95": 34.46000185978394,
+          "std": 24.994292464785953
+        },
+        "jitter_h3r_m_per_s3_div10": {
+          "count": 247,
+          "mean": 1874.6837921066847,
+          "median": 437.14436375050525,
+          "p90": 2826.0811744999764,
+          "p95": 9096.236460537233,
+          "std": 5276.120274849806
+        },
+        "foot_sliding_cm": {
+          "count": 322,
+          "mean": 19.374613524630785,
+          "median": 5.411850019086922,
+          "p90": 32.57617916979561,
+          "p95": 63.45078291015815,
+          "std": 66.41238825961821
+        },
+        "ate_sim3_m": {
+          "count": 150,
+          "mean": 1.2241934453594396,
+          "median": 0.6886700004609291,
+          "p90": 2.4020386669472718,
+          "p95": 3.9719372241365085,
+          "std": 1.1438610599699912
+        },
+        "ate_se3_m": {
+          "count": 150,
+          "mean": 1.3852808453536403,
+          "median": 1.2466628658645893,
+          "p90": 2.287101370202314,
+          "p95": 4.150910597265703,
+          "std": 1.1531343975786081
+        },
+        "ate_metric_initial_se3_m": {
+          "count": 150,
+          "mean": 2.179968464208526,
+          "median": 1.5005384555228385,
+          "p90": 3.58372026466383,
+          "p95": 5.608319567285372,
+          "std": 1.3289319502262735
+        }
+      },
+      "coverage": {
+        "visible_gt_person_frames": 300,
+        "matched_person_frames": 267,
+        "missed_person_frames": 33,
+        "predicted_person_frames": 999,
+        "false_positive_detections": 732,
+        "coverage": 0.89,
+        "precision": 0.2672672672672673,
+        "recall": 0.89,
+        "minimum_visible_vertex_fraction": 0.01,
+        "maximum_assignment_cost_m": 2.0,
+        "visibility_strata": {
+          "high_visibility": {
+            "visible_gt_person_frames": 300,
+            "matched_person_frames": 267,
+            "coverage": 0.89
+          },
+          "partial_visibility": {
+            "visible_gt_person_frames": 0,
+            "matched_person_frames": 0,
+            "coverage": 0.0
+          },
+          "severe_occlusion_or_truncation": {
+            "visible_gt_person_frames": 0,
+            "matched_person_frames": 0,
+            "coverage": 0.0
+          }
+        }
+      },
+      "identity": {
+        "ids_total": 11,
+        "ids_per_gt": {
+          "aria01": 3,
+          "aria02": 8
+        },
+        "id_continuity": 0.9584905660377359,
+        "association_accuracy_best_global_mapping": 0.5880149812734082,
+        "idf1": 0.24172440338722093,
+        "idtp": 157,
+        "idfp": 842,
+        "idfn": 143,
+        "visible_gt_person_frames": 300
+      },
+      "camera": {
+        "translation_m": {
+          "count": 150,
+          "mean": 2.4054483963637723,
+          "median": 1.9327576473618238,
+          "p90": 4.068399770291599,
+          "p95": 5.397574321674122,
+          "std": 1.2289723337915601
+        },
+        "rotation_deg": {
+          "count": 150,
+          "mean": 14.564918712997667,
+          "median": 16.67408249884864,
+          "p90": 18.618008443845945,
+          "p95": 20.51430806055417,
+          "std": 4.667151010544872
+        },
+        "first_post_translation_m": 5.552132058577557,
+        "first_post_rotation_deg": 36.01249757314079,
+        "post_translation_m": {
+          "count": 100,
+          "mean": 2.6454986499490163,
+          "median": 2.7000438752898424,
+          "p90": 4.835817228229385,
+          "p95": 5.861577871197123,
+          "std": 1.446596776645995
+        },
+        "post_rotation_deg": {
+          "count": 100,
+          "mean": 13.43813577864231,
+          "median": 11.834001486965462,
+          "p90": 19.670128483428954,
+          "p95": 23.225962732507842,
+          "std": 5.372038719959246
+        },
+        "rpe_translation_m": {
+          "count": 149,
+          "mean": 0.16622514603510138,
+          "median": 0.02646315655918219,
+          "p90": 0.17171485666127656,
+          "p95": 0.2915945865431734,
+          "std": 0.7989420943580458
+        },
+        "rpe_rotation_deg": {
+          "count": 149,
+          "mean": 0.9401467885270635,
+          "median": 0.22615242263829516,
+          "p90": 1.4765428550590372,
+          "p95": 2.547219205145135,
+          "std": 3.031854553313291
+        },
+        "boundary_rpe_translation_m": 6.876737750055471,
+        "boundary_rpe_rotation_deg": 19.366725431327453
+      },
+      "fixed_world": {
+        "root_m": {
+          "count": 267,
+          "mean": 1.3654529768352937,
+          "median": 0.8458322453715365,
+          "p90": 2.9552107226077347,
+          "p95": 3.8414192152321696,
+          "std": 1.1708007080779796
+        },
+        "joint_m": {
+          "count": 267,
+          "mean": 1.387086440674305,
+          "median": 0.853101579108396,
+          "p90": 2.8865164100641016,
+          "p95": 3.826429989053283,
+          "std": 1.1520842565050615
+        },
+        "vertex_m": {
+          "count": 267,
+          "mean": 1.3854331799373036,
+          "median": 0.8437829953735463,
+          "p90": 2.8503133813335273,
+          "p95": 3.8242406523994616,
+          "std": 1.1541379387386468
+        },
+        "first_post_root_m": {
+          "count": 2,
+          "mean": 3.650739351646667,
+          "median": 3.650739351646667,
+          "p90": 3.8778312630582095,
+          "p95": 3.906217751984652,
+          "std": 0.28386488926442754
+        },
+        "first_post_joint_m": {
+          "count": 2,
+          "mean": 3.648482538962422,
+          "median": 3.648482538962422,
+          "p90": 3.8442848786669432,
+          "p95": 3.8687601711300084,
+          "std": 0.2447529246306519
+        },
+        "first_post_vertex_m": {
+          "count": 2,
+          "mean": 3.6488123364709395,
+          "median": 3.6488123364709395,
+          "p90": 3.830031927932149,
+          "p95": 3.8526843768648003,
+          "std": 0.22652448932651148
+        },
+        "post_root_m": {
+          "count": 190,
+          "mean": 1.7057710907991332,
+          "median": 1.2382196420261824,
+          "p90": 3.2960539437394503,
+          "p95": 4.1343855542864745,
+          "std": 1.215005205442599
+        },
+        "post_joint_m": {
+          "count": 190,
+          "mean": 1.7087475698897896,
+          "median": 1.2057271889398538,
+          "p90": 3.268781304860122,
+          "p95": 4.131104977123995,
+          "std": 1.2125018538227699
+        },
+        "post_vertex_m": {
+          "count": 190,
+          "mean": 1.7021483393109527,
+          "median": 1.1893779468599552,
+          "p90": 3.2309941683312036,
+          "p95": 4.130450109688232,
+          "std": 1.220630648798324
+        }
+      },
+      "camera_human_relative": {
+        "root_gauge_m": {
+          "count": 267,
+          "mean": 1.554382941575048,
+          "median": 1.5172982470538758,
+          "p90": 2.2950414884536428,
+          "p95": 2.378875837691296,
+          "std": 0.49587178896076634
+        },
+        "body_orientation_deg": {
+          "count": 267,
+          "mean": 19.56333264530891,
+          "median": 14.165248470277827,
+          "p90": 26.307217917663912,
+          "p95": 34.46000185978394,
+          "std": 24.994292464785953
+        },
+        "first_post_root_gauge_m": {
+          "count": 2,
+          "mean": 1.7670288838104016,
+          "median": 1.7670288838104016,
+          "p90": 1.7891163808062005,
+          "p95": 1.7918773179306753,
+          "std": 0.027609371244748382
+        },
+        "post_root_gauge_m": {
+          "count": 190,
+          "mean": 1.3419631490505273,
+          "median": 1.2581750544759915,
+          "p90": 1.9142742236775088,
+          "p95": 2.119671804684447,
+          "std": 0.3926658204384067
+        }
+      },
+      "pairwise_layout": {
+        "distance_m": {
+          "count": 117,
+          "mean": 0.4465937150886211,
+          "median": 0.4657685551770694,
+          "p90": 0.6010483746107745,
+          "p95": 0.6336729186994409,
+          "std": 0.1407193049784328
+        },
+        "vector_m": {
+          "count": 117,
+          "mean": 0.49495149015676937,
+          "median": 0.5023537755317826,
+          "p90": 0.7432992458716927,
+          "p95": 0.7606132219371813,
+          "std": 0.16491414752415978
+        },
+        "first_post_distance_m": {
+          "count": 1,
+          "mean": 0.5867438648706269,
+          "median": 0.5867438648706269,
+          "p90": 0.5867438648706269,
+          "p95": 0.5867438648706269,
+          "std": 0.0
+        },
+        "first_post_vector_m": {
+          "count": 1,
+          "mean": 0.852846560468981,
+          "median": 0.852846560468981,
+          "p90": 0.852846560468981,
+          "p95": 0.852846560468981,
+          "std": 0.0
+        },
+        "post_distance_m": {
+          "count": 90,
+          "mean": 0.4606739700554512,
+          "median": 0.46942496682635176,
+          "p90": 0.6109926755763749,
+          "p95": 0.6367299291582683,
+          "std": 0.1315250589006699
+        },
+        "post_vector_m": {
+          "count": 90,
+          "mean": 0.5168832583636838,
+          "median": 0.510593658846382,
+          "p90": 0.7496164355315937,
+          "p95": 0.7717803670455129,
+          "std": 0.16141898166266888
+        }
+      },
+      "cut_seam": {
+        "available": true,
+        "camera_translation_excess_m": 7.3567668465562015,
+        "camera_rotation_excess_deg": 19.366728394137613,
+        "root_excess_m": 2.7026494670949304,
+        "joint_excess_m": 2.7000822630433143,
+        "vertex_excess_m": 2.7049223406587304,
+        "camera_human_relative_excess_m": 1.1633364906401422
+      },
+      "within_shot_motion": [
+        {
+          "identity": "aria01",
+          "label_evaluator_only": "moving",
+          "gt_net_displacement_m": 0.5693193063384923,
+          "pred_net_displacement_m": 4.615768495539179,
+          "motion_retention": 8.107521463174912,
+          "pred_drift_m": null,
+          "gt_path_length_m": 2.212489417474211,
+          "pred_path_length_m": 26.034550152146693,
+          "path_retention": 11.767084600055565,
+          "trajectory_direction_cosine": -0.46046586185263094,
+          "pred_mean_speed_m_per_s": 8.775691062521357,
+          "gt_mean_speed_m_per_s": 0.7457829497104081,
+          "pred_max_deviation_from_first_m": 13.09476883839625
+        },
+        {
+          "identity": "aria02",
+          "label_evaluator_only": "moving",
+          "gt_net_displacement_m": 0.8152268119707874,
+          "pred_net_displacement_m": 5.078451954841635,
+          "motion_retention": 6.229495743110587,
+          "pred_drift_m": null,
+          "gt_path_length_m": 2.591174599654521,
+          "pred_path_length_m": 28.135785684115376,
+          "path_retention": 10.858313325495972,
+          "trajectory_direction_cosine": 0.33431226407246484,
+          "pred_mean_speed_m_per_s": 8.525995661853143,
+          "gt_mean_speed_m_per_s": 0.7852044241377335,
+          "pred_max_deviation_from_first_m": 12.877751049960546
+        }
+      ],
+      "assignment_cost": {
+        "count": 267,
+        "mean": 0.7639214283902297,
+        "median": 0.6944089616510106,
+        "p90": 1.2385858437629873,
+        "p95": 1.2642667883935097,
+        "std": 0.3378285226376379
+      },
+      "shared_initial_sim3": {
+        "scale": 0.6322794498624296,
+        "rotation": [
+          [
+            -0.7818460819621194,
+            -0.09571128571564151,
+            0.6160812072341932
+          ],
+          [
+            -0.6234685961245057,
+            0.12303626447636591,
+            -0.7721068496459795
+          ],
+          [
+            -0.0019009910627145789,
+            -0.9877760006248181,
+            -0.15586840225850432
+          ]
+        ],
+        "translation": [
+          -1.1444294114257945,
+          -1.961339953999805,
+          0.6521765471720136
+        ]
+      },
+      "shared_initial_se3": {
+        "scale": 1.0,
+        "rotation": [
+          [
+            -0.7818460819621194,
+            -0.09571128571564151,
+            0.6160812072341932
+          ],
+          [
+            -0.6234685961245057,
+            0.12303626447636591,
+            -0.7721068496459795
+          ],
+          [
+            -0.0019009910627145789,
+            -0.9877760006248181,
+            -0.15586840225850432
+          ]
+        ],
+        "translation": [
+          -2.8134841204640293,
+          -0.4459610424481246,
+          0.9076822525096069
+        ]
+      },
+      "cut_seams": {
+        "50": {
+          "cut_seam": {
+            "available": true,
+            "camera_translation_excess_m": 7.3567668465562015,
+            "camera_rotation_excess_deg": 19.366728394137613,
+            "root_excess_m": 2.7026494670949304,
+            "joint_excess_m": 2.7000822630433143,
+            "vertex_excess_m": 2.7049223406587304,
+            "camera_human_relative_excess_m": 1.1633364906401422
+          },
+          "boundary_camera_rpe_translation_m": 6.876737750055471,
+          "boundary_camera_rpe_rotation_deg": 19.366725431327453
+        },
+        "100": {
+          "cut_seam": {
+            "available": true,
+            "camera_translation_excess_m": 6.861137744161939,
+            "camera_rotation_excess_deg": 18.738304757310754,
+            "root_excess_m": 4.049950847868775,
+            "joint_excess_m": 4.065808877915386,
+            "vertex_excess_m": 4.071926773566094,
+            "camera_human_relative_excess_m": 0.6720062164815983
+          },
+          "boundary_camera_rpe_translation_m": 6.478284560420381,
+          "boundary_camera_rpe_rotation_deg": 18.738357214350433
+        }
+      }
+    },
+    "bridge3r": {
+      "method": "bridge3r",
+      "multi_thumbs_named_provisional": {
+        "w_mpjpe_mm": {
+          "count": 267,
+          "mean": 1403.1699976231598,
+          "median": 1038.5771433145735,
+          "p90": 2742.3309452137487,
+          "p95": 2863.9868997457797,
+          "std": 865.1956984799422
+        },
+        "w_mpjpe_one_frame_fit_mm": {
+          "count": 267,
+          "mean": 1416.0019942098293,
+          "median": 1023.360391208947,
+          "p90": 2805.0537494225687,
+          "p95": 2931.537845415161,
+          "std": 872.7682034382588
+        },
+        "wa_mpjpe_mm": {
+          "count": 267,
+          "mean": 551.8652655049848,
+          "median": 501.0338717849517,
+          "p90": 718.9365299647427,
+          "p95": 747.7000778198327,
+          "std": 175.2788126691288
+        },
+        "mpjpe_mm": {
+          "count": 267,
+          "mean": 90.11111719906052,
+          "median": 75.38463767356221,
+          "p90": 131.77510672566464,
+          "p95": 157.33906572220258,
+          "std": 57.89787512786896
+        },
+        "pa_mpjpe_mm": {
+          "count": 267,
+          "mean": 65.24074600444297,
+          "median": 59.071597401022856,
+          "p90": 106.20665459482102,
+          "p95": 123.24863237974024,
+          "std": 29.294108012027063
+        },
+        "mpvpe_mm": {
+          "count": 267,
+          "mean": 113.27527851608308,
+          "median": 94.09630830199777,
+          "p90": 166.71646960538746,
+          "p95": 197.17435423443015,
+          "std": 75.45804882372644
+        },
+        "accel_delta2_mm_per_frame2": {
+          "count": 251,
+          "mean": 179.4315630670719,
+          "median": 71.96504082640624,
+          "p90": 359.22984350499416,
+          "p95": 666.7020834204126,
+          "std": 378.9590614912327
+        },
+        "accel_physical_m_per_s2": {
+          "count": 251,
+          "mean": 161.48840676036468,
+          "median": 64.76853674376562,
+          "p90": 323.30685915449476,
+          "p95": 600.0318750783713,
+          "std": 341.06315534210944
+        },
+        "rte_h3r_percent": {
+          "count": 267,
+          "mean": 27.86288648085795,
+          "median": 25.9863522650326,
+          "p90": 44.246067698094514,
+          "p95": 47.969465679349724,
+          "std": 10.369096869775857
+        },
+        "roe_joint_proxy_deg": {
+          "count": 267,
+          "mean": 23.082631246107024,
+          "median": 14.398234303442615,
+          "p90": 39.59277555332904,
+          "p95": 59.523446957770844,
+          "std": 28.277619332077258
+        },
+        "jitter_h3r_m_per_s3_div10": {
+          "count": 247,
+          "mean": 883.354195465057,
+          "median": 360.30182145873255,
+          "p90": 1755.8890518408693,
+          "p95": 4453.632624665321,
+          "std": 1786.0912729357938
+        },
+        "foot_sliding_cm": {
+          "count": 322,
+          "mean": 8.45927034307597,
+          "median": 3.764158112445489,
+          "p90": 12.956263017683892,
+          "p95": 16.85361237354336,
+          "std": 21.7062065818563
+        },
+        "ate_sim3_m": {
+          "count": 150,
+          "mean": 0.20780017112393034,
+          "median": 0.2728502635685729,
+          "p90": 0.33006081469360055,
+          "p95": 0.34449668443413806,
+          "std": 0.12552492730141235
+        },
+        "ate_se3_m": {
+          "count": 150,
+          "mean": 1.1290223184311334,
+          "median": 0.9592635620465542,
+          "p90": 1.6877931877428771,
+          "p95": 1.6896867375672986,
+          "std": 0.3915325252676596
+        },
+        "ate_metric_initial_se3_m": {
+          "count": 150,
+          "mean": 2.2957976874050927,
+          "median": 1.9892397070141996,
+          "p90": 3.5012238595988623,
+          "p95": 3.5226035793755153,
+          "std": 0.8642467596023404
+        }
+      },
+      "coverage": {
+        "visible_gt_person_frames": 300,
+        "matched_person_frames": 267,
+        "missed_person_frames": 33,
+        "predicted_person_frames": 999,
+        "false_positive_detections": 732,
+        "coverage": 0.89,
+        "precision": 0.2672672672672673,
+        "recall": 0.89,
+        "minimum_visible_vertex_fraction": 0.01,
+        "maximum_assignment_cost_m": 2.0,
+        "visibility_strata": {
+          "high_visibility": {
+            "visible_gt_person_frames": 300,
+            "matched_person_frames": 267,
+            "coverage": 0.89
+          },
+          "partial_visibility": {
+            "visible_gt_person_frames": 0,
+            "matched_person_frames": 0,
+            "coverage": 0.0
+          },
+          "severe_occlusion_or_truncation": {
+            "visible_gt_person_frames": 0,
+            "matched_person_frames": 0,
+            "coverage": 0.0
+          }
+        }
+      },
+      "identity": {
+        "ids_total": 11,
+        "ids_per_gt": {
+          "aria01": 2,
+          "aria02": 9
+        },
+        "id_continuity": 0.9584905660377359,
+        "association_accuracy_best_global_mapping": 0.7865168539325843,
+        "idf1": 0.3233256351039261,
+        "idtp": 210,
+        "idfp": 789,
+        "idfn": 90,
+        "visible_gt_person_frames": 300
+      },
+      "camera": {
+        "translation_m": {
+          "count": 150,
+          "mean": 1.8659643842257545,
+          "median": 1.9295385261178426,
+          "p90": 3.2400271813074695,
+          "p95": 3.2481520850523666,
+          "std": 1.1298642423022685
+        },
+        "rotation_deg": {
+          "count": 150,
+          "mean": 20.61896433984625,
+          "median": 16.799053726885443,
+          "p90": 35.79745153477197,
+          "p95": 36.03983159558661,
+          "std": 11.019829681097338
+        },
+        "first_post_translation_m": 0.4464894250735423,
+        "first_post_rotation_deg": 9.58858367303378,
+        "post_translation_m": {
+          "count": 100,
+          "mean": 1.836272631741989,
+          "median": 1.8246450516085186,
+          "p90": 3.2463156025163826,
+          "p95": 3.250977589212262,
+          "std": 1.3828232423767104
+        },
+        "post_rotation_deg": {
+          "count": 100,
+          "mean": 22.519204914505465,
+          "median": 22.403828364549206,
+          "p90": 35.95791344437227,
+          "p95": 36.09078104613336,
+          "std": 13.088792847015789
+        },
+        "rpe_translation_m": {
+          "count": 149,
+          "mean": 0.03663600597615007,
+          "median": 0.0021321605130834092,
+          "p90": 0.004616525293980251,
+          "p95": 0.005365853782872511,
+          "std": 0.29351449323710316
+        },
+        "rpe_rotation_deg": {
+          "count": 149,
+          "mean": 0.277856054622242,
+          "median": 0.034771696394002155,
+          "p90": 0.06606455045955799,
+          "p95": 0.08386167804591797,
+          "std": 2.355154118624597
+        },
+        "boundary_rpe_translation_m": 2.4586224385633466,
+        "boundary_rpe_rotation_deg": 8.140870045362636
+      },
+      "fixed_world": {
+        "root_m": {
+          "count": 267,
+          "mean": 0.9127200792349127,
+          "median": 0.9441642078698685,
+          "p90": 1.3195831637432427,
+          "p95": 1.4246117764310742,
+          "std": 0.35558529939657235
+        },
+        "joint_m": {
+          "count": 267,
+          "mean": 0.9383229042595798,
+          "median": 0.9919454596794766,
+          "p90": 1.2641476029742784,
+          "p95": 1.362655825554491,
+          "std": 0.3060748889862196
+        },
+        "vertex_m": {
+          "count": 267,
+          "mean": 0.9376997412583385,
+          "median": 0.9996164474946754,
+          "p90": 1.226886794823448,
+          "p95": 1.3227812781110166,
+          "std": 0.2917336849278885
+        },
+        "first_post_root_m": {
+          "count": 2,
+          "mean": 0.8498245776481058,
+          "median": 0.8498245776481058,
+          "p90": 0.8973709296047419,
+          "p95": 0.9033142235993213,
+          "std": 0.059432939945795016
+        },
+        "first_post_joint_m": {
+          "count": 2,
+          "mean": 0.8548309825513307,
+          "median": 0.8548309825513307,
+          "p90": 0.8991864991210378,
+          "p95": 0.9047309386922511,
+          "std": 0.055444395712133776
+        },
+        "first_post_vertex_m": {
+          "count": 2,
+          "mean": 0.8515129007911968,
+          "median": 0.8515129007911968,
+          "p90": 0.8900853670326809,
+          "p95": 0.8949069253128665,
+          "std": 0.04821558280185523
+        },
+        "post_root_m": {
+          "count": 190,
+          "mean": 1.0695622348931157,
+          "median": 1.0262483330028842,
+          "p90": 1.3729566999458631,
+          "p95": 1.4432374193199837,
+          "std": 0.2095698777062524
+        },
+        "post_joint_m": {
+          "count": 190,
+          "mean": 1.0781167086909744,
+          "median": 1.0546037359072957,
+          "p90": 1.3061168101276681,
+          "p95": 1.3776592543968336,
+          "std": 0.1661713940426329
+        },
+        "post_vertex_m": {
+          "count": 190,
+          "mean": 1.0729650359498393,
+          "median": 1.065628984589111,
+          "p90": 1.2696390103183746,
+          "p95": 1.338569802572682,
+          "std": 0.14852202551492563
+        }
+      },
+      "camera_human_relative": {
+        "root_gauge_m": {
+          "count": 267,
+          "mean": 1.7810368260125051,
+          "median": 1.7611580654194012,
+          "p90": 2.295041488365037,
+          "p95": 2.378875569699889,
+          "std": 0.34430314778830634
+        },
+        "body_orientation_deg": {
+          "count": 267,
+          "mean": 23.082631246107024,
+          "median": 14.398234303442615,
+          "p90": 39.59277555332904,
+          "p95": 59.523446957770844,
+          "std": 28.277619332077258
+        },
+        "first_post_root_gauge_m": {
+          "count": 2,
+          "mean": 1.2229037345131017,
+          "median": 1.2229037345131017,
+          "p90": 1.2426747781110412,
+          "p95": 1.2451461585607835,
+          "std": 0.02471380449742422
+        },
+        "post_root_gauge_m": {
+          "count": 190,
+          "mean": 1.6604715386249684,
+          "median": 1.6060908516240073,
+          "p90": 2.1069230311051106,
+          "p95": 2.144748890674327,
+          "std": 0.28511916870406245
+        }
+      },
+      "pairwise_layout": {
+        "distance_m": {
+          "count": 117,
+          "mean": 0.46461031682856496,
+          "median": 0.49084336999430367,
+          "p90": 0.6541163658006974,
+          "p95": 0.6823039061859937,
+          "std": 0.16360486657887607
+        },
+        "vector_m": {
+          "count": 117,
+          "mean": 0.5185635927871353,
+          "median": 0.5039948814791905,
+          "p90": 0.7171463267355108,
+          "p95": 0.7734826755281342,
+          "std": 0.16508328690286106
+        },
+        "first_post_distance_m": {
+          "count": 1,
+          "mean": 0.5301563204524085,
+          "median": 0.5301563204524085,
+          "p90": 0.5301563204524085,
+          "p95": 0.5301563204524085,
+          "std": 0.0
+        },
+        "first_post_vector_m": {
+          "count": 1,
+          "mean": 0.6199022597877079,
+          "median": 0.6199022597877079,
+          "p90": 0.6199022597877079,
+          "p95": 0.6199022597877079,
+          "std": 0.0
+        },
+        "post_distance_m": {
+          "count": 90,
+          "mean": 0.4840955557837749,
+          "median": 0.49679237408775895,
+          "p90": 0.662234273470856,
+          "p95": 0.684449973929861,
+          "std": 0.159895908856262
+        },
+        "post_vector_m": {
+          "count": 90,
+          "mean": 0.5475789949920128,
+          "median": 0.5506180342480459,
+          "p90": 0.7306316786141074,
+          "p95": 0.780538020874335,
+          "std": 0.15673157133537707
+        }
+      },
+      "cut_seam": {
+        "available": true,
+        "camera_translation_excess_m": 2.348177324702465,
+        "camera_rotation_excess_deg": 8.140853556052727,
+        "root_excess_m": 1.5428941053629157,
+        "joint_excess_m": 1.5417043570200613,
+        "vertex_excess_m": 1.5409746160703413,
+        "camera_human_relative_excess_m": 1.497470667471954
+      },
+      "within_shot_motion": [
+        {
+          "identity": "aria01",
+          "label_evaluator_only": "moving",
+          "gt_net_displacement_m": 0.5693193063384923,
+          "pred_net_displacement_m": 2.1137017796660507,
+          "motion_retention": 3.7126824193967107,
+          "pred_drift_m": null,
+          "gt_path_length_m": 2.212489417474211,
+          "pred_path_length_m": 7.697220501179275,
+          "path_retention": 3.4789863582563303,
+          "trajectory_direction_cosine": 0.13120881665232284,
+          "pred_mean_speed_m_per_s": 2.5945687082626767,
+          "gt_mean_speed_m_per_s": 0.7457829497104081,
+          "pred_max_deviation_from_first_m": 2.3016647384858406
+        },
+        {
+          "identity": "aria02",
+          "label_evaluator_only": "moving",
+          "gt_net_displacement_m": 0.8152268119707874,
+          "pred_net_displacement_m": 2.4324141531225467,
+          "motion_retention": 2.983726881163606,
+          "pred_drift_m": null,
+          "gt_path_length_m": 2.591174599654521,
+          "pred_path_length_m": 9.76802529237177,
+          "path_retention": 3.769728714411654,
+          "trajectory_direction_cosine": 0.6525474020495682,
+          "pred_mean_speed_m_per_s": 2.9600076643550812,
+          "gt_mean_speed_m_per_s": 0.7852044241377335,
+          "pred_max_deviation_from_first_m": 2.529471785194186
+        }
+      ],
+      "assignment_cost": {
+        "count": 267,
+        "mean": 0.4813486579122457,
+        "median": 0.44077782513007485,
+        "p90": 0.6612364737564685,
+        "p95": 0.7281533751257014,
+        "std": 0.21022312867353496
+      },
+      "shared_initial_sim3": {
+        "scale": 0.6322794498624296,
+        "rotation": [
+          [
+            -0.7818460819621194,
+            -0.09571128571564151,
+            0.6160812072341932
+          ],
+          [
+            -0.6234685961245057,
+            0.12303626447636591,
+            -0.7721068496459795
+          ],
+          [
+            -0.0019009910627145789,
+            -0.9877760006248181,
+            -0.15586840225850432
+          ]
+        ],
+        "translation": [
+          -1.1444294114257945,
+          -1.961339953999805,
+          0.6521765471720136
+        ]
+      },
+      "shared_initial_se3": {
+        "scale": 1.0,
+        "rotation": [
+          [
+            -0.7818460819621194,
+            -0.09571128571564151,
+            0.6160812072341932
+          ],
+          [
+            -0.6234685961245057,
+            0.12303626447636591,
+            -0.7721068496459795
+          ],
+          [
+            -0.0019009910627145789,
+            -0.9877760006248181,
+            -0.15586840225850432
+          ]
+        ],
+        "translation": [
+          -2.8134841204640293,
+          -0.4459610424481246,
+          0.9076822525096069
+        ]
+      },
+      "cut_seams": {
+        "50": {
+          "cut_seam": {
+            "available": true,
+            "camera_translation_excess_m": 2.348177324702465,
+            "camera_rotation_excess_deg": 8.140853556052727,
+            "root_excess_m": 1.5428941053629157,
+            "joint_excess_m": 1.5417043570200613,
+            "vertex_excess_m": 1.5409746160703413,
+            "camera_human_relative_excess_m": 1.497470667471954
+          },
+          "boundary_camera_rpe_translation_m": 2.4586224385633466,
+          "boundary_camera_rpe_rotation_deg": 8.140870045362636
+        },
+        "100": {
+          "cut_seam": {
+            "available": true,
+            "camera_translation_excess_m": 3.596599133033945,
+            "camera_rotation_excess_deg": 27.774425881461163,
+            "root_excess_m": 1.256516883771988,
+            "joint_excess_m": 1.2435280954623926,
+            "vertex_excess_m": 1.2416595281744691,
+            "camera_human_relative_excess_m": 0.5613136226011786
+          },
+          "boundary_camera_rpe_translation_m": 2.6439471820108795,
+          "boundary_camera_rpe_rotation_deg": 27.774425602519866
+        }
+      }
+    }
+  },
+  "detectors": {
+    "causal_gru": {
+      "kind": "causal_gru_detector",
+      "boundaries": [
+        50,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_positive_rate_per_noncut_pair": 0.0,
+      "boundary_detected": {
+        "50": true,
+        "100": true
+      },
+      "first_positive_index": 50,
+      "brier": 3.767889372976019e-05,
+      "latency_seconds": 58.67282022163272
+    },
+    "static_logistic": {
+      "kind": "static_logistic_detector",
+      "boundaries": [
+        50,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_positive_rate_per_noncut_pair": 0.0,
+      "boundary_detected": {
+        "50": true,
+        "100": true
+      },
+      "first_positive_index": 50,
+      "brier": 3.0339496799033674e-12,
+      "latency_seconds": 34.655326841399074
+    }
+  },
+  "evaluation_contract": {
+    "gt_used_only_in_evaluator": true,
+    "common_topology": {
+      "name": "Harmony4D-Movie3R-common-SMPL24-v1",
+      "surface_vertices": 6890,
+      "joints": 24,
+      "pelvis_definition": "mean(SMPL joints 1,2)",
+      "smplx_to_smpl_sha256": "c1d912d121ad98132e4492d8e7a0f1a8cf4412811e14a7ef8cb337bb48eef99e",
+      "smpl_neutral_sha256": "4924f235e63f7c5d5b690acedf736419c2edb846a2d69fc0956169615fa75688"
+    },
+    "matching": "per-frame Hungarian in camera coordinates; GT identity never enters runtime",
+    "aggregation_scope": "all 150 frames, with each frozen cut seam reported separately"
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-boundary-association-v1",
+  "method": "m3_b0_only",
+  "runtime_signal": "frozen geometry.association.pairs",
+  "runtime_gt_access": false,
+  "future_post_frames_used_by_association": 0,
+  "prediction_roots": [],
+  "runtime_manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/harmony4d_boundary_association/final_runtime_manifest_v1.jsonl",
+  "extracted_root": "/data/wangzheng/iJCV-CODE/data/Bridge3R_harmony4d_association_full/staging/test_08_ballroom2",
+  "evaluator": {
+    "assignment": "existing Harmony4D camera--joint Hungarian assignment",
+    "maximum_assignment_cost_m": 2.0,
+    "oracle": "framewise evaluator GT identity labels; never provided to runtime"
+  },
+  "bootstrap": {
+    "samples": 10000,
+    "seed": 20260825,
+    "unit": "case"
+  },
+  "summary": {
+    "case_count": 4,
+    "first_post_cut_correspondence": {
+      "pair_micro_accuracy": null,
+      "correct_pair_count": 0,
+      "evaluable_pair_count": 0,
+      "case_macro_accuracy": {
+        "count": 0,
+        "mean": null,
+        "ci95_low": null,
+        "ci95_high": null
+      },
+      "correct_continuation_coverage": 0.0,
+      "gt_continuation_count": 8,
+      "runtime_abstention_rate": 0.0,
+      "runtime_abstention_count": 0,
+      "maximum_runtime_pair_count": 8,
+      "evaluator_excluded_pair_count": 8
+    },
+    "identity": {
+      "cache_reconstructed_idf1_diagnostic": {
+        "count": 4,
+        "mean": 0.37618220038746075,
+        "ci95_low": 0.294628923611797,
+        "ci95_high": 0.42823541634200823
+      },
+      "final_audit_idf1": {
+        "count": 4,
+        "mean": 0.37618220038746075,
+        "ci95_low": 0.294628923611797,
+        "ci95_high": 0.42823541634200823
+      },
+      "oracle_framewise_idf1_upper_bound": {
+        "count": 4,
+        "mean": 0.3832244539085875,
+        "ci95_low": 0.3157556841751773,
+        "ci95_high": 0.42823541634200823
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "h4d_test_08_ballroom2_007_ballroom2_extreme_cam06_cam14_b00301",
+      "sequence": "08_ballroom2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_007_ballroom2_extreme_cam06_cam14_b00301.npz",
+      "cache_sha256": "a9e1dc58f2008b1c974c855656ee35155436c48795218df44fce1eaf21424081",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_007_ballroom2_extreme_cam06_cam14_b00301.runtime.json",
+      "runtime_sha256": "ef9f032cc5e843ad28105fea72c087d18ba910efae968ea83c879e0873dea03e",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 0,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": null,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.39473684210526316,
+        "final_audit_idf1": 0.39473684210526316,
+        "oracle_framewise_idf1_upper_bound": 0.39473684210526316,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_008_ballroom2_extreme_cam06_cam14_b00301",
+      "sequence": "08_ballroom2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_008_ballroom2_extreme_cam06_cam14_b00301.npz",
+      "cache_sha256": "d48fd9bf894245575d0d138537dce0acc0571768ac5efee5253d31de5ab1dd8f",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_008_ballroom2_extreme_cam06_cam14_b00301.runtime.json",
+      "runtime_sha256": "e3c138d0830f1e3defd76a9f33264dcbfec1c59598e82740cd0809a3565c06fe",
+      "endpoint": {
+        "runtime_pair_count": 3,
+        "maximum_runtime_pair_count": 3,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 0,
+        "evaluator_excluded_pair_count": 3,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": null,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 2,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 2,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.4179523141654979,
+        "final_audit_idf1": 0.4179523141654979,
+        "oracle_framewise_idf1_upper_bound": 0.4179523141654979,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_009_ballroom2_extreme_cam06_cam14_b00359",
+      "sequence": "08_ballroom2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_08_ballroom2/h4d_test_08_ballroom2_009_ballroom2_extreme_cam06_cam14_b00359.npz",
+      "cache_sha256": "4e6fe4d53bc60dc67ff4814d1f91a3aef8ed2460911152ce8a5ad03973e102be",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_08_ballroom2/h4d_test_08_ballroom2_009_ballroom2_extreme_cam06_cam14_b00359.runtime.json",
+      "runtime_sha256": "9141df5450a265141e256a90ca2d24a5848f8c615f3cefc7f8c1f8a969a56f27",
+      "endpoint": {
+        "runtime_pair_count": 1,
+        "maximum_runtime_pair_count": 1,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 0,
+        "evaluator_excluded_pair_count": 1,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": null,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.2535211267605634,
+        "final_audit_idf1": 0.2535211267605634,
+        "oracle_framewise_idf1_upper_bound": 0.28169014084507044,
+        "runtime_ids_total": 5,
+        "oracle_ids_total": 0
+      }
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_010_ballroom2_extreme_cam06_cam14_b00162",
+      "sequence": "08_ballroom2",
+      "angle_stratum": "extreme",
+      "boundary_index": 75,
+      "cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_010_ballroom2_extreme_cam06_cam14_b00162.npz",
+      "cache_sha256": "9f969f5818a2aeef7532179a3855b088479525d67570123515c3fba2b5c2b298",
+      "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions/08_ballroom2/h4d_test_08_ballroom2_010_ballroom2_extreme_cam06_cam14_b00162.runtime.json",
+      "runtime_sha256": "29321e856b98d8616a394ef8e7ee19a72c1b9686da97cdf8404b181b8bb271ae",
+      "endpoint": {
+        "runtime_pair_count": 2,
+        "maximum_runtime_pair_count": 2,
+        "runtime_abstention_count": 0,
+        "evaluable_pair_count": 0,
+        "evaluator_excluded_pair_count": 2,
+        "correct_pair_count": 0,
+        "correspondence_accuracy": null,
+        "gt_continuation_count": 2,
+        "correct_continuation_coverage": 0.0,
+        "pairs": [
+          {
+            "pre_position": 0,
+            "post_position": 1,
+            "evaluable": false,
+            "correct": false
+          },
+          {
+            "pre_position": 1,
+            "post_position": 0,
+            "evaluable": false,
+            "correct": false
+          }
+        ]
+      },
+      "identity_evaluator_only": {
+        "cache_reconstructed_idf1_diagnostic": 0.43851851851851853,
+        "final_audit_idf1": 0.43851851851851853,
+        "oracle_framewise_idf1_upper_bound": 0.43851851851851853,
+        "runtime_ids_total": 0,
+        "oracle_ids_total": 0
+      }
+    }
+  ]
+}

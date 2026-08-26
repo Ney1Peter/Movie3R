@@ -1,0 +1,49 @@
+{
+  "schema_version": "Bridge3R-Harmony4D-boundary-association-result-binding-v1",
+  "candidate": "bridge3r_unified_half_translation",
+  "case_count": 88,
+  "manifest": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/harmony4d_boundary_association/final_runtime_manifest_v1.jsonl",
+  "manifest_sha256": "a4de6a52da5e019d06e6910f2b1229d1130b61e64a4422223b713f110a16e021",
+  "audit_reports": [
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/01_hugging.json",
+      "sha256": "01818085d574260eafbe96048b2121f35baeafce061b592e4fb98a9ec4d00f52"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/03_grappling2.json",
+      "sha256": "785a77d2eddb47ba1413b3f87c8d1078f91d2f44d450ae05938f3a52aeb0aadb"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/05_sword2.json",
+      "sha256": "0fd406902bf99cac0d33b8e596c5cba21ef25e49a7976f692847a7e46481d6cd"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/06_sword3.json",
+      "sha256": "addb885d504bc0bfd97e4fab397838a368c5b3a5d25d77ba222bab1e88b6fb18"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/08_ballroom2.json",
+      "sha256": "cee20afd0d8e85073e303584935174131de2d186488c4cd136942f4fbf3d47bf"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/15_mma4.json",
+      "sha256": "7466fbbc5b7e3442d706d59f2e1735890884e231b2f158c79eb2a444e1da3f13"
+    },
+    {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/16_mma5.json",
+      "sha256": "9a535da9532773f21d110df647dd3d9dfdd7a7a561acf8c1a4b61111a21fa5f5"
+    }
+  ],
+  "prediction_roots": [
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_01_hugging",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_03_grappling2",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_05_sword2",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_06_sword3_a",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_06_sword3_b",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_08_ballroom2",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_15_mma4",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v15_harmony4d/predictions/test_16_mma5",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/full_test/predictions"
+  ],
+  "binding": "Every manifest row validates exact equality between the final unified-audit boundary matched_pairs and frozen RGB runtime geometry.association.pairs."
+}

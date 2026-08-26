@@ -79,4 +79,10 @@ output/anchor_token_report_v1/*
 !output/anchor_token_report_v1/01_aabb_step1/**
 # **========== 结束 ==========
 outputs/
+
+# Large, regenerable tensors and scheduler locks from the publication multi-cut
+# replay.  Keep the small manifests, runtime JSON, metrics, figures and logs
+# versioned as audit evidence; never store model-sized per-case arrays here.
+publication/bridge3r_iclr2027/multicut/runs/*.npz
+publication/bridge3r_iclr2027/multicut/runs/.gpu_locks/
 src/croco/models/curope/cuda_12.4.0_550.54.14_linux.run

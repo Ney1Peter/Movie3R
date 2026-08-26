@@ -1,0 +1,2553 @@
+{
+  "schema_version": "Harmony4D-Movie3R-index-v1",
+  "archive_entry": "train/10_karate2.zip",
+  "sequence_root_name": "001_karate2",
+  "capture_group_name": "10_karate2",
+  "capture_relative": "10_karate2/001_karate2",
+  "frame_count": 150,
+  "frame_min": 1,
+  "frame_max": 150,
+  "frames_contiguous": true,
+  "fps": 30.0,
+  "camera_count": 20,
+  "identities": [
+    "aria01",
+    "aria02"
+  ],
+  "person_count_at_audit": 2,
+  "audit_frame": 76,
+  "units": "metres",
+  "camera_convention": "COLMAP world_to_camera; adapter also stores inverse camera_to_world",
+  "published_smpl_world_identity": [
+    "published_smpl_world"
+  ],
+  "extrinsic_sources": {
+    "published_smpl45_to_poses2d45_static_pnp": 20
+  },
+  "projection_audit": {
+    "thresholds": {
+      "median_px": 5.0,
+      "p95_px": 15.0
+    },
+    "camera_count": 20,
+    "pnp_fallback_count": 20,
+    "median_px_across_cameras": 0.02900969110643282,
+    "max_camera_median_px": 0.38363127780458267,
+    "median_camera_p95_px": 0.05752343586923912,
+    "max_camera_p95_px": 0.9725634506068148,
+    "pass": true
+  },
+  "distortion_model": "OPENCV_FISHEYE",
+  "gt_runtime_isolation": "index/evaluator only",
+  "topology": {
+    "name": "Harmony4D-Movie3R-common-SMPL24-v1",
+    "surface_vertices": 6890,
+    "joints": 24,
+    "pelvis_definition": "mean(SMPL joints 1,2)",
+    "smplx_to_smpl_sha256": "c1d912d121ad98132e4492d8e7a0f1a8cf4412811e14a7ef8cb337bb48eef99e",
+    "smpl_neutral_sha256": "4924f235e63f7c5d5b690acedf736419c2edb846a2d69fc0956169615fa75688"
+  },
+  "identity_topology_audit": {
+    "aria01": {
+      "vertices": [
+        6890,
+        3
+      ],
+      "stored_joints": [
+        45,
+        3
+      ],
+      "regressed_vs_stored_joint_median_m": 0.004427034719948817,
+      "regressed_vs_stored_joint_p95_m": 0.007677695336630111
+    },
+    "aria02": {
+      "vertices": [
+        6890,
+        3
+      ],
+      "stored_joints": [
+        45,
+        3
+      ],
+      "regressed_vs_stored_joint_median_m": 0.005478116576658209,
+      "regressed_vs_stored_joint_p95_m": 0.010566373599649752
+    }
+  },
+  "cameras": {
+    "cam01": {
+      "name": "cam01",
+      "camera_id": 1,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1760.2558967879093,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1767.7532351935413,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09531197777371593,
+        -0.053402407126214774,
+        0.032144271400711834,
+        -0.01082558218649346
+      ],
+      "world_to_camera": [
+        [
+          -0.6802508928161026,
+          0.7329565517341763,
+          0.005780665432366938,
+          -2.318509542582153
+        ],
+        [
+          0.03840607391990991,
+          0.043517840422474974,
+          -0.9983141645048529,
+          0.3878205401723215
+        ],
+        [
+          -0.7319724696386836,
+          -0.6788820890514861,
+          -0.05775303330680226,
+          1.5610053624838562
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.6802508928161027,
+          0.038406073919909835,
+          -0.7319724696386837,
+          -0.44944990038114485
+        ],
+        [
+          0.7329565517341763,
+          0.043517840422474946,
+          -0.678882089051486,
+          2.742228228617633
+        ],
+        [
+          0.005780665432366902,
+          -0.9983141645048528,
+          -0.05775303330680232,
+          0.4907220611989965
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 3.713006017353427e-08,
+      "reprojection_p95_px": 8.490303027160999e-08,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1819.2930902816795,
+            804.8742960919282,
+            2063.6899730606087,
+            1423.6434454073412
+          ],
+          "bbox_area_fraction": 0.018232211040274976,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2182.016513854645,
+            771.2068219437112,
+            2596.3785048133677,
+            1614.7696206876267
+          ],
+          "bbox_area_fraction": 0.04214172945435971,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.3877787807814457e-16,
+        "normalized_ray_p95": 2.917064673839297e-16
+      },
+      "inverse_roundtrip_max_abs": 8.881784197001252e-16
+    },
+    "cam02": {
+      "name": "cam02",
+      "camera_id": 2,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1762.9491655597055,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1768.7457260083831,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.10499026134028679,
+        -0.08204723895249184,
+        0.06733118499824586,
+        -0.025821942526257784
+      ],
+      "world_to_camera": [
+        [
+          0.6561076234626017,
+          -0.7544757282614434,
+          -0.017004761057457518,
+          1.1920870942411659
+        ],
+        [
+          -0.1526620562375119,
+          -0.1106237240248438,
+          -0.9820675578941653,
+          -0.5627459900135104
+        ],
+        [
+          0.7390650059498091,
+          0.6469379932785211,
+          -0.18776088472620925,
+          7.021021326019808
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.656107623462602,
+          -0.152662056237512,
+          0.7390650059498092,
+          -6.057038558426455
+        ],
+        [
+          -0.7544757282614435,
+          -0.11062372402484374,
+          0.646937993278521,
+          -3.705017725937625
+        ],
+        [
+          -0.017004761057457466,
+          -0.9820675578941654,
+          -0.18776088472620922,
+          0.7858897519250088
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 1.342396967005013e-08,
+      "reprojection_p95_px": 2.9172576466044075e-08,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1308.8700636449885,
+            691.8461375111052,
+            1588.9797865089888,
+            1410.0556747391206
+          ],
+          "bbox_area_fraction": 0.02425461449064686,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1180.4952156486681,
+            734.1987915985787,
+            1403.9914873807224,
+            1255.5669042171048
+          ],
+          "bbox_area_fraction": 0.014048494088809125,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 2.482534153247273e-16,
+        "normalized_ray_p95": 4.2368061713722816e-16
+      },
+      "inverse_roundtrip_max_abs": 8.881784197001252e-16
+    },
+    "cam03": {
+      "name": "cam03",
+      "camera_id": 3,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1768.3068522870813,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1774.8102652472546,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.0927503721092202,
+        -0.04772442009311388,
+        0.025373929179843685,
+        -0.008378175840505788
+      ],
+      "world_to_camera": [
+        [
+          0.7938568171612385,
+          0.606652187577023,
+          -0.042005680028303405,
+          3.544929686551148
+        ],
+        [
+          0.014757891466034179,
+          -0.08827587521932072,
+          -0.9959867340952586,
+          0.2262179982729012
+        ],
+        [
+          -0.6079256192052647,
+          0.7900509433968643,
+          -0.07903131247562653,
+          2.895302674474991
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.7938568171612387,
+          0.014757891466034175,
+          -0.6079256192052646,
+          -1.0573764275251896
+        ],
+        [
+          0.606652187577023,
+          -0.08827587521932075,
+          0.7900509433968642,
+          -4.418006366753512
+        ],
+        [
+          -0.0420056800283034,
+          -0.995986734095259,
+          -0.07903131247562653,
+          0.6030368778074454
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.04508126811006932,
+      "reprojection_p95_px": 0.08524403479352156,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1935.547751046194,
+            814.3059274146649,
+            2152.547956209403,
+            1418.1162568013506
+          ],
+          "bbox_area_fraction": 0.015797039611855652,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2304.4631554757934,
+            838.8437939164207,
+            2461.431165368378,
+            1324.6219023753033
+          ],
+          "bbox_area_fraction": 0.009193145126130273,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 2.618455766672135e-16,
+        "normalized_ray_p95": 3.925231146709438e-16
+      },
+      "inverse_roundtrip_max_abs": 8.881784197001252e-16
+    },
+    "cam04": {
+      "name": "cam04",
+      "camera_id": 4,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1776.6952217806804,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1779.925219131183,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.0978609982548248,
+        -0.1057946851038751,
+        0.1388957187466472,
+        -0.0699461213488865
+      ],
+      "world_to_camera": [
+        [
+          -0.0005330956617093374,
+          -0.9993402145299942,
+          -0.036315994164562604,
+          -0.17753144910017019
+        ],
+        [
+          -0.17191532680145716,
+          0.03586690363699008,
+          -0.9844585748695792,
+          -0.3000935922967688
+        ],
+        [
+          0.9851115856692396,
+          0.005718465409525142,
+          -0.17182102005749011,
+          6.195743519249902
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.0005330956617092312,
+          -0.1719153268014572,
+          0.9851115856692396,
+          -6.155184051884241
+        ],
+        [
+          -0.9993402145299943,
+          0.03586690363699025,
+          0.005718465409525061,
+          -0.20208103347371803
+        ],
+        [
+          -0.03631599416456246,
+          -0.9844585748695793,
+          -0.1718210200574901,
+          0.762682030222584
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.04981840717268424,
+      "reprojection_p95_px": 0.099444653368862,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1758.7284505531861,
+            639.4886825298922,
+            2287.9338569504635,
+            1838.7135872700765
+          ],
+          "bbox_area_fraction": 0.07651382897795686,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            923.8803455990785,
+            745.8462743218577,
+            1380.470731795309,
+            1684.8928706189065
+          ],
+          "bbox_area_fraction": 0.051692665902238276,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.1731859301547433e-15,
+        "normalized_ray_p95": 1.4315135604453295e-15
+      },
+      "inverse_roundtrip_max_abs": 1.6653345369377348e-16
+    },
+    "cam05": {
+      "name": "cam05",
+      "camera_id": 5,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1767.6642785058173,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1775.5751212583878,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09599155971268365,
+        -0.03924885988469265,
+        0.008089466285080307,
+        0.0007097882906262426
+      ],
+      "world_to_camera": [
+        [
+          -0.9825828070848244,
+          0.1857744352428224,
+          -0.0043458522198939475,
+          -3.1797530127410907
+        ],
+        [
+          0.0014601979355554212,
+          -0.015667111571989634,
+          -0.9998761970549054,
+          0.6127579323662771
+        ],
+        [
+          -0.18581952277222047,
+          -0.9824675062439477,
+          0.015122967020496314,
+          3.3865898609457235
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.9825828070848244,
+          0.0014601979355553993,
+          -0.18581952277222044,
+          -2.49597087717723
+        ],
+        [
+          0.18577443524282236,
+          -0.015667111571989776,
+          -0.9824675062439475,
+          3.927531462401025
+        ],
+        [
+          -0.0043458522198939415,
+          -0.9998761970549052,
+          0.015122967020496165,
+          0.5476480476614557
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 1.56781153221355e-08,
+      "reprojection_p95_px": 3.221243395318265e-08,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2004.799263121532,
+            951.9761397502738,
+            2243.088235700651,
+            1604.1486482013183
+          ],
+          "bbox_area_fraction": 0.018736197552944884,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1993.7339764302742,
+            904.3315705757115,
+            2391.3238945347375,
+            1909.9462734041717
+          ],
+          "bbox_area_fraction": 0.048203880611281315,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 6.717169037441395e-16,
+        "normalized_ray_p95": 8.314571456451118e-16
+      },
+      "inverse_roundtrip_max_abs": 1.1102230246251565e-16
+    },
+    "cam06": {
+      "name": "cam06",
+      "camera_id": 6,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1763.166971888913,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1770.6638309129182,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.0915974191591426,
+        -0.03928248085735073,
+        0.013865006306683083,
+        -0.0030198495710612424
+      ],
+      "world_to_camera": [
+        [
+          -0.1320224080578848,
+          -0.9907981471386307,
+          0.029818038118796297,
+          -2.194497122497124
+        ],
+        [
+          -0.2262241273959038,
+          0.0008292817909083539,
+          -0.9740749234405296,
+          -0.6823989181350731
+        ],
+        [
+          0.9650869017630275,
+          -0.1353452766755011,
+          -0.2242519300409091,
+          6.119511107743551
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.13202240805788498,
+          -0.2262241273959036,
+          0.9650869017630272,
+          -6.349957909655839
+        ],
+        [
+          -0.9907981471386305,
+          0.0008292817909081663,
+          -0.13534527667550095,
+          -1.34549085787791
+        ],
+        [
+          0.029818038118796165,
+          -0.9740749234405293,
+          -0.22425193004090924,
+          0.7730401017301601
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 8.255075908740976e-08,
+      "reprojection_p95_px": 2.1842942153843356e-07,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            793.001832083912,
+            567.0702766345294,
+            1269.2136637101535,
+            1659.4225521354388
+          ],
+          "bbox_area_fraction": 0.06271593821100753,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            234.33572278720112,
+            655.9325069865697,
+            619.5388141416788,
+            1488.9627148759118
+          ],
+          "bbox_area_fraction": 0.038687043218392864,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 5.974351792794947e-16,
+        "normalized_ray_p95": 8.535181488793216e-16
+      },
+      "inverse_roundtrip_max_abs": 2.220446049250313e-16
+    },
+    "cam07": {
+      "name": "cam07",
+      "camera_id": 7,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1767.56610435618,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1773.1690837086774,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.08248585527052579,
+        -0.014303080642515897,
+        -0.011905557863002913,
+        0.005950995540540768
+      ],
+      "world_to_camera": [
+        [
+          -0.8005807041103583,
+          -0.5978124295501291,
+          0.04111976752773372,
+          -2.686045421891558
+        ],
+        [
+          -0.10025751640386715,
+          0.06597670537861677,
+          -0.9927716276928504,
+          -0.03836016209917385
+        ],
+        [
+          0.5907782719520847,
+          -0.7989163744865637,
+          -0.1127548667089523,
+          5.487344021144386
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.8005807041103583,
+          -0.10025751640386708,
+          0.5907782719520847,
+          -5.396045648129545
+        ],
+        [
+          -0.597812429550129,
+          0.06597670537861663,
+          -0.7989163744865635,
+          2.780708528503293
+        ],
+        [
+          0.0411197675277337,
+          -0.9927716276928503,
+          -0.1127548667089524,
+          0.6910914264416581
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 7.209016338122777e-08,
+      "reprojection_p95_px": 1.3983874330101267e-07,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2038.6577311114008,
+            769.0900142554104,
+            2340.7296778015666,
+            1612.0438770362991
+          ],
+          "bbox_area_fraction": 0.030699353093679823,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1271.3615754592288,
+            734.7405470943685,
+            1662.05010063554,
+            1885.3669550839163
+          ],
+          "bbox_area_fraction": 0.054197595289153286,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 4.0140672355883864e-16,
+        "normalized_ray_p95": 9.453208419344607e-16
+      },
+      "inverse_roundtrip_max_abs": 4.440892098500626e-16
+    },
+    "cam08": {
+      "name": "cam08",
+      "camera_id": 8,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1769.9946456468776,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1777.2400362903281,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.0859897451232513,
+        -0.04208630011170033,
+        0.029870048699633087,
+        -0.0125493867700807
+      ],
+      "world_to_camera": [
+        [
+          -0.9845108975102869,
+          0.16476609491044653,
+          0.059920168987170896,
+          -4.173221550950057
+        ],
+        [
+          -0.0668202050335372,
+          -0.036653937584331886,
+          -0.9970915449741014,
+          0.527017915085071
+        ],
+        [
+          -0.16209056999950813,
+          -0.985651369819738,
+          0.04709590523292817,
+          3.428888817207808
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.984510897510287,
+          -0.06682020503353721,
+          -0.16209056999950813,
+          -3.5175761066466276
+        ],
+        [
+          0.16476609491044655,
+          -0.036653937584332136,
+          -0.9856513698197378,
+          4.086611659551967
+        ],
+        [
+          0.05992016898717092,
+          -0.9970915449741009,
+          0.0470959052329279,
+          0.6140586249455688
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 2.1810061837205553e-08,
+      "reprojection_p95_px": 5.067305914556347e-08,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1630.178785566408,
+            1023.9488761308006,
+            1855.9129668888647,
+            1688.5491403935112
+          ],
+          "bbox_area_fraction": 0.01808726328125379,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1373.5287630189323,
+            978.1709745267058,
+            1709.588114092487,
+            1999.5315839070995
+          ],
+          "bbox_area_fraction": 0.04138187012929997,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.3334957007450271e-15,
+        "normalized_ray_p95": 1.828320857912122e-15
+      },
+      "inverse_roundtrip_max_abs": 4.440892098500626e-16
+    },
+    "cam09": {
+      "name": "cam09",
+      "camera_id": 9,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1773.3309662140628,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1781.513575330686,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.08189953267797088,
+        -0.021360562781965093,
+        0.006921973769925701,
+        -0.006485898722618015
+      ],
+      "world_to_camera": [
+        [
+          -0.84419027500724,
+          -0.5336691669324076,
+          0.05039841117407004,
+          -1.9669206351273976
+        ],
+        [
+          -0.1405028591539486,
+          0.12955918173675118,
+          -0.9815667908997681,
+          -0.46309998658364526
+        ],
+        [
+          0.517302354675451,
+          -0.8357102600144224,
+          -0.18435464505637023,
+          5.4769929769282575
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.84419027500724,
+          -0.14050285915394867,
+          0.5173023546754512,
+          -4.558783507580667
+        ],
+        [
+          -0.5336691669324075,
+          0.12955918173675132,
+          -0.8357102600144225,
+          3.5874931833993577
+        ],
+        [
+          0.05039841117407009,
+          -0.9815667908997683,
+          -0.18435464505637017,
+          0.6542752034571204
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 4.442306605475195e-08,
+      "reprojection_p95_px": 1.0174971373290485e-07,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2443.9728730107718,
+            664.2849971154467,
+            2706.380841132389,
+            1426.0867832427618
+          ],
+          "bbox_area_fraction": 0.024100942661203648,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1930.2195223536169,
+            610.7048741960803,
+            2284.8267092989518,
+            1708.400768850871
+          ],
+          "bbox_area_fraction": 0.04692935635187331,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 3.64275408404521e-16,
+        "normalized_ray_p95": 5.835275607609835e-16
+      },
+      "inverse_roundtrip_max_abs": 5.551115123125783e-17
+    },
+    "cam10": {
+      "name": "cam10",
+      "camera_id": 10,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1765.230873092096,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1772.6839671640084,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.07394462771633485,
+        0.01666901030251718,
+        -0.05178022859359394,
+        0.02225998154608996
+      ],
+      "world_to_camera": [
+        [
+          0.9968095621724814,
+          -0.058397726210638164,
+          -0.05440957944087824,
+          3.5614625207614066
+        ],
+        [
+          -0.05842961549227536,
+          -0.06949497871346356,
+          -0.9958696842293375,
+          0.16435671961073206
+        ],
+        [
+          0.05437533259604719,
+          0.9958715547233201,
+          -0.07268541599266429,
+          4.896706023078579
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.9968095621724813,
+          -0.05842961549227534,
+          0.05437533259604719,
+          -3.8067566147134175
+        ],
+        [
+          -0.058397726210638164,
+          -0.06949497871346354,
+          0.9958715547233201,
+          -4.657086960298674
+        ],
+        [
+          -0.05440957944087823,
+          -0.9958696842293372,
+          -0.07268541599266429,
+          0.713374666690039
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 2.113381644529377e-09,
+      "reprojection_p95_px": 4.997217455349066e-09,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1712.3211482226384,
+            864.9566521762388,
+            1934.140179179592,
+            1547.4112679164978
+          ],
+          "bbox_area_fraction": 0.018251039440538724,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1866.7774195063837,
+            898.1297747262834,
+            2024.9656184927924,
+            1389.0982965428964
+          ],
+          "bbox_area_fraction": 0.009363597876300794,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.7003958188823415e-16,
+        "normalized_ray_p95": 2.637190467937963e-16
+      },
+      "inverse_roundtrip_max_abs": 8.881784197001252e-16
+    },
+    "cam11": {
+      "name": "cam11",
+      "camera_id": 11,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1766.5348735800537,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1772.254842248751,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.07614798978582385,
+        0.00569704560671987,
+        -0.035400562255607775,
+        0.015658541031743266
+      ],
+      "world_to_camera": [
+        [
+          0.1781497236964505,
+          -0.9839929701502073,
+          0.004528867612482834,
+          -1.3789419717462148
+        ],
+        [
+          -0.0844622458296444,
+          -0.019876882169896692,
+          -0.9962284068348064,
+          0.1888099749836601
+        ],
+        [
+          0.9803717687572868,
+          0.1770952970865604,
+          -0.08665131720598279,
+          6.9195010324291815
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.1781497236964505,
+          -0.08446224582964443,
+          0.9803717687572869,
+          -6.522078020298283
+        ],
+        [
+          -0.9839929701502074,
+          -0.01987688216989671,
+          0.17709529708656044,
+          -2.578527343846898
+        ],
+        [
+          0.004528867612482824,
+          -0.9962284068348065,
+          -0.08665131720598276,
+          0.7939267850759724
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.02824679900455783,
+      "reprojection_p95_px": 0.08024057051861141,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            837.6913685754844,
+            858.2883964282332,
+            1195.7685588444897,
+            1706.8306817075977
+          ],
+          "bbox_area_fraction": 0.03663238297372632,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            516.7139691861578,
+            906.1718266305758,
+            811.8571966307859,
+            1539.9761825104856
+          ],
+          "bbox_area_fraction": 0.022552934891355646,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 3.775166431889533e-16,
+        "normalized_ray_p95": 6.992564622098176e-16
+      },
+      "inverse_roundtrip_max_abs": 4.440892098500626e-16
+    },
+    "cam12": {
+      "name": "cam12",
+      "camera_id": 12,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1765.6755455800273,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1772.4903920868794,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09685454343312447,
+        -0.05909127958912229,
+        0.04038435496518371,
+        -0.014936055030228322
+      ],
+      "world_to_camera": [
+        [
+          0.9775975238057604,
+          0.20773387951961422,
+          -0.03390747334403116,
+          3.3769290418268807
+        ],
+        [
+          -0.023607228269704683,
+          -0.05186447251996085,
+          -0.9983750674288938,
+          0.36289741947437204
+        ],
+        [
+          -0.2091549191921334,
+          0.976809455211177,
+          -0.04579855879583476,
+          4.067694943704924
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.9775975238057604,
+          -0.023607228269704683,
+          -0.20915491919213336,
+          -2.4419320598888463
+        ],
+        [
+          0.20773387951961422,
+          -0.05186447251996085,
+          0.976809455211177,
+          -4.656043969406925
+        ],
+        [
+          -0.033907473344031165,
+          -0.9983750674288938,
+          -0.04579855879583476,
+          0.6631054331507171
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.029840308440842594,
+      "reprojection_p95_px": 0.05636216993999095,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1654.5187246317546,
+            897.6159256101347,
+            1873.4433824642017,
+            1554.1370377662158
+          ],
+          "bbox_area_fraction": 0.01732839745352861,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1928.1094247431067,
+            930.0439589361604,
+            2087.4960940881606,
+            1418.5164820584287
+          ],
+          "bbox_area_fraction": 0.009386575102121087,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.6662377057012703e-16,
+        "normalized_ray_p95": 2.6189760787672345e-16
+      },
+      "inverse_roundtrip_max_abs": 8.881784197001252e-16
+    },
+    "cam13": {
+      "name": "cam13",
+      "camera_id": 13,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1772.110950404431,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1777.6755901410295,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.08944113037735085,
+        -0.045717250456717415,
+        0.03215489353401923,
+        -0.013776868698633923
+      ],
+      "world_to_camera": [
+        [
+          -0.09781982908596298,
+          0.9939818426223295,
+          -0.04930900095025004,
+          0.020882178930968293
+        ],
+        [
+          0.09662329260602759,
+          -0.03982699012683166,
+          -0.9945238811528898,
+          0.5016554976114884
+        ],
+        [
+          -0.9905025090142695,
+          -0.10204855410321123,
+          -0.0921459290575607,
+          0.055912461846659385
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.09781982908596307,
+          0.09662329260602749,
+          -0.9905025090142693,
+          0.008952518985113372
+        ],
+        [
+          0.9939818426223294,
+          -0.039826990126831795,
+          -0.10204855410321113,
+          0.004928707746473143
+        ],
+        [
+          -0.049309000950249905,
+          -0.9945238811528897,
+          -0.09214592905756076,
+          0.5050901576097679
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.1065903442693378,
+      "reprojection_p95_px": 0.17186826466845348,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1809.6796622765357,
+            713.7796755157312,
+            2102.44422852643,
+            1470.4860697165734
+          ],
+          "bbox_area_fraction": 0.026709203712954644,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2510.5139839235117,
+            688.6862203321222,
+            2866.0152661289762,
+            1526.957527443826
+          ],
+          "bbox_area_fraction": 0.0359286415550566,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.270020454829257e-16,
+        "normalized_ray_p95": 2.598597691904006e-16
+      },
+      "inverse_roundtrip_max_abs": 1.1102230246251565e-16
+    },
+    "cam14": {
+      "name": "cam14",
+      "camera_id": 14,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1769.9073525857532,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1776.6270249036315,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.07923722676243634,
+        -0.01535061704753631,
+        -0.003630164652330953,
+        0.00032424945531403537
+      ],
+      "world_to_camera": [
+        [
+          0.13873209489297528,
+          0.9903293369926229,
+          -0.001100062888422293,
+          1.508179883587599
+        ],
+        [
+          0.09496363252808787,
+          -0.014408823255405045,
+          -0.9953764585871341,
+          0.531446699960184
+        ],
+        [
+          -0.9857663589023906,
+          0.13798619533905,
+          -0.09604423747511731,
+          0.09083044073198704
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.13873209489297522,
+          0.09496363252808789,
+          -0.9857663589023905,
+          -0.17016347101096474
+        ],
+        [
+          0.9903293369926229,
+          -0.01440882325540512,
+          0.13798619533905004,
+          -1.4984706095470997
+        ],
+        [
+          -0.0011000628884222307,
+          -0.9953764585871343,
+          -0.0960442374751173,
+          0.5393723672728196
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.10820767738701746,
+      "reprojection_p95_px": 0.17653928705327657,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2049.4434128992407,
+            722.6626782442496,
+            2391.520153706688,
+            1490.854621387612
+          ],
+          "bbox_area_fraction": 0.031681688395184836,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2772.3417285141445,
+            764.1981813483378,
+            3044.976623009487,
+            1506.2716258821547
+          ],
+          "bbox_area_fraction": 0.0243917721906675,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 3.331391796911832e-16,
+        "normalized_ray_p95": 5.613217783960923e-16
+      },
+      "inverse_roundtrip_max_abs": 2.220446049250313e-16
+    },
+    "cam15": {
+      "name": "cam15",
+      "camera_id": 15,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1773.992459772807,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1781.8384819858302,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.10114364290479834,
+        -0.06870812466570293,
+        0.05596018593356176,
+        -0.0235192618821603
+      ],
+      "world_to_camera": [
+        [
+          0.27715452912300037,
+          0.9607491605246254,
+          -0.012100311476815728,
+          3.043107293159863
+        ],
+        [
+          0.11999360237543383,
+          -0.04710503529709498,
+          -0.9916565186790364,
+          0.4662025573963585
+        ],
+        [
+          -0.9533031534488778,
+          0.273390135522274,
+          -0.12833912662761232,
+          0.44107054918011446
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.27715452912300004,
+          0.1199936023754337,
+          -0.9533031534488775,
+          -0.4788783477782867
+        ],
+        [
+          0.960749160524625,
+          -0.047105035297095074,
+          0.2733901355222741,
+          -3.022286626583186
+        ],
+        [
+          -0.012100311476815619,
+          -0.9916565186790361,
+          -0.12833912662761238,
+          0.5557419602344772
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.09874018677099786,
+      "reprojection_p95_px": 0.14906194760242567,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2477.5076897368895,
+            684.367109011802,
+            2796.1036474991643,
+            1402.2009408479646
+          ],
+          "bbox_area_fraction": 0.027572694488812444,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            3075.80499826552,
+            736.2348881627344,
+            3284.216278729986,
+            1372.9862496904184
+          ],
+          "bbox_area_fraction": 0.01599948960665949,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 4.577566798522237e-16,
+        "normalized_ray_p95": 7.791361360319881e-16
+      },
+      "inverse_roundtrip_max_abs": 5.551115123125783e-17
+    },
+    "cam16": {
+      "name": "cam16",
+      "camera_id": 16,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1769.238851086625,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1776.0676421289122,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09737406027682691,
+        -0.0721394423350984,
+        0.06053017846874286,
+        -0.02378726009227497
+      ],
+      "world_to_camera": [
+        [
+          -0.338666137456754,
+          0.9406248770967465,
+          0.023023638436481753,
+          -1.4206725600539822
+        ],
+        [
+          0.0818639633231249,
+          0.05383380177865327,
+          -0.9951885315331397,
+          0.4218934880582819
+        ],
+        [
+          -0.9373385401492638,
+          -0.3351518497230584,
+          -0.09523496615245586,
+          0.5078860241566314
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.33866613745675395,
+          0.08186396332312482,
+          -0.9373385401492639,
+          -0.039610417091758277
+        ],
+        [
+          0.9406248770967462,
+          0.053833801778653205,
+          -0.3351518497230584,
+          1.4838267622322476
+        ],
+        [
+          0.023023638436481766,
+          -0.9951885315331394,
+          -0.09523496615245593,
+          0.5009411205232916
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.029772583208307814,
+      "reprojection_p95_px": 0.058684701798487296,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1605.6068530975163,
+            720.1582341988519,
+            1873.2228153031888,
+            1401.8984288127012
+          ],
+          "bbox_area_fraction": 0.02199611281778884,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2153.6489309461776,
+            717.0262299046085,
+            2558.730001942691,
+            1569.146977323738
+          ],
+          "bbox_area_fraction": 0.041615787155537536,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 4.002966042486721e-16,
+        "normalized_ray_p95": 7.397520737355967e-16
+      },
+      "inverse_roundtrip_max_abs": 1.1102230246251565e-16
+    },
+    "cam17": {
+      "name": "cam17",
+      "camera_id": 17,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1768.670529737993,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1774.8508602829272,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09720873646052365,
+        -0.055329140213861025,
+        0.032849014082759094,
+        -0.010492590583662696
+      ],
+      "world_to_camera": [
+        [
+          0.9033025025461596,
+          -0.4288235116484669,
+          -0.012449287181312746,
+          2.6739678110576826
+        ],
+        [
+          -0.04555847412808836,
+          -0.06703166139646105,
+          -0.9967101794431271,
+          0.23638880374959104
+        ],
+        [
+          0.42657826284161027,
+          0.9008979699321714,
+          -0.08008641235020272,
+          6.154792983463732
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          0.9033025025461593,
+          -0.04555847412808832,
+          0.42657826284161016,
+          -5.030133201292174
+        ],
+        [
+          -0.4288235116484667,
+          -0.06703166139646105,
+          0.9008979699321713,
+          -4.382334703131671
+        ],
+        [
+          -0.01244928718131277,
+          -0.9967101794431269,
+          -0.08008641235020271,
+          0.7618154090008552
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.008022982437984143,
+      "reprojection_p95_px": 0.01354273894374885,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1528.9494778938617,
+            868.7770261588055,
+            1779.148082314709,
+            1565.1601988048956
+          ],
+          "bbox_area_fraction": 0.021006232872566265,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1541.270586085524,
+            905.2012319523052,
+            1723.114454323109,
+            1402.078764173736
+          ],
+          "bbox_area_fraction": 0.010893389817164624,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.734723475976807e-16,
+        "normalized_ray_p95": 2.9406505148178845e-16
+      },
+      "inverse_roundtrip_max_abs": 1.1102230246251565e-16
+    },
+    "cam18": {
+      "name": "cam18",
+      "camera_id": 18,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1767.2383437199362,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1771.9916752700983,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.09512086996010541,
+        -0.043875959714213986,
+        0.013329287751333114,
+        0.0007174282114031167
+      ],
+      "world_to_camera": [
+        [
+          -0.2870522635700946,
+          -0.957914598360995,
+          0.0007875443979130647,
+          0.10421488680897245
+        ],
+        [
+          -0.17139323292546982,
+          0.05055142362190357,
+          -0.9839049310157739,
+          -0.3765722862053157
+        ],
+        [
+          0.9424570853288975,
+          -0.2825671173662863,
+          -0.17869098045695198,
+          6.06339160219126
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.2870522635700946,
+          -0.17139323292546976,
+          0.9424570853288974,
+          -5.749113199015535
+        ],
+        [
+          -0.9579145983609949,
+          0.05055142362190334,
+          -0.28256711736628626,
+          1.8321803130992191
+        ],
+        [
+          0.0007875443979128633,
+          -0.9839049310157736,
+          -0.17869098045695198,
+          0.7128799871584265
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.38363127780458267,
+      "reprojection_p95_px": 0.9725634506068148,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2686.91659249991,
+            642.3645320820004,
+            3076.044988172389,
+            1709.324573169117
+          ],
+          "bbox_area_fraction": 0.05005599549513789,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1622.3025905953377,
+            641.8849253960282,
+            2125.5158462694058,
+            1794.8809967460506
+          ],
+          "bbox_area_fraction": 0.06995116064374214,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 6.268139317504111e-16,
+        "normalized_ray_p95": 8.507873008877302e-16
+      },
+      "inverse_roundtrip_max_abs": 1.249000902703301e-16
+    },
+    "cam19": {
+      "name": "cam19",
+      "camera_id": 19,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1762.1735776299076,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1765.7434663248541,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.10577044225406726,
+        -0.0846691768872852,
+        0.0652105550160101,
+        -0.020250707634478535
+      ],
+      "world_to_camera": [
+        [
+          -0.23926597801042648,
+          -0.969629375032956,
+          0.05070174395337318,
+          -0.6987621931500927
+        ],
+        [
+          -0.26777920022679413,
+          0.015703742028284284,
+          -0.9633523199807057,
+          -0.9077116516638748
+        ],
+        [
+          0.9332985008520118,
+          -0.24407430745473496,
+          -0.2634039497575519,
+          5.940193862107201
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.2392659780104266,
+          -0.26777920022679397,
+          0.9332985008520118,
+          -5.954230345934834
+        ],
+        [
+          -0.9696293750329557,
+          0.015703742028284135,
+          -0.2440743074547347,
+          0.7865628240136963
+        ],
+        [
+          0.05070174395337312,
+          -0.9633523199807053,
+          -0.263403949757552,
+          0.7256528619020854
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.062289067980966374,
+      "reprojection_p95_px": 0.1360149040361882,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2073.618876392628,
+            478.45504132271356,
+            2522.2741055496795,
+            1656.5483275520855
+          ],
+          "bbox_area_fraction": 0.06372464714766864,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            970.3710562979702,
+            479.08949331300346,
+            1475.0705866753801,
+            1585.4549545627344
+          ],
+          "bbox_area_fraction": 0.06732037624403522,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 1.0007415106216802e-16,
+        "normalized_ray_p95": 2.2887833992611187e-16
+      },
+      "inverse_roundtrip_max_abs": 2.220446049250313e-16
+    },
+    "cam20": {
+      "name": "cam20",
+      "camera_id": 20,
+      "width": 3840,
+      "height": 2160,
+      "model": "OPENCV_FISHEYE",
+      "intrinsic": [
+        [
+          1770.150166325267,
+          0.0,
+          1920.0
+        ],
+        [
+          0.0,
+          1778.162770147931,
+          1080.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.10715909217371365,
+        -0.08525520366753471,
+        0.06771190925395049,
+        -0.02376204417918759
+      ],
+      "world_to_camera": [
+        [
+          -0.8570877310542838,
+          0.5148089429656524,
+          0.01929698211657127,
+          -2.9722108214286105
+        ],
+        [
+          0.0469568926822341,
+          0.11536877698327219,
+          -0.9922122230284269,
+          0.16938915448301686
+        ],
+        [
+          -0.5130259949611217,
+          -0.8495067966414227,
+          -0.12305499158579314,
+          2.316486951352886
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "camera_to_world": [
+        [
+          -0.8570877310542837,
+          0.04695689268223414,
+          -0.5130259949611217,
+          -1.3669813944695604
+        ],
+        [
+          0.5148089429656525,
+          0.1153687769832724,
+          -0.8495067966414229,
+          3.478449901169246
+        ],
+        [
+          0.019296982116571212,
+          -0.9922122230284273,
+          -0.12305499158579299,
+          0.5104799709016159
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "calibration_views": 450,
+      "center_scatter_max_m": 0.0,
+      "rotation_scatter_max_deg": 0.0,
+      "canonical_world": "published_smpl_world",
+      "extrinsic_source": "published_smpl45_to_poses2d45_static_pnp",
+      "reprojection_median_px": 0.038673166633575964,
+      "reprojection_p95_px": 0.10401920707651896,
+      "audit_frame": 76,
+      "people_projection": {
+        "aria01": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            1853.8222707799507,
+            693.1075440407554,
+            2094.349226096947,
+            1328.7058948868596
+          ],
+          "bbox_area_fraction": 0.01843153647443063,
+          "visible_vertices": 6890
+        },
+        "aria02": {
+          "visible_vertex_fraction": 1.0,
+          "positive_depth_fraction": 1.0,
+          "bbox_xyxy": [
+            2051.6245226620194,
+            650.5675712951844,
+            2471.673869450328,
+            1583.7229792165535
+          ],
+          "bbox_area_fraction": 0.047257344660174165,
+          "visible_vertices": 6890
+        }
+      },
+      "projection_roundtrip": {
+        "count": 552,
+        "normalized_ray_median": 2.36032012215029e-16,
+        "normalized_ray_p95": 5.306973333700319e-16
+      },
+      "inverse_roundtrip_max_abs": 4.440892098500626e-16
+    }
+  },
+  "selected_protocol_pairs": [
+    {
+      "pre_camera": "cam13",
+      "post_camera": "cam16",
+      "angle_deg": 14.77436325589702,
+      "baseline_m": 1.479700993049258,
+      "angle_stratum": "small"
+    },
+    {
+      "pre_camera": "cam03",
+      "post_camera": "cam14",
+      "angle_deg": 44.728480002141936,
+      "baseline_m": 3.0520303140229696,
+      "angle_stratum": "medium"
+    },
+    {
+      "pre_camera": "cam08",
+      "post_camera": "cam14",
+      "angle_deg": 89.07057923436682,
+      "baseline_m": 6.511827189269018,
+      "angle_stratum": "large"
+    },
+    {
+      "pre_camera": "cam10",
+      "post_camera": "cam20",
+      "angle_deg": 152.44072502475785,
+      "baseline_m": 8.495918396924392,
+      "angle_stratum": "extreme"
+    }
+  ],
+  "overlays": [
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/overlays/10_karate2_001_karate2_cam01_f00076.jpg",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/overlays/10_karate2_001_karate2_cam08_f00076.jpg",
+    "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/metadata/10_karate2/overlays/10_karate2_001_karate2_cam15_f00076.jpg"
+  ]
+}

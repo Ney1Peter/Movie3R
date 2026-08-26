@@ -1,0 +1,180 @@
+{
+  "schema_version": "Bridge3R-EgoBody-CS150-recording-paired-statistics-v1",
+  "source_recording_metrics": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/aggregate/recording_metrics.csv",
+  "source_recording_metrics_sha256": "915db00cf9f980372ea132519929de985c8d7afe8011dd4c407d519c7a40ce09",
+  "split": "test",
+  "aggregation_unit": "recording",
+  "recordings": [
+    "recording_20210907_S03_S04_01",
+    "recording_20210911_S03_S08_01",
+    "recording_20210911_S03_S08_02",
+    "recording_20210921_S05_S12_01",
+    "recording_20210921_S05_S12_02",
+    "recording_20210921_S05_S12_03",
+    "recording_20210929_S05_S16_01",
+    "recording_20210929_S05_S16_02",
+    "recording_20210929_S05_S16_03",
+    "recording_20210929_S05_S16_04",
+    "recording_20211002_S17_S15_01",
+    "recording_20211002_S17_S15_02",
+    "recording_20211002_S17_S15_03",
+    "recording_20211004_S12_S20_01",
+    "recording_20211004_S12_S20_02",
+    "recording_20211004_S12_S20_03",
+    "recording_20211004_S12_S20_04",
+    "recording_20211004_S20_S12_01",
+    "recording_20211004_S20_S12_02",
+    "recording_20211004_S20_S12_03",
+    "recording_20211004_S20_S12_04",
+    "recording_20220225_S24_S25_01",
+    "recording_20220225_S24_S25_02",
+    "recording_20220225_S25_S24_01",
+    "recording_20220225_S27_S26_01",
+    "recording_20220225_S27_S26_02",
+    "recording_20220225_S27_S26_03",
+    "recording_20220225_S27_S26_04",
+    "recording_20220312_S29_S28_01",
+    "recording_20220312_S29_S28_02",
+    "recording_20220312_S29_S28_03",
+    "recording_20220312_S29_S28_04",
+    "recording_20220312_S29_S28_05",
+    "recording_20220318_S31_S32_01",
+    "recording_20220318_S32_S31_01",
+    "recording_20220318_S32_S31_02",
+    "recording_20220318_S33_S34_01",
+    "recording_20220318_S33_S34_02",
+    "recording_20220318_S34_S33_01",
+    "recording_20220318_S34_S33_02",
+    "recording_20220318_S34_S33_03",
+    "recording_20220415_S35_S36_01",
+    "recording_20220415_S35_S36_02"
+  ],
+  "recording_count": 43,
+  "strict_method": "m0_strict_human3r",
+  "bridge3r_method": "v19_ungated_translation_b050",
+  "primary_metrics": [
+    "W-MPJPE_mm",
+    "WA-MPJPE_mm",
+    "ATE_Sim3_m",
+    "IDF1",
+    "Coverage"
+  ],
+  "analysis_scope": "retrospective paired statistics over the v011 EgoBody main-table metrics; not a Test-time method-selection rule",
+  "bootstrap": {
+    "method": "paired percentile bootstrap of recording means",
+    "samples": 100000,
+    "seed": 20260826
+  },
+  "sign_flip": {
+    "method": "two-sided Monte-Carlo sign-flip randomisation test of mean paired gain",
+    "samples": 1000000,
+    "seed": 20260827
+  },
+  "rows": [
+    {
+      "metric": "W-MPJPE_mm",
+      "label": "W-MPJPE",
+      "unit": "mm",
+      "direction": "higher paired gain is better",
+      "recording_count": 43,
+      "strict_mean": 321.1479860998175,
+      "bridge3r_mean": 258.83269644768603,
+      "mean_improvement": 62.31528965213149,
+      "bootstrap_ci95": [
+        21.15638431313328,
+        111.29206857740157
+      ],
+      "median_improvement": 7.416822761499475,
+      "win_tie_loss": {
+        "wins": 23,
+        "ties": 0,
+        "losses": 20
+      },
+      "signflip_pvalue_two_sided": 0.003707996292003708
+    },
+    {
+      "metric": "WA-MPJPE_mm",
+      "label": "WA-MPJPE",
+      "unit": "mm",
+      "direction": "higher paired gain is better",
+      "recording_count": 43,
+      "strict_mean": 233.38694958961477,
+      "bridge3r_mean": 201.6903095894276,
+      "mean_improvement": 31.69664000018709,
+      "bootstrap_ci95": [
+        15.113421090924668,
+        49.233473414824715
+      ],
+      "median_improvement": 17.797426124598445,
+      "win_tie_loss": {
+        "wins": 28,
+        "ties": 0,
+        "losses": 15
+      },
+      "signflip_pvalue_two_sided": 0.000638999361000639
+    },
+    {
+      "metric": "ATE_Sim3_m",
+      "label": "ATE-Sim3",
+      "unit": "m",
+      "direction": "higher paired gain is better",
+      "recording_count": 43,
+      "strict_mean": 0.12437407452436845,
+      "bridge3r_mean": 0.016451692923067602,
+      "mean_improvement": 0.10792238160130087,
+      "bootstrap_ci95": [
+        0.056374067679678216,
+        0.17286975100340707
+      ],
+      "median_improvement": 0.042547101560942546,
+      "win_tie_loss": {
+        "wins": 43,
+        "ties": 0,
+        "losses": 0
+      },
+      "signflip_pvalue_two_sided": 9.99999000001e-07
+    },
+    {
+      "metric": "IDF1",
+      "label": "IDF1",
+      "unit": "unitless",
+      "direction": "higher paired gain is better",
+      "recording_count": 43,
+      "strict_mean": 0.8703780309755466,
+      "bridge3r_mean": 0.9847541218196655,
+      "mean_improvement": 0.11437609084411887,
+      "bootstrap_ci95": [
+        0.07568356222891393,
+        0.15467058730772829
+      ],
+      "median_improvement": 0.0348977135980747,
+      "win_tie_loss": {
+        "wins": 22,
+        "ties": 20,
+        "losses": 1
+      },
+      "signflip_pvalue_two_sided": 9.99999000001e-07
+    },
+    {
+      "metric": "Coverage",
+      "label": "Coverage",
+      "unit": "unitless",
+      "direction": "higher paired gain is better",
+      "recording_count": 43,
+      "strict_mean": 0.980594315245478,
+      "bridge3r_mean": 0.980594315245478,
+      "mean_improvement": 0.0,
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "median_improvement": 0.0,
+      "win_tie_loss": {
+        "wins": 0,
+        "ties": 43,
+        "losses": 0
+      },
+      "signflip_pvalue_two_sided": 1.0
+    }
+  ]
+}
