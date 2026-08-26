@@ -35,6 +35,7 @@ DISPLAY = {
     "m6_b0_identity_brtc_c1": "Fine alignment / history transaction",
     "m14_safe_boundary_permutation_causal_gru": "Gated parent",
     "m15_bridge3r_fixed_v19": "Bridge3R (fixed, causal)",
+    "prompthmr_official": "PromptHMR (official, offline)",
 }
 
 
