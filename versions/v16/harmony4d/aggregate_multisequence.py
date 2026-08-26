@@ -77,6 +77,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--parent-display-name")
     parser.add_argument("--title", default="Movie3R-v16 Harmony4D frozen test summary")
     parser.add_argument("--test-used-for-parameter-selection", action="store_true")
+    parser.add_argument(
+        "--primary-ungated",
+        action="store_true",
+        help=(
+            "Declare that the primary candidate applies its fixed boundary "
+            "correction without a reliability gate. This suppresses gate "
+            "acceptance/fallback statistics and preserves all primary-vs-parent "
+            "differences in paired tests."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -265,8 +275,17 @@ def markdown_summary(
         f"# {result['title']}", "",
         f"- Sequences: {result['sequence_count']}",
         f"- Cases: {result['case_count']} evaluable / {result['manifest_case_count']} preregistered (150 frames, 75+75)",
-        f"- Evaluator-unavailable: {result['evaluator_unavailable_count']} (method-independent, IDs retained)",
-        f"- Gate: {result['gate']['accepted']} accepted / {result['gate']['fallback']} fallback", "",
+        (
+            f"- Shared-internal evaluator unavailable: {result['evaluator_unavailable_count']} "
+            "(legacy prediction-dependent initial-match fit; not an inference failure)"
+        ),
+        (
+            f"- Reliability gate: {result['gate']['accepted']} accepted / "
+            f"{result['gate']['fallback']} fallback"
+            if result["gate"]["enabled"]
+            else "- Reliability gate: not used; the fixed shared translation is applied to every evaluator-available case"
+        ),
+        "",
         "| Method | " + " | ".join(labels) + " |",
         "|---|" + "---:|" * len(labels),
     ]
@@ -317,7 +336,17 @@ def main() -> None:
             raise ValueError(f"Incomplete probe report: {path}: {payload['errors']}")
         sources.append(str(path))
         manifest_case_count += int(payload.get("case_count", 0))
-        skipped_cases.extend(payload.get("skipped_cases", []))
+        for skipped in payload.get("skipped_cases", []):
+            # Older reports carried a `method_independent` field even though
+            # these cases arise from a prediction-dependent initial-match fit
+            # in the shared internal evaluator. Preserve that legacy detail
+            # but do not repeat the incorrect publication-facing label.
+            corrected = dict(skipped)
+            if "method_independent" in corrected:
+                corrected["legacy_method_independent_field"] = corrected["method_independent"]
+            corrected["method_independent"] = False
+            corrected["availability_scope"] = "shared_internal_legacy_initial_match"
+            skipped_cases.append(corrected)
         for row in payload.get("reference_rows", []):
             if row.get("status") == "complete":
                 rows_by_method[str(row["method"])].append(row)
@@ -367,30 +396,46 @@ def main() -> None:
         significance[method] = {
             metric: paired_sequence_test(
                 rows_by_method[primary], rows_by_method[method], metric, higher, rng,
-                zero_all_fallback_sequences=(method == parent),
+                zero_all_fallback_sequences=(method == parent and not args.primary_ungated),
             )
             for metric, _, higher in METRICS
         }
 
     primary_rows = rows_by_method[primary]
-    accepted = [
-        row for row in primary_rows
-        if bool(row.get("diagnostics", {}).get("reliability_gate", {}).get("accepted"))
-    ]
-    parent_by_case = {row["case_id"]: row for row in rows_by_method[parent]}
-    gate_strata = {}
-    for name, rows in (("accepted", accepted), ("fallback", [row for row in primary_rows if row not in accepted])):
-        gate_strata[name] = {
-            "case_count": len(rows),
-            "mean_delta_primary_minus_parent": {
-                metric: distribution([
-                    float(row["metrics"][metric]) - float(parent_by_case[row["case_id"]]["metrics"][metric])
-                    for row in rows
-                    if finite(row["metrics"].get(metric)) is not None
-                    and finite(parent_by_case[row["case_id"]]["metrics"].get(metric)) is not None
-                ])["mean"]
-                for metric, _, _ in METRICS
-            },
+    if args.primary_ungated:
+        gate = {
+            "enabled": False,
+            "applied_cases": len(primary_rows),
+            "accepted": None,
+            "fallback": None,
+            "strata": None,
+        }
+    else:
+        accepted = [
+            row for row in primary_rows
+            if bool(row.get("diagnostics", {}).get("reliability_gate", {}).get("accepted"))
+        ]
+        parent_by_case = {row["case_id"]: row for row in rows_by_method[parent]}
+        gate_strata = {}
+        for name, rows in (("accepted", accepted), ("fallback", [row for row in primary_rows if row not in accepted])):
+            gate_strata[name] = {
+                "case_count": len(rows),
+                "mean_delta_primary_minus_parent": {
+                    metric: distribution([
+                        float(row["metrics"][metric]) - float(parent_by_case[row["case_id"]]["metrics"][metric])
+                        for row in rows
+                        if finite(row["metrics"].get(metric)) is not None
+                        and finite(parent_by_case[row["case_id"]]["metrics"].get(metric)) is not None
+                    ])["mean"]
+                    for metric, _, _ in METRICS
+                },
+            }
+        gate = {
+            "enabled": True,
+            "applied_cases": len(primary_rows),
+            "accepted": len(accepted),
+            "fallback": len(primary_rows) - len(accepted),
+            "strata": gate_strata,
         }
 
     result = {
@@ -407,12 +452,10 @@ def main() -> None:
             "uncertainty": "hierarchical sequence-then-clip bootstrap",
             "paired_test_unit": "sequence",
             "test_used_for_parameter_selection": bool(args.test_used_for_parameter_selection),
-            "exclusion_rule": "method-independent evaluator unavailable only",
+            "exclusion_rule": "shared-internal legacy evaluator unavailable only; not an external inference failure",
+            "evaluator_unavailable_scope": "prediction-dependent initial-match fit in the legacy shared internal evaluator",
         },
-        "gate": {
-            "accepted": len(accepted), "fallback": len(primary_rows) - len(accepted),
-            "strata": gate_strata,
-        },
+        "gate": gate,
         "methods": summary, "paired_significance_vs_primary": significance,
         "multi_thumbs_literature_reference": {
             "values": LITERATURE_MULTI_THUMBS,
@@ -449,7 +492,7 @@ def main() -> None:
     )
     print(json.dumps({
         "output": str(args.output.resolve()), "cases": len(case_ids),
-        "sequences": len(sequences), "gate_accepts": len(accepted),
+        "sequences": len(sequences), "gate_enabled": gate["enabled"],
         "W_primary": summary[primary]["clip_macro"]["W-MPJPE_mm"],
         "W_parent": summary[parent]["clip_macro"]["W-MPJPE_mm"],
     }, indent=2, ensure_ascii=False))

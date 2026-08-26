@@ -1,0 +1,49 @@
+{
+  "phase": "Harmony4D train-only fixed-grid sensitivity audit; not a publication-candidate selection artifact",
+  "created_at": "2026-08-26",
+  "source_method": "m3_b0_only",
+  "publication_configuration_unchanged": {
+    "name": "bridge3r_unified_half_translation",
+    "camera_alpha": 1.0,
+    "boundary_kind": "translation",
+    "boundary_blend": 0.5,
+    "reliability_gate": false,
+    "root_filter": false
+  },
+  "contract": {
+    "camera_alpha": 1.0,
+    "boundary_kind": "translation",
+    "reliability_gate": false,
+    "root_filter": false,
+    "purpose": "Measure train-only sensitivity of the fixed causal shared-translation operation; results cannot select or alter the publication configuration."
+  },
+  "candidates": [
+    {
+      "name": "v16_0_m15_geometry"
+    },
+    {
+      "name": "bridge3r_lambda_025",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.25
+    },
+    {
+      "name": "bridge3r_lambda_050",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.5
+    },
+    {
+      "name": "bridge3r_lambda_075",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 0.75
+    },
+    {
+      "name": "bridge3r_lambda_100",
+      "camera_alpha": 1.0,
+      "boundary_kind": "translation",
+      "boundary_blend": 1.0
+    }
+  ]
+}

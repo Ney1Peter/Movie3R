@@ -89,6 +89,24 @@ def within(child: Path, parent: Path) -> bool:
     return child == parent or parent in child.parents
 
 
+def resolve_outer_member(names: list[str], logical_name: str) -> str:
+    """Resolve an optional single top-level directory added when repacking."""
+    if logical_name in names:
+        return logical_name
+    suffix = "/" + logical_name
+    candidates = [name for name in names if name.endswith(suffix)]
+    if len(candidates) != 1:
+        raise KeyError(
+            f"Expected one outer member for {logical_name!r}, got {candidates}"
+        )
+    prefix = candidates[0][:-len(suffix)]
+    if not prefix or "/" in prefix:
+        raise KeyError(
+            f"Only a single optional top-level directory is supported: {candidates[0]}"
+        )
+    return candidates[0]
+
+
 def main() -> None:
     args = parse_args()
     started = time.time()
@@ -109,11 +127,12 @@ def main() -> None:
             raise ValueError(f"Resolved target escapes work root: {target}")
     state_name = ".harmony4d_download_state.json"
     with zipfile.ZipFile(outer) as archive:
-        if args.entry not in archive.namelist() or state_name not in archive.namelist():
-            raise KeyError(f"Missing entry/state in outer archive: {args.entry}")
-        state = json.loads(archive.read(state_name).decode("utf-8-sig"))
+        names = archive.namelist()
+        archive_entry = resolve_outer_member(names, args.entry)
+        archive_state = resolve_outer_member(names, state_name)
+        state = json.loads(archive.read(archive_state).decode("utf-8-sig"))
         expected = state["files"][args.entry]
-        outer_info = archive.getinfo(args.entry)
+        outer_info = archive.getinfo(archive_entry)
         if int(outer_info.file_size) != int(expected["size"]):
             raise ValueError("Outer central-directory size disagrees with published state")
         inner_path.parent.mkdir(parents=True, exist_ok=True)
@@ -121,7 +140,7 @@ def main() -> None:
             partial = inner_path.with_suffix(inner_path.suffix + ".partial")
             if partial.exists():
                 partial.unlink()
-            with archive.open(args.entry) as source, partial.open("wb") as destination:
+            with archive.open(archive_entry) as source, partial.open("wb") as destination:
                 shutil.copyfileobj(source, destination, length=16 * 1024 * 1024)
             os.replace(partial, inner_path)
     if inner_path.stat().st_size != int(expected["size"]):
