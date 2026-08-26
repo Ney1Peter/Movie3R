@@ -103,14 +103,28 @@ def validate_pair(args: argparse.Namespace) -> list[tuple[int, dict[str, Any], d
     return selected[:args.max_cases] if args.max_cases else selected
 
 
-def run_logged(command: list[str], *, cwd: Path) -> dict[str, Any]:
+def run_logged(
+    command: list[str], *, cwd: Path, environment: dict[str, str] | None = None
+) -> dict[str, Any]:
     started = time.perf_counter()
-    completed = subprocess.run(command, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return {
+    effective_environment = os.environ.copy()
+    if environment:
+        effective_environment.update(environment)
+    completed = subprocess.run(
+        command, cwd=cwd, env=effective_environment, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    record: dict[str, Any] = {
         "command": command, "returncode": completed.returncode,
         "seconds": time.perf_counter() - started,
         "stdout": completed.stdout, "stderr": completed.stderr,
     }
+    if environment:
+        # The official PromptHMR pipeline contains upstream ``.cuda()`` calls.
+        # Masking one physical accelerator before the interpreter starts makes
+        # its logical ``cuda:0`` unambiguous, without patching that pipeline.
+        record["environment_overrides"] = dict(environment)
+    return record
 
 
 def is_complete(cache: Path, report: Path, metric: Path, case_id: str) -> bool:
@@ -149,9 +163,14 @@ def execute_case(args: argparse.Namespace, device: int, item: tuple[int, dict[st
         "--output-dir", str(official), "--cache-output", str(cache),
         "--runtime-report", str(report), "--adapter-metadata", str(metadata),
         "--converter", str(args.converter.resolve()), "--python", str(args.python_executable),
-        "--device", f"cuda:{device}", "--batch-size", str(args.batch_size),
+        # PromptHMR's official pipeline uses unqualified ``.cuda()`` in many
+        # modules.  It must therefore see exactly one CUDA device from process
+        # start; the selected physical GPU is exposed as logical ``cuda:0``.
+        "--device", "cuda:0", "--batch-size", str(args.batch_size),
     ]
-    inference = run_logged(runner_command, cwd=Path.cwd())
+    inference = run_logged(
+        runner_command, cwd=Path.cwd(), environment={"CUDA_VISIBLE_DEVICES": str(device)}
+    )
     log: dict[str, Any] = {"line": line, "case_id": case_id, "device": device, "inference": inference}
     if inference["returncode"]:
         atomic_json(log_path, log)
