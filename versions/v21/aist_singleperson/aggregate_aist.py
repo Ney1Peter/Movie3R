@@ -36,6 +36,7 @@ DISPLAY = {
     "m14_safe_boundary_permutation_causal_gru": "Gated parent",
     "m15_bridge3r_fixed_v19": "Bridge3R (fixed, causal)",
     "prompthmr_official": "PromptHMR (official, offline)",
+    "gvhmr_official": "GVHMR (official, offline)",
 }
 
 
