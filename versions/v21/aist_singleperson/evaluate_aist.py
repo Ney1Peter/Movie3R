@@ -11,7 +11,10 @@ paper score.
 The evaluator is the only component that reads AIST labels, calibration, and
 ground-truth cut indices.  A single first-shot Sim(3) anchor is fitted for
 each method/case and is retained after the view change; no post-cut re-fit is
-performed.
+performed.  If an official label has a non-finite body frame, that frame is
+excluded from *all* geometry calculations for every method while prediction
+coverage keeps its full 150-frame denominator.  This is a label-availability
+rule, not a method-dependent filtering rule.
 """
 
 from __future__ import annotations
@@ -222,29 +225,41 @@ def evaluate_method(method: str, arrays: dict[str, np.ndarray], label: dict[str,
     if cuts.tolist() != [74]:
         raise ValueError(f"CS150 requires cut index [74], received {cuts.tolist()}")
     cut = int(cuts[0]); first_post = cut + 1
-    anchor_mask = pred_valid.copy(); anchor_mask[first_post:] = False
+    # AIST labels occasionally mark an unavailable body frame with NaNs.  A
+    # full body frame (rather than individual joints) is the smallest common
+    # unit used by PA, root and orientation summaries, so one immutable
+    # evaluator-only mask is shared by every metric and method.  Prediction
+    # coverage intentionally remains independent of this annotation mask.
+    gt_valid = np.isfinite(gt).all(axis=(1, 2))
+    metric_valid = pred_valid & gt_valid
+    anchor_mask = metric_valid.copy(); anchor_mask[first_post:] = False
     status = "ok"
     if int(anchor_mask.sum()) < 3:
         status = "evaluator_unavailable_insufficient_first_shot_track_coverage"
         return {
             "method": method, "status": status, "track": track,
-            "coverage": {"valid_frames": int(pred_valid.sum()), "total_frames": EXPECTED_FRAMES, "valid_frame_coverage": float(pred_valid.mean()), "completion": 1.0},
+            "coverage": {
+                "valid_frames": int(pred_valid.sum()), "total_frames": EXPECTED_FRAMES,
+                "valid_frame_coverage": float(pred_valid.mean()), "completion": 1.0,
+                "evaluator_gt_valid_frames": int(gt_valid.sum()),
+                "geometry_evaluable_frames": int(metric_valid.sum()),
+            },
             "metrics": {}, "selected_detection_index_per_frame": selected_indices,
         }
     fit = fit_similarity(gt[anchor_mask], pred[anchor_mask], allow_scale=True)
     aligned = apply_similarity(pred, fit)
     aligned_root, gt_root = root_from_body12(aligned), root_from_body12(gt)
-    pa = [procrustes_mpjpe(gt[index], pred[index]) for index in np.flatnonzero(pred_valid)]
-    anchor_joint = np.linalg.norm(aligned[pred_valid] - gt[pred_valid], axis=-1).mean(axis=-1)
-    root_error = np.linalg.norm(aligned_root[pred_valid] - gt_root[pred_valid], axis=-1)
+    pa = [procrustes_mpjpe(gt[index], pred[index]) for index in np.flatnonzero(metric_valid)]
+    anchor_joint = np.linalg.norm(aligned[metric_valid] - gt[metric_valid], axis=-1).mean(axis=-1)
+    root_error = np.linalg.norm(aligned_root[metric_valid] - gt_root[metric_valid], axis=-1)
     orientation = []
-    for frame in np.flatnonzero(pred_valid):
+    for frame in np.flatnonzero(metric_valid):
         source, target = torso_rotation(aligned[frame]), torso_rotation(gt[frame])
         if source is not None and target is not None:
             orientation.append(rotation_error_deg(source, target))
     seam_root = None
     seam_orientation = None
-    if pred_valid[cut] and pred_valid[first_post]:
+    if metric_valid[cut] and metric_valid[first_post]:
         seam_root = float(np.linalg.norm((aligned_root[first_post] - aligned_root[cut]) - (gt_root[first_post] - gt_root[cut])))
         before_pred, after_pred = torso_rotation(aligned[cut]), torso_rotation(aligned[first_post])
         before_gt, after_gt = torso_rotation(gt[cut]), torso_rotation(gt[first_post])
@@ -258,6 +273,8 @@ def evaluate_method(method: str, arrays: dict[str, np.ndarray], label: dict[str,
     camera_rotation = []
     camera_translation = []
     for frame in range(first_post, EXPECTED_FRAMES):
+        if not (np.isfinite(anchor_camera).all() and np.isfinite(pred_cameras[frame]).all() and np.isfinite(gt_cameras[0]).all() and np.isfinite(gt_cameras[frame]).all()):
+            continue
         predicted_relative = np.linalg.inv(anchor_camera) @ pred_cameras[frame]
         gt_relative = np.linalg.inv(gt_cameras[0]) @ gt_cameras[frame]
         camera_rotation.append(rotation_error_deg(predicted_relative[:3, :3], gt_relative[:3, :3]))
@@ -267,7 +284,8 @@ def evaluate_method(method: str, arrays: dict[str, np.ndarray], label: dict[str,
         "coverage": {
             "valid_frames": int(pred_valid.sum()), "total_frames": EXPECTED_FRAMES,
             "valid_frame_coverage": float(pred_valid.mean()), "completion": 1.0,
-            "anchor_valid_frames": int(anchor_mask.sum()), "post_valid_frames": int(pred_valid[first_post:].sum()),
+            "anchor_valid_frames": int(anchor_mask.sum()), "post_valid_frames": int(metric_valid[first_post:].sum()),
+            "evaluator_gt_valid_frames": int(gt_valid.sum()), "geometry_evaluable_frames": int(metric_valid.sum()),
         },
         "metrics": {
             "pa_mpjpe_body12_mm": summary(pa, 1000.0),
@@ -341,6 +359,7 @@ def main() -> None:
             "gt_used_only_in_evaluator": True,
             "joint_set": {"name": "AIST-COCO-body12-v1", "coco17_indices": COCO_BODY12, "common_smpl24_indices": SMPL24_BODY12, "names": BODY12_NAMES, "excluded_coco17_indices": [0, 1, 2, 3, 4], "reason": "face landmarks have no verified common-SMPL-24 equivalent"},
             "anchor": "one first-shot-only Sim(3) per case/method; no post-cut re-alignment",
+            "label_availability": "A non-finite official body frame is excluded uniformly from geometry metrics only; prediction coverage retains the 150-frame runtime denominator.",
             "track_policy": "longest valid persistent track then lowest numeric ID; never GT selected",
         },
     }
