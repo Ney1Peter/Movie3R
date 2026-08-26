@@ -75,6 +75,32 @@ def runtime_paths(roots: list[Path]) -> list[Path]:
     return values
 
 
+def causal_runtime_boundary(runtime: dict[str, Any]) -> int:
+    """Return the boundary proposed from RGB-only causal detector evidence.
+
+    The cached ``m3_b0_only`` source was produced at the evaluation cut.  A
+    candidate can reuse it as a detector-driven source only when the frozen
+    detector proposes precisely that same index; otherwise a new backbone
+    forward is required and this cache-only program must fail closed rather
+    than silently substitute the annotated boundary.
+    """
+
+    detector = runtime.get("runtime", {}).get("causal_gru_detector", {})
+    proposal = detector.get("first_positive_index")
+    evaluation_boundary = runtime.get("record", {}).get("boundary_index")
+    if proposal is None:
+        raise ValueError("Causal GRU emitted no boundary; cached B0 source is unusable")
+    if evaluation_boundary is None:
+        raise ValueError("Runtime report has no evaluator boundary")
+    proposal, evaluation_boundary = int(proposal), int(evaluation_boundary)
+    if proposal != evaluation_boundary:
+        raise ValueError(
+            "Causal GRU boundary differs from cached B0 boundary; rerun the RGB "
+            "backbone at the detector proposal instead of reusing this cache"
+        )
+    return proposal
+
+
 def main() -> None:
     args = parse_args()
     spec = json.loads(args.candidate_json.read_text(encoding="utf-8"))
@@ -93,11 +119,13 @@ def main() -> None:
         with np.load(cache_path, allow_pickle=False) as cache:
             source = method_arrays(cache, "m3_b0_only")
             refs = {method: method_arrays(cache, method) for method in args.reference_methods}
+        runtime_boundary = causal_runtime_boundary(runtime)
+        evaluator_boundary = int(record["boundary_index"])
         gt, identities = load_gt(record, args.extracted_root, topology)
         pairs = [tuple(map(int, pair)) for pair in runtime.get("geometry", {}).get("association", {}).get("pairs", [])]
         for method, arrays in refs.items():
             try:
-                result = evaluate_method(method, arrays, gt, identities, int(record["boundary_index"]), float(record["fps"]))
+                result = evaluate_method(method, arrays, gt, identities, evaluator_boundary, float(record["fps"]))
                 references.append(
                     {
                         "case_id": case_id,
@@ -133,13 +161,13 @@ def main() -> None:
                 geometry_spec = dict(candidate.get("geometry") or {"name": BASELINE})
                 geometry_spec["name"] = name
                 arrays, geometry_debug = apply_candidate(
-                    source, int(record["boundary_index"]), pairs, Candidate(**geometry_spec)
+                    source, runtime_boundary, pairs, Candidate(**geometry_spec)
                 )
                 identity_debug = None
                 if candidate.get("identity") is not None:
                     arrays, identity_debug = retrack_causally(
                         arrays,
-                        int(record["boundary_index"]),
+                        runtime_boundary,
                         pairs,
                         IdentityConfig(**candidate["identity"]),
                     )
@@ -149,12 +177,12 @@ def main() -> None:
                         raise ValueError("person correction requires causal identity transport")
                     arrays, person_debug = person_boundary_correct(
                         arrays,
-                        int(record["boundary_index"]),
+                        runtime_boundary,
                         pairs,
                         PersonCorrectionConfig(**candidate["person"]),
                     )
                 postprocess_seconds = time.perf_counter() - postprocess_started
-                result = evaluate_method(name, arrays, gt, identities, int(record["boundary_index"]), float(record["fps"]))
+                result = evaluate_method(name, arrays, gt, identities, evaluator_boundary, float(record["fps"]))
                 rows.append(
                     {
                         "case_id": case_id,
@@ -173,6 +201,9 @@ def main() -> None:
                             "person_correction": person_debug,
                             "postprocess_seconds": postprocess_seconds,
                             "postprocess_frames": int(len(arrays["valid"])),
+                            "runtime_boundary": runtime_boundary,
+                            "runtime_boundary_source": "causal_gru_first_positive",
+                            "evaluator_boundary": evaluator_boundary,
                         },
                     }
                 )
@@ -227,6 +258,8 @@ def main() -> None:
             "gt_scope": "frozen evaluator only",
             "future_frames_at_boundary": 0,
             "source_cache_immutable": True,
+            "boundary_source": "causal_gru_first_positive",
+            "cache_reuse_policy": "fail closed unless detector and cached B0 boundaries agree",
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

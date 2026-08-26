@@ -434,7 +434,7 @@ def main() -> None:
         "## Causal boundary detector check",
         "",
         f"- The causal GRU first triggers at the pre-registered cut in {int(detectors[0]['true_positive'])}/{int(detectors[0]['case_count'])} Test cases, with {int(detectors[0]['false_positive'])} off-boundary positives and {fmt(detectors[0]['boundary_mae_frames_given_positive'], 'IDs')} frame MAE.",
-        "- The v19 postprocessor consumes the pre-registered cut index in this implementation. Because the causal proposal equals that index for every Test case, substituting the online proposal is boundary- and output-equivalent on CS100; this does not establish detector generalization beyond the constructed cross-camera protocol.",
+        "- The v19 release postprocessor takes the causal GRU's first positive as its runtime trigger and fails closed if it differs from the cached source boundary. On CS100 the proposal equals the evaluator boundary for every Test case, so the frozen source caches are output-equivalent; this does not establish detector generalization beyond the constructed cross-camera protocol.",
         "",
         "## Interpretation and limitations",
         "",
