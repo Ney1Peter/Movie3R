@@ -100,6 +100,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--size", type=int, default=512)
     parser.add_argument("--current-checkpoint", type=Path, default=None)
     parser.add_argument("--original-checkpoint", type=Path, default=None)
+    parser.add_argument(
+        "--ablation-token-mode",
+        choices=("full", "native", "semantic_only", "alignment_only", "semantic_alignment"),
+        default="full",
+        help=(
+            "Inference-only correction-token ablation. 'full' preserves the checkpoint's "
+            "semantic+alignment+momentum production route; 'native' disables the learned "
+            "prompt pathway."
+        ),
+    )
+    parser.add_argument(
+        "--ablation-disable-camera-residual-head",
+        action="store_true",
+        help="Mask only the explicit pose/camera residual head while retaining correction-token routing.",
+    )
+    parser.add_argument(
+        "--ablation-disable-human-latent-head",
+        action="store_true",
+        help="Mask only the explicit human latent correction head while retaining correction-token routing.",
+    )
+    parser.add_argument(
+        "--ablation-disable-head-lora",
+        action="store_true",
+        help="Disable the event-only pose/human head LoRA updates.",
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -199,6 +224,45 @@ def strict_original(model: ARCroco3DStereo) -> None:
     ):
         if hasattr(model, name):
             setattr(model, name, False)
+
+
+def configure_inference_ablation(model: ARCroco3DStereo, args: argparse.Namespace) -> dict[str, Any]:
+    """Apply a narrow, runtime-only component mask to the frozen checkpoint.
+
+    This function intentionally neither loads a different checkpoint nor
+    rewrites any cached result.  The resulting experiments must be described
+    as inference-time component masking, not as separately retrained model
+    variants.
+    """
+
+    token_mode = str(args.ablation_token_mode)
+    if token_mode == "native":
+        model.enable_v8_pose_prompt = False
+        model.enable_v8_human_latent_corr = False
+        model.enable_v8_head_lora = False
+    else:
+        model.enable_v8_pose_prompt = True
+        model.v8_pose_prompt.token_ablation = token_mode if token_mode != "full" else "all"
+        model.enable_v8_human_latent_corr = not bool(args.ablation_disable_human_latent_head)
+        model.enable_v8_head_lora = not bool(args.ablation_disable_head_lora)
+    model.enable_v8_pose_residual_corr = (
+        token_mode != "native" and not bool(args.ablation_disable_camera_residual_head)
+    )
+    return {
+        "kind": "frozen_checkpoint_inference_component_masking",
+        "token_mode": token_mode,
+        "correction_tokens_enabled": bool(getattr(model, "enable_v8_pose_prompt", False)),
+        "underlying_token_ablation": None
+        if token_mode == "native"
+        else str(getattr(model.v8_pose_prompt, "token_ablation", "")),
+        "explicit_camera_residual_head_enabled": bool(
+            getattr(model, "enable_v8_pose_residual_corr", True)
+        ),
+        "explicit_human_latent_head_enabled": bool(
+            getattr(model, "enable_v8_human_latent_corr", False)
+        ),
+        "event_head_lora_enabled": bool(getattr(model, "enable_v8_head_lora", False)),
+    }
 
 
 def transform_points(transform: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -839,6 +903,7 @@ def main() -> None:
 
     current_model = ARCroco3DStereo.from_pretrained(str(current_path)).to(device)
     flags = configure_model(current_model)
+    ablation = configure_inference_ablation(current_model, args)
     current_model.eval()
     current_layer = SMPL_Layer(type="smplx", gender="neutral", num_betas=10, kid=False, person_center="head").to(device).eval()
     oracle_methods, oracle_geometry, oracle_runtime = run_transaction(
@@ -926,6 +991,7 @@ def main() -> None:
             "static_detector_training_csv": str(STATIC_DETECTOR_CSV),
             "static_detector_training_csv_sha256": verified_artifact_sha256(STATIC_DETECTOR_CSV),
             "current_flags": flags,
+            "inference_ablation": ablation,
         },
         "provenance": {
             **git_provenance(),

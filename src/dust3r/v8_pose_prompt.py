@@ -288,6 +288,12 @@ class V82PoseRelationPrompt(nn.Module):
         self.token_ablation = str(token_ablation or "all").lower()
         valid_ablations = {
             "all",
+            # Publication ablations.  These names are deliberately explicit:
+            # historical ``no_*`` modes retain the remaining two relation
+            # tokens and therefore must not be relabelled as an ``only`` mode.
+            "semantic_only",
+            "alignment_only",
+            "semantic_alignment",
             "single_token",
             "no_semantic",
             "no_alignment",
@@ -323,7 +329,16 @@ class V82PoseRelationPrompt(nn.Module):
         elif self.token_ablation == "semantic_alignment_human":
             self.num_corr_tokens = 3
         else:
-            self.num_corr_tokens = 3 - int(self.token_ablation in {"no_semantic", "no_alignment", "no_momentum"})
+            base_counts = {
+                "all": 3,
+                "no_semantic": 2,
+                "no_alignment": 2,
+                "no_momentum": 2,
+                "semantic_only": 1,
+                "alignment_only": 1,
+                "semantic_alignment": 2,
+            }
+            self.num_corr_tokens = base_counts[self.token_ablation]
             if self.use_human_alignment:
                 self.num_corr_tokens += 1
             if self.use_body_part_token and self.body_part_token_target in {"shared", "aux_only"}:
@@ -536,18 +551,20 @@ class V82PoseRelationPrompt(nn.Module):
             human_anchor_tokens = self.human_anchor_multi_mlp(torch.cat([base, anchor_type], dim=-1))
             corr_token_parts = [human_anchor_tokens + self.token_type_embed[:, :4]]
         else:
-            if self.token_ablation not in {"single_token", "no_semantic", "human_only", "human_pose_alignment"}:
+            semantic_enabled = self.token_ablation in {
+                "all", "no_alignment", "no_momentum", "semantic_only", "semantic_alignment",
+            }
+            alignment_enabled = self.token_ablation in {
+                "all", "no_semantic", "no_momentum", "alignment_only", "semantic_alignment",
+            }
+            momentum_enabled = self.token_ablation in {
+                "all", "no_semantic", "no_alignment",
+            }
+            if semantic_enabled:
                 corr_token_parts.append(semantic_token + self.token_type_embed[:, 0:1])
-            if self.token_ablation not in {"single_token", "no_alignment", "human_only", "human_semantic"}:
+            if alignment_enabled:
                 corr_token_parts.append(alignment_token + self.token_type_embed[:, 1:2])
-            if self.token_ablation not in {
-                "single_token",
-                "no_momentum",
-                "human_only",
-                "human_semantic",
-                "human_pose_alignment",
-                "semantic_alignment_human",
-            }:
+            if momentum_enabled:
                 corr_token_parts.append(momentum_token + self.token_type_embed[:, 2:3])
         if self.use_human_alignment and self.token_ablation not in {"human_anchor_single", "human_anchor_multi"}:
             human_alignment_token = self.human_alignment_mlp(

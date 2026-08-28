@@ -917,6 +917,11 @@ class ARCroco3DStereo(CroCoNet):
         self.enable_anchor_pose_token_adapter = False
         self.enable_v7_pose_adapter = False
         self.enable_v8_pose_prompt = False
+        # The prompt pathway can remain active while this explicit camera
+        # residual head is masked for a narrowly scoped inference ablation.
+        # It defaults to the production behavior and is intentionally a
+        # runtime flag rather than a new trainable architectural variant.
+        self.enable_v8_pose_residual_corr = True
         self.enable_v8_human_trans_corr = False
         self.enable_v8_human_latent_corr = False
         self.enable_v8_body_part_residual = False
@@ -3855,6 +3860,13 @@ class ARCroco3DStereo(CroCoNet):
                 if v9_force_no_correction:
                     v8_delta_applied = torch.zeros_like(v8_delta_applied)
                     v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                if not getattr(self, "enable_v8_pose_residual_corr", True):
+                    # Keep the correction-token route intact but remove only
+                    # the explicit pose/camera residual added to the decoded
+                    # pose token.  This is an inference-time component mask,
+                    # not a separately retrained architecture.
+                    v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                    v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
                 pose_token_for_head = pose_token_for_head + v8_delta_applied
                 v8_pose_prompt_info = {
                     "v8_pose_prompt_gate": v8_gate_for_heads,
@@ -5044,6 +5056,11 @@ class ARCroco3DStereo(CroCoNet):
                     and int(i) < v9_force_no_correction_before_view
                 )
                 if v9_force_no_correction:
+                    v8_delta_applied = torch.zeros_like(v8_delta_applied)
+                    v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
+                if not getattr(self, "enable_v8_pose_residual_corr", True):
+                    # See the matching recurrent path above.  Both forward
+                    # implementations must share the exact masking semantics.
                     v8_delta_applied = torch.zeros_like(v8_delta_applied)
                     v8_gate_for_heads = torch.zeros_like(v8_gate_for_heads)
                 pose_token_for_head = pose_token_for_head + v8_delta_applied

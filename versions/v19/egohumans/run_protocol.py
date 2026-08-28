@@ -63,7 +63,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--split", choices=("development", "holdout", "test"), required=True)
     parser.add_argument("--devices", default=",".join(DEFAULT_DEVICES))
     parser.add_argument("--entries", nargs="*", help="Optional exact outer-ZIP entries from the frozen split.")
+    parser.add_argument(
+        "--formal-manifest",
+        type=Path,
+        help=(
+            "Optional immutable case-level manifest.  This is intended for a final "
+            "test protocol with fewer than the four legacy cases for some captures; "
+            "only its listed cases are materialized and evaluated."
+        ),
+    )
     parser.add_argument("--candidate-json", type=Path, nargs="*", default=[])
+    parser.add_argument(
+        "--outer",
+        type=Path,
+        default=OUTER,
+        help="Immutable EgoHumans outer ZIP; defaults to the historical protocol source.",
+    )
+    parser.add_argument(
+        "--outer-index",
+        type=Path,
+        default=INDEX,
+        help="Frozen split index used to validate --entries.",
+    )
+    parser.add_argument(
+        "--work-root",
+        type=Path,
+        default=WORK,
+        help="Disk-bounded staging root.  Use a dedicated root for a new inference ablation.",
+    )
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        default=OUTPUT,
+        help="Prediction/report root.  Defaults to the historical v19 output only for unchanged replay.",
+    )
+    parser.add_argument(
+        "--replay-prediction-root",
+        type=Path,
+        help=(
+            "Optional immutable prediction root to hard-link and re-evaluate instead of "
+            "running inference.  Every selected case must be present and valid; this "
+            "never falls back to recomputation."
+        ),
+    )
     parser.add_argument(
         "--include-exploration",
         action="store_true",
@@ -72,6 +114,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reserve-gib", type=float, default=80.0)
     parser.add_argument("--keep-staging", action="store_true")
     parser.add_argument("--continue-on-structural-error", action="store_true")
+    parser.add_argument(
+        "--runner-extra-args",
+        nargs=argparse.REMAINDER,
+        default=[],
+        help="Arguments forwarded verbatim to run_harmony_case.py; must be the final option.",
+    )
     return parser.parse_args()
 
 
@@ -110,16 +158,66 @@ def run(command: list[str], log: Path) -> tuple[int, float]:
     return completed.returncode, time.perf_counter() - started
 
 
-def selected_entries(split: str, requested: list[str] | None) -> list[dict[str, Any]]:
+def load_formal_manifest(path: Path, split: str, index: Path) -> tuple[dict[str, list[dict[str, Any]]], str]:
+    """Load and validate an immutable, case-level final-evaluation manifest.
+
+    The runner never creates or expands this selection.  It only uses the legacy
+    per-capture manifest builder to verify that each pre-registered case can be
+    reconstructed from the staged archive, then retains the exact listed rows.
+    """
+
+    if split != "test":
+        raise ValueError("--formal-manifest is only permitted for the frozen test split")
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    index_payload = read_json(index)
+    allowed_entries = {
+        str(row["entry"])
+        for row in index_payload["entries"]
+        if str(row.get("split")) == split
+    }
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not rows:
+        raise ValueError("Formal manifest is empty")
+    by_entry: dict[str, list[dict[str, Any]]] = {}
+    case_ids: set[str] = set()
+    for line_number, row in enumerate(rows, start=1):
+        if str(row.get("split")) != split:
+            raise ValueError(f"Formal manifest line {line_number} is not a {split} row")
+        if str(row.get("formal_protocol", "")).strip() == "":
+            raise ValueError(f"Formal manifest line {line_number} lacks formal_protocol")
+        entry = str(row.get("archive_entry", ""))
+        case_id = str(row.get("case_id", ""))
+        if entry not in allowed_entries:
+            raise ValueError(f"Formal manifest has entry outside frozen {split}: {entry}")
+        if not case_id or case_id in case_ids:
+            raise ValueError(f"Formal manifest has missing/duplicate case_id at line {line_number}")
+        case_ids.add(case_id)
+        by_entry.setdefault(entry, []).append(row)
+    for entry, entry_rows in by_entry.items():
+        entry_rows.sort(key=lambda row: str(row["case_id"]))
+        if len(entry_rows) > 4:
+            raise ValueError(f"Formal manifest has more than four legacy cases for {entry}")
+    return by_entry, sha256(path)
+
+
+def selected_entries(
+    split: str,
+    requested: list[str] | None,
+    formal_rows_by_entry: dict[str, list[dict[str, Any]]] | None = None,
+) -> list[dict[str, Any]]:
     payload = read_json(INDEX)
     rows = [row for row in payload["entries"] if row["split"] == split]
     by_entry = {str(row["entry"]): row for row in rows}
+    if formal_rows_by_entry is not None:
+        by_entry = {entry: by_entry[entry] for entry in formal_rows_by_entry}
     if requested:
         unknown = sorted(set(requested) - set(by_entry))
         if unknown:
-            raise ValueError(f"Entries are not in frozen {split} split: {unknown}")
+            qualifier = "formal " if formal_rows_by_entry is not None else ""
+            raise ValueError(f"Entries are not in frozen {qualifier}{split} split: {unknown}")
         return [by_entry[value] for value in requested]
-    return sorted(rows, key=lambda row: (str(row["action"]), str(row["entry"])))
+    return sorted(by_entry.values(), key=lambda row: (str(row["action"]), str(row["entry"])))
 
 
 def report_tag(candidate: Path | None) -> str:
@@ -180,6 +278,28 @@ def link_smoke_cache(prediction_root: Path, case_id: str) -> bool:
     return valid_cache(target_cache, target_runtime, case_id)
 
 
+def link_replay_cache(replay_root: Path, prediction_root: Path, case_id: str) -> bool:
+    """Hard-link a sealed prior cache for evaluator-only replay.
+
+    ``prediction_root`` is a per-capture directory, so its final directory name
+    is also the stable source capture token below the replay root.
+    """
+
+    source_root = replay_root / prediction_root.name
+    source_cache = source_root / f"{case_id}.npz"
+    source_runtime = source_root / f"{case_id}.runtime.json"
+    if not valid_cache(source_cache, source_runtime, case_id):
+        return False
+    prediction_root.mkdir(parents=True, exist_ok=True)
+    target_cache = prediction_root / source_cache.name
+    target_runtime = prediction_root / source_runtime.name
+    if not target_cache.exists():
+        os.link(source_cache, target_cache)
+    if not target_runtime.exists():
+        os.link(source_runtime, target_runtime)
+    return valid_cache(target_cache, target_runtime, case_id)
+
+
 def launch_inference(
     rows: list[dict[str, Any]],
     manifest: Path,
@@ -189,6 +309,8 @@ def launch_inference(
     devices: list[str],
     state: dict[str, Any],
     state_path: Path,
+    runner_extra_args: list[str],
+    replay_prediction_root: Path | None = None,
 ) -> None:
     prediction_root.mkdir(parents=True, exist_ok=True)
     pending: deque[tuple[int, dict[str, Any]]] = deque()
@@ -197,7 +319,19 @@ def launch_inference(
         case_id = str(row["case_id"])
         cache = prediction_root / f"{case_id}.npz"
         runtime = prediction_root / f"{case_id}.runtime.json"
-        if valid_cache(cache, runtime, case_id) or link_smoke_cache(prediction_root, case_id):
+        if valid_cache(cache, runtime, case_id):
+            inference[case_id] = {"status": "complete", "cache_reused": True}
+        elif replay_prediction_root is not None:
+            if not link_replay_cache(replay_prediction_root, prediction_root, case_id):
+                raise RuntimeError(
+                    f"Replay source has no valid cache for {case_id}: {replay_prediction_root}"
+                )
+            inference[case_id] = {
+                "status": "complete",
+                "cache_reused": True,
+                "replay_source": str(replay_prediction_root),
+            }
+        elif link_smoke_cache(prediction_root, case_id):
             inference[case_id] = {"status": "complete", "cache_reused": True}
         else:
             pending.append((line, row))
@@ -223,6 +357,7 @@ def launch_inference(
                 "--device",
                 free_device,
             ]
+            command.extend(runner_extra_args)
             log = log_root / f"{case_id}.inference.log"
             log.parent.mkdir(parents=True, exist_ok=True)
             handle = log.open("w", encoding="utf-8")
@@ -316,6 +451,11 @@ def process_entry(
     reserve_gib: float,
     keep_staging: bool,
     continue_on_structural_error: bool,
+    runner_extra_args: list[str],
+    formal_rows: list[dict[str, Any]] | None = None,
+    formal_manifest_path: Path | None = None,
+    formal_manifest_sha256: str | None = None,
+    replay_prediction_root: Path | None = None,
 ) -> dict[str, Any]:
     entry = str(row["entry"])
     token = slug(entry)
@@ -333,7 +473,22 @@ def process_entry(
     }
     if state_path.is_file():
         previous = read_json(state_path)
-        if previous.get("status") == "complete" and all(path.is_file() for path in expected_reports.values()):
+        same_formal_manifest = (
+            previous.get("formal_manifest_sha256") == formal_manifest_sha256
+            if formal_rows is not None
+            else "formal_manifest_sha256" not in previous
+        )
+        same_replay_source = (
+            previous.get("replay_prediction_root") == str(replay_prediction_root.resolve())
+            if replay_prediction_root is not None
+            else "replay_prediction_root" not in previous
+        )
+        if (
+            previous.get("status") == "complete"
+            and same_formal_manifest
+            and same_replay_source
+            and all(path.is_file() for path in expected_reports.values())
+        ):
             for path in expected_reports.values():
                 valid_probe(path, int(previous["manifest_cases"]))
             return previous
@@ -346,8 +501,15 @@ def process_entry(
         "status": "started",
         "started_at": time.time(),
         "devices": devices,
+        "runner_extra_args": list(runner_extra_args),
         "candidate_reports": {key: str(value.resolve()) for key, value in expected_reports.items()},
     }
+    if formal_rows is not None:
+        state["formal_manifest"] = str(formal_manifest_path.resolve()) if formal_manifest_path else None
+        state["formal_manifest_sha256"] = formal_manifest_sha256
+        state["formal_case_ids"] = [str(value["case_id"]) for value in formal_rows]
+    if replay_prediction_root is not None:
+        state["replay_prediction_root"] = str(replay_prediction_root.resolve())
     atomic_json(state_path, state)
     stage_command = [
         sys.executable,
@@ -392,8 +554,74 @@ def process_entry(
         atomic_json(state_path, state)
         raise RuntimeError(f"manifest failed for {entry}")
     rows = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines() if line.strip()]
-    if len(rows) != 4:
+    if formal_rows is None and len(rows) != 4:
         raise ValueError(f"Frozen CS100 protocol requires four angle cases, got {len(rows)} for {entry}")
+    if formal_rows is not None:
+        legacy_by_id = {str(value["case_id"]): value for value in rows}
+        formal_by_id = {str(value["case_id"]): value for value in formal_rows}
+        if len(formal_by_id) != len(formal_rows):
+            raise ValueError(f"Formal manifest repeats a case for {entry}")
+        missing = sorted(set(formal_by_id) - set(legacy_by_id))
+        if missing:
+            raise ValueError(
+                f"Formal manifest cases cannot be rebuilt from staged capture {entry}: {missing}"
+            )
+        binding_keys = (
+            "archive_entry",
+            "capture",
+            "pre_camera",
+            "post_camera",
+            "pre_frame_numbers",
+            "post_frame_numbers",
+            "boundary_frame",
+            "boundary_index",
+            "clip_length",
+            "fps",
+            "angle_stratum",
+        )
+        drift = []
+        for case_id, formal_row in formal_by_id.items():
+            legacy_row = legacy_by_id[case_id]
+            mismatched = [
+                key for key in binding_keys if legacy_row.get(key) != formal_row.get(key)
+            ]
+            if mismatched:
+                drift.append({"case_id": case_id, "keys": mismatched})
+        if drift:
+            raise ValueError(f"Formal manifest binding mismatch for {entry}: {drift}")
+        # Preserve the legacy runtime-only row shape and append only the immutable
+        # formal protocol identifier.  Evaluator-only metadata remains outside the
+        # model process; run_harmony_case receives RGB constructed from this row.
+        rows = []
+        for case_id in sorted(formal_by_id):
+            selected = dict(legacy_by_id[case_id])
+            selected["formal_protocol"] = str(formal_by_id[case_id]["formal_protocol"])
+            rows.append(selected)
+        text = "".join(json.dumps(value, ensure_ascii=False) + "\n" for value in rows)
+        partial = manifest.with_suffix(manifest.suffix + ".partial")
+        partial.write_text(text, encoding="utf-8")
+        os.replace(partial, manifest)
+        # build_manifest.py necessarily records the four legacy rows before this
+        # runner applies the immutable final subset.  Rewrite the local spec so
+        # no downstream audit can mistake the selected case count or digest.
+        spec_path = manifest.with_suffix(".spec.json")
+        manifest_spec = read_json(spec_path)
+        manifest_spec.update(
+            schema_version="Movie3R-v19-EgoHumans-formal-selected-manifest-spec-v1",
+            protocol=str(formal_rows[0]["formal_protocol"]),
+            manifest_sha256=sha256(manifest),
+            case_count=len(rows),
+            formal_manifest=str(formal_manifest_path.resolve()) if formal_manifest_path else None,
+            formal_manifest_sha256=formal_manifest_sha256,
+            formal_case_ids=[str(value["case_id"]) for value in rows],
+            construction=(
+                "Rebuilt from staged capture, then exact-selected by immutable "
+                "formal case manifest; no model result used"
+            ),
+        )
+        atomic_json(spec_path, manifest_spec)
+    if not rows:
+        raise ValueError(f"No selected manifest cases for {entry}")
     state.update(
         manifest=str(manifest.resolve()),
         manifest_sha256=sha256(manifest),
@@ -401,7 +629,18 @@ def process_entry(
         capture_root=str(capture_root.resolve()),
     )
     atomic_json(state_path, state)
-    launch_inference(rows, manifest, stage_root, prediction_root, logs, devices, state, state_path)
+    launch_inference(
+        rows,
+        manifest,
+        stage_root,
+        prediction_root,
+        logs,
+        devices,
+        state,
+        state_path,
+        runner_extra_args,
+        replay_prediction_root,
+    )
     reports = {}
     for candidate in candidates:
         tag = report_tag(candidate)
@@ -460,9 +699,30 @@ def process_entry(
 
 
 def main() -> None:
+    global OUTER, INDEX, WORK, OUTPUT
     args = parse_args()
+    OUTER = args.outer.resolve()
+    INDEX = args.outer_index.resolve()
+    WORK = args.work_root.resolve()
+    OUTPUT = args.output_root.resolve()
+    for path in (OUTER, INDEX):
+        if not path.is_file():
+            raise FileNotFoundError(path)
     if args.include_exploration and args.split != "development":
         raise ValueError("The finite exploration grid is forbidden outside development")
+    formal_manifest_path: Path | None = None
+    formal_rows_by_entry: dict[str, list[dict[str, Any]] | None] = {}
+    formal_manifest_sha256: str | None = None
+    if args.formal_manifest is not None:
+        formal_manifest_path = args.formal_manifest.resolve()
+        formal_rows_by_entry, formal_manifest_sha256 = load_formal_manifest(
+            formal_manifest_path, args.split, INDEX
+        )
+    replay_prediction_root: Path | None = None
+    if args.replay_prediction_root is not None:
+        replay_prediction_root = args.replay_prediction_root.resolve()
+        if not replay_prediction_root.is_dir():
+            raise FileNotFoundError(replay_prediction_root)
     candidates: list[Path | None] = []
     if args.include_exploration:
         candidates.append(None)
@@ -476,7 +736,11 @@ def main() -> None:
     devices = [value.strip() for value in args.devices.split(",") if value.strip()]
     if not devices:
         raise ValueError("At least one device is required")
-    entries = selected_entries(args.split, args.entries)
+    entries = selected_entries(
+        args.split,
+        args.entries,
+        formal_rows_by_entry if formal_manifest_path is not None else None,
+    )
     split_state = OUTPUT / args.split / "protocol_state.json"
     summary = {
         "schema_version": "Movie3R-v19-EgoHumans-split-state-v1",
@@ -486,11 +750,29 @@ def main() -> None:
         "outer_index_sha256": sha256(INDEX),
         "entries": [row["entry"] for row in entries],
         "devices": devices,
+        "work_root": str(WORK),
+        "output_root": str(OUTPUT),
+        "runner_extra_args": list(args.runner_extra_args),
         "candidate_sources": ["finite_exploration_grid" if path is None else str(path) for path in candidates],
         "status": "running",
         "captures": {},
         "started_at": time.time(),
     }
+    if replay_prediction_root is not None:
+        summary["replay_prediction_root"] = str(replay_prediction_root)
+    if formal_manifest_path is not None:
+        summary.update(
+            formal_manifest=str(formal_manifest_path),
+            formal_manifest_sha256=formal_manifest_sha256,
+            formal_protocols=sorted(
+                {
+                    str(row["formal_protocol"])
+                    for rows in formal_rows_by_entry.values()
+                    for row in rows
+                }
+            ),
+            formal_case_count=sum(len(rows) for rows in formal_rows_by_entry.values()),
+        )
     if split_state.is_file():
         previous = read_json(split_state)
         if previous.get("outer_index_sha256") == summary["outer_index_sha256"]:
@@ -510,6 +792,11 @@ def main() -> None:
                 float(args.reserve_gib),
                 bool(args.keep_staging),
                 bool(args.continue_on_structural_error),
+                list(args.runner_extra_args),
+                formal_rows_by_entry.get(entry) if formal_manifest_path is not None else None,
+                formal_manifest_path,
+                formal_manifest_sha256,
+                replay_prediction_root,
             )
             summary["captures"][entry] = {
                 "status": result["status"],
