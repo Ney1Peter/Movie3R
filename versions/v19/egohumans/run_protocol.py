@@ -107,6 +107,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--detector-cache-prediction-root",
+        type=Path,
+        help=(
+            "Optional sealed prediction root supplying only same-case RGB detector "
+            "streams to repeated inference-time component masks."
+        ),
+    )
+    parser.add_argument(
         "--include-exploration",
         action="store_true",
         help="Evaluate the code-frozen finite grid; permitted only on development.",
@@ -311,6 +319,7 @@ def launch_inference(
     state_path: Path,
     runner_extra_args: list[str],
     replay_prediction_root: Path | None = None,
+    detector_cache_prediction_root: Path | None = None,
 ) -> None:
     prediction_root.mkdir(parents=True, exist_ok=True)
     pending: deque[tuple[int, dict[str, Any]]] = deque()
@@ -357,6 +366,17 @@ def launch_inference(
                 "--device",
                 free_device,
             ]
+            if detector_cache_prediction_root is not None:
+                detector_cache = (
+                    detector_cache_prediction_root
+                    / prediction_root.name
+                    / f"{case_id}.runtime.json"
+                )
+                if not detector_cache.is_file():
+                    raise RuntimeError(
+                        f"No same-case detector cache for {case_id}: {detector_cache}"
+                    )
+                command.extend(("--detector-cache-runtime", str(detector_cache)))
             command.extend(runner_extra_args)
             log = log_root / f"{case_id}.inference.log"
             log.parent.mkdir(parents=True, exist_ok=True)
@@ -456,6 +476,7 @@ def process_entry(
     formal_manifest_path: Path | None = None,
     formal_manifest_sha256: str | None = None,
     replay_prediction_root: Path | None = None,
+    detector_cache_prediction_root: Path | None = None,
 ) -> dict[str, Any]:
     entry = str(row["entry"])
     token = slug(entry)
@@ -483,10 +504,17 @@ def process_entry(
             if replay_prediction_root is not None
             else "replay_prediction_root" not in previous
         )
+        same_detector_cache_source = (
+            previous.get("detector_cache_prediction_root")
+            == str(detector_cache_prediction_root.resolve())
+            if detector_cache_prediction_root is not None
+            else "detector_cache_prediction_root" not in previous
+        )
         if (
             previous.get("status") == "complete"
             and same_formal_manifest
             and same_replay_source
+            and same_detector_cache_source
             and all(path.is_file() for path in expected_reports.values())
         ):
             for path in expected_reports.values():
@@ -510,6 +538,8 @@ def process_entry(
         state["formal_case_ids"] = [str(value["case_id"]) for value in formal_rows]
     if replay_prediction_root is not None:
         state["replay_prediction_root"] = str(replay_prediction_root.resolve())
+    if detector_cache_prediction_root is not None:
+        state["detector_cache_prediction_root"] = str(detector_cache_prediction_root.resolve())
     atomic_json(state_path, state)
     stage_command = [
         sys.executable,
@@ -640,6 +670,7 @@ def process_entry(
         state_path,
         runner_extra_args,
         replay_prediction_root,
+        detector_cache_prediction_root,
     )
     reports = {}
     for candidate in candidates:
@@ -723,6 +754,11 @@ def main() -> None:
         replay_prediction_root = args.replay_prediction_root.resolve()
         if not replay_prediction_root.is_dir():
             raise FileNotFoundError(replay_prediction_root)
+    detector_cache_prediction_root: Path | None = None
+    if args.detector_cache_prediction_root is not None:
+        detector_cache_prediction_root = args.detector_cache_prediction_root.resolve()
+        if not detector_cache_prediction_root.is_dir():
+            raise FileNotFoundError(detector_cache_prediction_root)
     candidates: list[Path | None] = []
     if args.include_exploration:
         candidates.append(None)
@@ -760,6 +796,8 @@ def main() -> None:
     }
     if replay_prediction_root is not None:
         summary["replay_prediction_root"] = str(replay_prediction_root)
+    if detector_cache_prediction_root is not None:
+        summary["detector_cache_prediction_root"] = str(detector_cache_prediction_root)
     if formal_manifest_path is not None:
         summary.update(
             formal_manifest=str(formal_manifest_path),
@@ -797,6 +835,7 @@ def main() -> None:
                 formal_manifest_path,
                 formal_manifest_sha256,
                 replay_prediction_root,
+                detector_cache_prediction_root,
             )
             summary["captures"][entry] = {
                 "status": result["status"],

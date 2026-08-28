@@ -122,6 +122,8 @@ def command_for(name: str, extra: tuple[str, ...], device: str, reserve_gib: flo
         str(WORK_PARENT / f"EgoHuman_ablation_formal90_{name}"),
         "--output-root",
         str(OUTPUT_PARENT / f"formal90_{name}"),
+        "--detector-cache-prediction-root",
+        str(SEALED_FULL_PREDICTIONS),
         "--reserve-gib",
         str(reserve_gib),
         "--runner-extra-args",

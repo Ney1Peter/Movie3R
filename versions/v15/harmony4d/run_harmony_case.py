@@ -125,6 +125,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable the event-only pose/human head LoRA updates.",
     )
+    parser.add_argument(
+        "--detector-cache-runtime",
+        type=Path,
+        help=(
+            "Optional sealed runtime JSON from an RGB-only detector pass on the exact "
+            "same case.  It reuses only the two detector streams after strict record "
+            "validation, avoiding repeated CPU ORB extraction across component masks."
+        ),
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -155,6 +164,72 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(16 * 1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def load_cached_detector_streams(
+    path: Path, record: dict[str, Any], frame_count: int
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Load deterministic RGB-only detector outputs from an identical prior run.
+
+    This cache is an execution optimization, not a new source of supervision:
+    it contains no calibration, GT, identity, or reconstruction output.  The
+    exact RGB ordering is bound by the runtime record before any cached label is
+    consumed, so a cache for another camera pair or frame span fails closed.
+    """
+
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    source_record = payload.get("record")
+    if not isinstance(source_record, dict):
+        raise ValueError(f"Detector cache has no runtime record: {path}")
+    binding_keys = (
+        "case_id",
+        "capture_relative",
+        "pre_camera",
+        "post_camera",
+        "pre_frame_numbers",
+        "post_frame_numbers",
+        "boundary_index",
+    )
+    mismatch = [key for key in binding_keys if source_record.get(key) != record.get(key)]
+    if mismatch:
+        raise ValueError(f"Detector cache record mismatch for {path}: {mismatch}")
+    source_runtime = payload.get("runtime")
+    if not isinstance(source_runtime, dict):
+        raise ValueError(f"Detector cache has no runtime block: {path}")
+    streams: list[dict[str, Any]] = []
+    for name in ("causal_gru_detector", "static_logistic_detector"):
+        stream = source_runtime.get(name)
+        if not isinstance(stream, dict):
+            raise ValueError(f"Detector cache lacks {name}: {path}")
+        labels = stream.get("labels")
+        rows = stream.get("rows")
+        if not isinstance(labels, list) or len(labels) != frame_count:
+            raise ValueError(f"Detector cache {name} label length is invalid: {path}")
+        labels = [int(value) for value in labels]
+        if any(value not in (0, 1) for value in labels):
+            raise ValueError(f"Detector cache {name} labels are not binary: {path}")
+        if not isinstance(rows, list) or len(rows) != max(0, frame_count - 1):
+            raise ValueError(f"Detector cache {name} row count is invalid: {path}")
+        copied = dict(stream)
+        copied.update(
+            labels=labels,
+            rows=rows,
+            seconds=0.0,
+            source="sealed_same_rgb_detector_cache",
+            source_runtime=str(path.resolve()),
+            source_runtime_sha256=sha256(path),
+        )
+        streams.append(copied)
+    cache = {
+        "kind": "sealed_same_rgb_detector_cache",
+        "path": str(path.resolve()),
+        "sha256": sha256(path),
+        "record_binding_keys": list(binding_keys),
+        "gt_or_calibration_read": False,
+    }
+    return streams[0], streams[1], cache
 
 
 def git_provenance() -> dict[str, Any]:
@@ -859,30 +934,42 @@ def main() -> None:
     topology = CommonTopology.load()
     runtime: dict[str, Any] = {}
 
-    detector_started = time.perf_counter()
-    detector = CausalGRUShotDetector(DETECTOR_PATH)
-    detector_labels, detector_rows = detector.predict_sequence(all_paths)
-    runtime["causal_gru_detector"] = {
-        "seconds": time.perf_counter() - detector_started,
-        "labels": detector_labels,
-        "rows": detector_rows,
-        "boundary_prediction": int(detector_labels[boundary]),
-        "false_positive_indices": [i for i, value in enumerate(detector_labels) if value and i != boundary],
-        "first_positive_index": first_positive(detector_labels),
-        "deployment_policy": "first_positive_only_for_preregistered_two-shot_protocol",
-    }
-    static_started = time.perf_counter()
-    static_detector = StreamingImageOnlyShotDetector(STATIC_DETECTOR_CSV)
-    static_labels, static_rows = static_detector.predict_sequence(all_paths)
-    runtime["static_logistic_detector"] = {
-        "seconds": time.perf_counter() - static_started,
-        "labels": static_labels,
-        "rows": static_rows,
-        "boundary_prediction": int(static_labels[boundary]),
-        "false_positive_indices": [i for i, value in enumerate(static_labels) if value and i != boundary],
-        "first_positive_index": first_positive(static_labels),
-        "deployment_policy": "first_positive_only_for_preregistered_two-shot_protocol",
-    }
+    if args.detector_cache_runtime is not None:
+        causal_stream, static_stream, detector_cache = load_cached_detector_streams(
+            args.detector_cache_runtime, record, len(all_paths)
+        )
+        detector_labels = list(causal_stream["labels"])
+        static_labels = list(static_stream["labels"])
+        runtime["detector_cache"] = detector_cache
+        runtime["causal_gru_detector"] = causal_stream
+        runtime["static_logistic_detector"] = static_stream
+    else:
+        detector_started = time.perf_counter()
+        detector = CausalGRUShotDetector(DETECTOR_PATH)
+        detector_labels, detector_rows = detector.predict_sequence(all_paths)
+        runtime["causal_gru_detector"] = {
+            "seconds": time.perf_counter() - detector_started,
+            "labels": detector_labels,
+            "rows": detector_rows,
+        }
+        static_started = time.perf_counter()
+        static_detector = StreamingImageOnlyShotDetector(STATIC_DETECTOR_CSV)
+        static_labels, static_rows = static_detector.predict_sequence(all_paths)
+        runtime["static_logistic_detector"] = {
+            "seconds": time.perf_counter() - static_started,
+            "labels": static_labels,
+            "rows": static_rows,
+        }
+    for detector_name, labels in (
+        ("causal_gru_detector", detector_labels),
+        ("static_logistic_detector", static_labels),
+    ):
+        runtime[detector_name].update(
+            boundary_prediction=int(labels[boundary]),
+            false_positive_indices=[index for index, value in enumerate(labels) if value and index != boundary],
+            first_positive_index=first_positive(labels),
+            deployment_policy="first_positive_only_for_preregistered_two-shot_protocol",
+        )
 
     original_model = ARCroco3DStereo.from_pretrained(str(original_path)).to(device)
     strict_original(original_model)
