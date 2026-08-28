@@ -32,6 +32,7 @@ OUTER_INDEX = REPO_ROOT.parents[0] / "data/EgoHuman_work_v19/outer_index.json"
 CANDIDATE = REPO_ROOT / "versions/v19/egohumans/frozen_final_candidate.json"
 OUTPUT_PARENT = REPO_ROOT / "output/bridge3r_egohumans_ablation_v1"
 WORK_PARENT = REPO_ROOT.parents[0] / "data"
+SEALED_FULL_PREDICTIONS = REPO_ROOT / "output/v19_egohumans/test/predictions"
 
 
 ROUTES: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -55,6 +56,11 @@ def parse_args() -> argparse.Namespace:
         "--wait-pid",
         type=int,
         help="Do not launch a GPU route until this prerequisite smoke PID has exited.",
+    )
+    parser.add_argument(
+        "--skip-full-replay",
+        action="store_true",
+        help="Do not re-evaluate the sealed full-model caches on the formal 90 cases.",
     )
     parser.add_argument(
         "--state",
@@ -123,13 +129,51 @@ def command_for(name: str, extra: tuple[str, ...], device: str, reserve_gib: flo
     ]
 
 
+def replay_command(reserve_gib: float) -> list[str]:
+    """Evaluator-only replay of the sealed full Bridge3R predictions.
+
+    The runner hard-links every existing cache and rejects a missing case, so
+    this stage consumes disk/CPU for staging and GT evaluation but no GPU model
+    forward.  Keeping it in the queue ensures the full row receives exactly the
+    same formal 90-case denominator as every inference-time ablation.
+    """
+
+    return [
+        sys.executable,
+        str(RUNNER),
+        "--split",
+        "test",
+        "--formal-manifest",
+        str(FORMAL_MANIFEST),
+        "--devices",
+        "cuda:1",
+        "--candidate-json",
+        str(CANDIDATE),
+        "--outer",
+        str(OUTER),
+        "--outer-index",
+        str(OUTER_INDEX),
+        "--work-root",
+        str(WORK_PARENT / "EgoHuman_ablation_formal90_full_replay"),
+        "--output-root",
+        str(OUTPUT_PARENT / "formal90_full_replay"),
+        "--replay-prediction-root",
+        str(SEALED_FULL_PREDICTIONS),
+        "--reserve-gib",
+        str(reserve_gib),
+    ]
+
+
 def main() -> None:
     args = parse_args()
     devices = [value.strip() for value in args.devices.split(",") if value.strip()]
     if not 1 <= len(devices) <= 3 or len(set(devices)) != len(devices):
         raise ValueError("--devices must name one to three distinct GPUs")
-    for path in (RUNNER, FORMAL_MANIFEST, OUTER, OUTER_INDEX, CANDIDATE):
-        if not path.is_file():
+    required_paths = [RUNNER, FORMAL_MANIFEST, OUTER, OUTER_INDEX, CANDIDATE]
+    if not args.skip_full_replay:
+        required_paths.append(SEALED_FULL_PREDICTIONS)
+    for path in required_paths:
+        if not path.exists():
             raise FileNotFoundError(path)
 
     state: dict[str, Any] = {
@@ -212,6 +256,47 @@ def main() -> None:
                 flush=True,
             )
     errors = [name for name, value in state["routes"].items() if value.get("status") == "error"]
+    if not errors and not args.skip_full_replay:
+        replay_state = state["routes"].get("full_replay", {})
+        if not route_complete("full_replay"):
+            command = replay_command(float(args.reserve_gib))
+            log_path = logs / "full_replay.launch.log"
+            started = time.time()
+            state["routes"]["full_replay"] = {
+                "status": "running",
+                "kind": "sealed_prediction_evaluator_replay",
+                "started_at": started,
+                "command": command,
+            }
+            atomic_json(args.state, state)
+            with log_path.open("a", encoding="utf-8") as handle:
+                handle.write("\nCOMMAND " + json.dumps(command, ensure_ascii=False) + "\n")
+                handle.flush()
+                completed = subprocess.run(
+                    command,
+                    cwd=REPO_ROOT,
+                    stdout=handle,
+                    stderr=subprocess.STDOUT,
+                    env={**os.environ, "TMPDIR": str(WORK_PARENT / "EgoHuman_ablation_formal90_full_replay/tmp")},
+                )
+            done = route_complete("full_replay")
+            state["routes"]["full_replay"].update(
+                status="complete" if completed.returncode == 0 and done else "error",
+                returncode=completed.returncode,
+                elapsed_seconds=time.time() - started,
+                completed_at=time.time(),
+                protocol_complete=done,
+            )
+            atomic_json(args.state, state)
+            if completed.returncode or not done:
+                errors.append("full_replay")
+        elif replay_state.get("status") != "complete":
+            state["routes"]["full_replay"] = {
+                "status": "complete_reused",
+                "kind": "sealed_prediction_evaluator_replay",
+                "completed_at": time.time(),
+            }
+            atomic_json(args.state, state)
     state.update(
         status="complete" if not errors else "error",
         errors=errors,
