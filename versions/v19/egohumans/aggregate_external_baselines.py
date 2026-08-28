@@ -24,7 +24,9 @@ def finite(value):
     return x if math.isfinite(x) else None
 
 
-def collect(paths: list[Path], method_label: str) -> dict:
+def collect(
+    paths: list[Path], method_label: str, selected_case_ids: set[str] | None = None
+) -> dict:
     rows = []
     for path in sorted(paths):
         try:
@@ -69,8 +71,20 @@ def collect(paths: list[Path], method_label: str) -> dict:
             })
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             continue
+    source_case_count = len(rows)
+    if selected_case_ids is not None:
+        observed = [str(row.get("case_id")) for row in rows]
+        if len(observed) != len(set(observed)):
+            raise RuntimeError(f"{method_label}: duplicate case_id rows detected in source")
+        missing = selected_case_ids - set(observed)
+        if missing:
+            raise RuntimeError(
+                f"{method_label}: selected formal cases are missing from source ({len(missing)}): "
+                f"{sorted(missing)[:3]}"
+            )
+        rows = [row for row in rows if str(row.get("case_id")) in selected_case_ids]
     metrics = ["W-MPJPE_mm", "WA-MPJPE_mm", "MPJPE_mm", "PA-MPJPE_mm", "MPVPE_mm", "Accel_mm_frame2", "ATE-Sim3_m", "ATE-SE3_m", "RPE-translation_m", "RPE-rotation_deg", "Camera-seam-translation_m", "Camera-seam-rotation_deg", "Human-seam_mm", "IDF1", "IDs", "Coverage", "Precision"]
-    summary = {"method": method_label, "case_count": len(rows), "success_cases": sum(row["status"] not in {"inference_failed", "failed"} for row in rows), "failed_cases": sum(row["status"] in {"inference_failed", "failed"} for row in rows)}
+    summary = {"method": method_label, "case_count": len(rows), "source_case_count": source_case_count, "success_cases": sum(row["status"] not in {"inference_failed", "failed"} for row in rows), "failed_cases": sum(row["status"] in {"inference_failed", "failed"} for row in rows)}
     for metric in metrics:
         values = [row[metric] for row in rows if row[metric] is not None]
         summary[metric] = mean(values) if values else None
@@ -132,10 +146,30 @@ def main() -> None:
     p.add_argument("--manifest", type=Path,
                    default=Path("data/EgoHuman_work_v19/external_predictions/trace_egohumans_v2/manifests/egohumans_test.runtime.jsonl"),
                    help="frozen runtime manifest used to verify case identity and sequence parity")
+    p.add_argument(
+        "--selected-case-manifest",
+        type=Path,
+        help=(
+            "Optional immutable formal JSONL manifest. Sources may contain a strict "
+            "superset, but every listed case must exist and only listed cases enter "
+            "the reported denominator."
+        ),
+    )
     args = p.parse_args()
     root = args.root.resolve()
     expected_case_ids = None
-    if args.manifest.is_file():
+    if args.selected_case_manifest is not None:
+        selected = args.selected_case_manifest.resolve()
+        if not selected.is_file():
+            raise FileNotFoundError(selected)
+        expected_case_ids = {
+            str(json.loads(line)["case_id"])
+            for line in selected.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        }
+        if not expected_case_ids:
+            raise RuntimeError("selected case manifest is empty")
+    elif args.manifest.is_file():
         expected_case_ids = []
         for line in args.manifest.read_text(encoding="utf-8").splitlines():
             if line.strip():
@@ -152,7 +186,7 @@ def main() -> None:
             # TRACE writes ``evaluations/line001.evaluation.json`` directly;
             # PromptHMR keeps the variant filename inside ``line001/``.
             pattern = "line*.evaluation.json" if "trace_egohumans" in str(path) else "line*/prompthmr_*.evaluation.json"
-            results[label] = collect(list(path.glob(pattern)), label)
+            results[label] = collect(list(path.glob(pattern)), label, expected_case_ids)
         else:
             results[label] = {"method": label, "case_count": 0, "success_cases": 0, "failed_cases": 0, "case_rows": []}
         if args.expected_cases is not None and results[label].get("case_count", 0) != args.expected_cases:
@@ -210,7 +244,8 @@ def main() -> None:
                                      "failure_reason": row.get("failure_reason"), "coverage": row.get("Coverage"), "path": row.get("path")})
     write_rows(args.output.with_name("external_baseline_failures.csv"), failure_rows,
                ["method", "case_id", "capture", "sequence", "angle_stratum", "status", "failure_reason", "coverage", "path"])
-    md = ["# EgoHumans external baseline results", "", "All rows use the same frozen 116-case CS100 manifest. Coverage and IDF1 retain every case; conditional metrics expose their availability counts. Camera ATE/RPE and seam metrics are N/A when the method has no reportable trajectory.", "", "| Method | Cases | Success | Failed | W-MPJPE | WA-MPJPE | MPJPE | PA-MPJPE | MPVPE | Accel | ATE-Sim3 | ATE-SE3 | RPE-T | RPE-R | C-seam-T | C-seam-R | H-seam | IDF1 | IDs | Coverage | W avail. | WA avail. |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    denominator = len(expected_case_ids) if expected_case_ids is not None else "the frozen source"
+    md = ["# EgoHumans external baseline results", "", f"All rows use the same frozen {denominator}-case CS100 selection. Coverage and IDF1 retain every selected case; conditional metrics expose their availability counts. Camera ATE/RPE and seam metrics are N/A when the method has no reportable trajectory.", "", "| Method | Cases | Success | Failed | W-MPJPE | WA-MPJPE | MPJPE | PA-MPJPE | MPVPE | Accel | ATE-Sim3 | ATE-SE3 | RPE-T | RPE-R | C-seam-T | C-seam-R | H-seam | IDF1 | IDs | Coverage | W avail. | WA avail. |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for result in results.values():
         fmt = lambda key: "—" if result.get(key) is None else f"{float(result[key]):.3f}"
         md.append(f"| {result['method']} | {result.get('case_count',0)} | {result.get('success_cases',0)} | {result.get('failed_cases',0)} | {fmt('W-MPJPE_mm')} | {fmt('WA-MPJPE_mm')} | {fmt('MPJPE_mm')} | {fmt('PA-MPJPE_mm')} | {fmt('MPVPE_mm')} | {fmt('Accel_mm_frame2')} | {fmt('ATE-Sim3_m')} | {fmt('ATE-SE3_m')} | {fmt('RPE-translation_m')} | {fmt('RPE-rotation_deg')} | {fmt('Camera-seam-translation_m')} | {fmt('Camera-seam-rotation_deg')} | {fmt('Human-seam_mm')} | {fmt('IDF1')} | {fmt('IDs')} | {fmt('Coverage')} | {result.get('W_available_cases',0)} | {result.get('WA_available_cases',0)} |")
