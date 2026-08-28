@@ -52,6 +52,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--poll-seconds", type=float, default=15.0)
     parser.add_argument("--reserve-gib", type=float, default=120.0)
     parser.add_argument(
+        "--wait-pid",
+        type=int,
+        help="Do not launch a GPU route until this prerequisite smoke PID has exited.",
+    )
+    parser.add_argument(
         "--state",
         type=Path,
         default=OUTPUT_PARENT / "formal90_ablation_queue_state.json",
@@ -64,6 +69,16 @@ def atomic_json(path: Path, value: Any) -> None:
     partial = path.with_suffix(path.suffix + ".partial")
     partial.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     os.replace(partial, path)
+
+
+def process_exists(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def route_complete(name: str) -> bool:
@@ -124,7 +139,8 @@ def main() -> None:
         "devices": devices,
         "routes": {},
         "started_at": time.time(),
-        "status": "running",
+        "status": "waiting_for_prerequisite" if args.wait_pid is not None else "running",
+        "wait_pid": args.wait_pid,
     }
     if args.state.is_file():
         previous = json.loads(args.state.read_text(encoding="utf-8"))
@@ -138,6 +154,14 @@ def main() -> None:
     logs = OUTPUT_PARENT / "formal90_ablation_queue_logs"
     logs.mkdir(parents=True, exist_ok=True)
     atomic_json(args.state, state)
+
+    if args.wait_pid is not None:
+        print(f"waiting for prerequisite pid {args.wait_pid}", flush=True)
+        while process_exists(int(args.wait_pid)):
+            time.sleep(float(args.poll_seconds))
+        state["status"] = "running"
+        state["prerequisite_completed_at"] = time.time()
+        atomic_json(args.state, state)
 
     while pending or active:
         while pending and len(active) < len(devices):
