@@ -41,7 +41,17 @@ BUILDER = REPO_ROOT / "versions/v19/egohumans/build_manifest.py"
 RUN_CASE = REPO_ROOT / "versions/v15/harmony4d/run_harmony_case.py"
 PROBE = REPO_ROOT / "versions/v19/egohumans/probe_parallel.py"
 V19_PROBE = REPO_ROOT / "versions/v19/egohumans/probe_v19_candidates.py"
-REFERENCES = ("m0_strict_human3r", "m15_safe_boundary_permutation_causal_gru")
+# These are compact, causal-system controls derived from the same frozen
+# forward.  Including them in a replay is evaluator-only and lets the formal
+# 90-case ledger support the reset -> coarse gauge -> association -> final
+# transaction ablation without another GPU reconstruction pass.
+REFERENCES = (
+    "m0_strict_human3r",
+    "m1_clean_reset",
+    "m3_b0_only",
+    "m4_b0_identity",
+    "m15_safe_boundary_permutation_causal_gru",
+)
 DEFAULT_DEVICES = ("cuda:0", "cuda:2", "cuda:3", "cuda:5")
 REQUIRED_METRICS = {
     "W-MPJPE_mm",
