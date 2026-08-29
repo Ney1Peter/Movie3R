@@ -1,0 +1,165 @@
+{
+  "schema_version": "Bridge3R-human-latent-head-audit-v1",
+  "checkpoint": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+  "checkpoint_sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+  "manifest": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/private_audit/egohumans_formal90_manifest.jsonl",
+  "manifest_sha256": "682f0b4c5eda66a602a7462a60b3842a5b28d9dc331b62eb74668a07858e056f",
+  "capture": "002_fencing",
+  "device": "cuda:1",
+  "model_flags_before_mask": {
+    "enable_v8_pose_prompt": true,
+    "enable_v8_human_latent_corr": true,
+    "enable_v8_human_trans_corr": false,
+    "enable_v8_head_lora": true,
+    "v9_oracle_correction_gate_enabled": true,
+    "v9_oracle_correction_cache_enabled": false,
+    "v14_1_event_only_head_lora": true
+  },
+  "case_count": 3,
+  "all_internal_token_deltas_nonzero": true,
+  "all_reported_residuals_match_injected_tokens": true,
+  "all_formal_caches_byte_identical": true,
+  "cases": [
+    {
+      "schema_version": "Bridge3R-human-latent-head-audit-v1",
+      "case_id": "ego_test_fencing_002_fencing_small_cam03_cam13_b00301",
+      "capture": "002_fencing",
+      "angle_stratum": "small",
+      "angle_deg": 26.478785574919005,
+      "causal_prefix_frames": 51,
+      "boundary_index": 50,
+      "future_post_frames_read": 0,
+      "gt_or_calibration_read": false,
+      "head_on_seconds": 13.107437195256352,
+      "head_off_seconds": 13.287090245634317,
+      "human_count": 3,
+      "reported_delta_l2": 1.6597353452154082,
+      "observed_token_delta_l2": 1.6597353359384135,
+      "reported_vs_observed_max_abs": 4.10713255405426e-07,
+      "decoded_output_max_abs_on_vs_off": {
+        "smpl_transl": 0.6967496871948242,
+        "smpl_rotmat": 0.027169793844223022,
+        "smpl_shape": 0.11719191074371338,
+        "smpl_expression": 0.03191608190536499,
+        "camera_pose": 0.0
+      },
+      "event_route_append": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "event_route_gate": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "formal_cache": {
+        "full": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_full_replay/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.npz",
+        "head_off": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_human_residual_off/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.npz",
+        "full_sha256": "fb100e0d85c1d56b69cf3b09e40276aea469d70c6224cb6369a59c3bac4b715d",
+        "head_off_sha256": "fb100e0d85c1d56b69cf3b09e40276aea469d70c6224cb6369a59c3bac4b715d",
+        "byte_identical": true
+      },
+      "npz": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/human_residual_audit/tensor_probe/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.tensor_probe.npz",
+      "npz_sha256": "7b2b81531c842e51138e1e3bd2ecaa589fe8cd6d86ab80dafa4af28190f0206a"
+    },
+    {
+      "schema_version": "Bridge3R-human-latent-head-audit-v1",
+      "case_id": "ego_test_fencing_002_fencing_medium_cam01_cam08_b00301",
+      "capture": "002_fencing",
+      "angle_stratum": "medium",
+      "angle_deg": 80.24555273385398,
+      "causal_prefix_frames": 51,
+      "boundary_index": 50,
+      "future_post_frames_read": 0,
+      "gt_or_calibration_read": false,
+      "head_on_seconds": 12.690731570124626,
+      "head_off_seconds": 13.548639898188412,
+      "human_count": 4,
+      "reported_delta_l2": 0.571012804242365,
+      "observed_token_delta_l2": 0.5710128129653819,
+      "reported_vs_observed_max_abs": 2.3655593395233154e-07,
+      "decoded_output_max_abs_on_vs_off": {
+        "smpl_transl": 0.28679585456848145,
+        "smpl_rotmat": 0.020161462016403675,
+        "smpl_shape": 0.04505276679992676,
+        "smpl_expression": 0.015474796295166016,
+        "camera_pose": 0.0
+      },
+      "event_route_append": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "event_route_gate": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "formal_cache": {
+        "full": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_full_replay/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_medium_cam01_cam08_b00301.npz",
+        "head_off": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_human_residual_off/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_medium_cam01_cam08_b00301.npz",
+        "full_sha256": "51a600182921515c0f0e633d7594066b3fec6665c698595f976f6dd46a7468a0",
+        "head_off_sha256": "51a600182921515c0f0e633d7594066b3fec6665c698595f976f6dd46a7468a0",
+        "byte_identical": true
+      },
+      "npz": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/human_residual_audit/tensor_probe/ego_test_fencing_002_fencing_medium_cam01_cam08_b00301.tensor_probe.npz",
+      "npz_sha256": "bc6b768dc78d9702795def5ec1dd16a5b69e6efe8d7aa16025b48251b2a415cd"
+    },
+    {
+      "schema_version": "Bridge3R-human-latent-head-audit-v1",
+      "case_id": "ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301",
+      "capture": "002_fencing",
+      "angle_stratum": "extreme",
+      "angle_deg": 179.63049026315505,
+      "causal_prefix_frames": 51,
+      "boundary_index": 50,
+      "future_post_frames_read": 0,
+      "gt_or_calibration_read": false,
+      "head_on_seconds": 13.489836227148771,
+      "head_off_seconds": 13.207886246964335,
+      "human_count": 3,
+      "reported_delta_l2": 1.413017294351957,
+      "observed_token_delta_l2": 1.413017302648507,
+      "reported_vs_observed_max_abs": 1.1734664440155029e-07,
+      "decoded_output_max_abs_on_vs_off": {
+        "smpl_transl": 0.38031864166259766,
+        "smpl_rotmat": 0.02542765438556671,
+        "smpl_shape": 0.15683960914611816,
+        "smpl_expression": 0.06585025787353516,
+        "camera_pose": 0.0
+      },
+      "event_route_append": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "event_route_gate": [
+        [
+          [
+            1.0
+          ]
+        ]
+      ],
+      "formal_cache": {
+        "full": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_full_replay/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301.npz",
+        "head_off": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_human_residual_off/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301.npz",
+        "full_sha256": "9851245b216ddc9553471bfa41bbe964754a86bb95d981e2345f29fb0d22bcb0",
+        "head_off_sha256": "9851245b216ddc9553471bfa41bbe964754a86bb95d981e2345f29fb0d22bcb0",
+        "byte_identical": true
+      },
+      "npz": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/human_residual_audit/tensor_probe/ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301.tensor_probe.npz",
+      "npz_sha256": "af69604ede4dd57239d1ace88e8a76ee465af76addb9db2209a133121aa56430"
+    }
+  ]
+}

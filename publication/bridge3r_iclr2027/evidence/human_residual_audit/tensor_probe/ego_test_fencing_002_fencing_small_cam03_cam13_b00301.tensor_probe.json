@@ -1,0 +1,47 @@
+{
+  "schema_version": "Bridge3R-human-latent-head-audit-v1",
+  "case_id": "ego_test_fencing_002_fencing_small_cam03_cam13_b00301",
+  "capture": "002_fencing",
+  "angle_stratum": "small",
+  "angle_deg": 26.478785574919005,
+  "causal_prefix_frames": 51,
+  "boundary_index": 50,
+  "future_post_frames_read": 0,
+  "gt_or_calibration_read": false,
+  "head_on_seconds": 13.107437195256352,
+  "head_off_seconds": 13.287090245634317,
+  "human_count": 3,
+  "reported_delta_l2": 1.6597353452154082,
+  "observed_token_delta_l2": 1.6597353359384135,
+  "reported_vs_observed_max_abs": 4.10713255405426e-07,
+  "decoded_output_max_abs_on_vs_off": {
+    "smpl_transl": 0.6967496871948242,
+    "smpl_rotmat": 0.027169793844223022,
+    "smpl_shape": 0.11719191074371338,
+    "smpl_expression": 0.03191608190536499,
+    "camera_pose": 0.0
+  },
+  "event_route_append": [
+    [
+      [
+        1.0
+      ]
+    ]
+  ],
+  "event_route_gate": [
+    [
+      [
+        1.0
+      ]
+    ]
+  ],
+  "formal_cache": {
+    "full": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_full_replay/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.npz",
+    "head_off": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_egohumans_ablation_v1/formal90_human_residual_off/test/predictions/fencing__002_fencing-002/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.npz",
+    "full_sha256": "fb100e0d85c1d56b69cf3b09e40276aea469d70c6224cb6369a59c3bac4b715d",
+    "head_off_sha256": "fb100e0d85c1d56b69cf3b09e40276aea469d70c6224cb6369a59c3bac4b715d",
+    "byte_identical": true
+  },
+  "npz": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/human_residual_audit/tensor_probe/ego_test_fencing_002_fencing_small_cam03_cam13_b00301.tensor_probe.npz",
+  "npz_sha256": "7b2b81531c842e51138e1e3bd2ecaa589fe8cd6d86ab80dafa4af28190f0206a"
+}

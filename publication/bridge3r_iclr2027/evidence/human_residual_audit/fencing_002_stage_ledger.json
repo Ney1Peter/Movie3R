@@ -1,0 +1,16 @@
+{
+  "schema_version": "Movie3R-v19-EgoHumans-stage-ledger-v1",
+  "status": "staged_and_audited",
+  "entry": "fencing/002_fencing-002.tar.gz",
+  "outer": "/data/wangzheng/iJCV-CODE/data/EgoHuman.zip",
+  "archive": "/data/wangzheng/iJCV-CODE/data/EgoHuman_human_residual_audit_v1/archives/fencing__002_fencing-002.tar.gz",
+  "stage_root": "/data/wangzheng/iJCV-CODE/data/EgoHuman_human_residual_audit_v1/staging/fencing__002_fencing-002",
+  "capture_root": "/data/wangzheng/iJCV-CODE/data/EgoHuman_human_residual_audit_v1/staging/fencing__002_fencing-002/002_fencing",
+  "capture_relative": "002_fencing",
+  "audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/human_residual_audit/fencing_002_capture_audit.json",
+  "disk_free_before_bytes": 496995835904,
+  "reserve_gib": 80.0,
+  "outer_crc32": "e1788395",
+  "inner_tar_size_bytes": 3473463942,
+  "inner_tar_sha256": "956b73ef10a55a65b8dd561b6bd6d34fc99438f145a34c7ab8dadca2eed7a821"
+}
