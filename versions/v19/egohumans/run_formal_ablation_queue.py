@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Keep the sealed EgoHumans component-ablation queue running on at most 3 GPUs.
+"""Keep the sealed EgoHumans component-ablation queue running on bounded GPU groups.
 
 Each route has an independent, disk-bounded staging root and output root.  The
-queue deliberately runs one reconstruction process per assigned GPU: the pilot
-showed that a second reconstruction process does not increase throughput on an
-L20 even when memory remains available.  All routes receive the same immutable
-formal case manifest; a route failure is recorded but never silently retried
-with a different case set or checkpoint.
+queue can assign one GPU per route (legacy comma-separated syntax) or a group
+of GPUs per route (semicolon-separated groups).  The latter lets the protocol
+runner execute the independent angle-stratum cases of one capture in parallel.
+All routes receive the same immutable formal case manifest; a route failure is
+recorded but never silently retried with a different case set or checkpoint.
 """
 
 from __future__ import annotations
@@ -15,13 +15,13 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+INFERENCE_PYTHON = REPO_ROOT / ".venv/bin/python"
 RUNNER = REPO_ROOT / "versions/v19/egohumans/run_protocol.py"
 FORMAL_MANIFEST = (
     REPO_ROOT.parents[0]
@@ -56,7 +56,15 @@ ROUTES: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--devices", default="cuda:1,cuda:5,cuda:6")
+    parser.add_argument(
+        "--devices",
+        default="cuda:1,cuda:5,cuda:6",
+        help=(
+            "Legacy: comma-separated one-GPU route slots. Multi-GPU routes: "
+            "semicolon-separated groups, e.g. "
+            "'cuda:0,cuda:1,cuda:2;cuda:3,cuda:4'."
+        ),
+    )
     parser.add_argument("--poll-seconds", type=float, default=15.0)
     parser.add_argument("--reserve-gib", type=float, default=120.0)
     parser.add_argument(
@@ -111,7 +119,7 @@ def route_complete(name: str) -> bool:
 
 def command_for(name: str, extra: tuple[str, ...], device: str, reserve_gib: float) -> list[str]:
     return [
-        sys.executable,
+        str(INFERENCE_PYTHON),
         str(RUNNER),
         "--split",
         "test",
@@ -148,7 +156,7 @@ def replay_command(reserve_gib: float) -> list[str]:
     """
 
     return [
-        sys.executable,
+        str(INFERENCE_PYTHON),
         str(RUNNER),
         "--split",
         "test",
@@ -175,10 +183,19 @@ def replay_command(reserve_gib: float) -> list[str]:
 
 def main() -> None:
     args = parse_args()
-    devices = [value.strip() for value in args.devices.split(",") if value.strip()]
-    if not 1 <= len(devices) <= 3 or len(set(devices)) != len(devices):
-        raise ValueError("--devices must name one to three distinct GPUs")
-    required_paths = [RUNNER, FORMAL_MANIFEST, OUTER, OUTER_INDEX, CANDIDATE]
+    if ";" in args.devices:
+        device_groups = [value.strip() for value in args.devices.split(";") if value.strip()]
+    else:
+        device_groups = [value.strip() for value in args.devices.split(",") if value.strip()]
+    physical_devices = [
+        device.strip()
+        for group in device_groups
+        for device in group.split(",")
+        if device.strip()
+    ]
+    if not 1 <= len(physical_devices) <= 5 or len(set(physical_devices)) != len(physical_devices):
+        raise ValueError("--devices must name one to five distinct GPUs")
+    required_paths = [INFERENCE_PYTHON, RUNNER, FORMAL_MANIFEST, OUTER, OUTER_INDEX, CANDIDATE]
     if not args.skip_full_replay:
         required_paths.append(SEALED_FULL_PREDICTIONS)
     for path in required_paths:
@@ -189,7 +206,8 @@ def main() -> None:
         "schema_version": "Bridge3R-EgoHumans-formal90-ablation-queue-v1",
         "protocol": "Bridge3R-EgoHumans-formal90-v1",
         "formal_manifest": str(FORMAL_MANIFEST),
-        "devices": devices,
+        "device_groups": device_groups,
+        "physical_devices": physical_devices,
         "routes": {},
         "started_at": time.time(),
         "status": "waiting_for_prerequisite" if args.wait_pid is not None else "running",
@@ -217,8 +235,8 @@ def main() -> None:
         atomic_json(args.state, state)
 
     while pending or active:
-        while pending and len(active) < len(devices):
-            device = next(value for value in devices if value not in active)
+        while pending and len(active) < len(device_groups):
+            device = next(value for value in device_groups if value not in active)
             name, extra = pending.pop(0)
             command = command_for(name, extra, device, float(args.reserve_gib))
             log_path = logs / f"{name}.launch.log"
