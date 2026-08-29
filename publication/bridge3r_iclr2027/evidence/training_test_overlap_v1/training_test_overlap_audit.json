@@ -1,0 +1,248 @@
+{
+  "schema_version": "Bridge3R-correction-training-test-overlap-audit-v1",
+  "checkpoint": {
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+    "bytes": 4930639378,
+    "sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+    "parameter_audit": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/checkpoint_parameter_audit/v14_1_p0_e6.json",
+    "parameter_audit_sha256": "4587568b4f933a64920781d5fe96504d4f63cb178cd89dca8b9e03313433b956"
+  },
+  "training_config": {
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/config/train_v14_1_cut_first_cross_source_multihuman_p0.yaml",
+    "sha256": "67672e48db6692e35927387dd7280bfdbd87052e773e7db28139ac1bf0ae8bbb",
+    "binding": "configuration exp_name/output_dir matches the checkpoint run directory; saved model flags match the retained parameter audit",
+    "caveat": "the pth does not itself embed a cryptographic hash of this YAML"
+  },
+  "training_universe": {
+    "source_count": 5,
+    "capture_count": 16,
+    "candidate_event_count": 576,
+    "unique_frame_identity_count": 1528,
+    "manifests": [
+      {
+        "dataset": "avatarrex",
+        "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v14/cut_first_cross_source/manifests/train96ps/avatarrex.jsonl",
+        "sha256": "436d5c2e4df8572e28b17f9693c12bb2f1beec344b06aa0642a6c7e03e8126b6",
+        "candidate_event_count": 96
+      },
+      {
+        "dataset": "thuman",
+        "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v14/cut_first_cross_source/manifests/train96ps/thuman.jsonl",
+        "sha256": "59873f49b64dda510a62d6cca261a4bea363eacac24805d06a54c471d962caa1",
+        "candidate_event_count": 96
+      },
+      {
+        "dataset": "mvhuman100",
+        "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v14/cut_first_cross_source/manifests/train96ps/mvhuman100.jsonl",
+        "sha256": "b54a3a92750651d038f50fafaba1d31fdcd54d6417d78f32f3e9d3ef1d773a27",
+        "candidate_event_count": 96
+      },
+      {
+        "dataset": "mvhuman200",
+        "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v14/cut_first_cross_source/manifests/train96ps/mvhuman200.jsonl",
+        "sha256": "5f044cb724573a36f1ffb3db3de9fe7f7ae64eaed7c7414e2d8aef59c46a3b29",
+        "candidate_event_count": 96
+      },
+      {
+        "dataset": "multihuman",
+        "path": "/data/wangzheng/iJCV-CODE/Movie3R/config/manifests/v14_multihuman_camera_supervision_20260803.json",
+        "sha256": "3c0f239497a0756c870b1b8dc9643b8022535691f7c209de5e4e9e4483f60de1",
+        "candidate_event_count": 192,
+        "configured_epoch_sample_count": 96,
+        "audit_policy": "all 192 candidate train events treated as potentially observed"
+      }
+    ],
+    "policy": "superset audit: all configured manifest candidates are treated as potentially observed; zero overlap with this superset implies zero overlap with the actual sampled subset"
+  },
+  "identity_definition": {
+    "source": "dataset-qualified dataset/source namespace",
+    "capture": "dataset-qualified subject/sequence/capture namespace",
+    "event": "dataset-qualified pattern/event/case identifier",
+    "frame_or_member": "dataset-qualified source sequence/frame or archive member"
+  },
+  "benchmarks": {
+    "egobody": {
+      "display_name": "EgoBody",
+      "status": "complete_zero_overlap",
+      "event_count": 129,
+      "capture_count": 43,
+      "unique_frame_or_member_count": 15525,
+      "inputs": [
+        {
+          "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/evaluations",
+          "file_count": 129,
+          "aggregate_filename_and_content_sha256": "d45f25769599cecb8f2c68bdc69e3e02916b3ff66287ac28ce20b409a5d46da3"
+        }
+      ],
+      "overlap": {
+        "status": "zero_overlap",
+        "qualified_identity_intersections": {
+          "sources": {
+            "training_count": 5,
+            "benchmark_count": 1,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "captures": {
+            "training_count": 16,
+            "benchmark_count": 43,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "events": {
+            "training_count": 576,
+            "benchmark_count": 129,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "frames": {
+            "training_count": 1528,
+            "benchmark_count": 15525,
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "unqualified_text_sanity_intersections": {
+          "raw_captures": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_events": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_frames": {
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "passed": true
+      }
+    },
+    "egohumans": {
+      "display_name": "EgoHumans",
+      "status": "complete_zero_overlap",
+      "event_count": 90,
+      "capture_count": 27,
+      "unique_frame_or_member_count": 7800,
+      "inputs": [
+        {
+          "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/private_audit/egohumans_formal90_manifest.jsonl",
+          "sha256": "682f0b4c5eda66a602a7462a60b3842a5b28d9dc331b62eb74668a07858e056f",
+          "row_count": 90
+        }
+      ],
+      "overlap": {
+        "status": "zero_overlap",
+        "qualified_identity_intersections": {
+          "sources": {
+            "training_count": 5,
+            "benchmark_count": 1,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "captures": {
+            "training_count": 16,
+            "benchmark_count": 27,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "events": {
+            "training_count": 576,
+            "benchmark_count": 90,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "frames": {
+            "training_count": 1528,
+            "benchmark_count": 7800,
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "unqualified_text_sanity_intersections": {
+          "raw_captures": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_events": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_frames": {
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "passed": true
+      }
+    },
+    "harmony4d": {
+      "display_name": "Harmony4D",
+      "status": "complete_zero_overlap",
+      "event_count": 88,
+      "capture_count": 25,
+      "unique_frame_or_member_count": 11550,
+      "inputs": [
+        {
+          "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/private_audit/harmony4d_cs150_formal_case_ids.txt",
+          "sha256": "e577abd458b18e9310d6a9db57c817f76fa7d27ab6cd8f7781877fd148281bbc",
+          "row_count": 88
+        },
+        {
+          "path": "/data/wangzheng/iJCV-CODE/data/Harmony4D_work_v17_full_test/external_predictions/trace/manifests/harmony4d_test.runtime.jsonl",
+          "sha256": "2a0957ba79179867808ebfffb9f9ff88227e866758432d09014962a50d25fa2f",
+          "selected_row_count": 88,
+          "total_row_count": 100
+        }
+      ],
+      "overlap": {
+        "status": "zero_overlap",
+        "qualified_identity_intersections": {
+          "sources": {
+            "training_count": 5,
+            "benchmark_count": 1,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "captures": {
+            "training_count": 16,
+            "benchmark_count": 25,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "events": {
+            "training_count": 576,
+            "benchmark_count": 88,
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "frames": {
+            "training_count": 1528,
+            "benchmark_count": 11550,
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "unqualified_text_sanity_intersections": {
+          "raw_captures": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_events": {
+            "intersection_count": 0,
+            "intersection": []
+          },
+          "raw_frames": {
+            "intersection_count": 0,
+            "intersection": []
+          }
+        },
+        "passed": true
+      }
+    }
+  },
+  "overall_status": "complete_zero_overlap",
+  "claim": "The audited Bridge3R correction-module fine-tuning sources have zero source-, capture-, event-, and frame/member-level overlap with the EgoBody-129, EgoHumans-90, and Harmony4D-88 evaluation sets.",
+  "scope_boundary": "This audit covers correction-module fine-tuning bound by the retained configuration. It does not reconstruct or certify the inherited Human3R base model's complete pretraining corpus."
+}
