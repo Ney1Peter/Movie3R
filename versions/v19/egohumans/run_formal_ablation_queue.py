@@ -36,6 +36,9 @@ SEALED_FULL_PREDICTIONS = REPO_ROOT / "output/v19_egohumans/test/predictions"
 
 
 ROUTES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # Native disables the learned correction branch while preserving the same
+    # checkpoint, detector stream, formal manifest, and evaluator contract.
+    ("native", ("--ablation-token-mode", "native")),
     ("semantic_only", ("--ablation-token-mode", "semantic_only")),
     ("alignment_only", ("--ablation-token-mode", "alignment_only")),
     ("semantic_alignment", ("--ablation-token-mode", "semantic_alignment")),
@@ -43,6 +46,10 @@ ROUTES: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "camera_residual_off",
         ("--ablation-token-mode", "full", "--ablation-disable-camera-residual-head"),
+    ),
+    (
+        "human_residual_off",
+        ("--ablation-token-mode", "full", "--ablation-disable-human-latent-head"),
     ),
 )
 

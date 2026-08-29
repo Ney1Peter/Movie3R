@@ -1,5 +1,9 @@
 # Bridge3R publication method-to-code map
 
+> Historical integration map. For the paper-facing implementation facts,
+> use `METHOD_TO_CODE_FACT_AUDIT_20260829.md`; this older map retains legacy
+> paths and terminology for reproducibility history.
+
 `PAPER_METHOD_LOCK.json` is the scientific contract.  This map records the
 current implementation pieces and their publication role; it intentionally
 does not pretend that a historical dataset runner is already a single,

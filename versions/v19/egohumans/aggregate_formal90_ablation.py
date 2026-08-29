@@ -38,11 +38,13 @@ SYSTEM_METHODS = (
     "m15_safe_boundary_permutation_causal_gru",
 )
 ROUTES: dict[str, str] = {
+    "native": "No learned correction branch",
     "semantic_only": "Semantic only",
     "alignment_only": "Alignment only",
     "semantic_alignment": "Semantic + alignment",
     "lora_off": "Full token, LoRA off",
     "camera_residual_off": "Full token, camera residual off",
+    "human_residual_off": "Full token, human residual off",
     "full_replay": "Bridge3R (full)",
 }
 CORE_METRICS: tuple[tuple[str, str, str, bool], ...] = (
@@ -222,6 +224,7 @@ def compact_table(summary: dict[str, Any], rows: list[tuple[str, dict[str, Any]]
         r"\begin{table}[t]",
         r"\centering",
         r"\small",
+        r"\resizebox{\linewidth}{!}{%",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
         r"Method & W-MPJPE$\downarrow$ & WA-MPJPE$\downarrow$ & MPJPE$\downarrow$ & Human seam$\downarrow$ & IDF1$\uparrow$ & Coverage$\uparrow$\\",
@@ -231,11 +234,11 @@ def compact_table(summary: dict[str, Any], rows: list[tuple[str, dict[str, Any]]
         lines.append(
             f"{name} & {tex_number(values.get('W-MPJPE_mm'))} & {tex_number(values.get('WA-MPJPE_mm'))} & "
             f"{tex_number(values.get('MPJPE_mm'))} & {tex_number(values.get('Seam_root_m'), 3)} & "
-            f"{tex_number(values.get('IDF1'), 3)} & {tex_number(values.get('Coverage'), 3)}\\"
+            f"{tex_number(values.get('IDF1'), 3)} & {tex_number(values.get('Coverage'), 3)}\\\\"
         )
     lines.extend([
         r"\bottomrule",
-        r"\end{tabular}",
+        r"\end{tabular}}",
         rf"\caption{{{caption} Every row uses the immutable 90-case EgoHumans protocol; geometric metrics retain their finite support in the accompanying ledger.}}",
         rf"\label{{{label}}}",
         r"\end{table}",
@@ -280,11 +283,13 @@ def main() -> None:
         "Coarse gauge": routes["full_replay"]["m3_b0_only"],
         "Coarse + association": routes["full_replay"]["m4_b0_identity"],
         "Causal transaction": routes["full_replay"]["m15_safe_boundary_permutation_causal_gru"],
+        "No learned correction branch": routes["native"][CANDIDATE],
         "Semantic only": routes["semantic_only"][CANDIDATE],
         "Alignment only": routes["alignment_only"][CANDIDATE],
         "Semantic + alignment": routes["semantic_alignment"][CANDIDATE],
         "Full token, LoRA off": routes["lora_off"][CANDIDATE],
         "Full token, camera residual off": routes["camera_residual_off"][CANDIDATE],
+        "Full token, human residual off": routes["human_residual_off"][CANDIDATE],
         "Bridge3R (full)": routes["full_replay"][CANDIDATE],
     }
     summaries = {name: metric_summary(rows) for name, rows in named_rows.items()}
@@ -349,6 +354,7 @@ def main() -> None:
                 })
     token_rows = [
         ("Strict Human3R", summaries["Strict Human3R"]),
+        ("No learned correction branch", summaries["No learned correction branch"]),
         ("Semantic only", summaries["Semantic only"]),
         ("Alignment only", summaries["Alignment only"]),
         ("Semantic + alignment", summaries["Semantic + alignment"]),
@@ -363,20 +369,21 @@ def main() -> None:
         ("Clean reset", summaries["Clean reset"]),
         ("Coarse gauge", summaries["Coarse gauge"]),
         ("Coarse + association", summaries["Coarse + association"]),
-        ("Causal transaction", summaries["Causal transaction"]),
+        ("Causal boundary operation", summaries["Causal transaction"]),
         (r"\textbf{Bridge3R (full)}", summaries["Bridge3R (full)"]),
     ]
     (args.output / "formal90_system_ablation.tex").write_text(
-        compact_table(result, system_rows, "Causal transaction controls on EgoHumans.", "tab:egohumans-system"),
+        compact_table(result, system_rows, "Causal boundary-operation controls on EgoHumans.", "tab:egohumans-system"),
         encoding="utf-8",
     )
     head_rows = [
         ("Full token, LoRA off", summaries["Full token, LoRA off"]),
         ("Full token, camera residual off", summaries["Full token, camera residual off"]),
+        ("Full token, human residual off", summaries["Full token, human residual off"]),
         (r"\textbf{Bridge3R (full)}", summaries["Bridge3R (full)"]),
     ]
     (args.output / "formal90_head_ablation.tex").write_text(
-        compact_table(result, head_rows, "Frozen-checkpoint component masking on EgoHumans.", "tab:egohumans-head"),
+        compact_table(result, head_rows, "Fixed-checkpoint component masking on EgoHumans.", "tab:egohumans-head"),
         encoding="utf-8",
     )
     lines = [
