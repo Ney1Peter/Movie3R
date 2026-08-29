@@ -1,0 +1,24 @@
+% Mechanically derived from egohumans_fencing002_extreme_l20_gpu4.json.
+% See README.md in this directory for the sealed artifact hashes.
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4.5pt}
+  \caption{Standardized runtime and memory on one NVIDIA L20 at $512$ input
+  resolution, batch size one, and FP32 precision. Values use one warm-up run
+  followed by three timed runs; time and FPS are computed from the median run,
+  while peak VRAM is the maximum \texttt{torch} allocated memory across the
+  three runs. Checkpoint loading and RGB preprocessing are excluded, whereas
+  output decoding and the locked geometry transaction are included. Detector
+  latency is excluded. Single-cut FPS is amortized over 100 output frames.}
+  \label{tab:standardized-runtime-memory}
+  \begin{tabular}{lrrr}
+    \toprule
+    Method & s / 100 frames $\downarrow$ & FPS $\uparrow$ & Peak VRAM (GiB) $\downarrow$ \\
+    \midrule
+    Strict Human3R & 31.020 & 3.224 & 5.292 \\
+    Bridge3R (no cut) & 31.125 & 3.213 & 5.359 \\
+    Bridge3R (single cut) & 32.191 & 3.106 & 5.246 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

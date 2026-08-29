@@ -1,0 +1,483 @@
+{
+  "schema_version": "Bridge3R-standardized-runtime-memory-v1",
+  "protocol": {
+    "input_size": 512,
+    "batch_size": 1,
+    "precision": "FP32",
+    "autocast_enabled": false,
+    "tf32_enabled": false,
+    "clip_frames": 100,
+    "warmup": 1,
+    "repetitions": 3,
+    "aggregation": "median runtime/FPS; maximum peak allocated across timed repetitions",
+    "checkpoint_loading_timed": false,
+    "rgb_decode_resize_timed": false,
+    "model_output_decode_timed": true,
+    "locked_geometry_timed": true,
+    "detector_timed": false,
+    "single_process_on_gpu": true
+  },
+  "case": {
+    "case_id": "ego_test_fencing_002_fencing_extreme_cam10_cam07_b00301",
+    "capture": "002_fencing",
+    "capture_relative": "002_fencing",
+    "angle_stratum": "extreme",
+    "camera_rotation_span_deg_evaluator_only": 179.63049026315505,
+    "pre_camera": "cam10",
+    "post_camera": "cam07",
+    "boundary_index": 50,
+    "pre_frames": 50,
+    "post_frames": 50,
+    "manifest": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/private_audit/egohumans_formal90_manifest.jsonl",
+    "manifest_sha256": "682f0b4c5eda66a602a7462a60b3842a5b28d9dc331b62eb74668a07858e056f",
+    "staged_sequence_root": "/data/wangzheng/iJCV-CODE/data/EgoHuman_human_residual_audit_v1/staging/fencing__002_fencing-002/002_fencing"
+  },
+  "checkpoints": {
+    "strict_human3r": {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth",
+      "bytes": 4670554642,
+      "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377"
+    },
+    "bridge3r": {
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+      "bytes": 4930639378,
+      "sha256": "de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265",
+      "runtime_flags": {
+        "enable_v8_pose_prompt": true,
+        "enable_v8_human_latent_corr": true,
+        "enable_v8_human_trans_corr": false,
+        "enable_v8_head_lora": true,
+        "v9_oracle_correction_gate_enabled": true,
+        "v9_oracle_correction_cache_enabled": false,
+        "v14_1_event_only_head_lora": true
+      }
+    }
+  },
+  "hardware": {
+    "gpu": {
+      "torch_index": 4,
+      "torch_name": "NVIDIA L20",
+      "total_memory_bytes": 47803596800,
+      "compute_capability": "8.9",
+      "nvidia_smi": "4, NVIDIA L20, GPU-0227ecd0-4186-14bc-2c6b-6bf6377fbd7f, 550.127.08, 46068"
+    },
+    "cpu": "x86_64",
+    "platform": "Linux-5.15.0-130-generic-x86_64-with-glibc2.35"
+  },
+  "software": {
+    "python": "3.10.19 (main, Dec  9 2025, 19:03:08) [Clang 21.1.4 ]",
+    "torch": "2.4.0+cu124",
+    "cuda_runtime": "12.4",
+    "cudnn": 90100,
+    "git": {
+      "commit": "69e8e03ac498ab57ec4d204771d953dd56535b7d",
+      "tracked_worktree_dirty": true
+    },
+    "script": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/benchmark_runtime_memory.py",
+    "script_sha256": "36aa5643dd55689de8dfbb364fb0783113a0d4c5e4d939966a3c1de3e5e2a1d0"
+  },
+  "routes": {
+    "strict_human3r": {
+      "warmup_count": 1,
+      "timed_repetitions": [
+        {
+          "forward_seconds": 29.014734954573214,
+          "decode_seconds": 2.123584283515811,
+          "total_seconds": 31.138320529833436,
+          "fps_forward": 3.4465246763950983,
+          "fps_end_to_end": 3.211476993571012,
+          "peak_allocated_bytes": 5682587648,
+          "baseline_allocated_bytes": 4956616192,
+          "incremental_peak_bytes": 725971456,
+          "decoded_person_frames": 249
+        },
+        {
+          "forward_seconds": 29.109225258231163,
+          "decode_seconds": 1.9110479233786464,
+          "total_seconds": 31.020274475216866,
+          "fps_forward": 3.4353370490931625,
+          "fps_end_to_end": 3.2236981036351997,
+          "peak_allocated_bytes": 5682638848,
+          "baseline_allocated_bytes": 4956667392,
+          "incremental_peak_bytes": 725971456,
+          "decoded_person_frames": 249
+        },
+        {
+          "forward_seconds": 29.406822068616748,
+          "decode_seconds": 1.4090082421898842,
+          "total_seconds": 30.815831589512527,
+          "fps_forward": 3.4005714649023906,
+          "fps_end_to_end": 3.2450852319050427,
+          "peak_allocated_bytes": 5682690048,
+          "baseline_allocated_bytes": 4956718592,
+          "incremental_peak_bytes": 725971456,
+          "decoded_person_frames": 249
+        }
+      ],
+      "aggregate": {
+        "forward_seconds": {
+          "median": 29.109225258231163,
+          "mean": 29.176927427140374,
+          "stdev": 0.20462346885439453,
+          "min": 29.014734954573214,
+          "max": 29.406822068616748
+        },
+        "decode_seconds": {
+          "median": 1.9110479233786464,
+          "mean": 1.814546816361447,
+          "stdev": 0.3669319793243931,
+          "min": 1.4090082421898842,
+          "max": 2.123584283515811
+        },
+        "total_seconds": {
+          "median": 31.020274475216866,
+          "mean": 30.991475531520944,
+          "stdev": 0.16316192425264664,
+          "min": 30.815831589512527,
+          "max": 31.138320529833436
+        },
+        "fps_forward": {
+          "median": 3.4353370490931625,
+          "mean": 3.4274777301302173,
+          "stdev": 0.02396353651997896,
+          "min": 3.4005714649023906,
+          "max": 3.4465246763950983
+        },
+        "fps_end_to_end": {
+          "median": 3.2236981036351997,
+          "mean": 3.226753443037085,
+          "stdev": 0.01701116530766744,
+          "min": 3.211476993571012,
+          "max": 3.2450852319050427
+        },
+        "peak_allocated_bytes": {
+          "median": 5682638848.0,
+          "mean": 5682638848.0,
+          "stdev": 51200.0,
+          "min": 5682587648.0,
+          "max": 5682690048.0
+        },
+        "baseline_allocated_bytes": {
+          "median": 4956667392.0,
+          "mean": 4956667392.0,
+          "stdev": 51200.0,
+          "min": 4956616192.0,
+          "max": 4956718592.0
+        },
+        "incremental_peak_bytes": {
+          "median": 725971456.0,
+          "mean": 725971456.0,
+          "stdev": 0.0,
+          "min": 725971456.0,
+          "max": 725971456.0
+        },
+        "decoded_person_frames": {
+          "median": 249.0,
+          "mean": 249.0,
+          "stdev": 0.0,
+          "min": 249.0,
+          "max": 249.0
+        }
+      }
+    },
+    "bridge3r_no_cut": {
+      "warmup_count": 1,
+      "timed_repetitions": [
+        {
+          "forward_seconds": 29.617239935323596,
+          "decode_seconds": 1.507796156220138,
+          "total_seconds": 31.12503725476563,
+          "fps_forward": 3.3764118539868733,
+          "fps_end_to_end": 3.2128475600358923,
+          "peak_allocated_bytes": 5750126592,
+          "baseline_allocated_bytes": 5028090368,
+          "incremental_peak_bytes": 722036224,
+          "decoded_person_frames": 249
+        },
+        {
+          "forward_seconds": 29.59549685101956,
+          "decode_seconds": 1.3867405038326979,
+          "total_seconds": 30.982238334603608,
+          "fps_forward": 3.378892420809452,
+          "fps_end_to_end": 3.2276557594068813,
+          "peak_allocated_bytes": 5750126592,
+          "baseline_allocated_bytes": 5028095488,
+          "incremental_peak_bytes": 722031104,
+          "decoded_person_frames": 249
+        },
+        {
+          "forward_seconds": 29.660448979586363,
+          "decode_seconds": 1.8769255531951785,
+          "total_seconds": 31.53737587761134,
+          "fps_forward": 3.3714931310994123,
+          "fps_end_to_end": 3.1708408584174843,
+          "peak_allocated_bytes": 5753952256,
+          "baseline_allocated_bytes": 5028095488,
+          "incremental_peak_bytes": 725856768,
+          "decoded_person_frames": 249
+        }
+      ],
+      "aggregate": {
+        "forward_seconds": {
+          "median": 29.617239935323596,
+          "mean": 29.62439525530984,
+          "stdev": 0.03306196764287838,
+          "min": 29.59549685101956,
+          "max": 29.660448979586363
+        },
+        "decode_seconds": {
+          "median": 1.507796156220138,
+          "mean": 1.590487404416005,
+          "stdev": 0.2553404150360205,
+          "min": 1.3867405038326979,
+          "max": 1.8769255531951785
+        },
+        "total_seconds": {
+          "median": 31.12503725476563,
+          "mean": 31.214883822326858,
+          "stdev": 0.2882684984369019,
+          "min": 30.982238334603608,
+          "max": 31.53737587761134
+        },
+        "fps_forward": {
+          "median": 3.3764118539868733,
+          "mean": 3.3755991352985792,
+          "stdev": 0.0037659999738452366,
+          "min": 3.3714931310994123,
+          "max": 3.378892420809452
+        },
+        "fps_end_to_end": {
+          "median": 3.2128475600358923,
+          "mean": 3.203781392620086,
+          "stdev": 0.0294725259744956,
+          "min": 3.1708408584174843,
+          "max": 3.2276557594068813
+        },
+        "peak_allocated_bytes": {
+          "median": 5750126592.0,
+          "mean": 5751401813.333333,
+          "stdev": 2208748.1402290603,
+          "min": 5750126592.0,
+          "max": 5753952256.0
+        },
+        "baseline_allocated_bytes": {
+          "median": 5028095488.0,
+          "mean": 5028093781.333333,
+          "stdev": 2956.033378250884,
+          "min": 5028090368.0,
+          "max": 5028095488.0
+        },
+        "incremental_peak_bytes": {
+          "median": 722036224.0,
+          "mean": 723308032.0,
+          "stdev": 2207271.608088139,
+          "min": 722031104.0,
+          "max": 725856768.0
+        },
+        "decoded_person_frames": {
+          "median": 249.0,
+          "mean": 249.0,
+          "stdev": 0.0,
+          "min": 249.0,
+          "max": 249.0
+        }
+      }
+    },
+    "bridge3r_single_cut_transaction": {
+      "warmup_count": 1,
+      "timed_repetitions": [
+        {
+          "shadow_forward_seconds": 15.11091433186084,
+          "shadow_decode_seconds": 0.6728899078443646,
+          "clean_post_forward_seconds": 14.856671043671668,
+          "clean_post_decode_seconds": 0.7370450617745519,
+          "neural_forward_seconds": 29.967585375532508,
+          "decode_seconds": 1.4099349696189165,
+          "geometry_seconds": 0.6571534117683768,
+          "total_seconds": 32.039675070904195,
+          "neural_frame_evaluations": 101,
+          "output_frames": 100,
+          "fps_neural_frame_evaluations": 3.3703082425340476,
+          "amortized_output_fps": 3.121130279214716,
+          "peak_allocated_bytes": 5632883712,
+          "baseline_allocated_bytes": 5028095488,
+          "incremental_peak_bytes": 604788224,
+          "boundary_pair_count": 2,
+          "valid_person_frames": 249
+        },
+        {
+          "shadow_forward_seconds": 15.181564192287624,
+          "shadow_decode_seconds": 0.6394370933994651,
+          "clean_post_forward_seconds": 14.742579158395529,
+          "clean_post_decode_seconds": 0.9761106269434094,
+          "neural_forward_seconds": 29.924143350683153,
+          "decode_seconds": 1.6155477203428745,
+          "geometry_seconds": 0.6456531528383493,
+          "total_seconds": 32.19059838168323,
+          "neural_frame_evaluations": 101,
+          "output_frames": 100,
+          "fps_neural_frame_evaluations": 3.375201048075925,
+          "amortized_output_fps": 3.1064970838473442,
+          "peak_allocated_bytes": 5632883712,
+          "baseline_allocated_bytes": 5028095488,
+          "incremental_peak_bytes": 604788224,
+          "boundary_pair_count": 2,
+          "valid_person_frames": 249
+        },
+        {
+          "shadow_forward_seconds": 15.17105794698,
+          "shadow_decode_seconds": 0.6572975628077984,
+          "clean_post_forward_seconds": 14.881626236252487,
+          "clean_post_decode_seconds": 0.7723447028547525,
+          "neural_forward_seconds": 30.052684183232486,
+          "decode_seconds": 1.429642265662551,
+          "geometry_seconds": 0.711112323217094,
+          "total_seconds": 32.1978133963421,
+          "neural_frame_evaluations": 101,
+          "output_frames": 100,
+          "fps_neural_frame_evaluations": 3.360764695233169,
+          "amortized_output_fps": 3.1058009675700746,
+          "peak_allocated_bytes": 5632883712,
+          "baseline_allocated_bytes": 5028095488,
+          "incremental_peak_bytes": 604788224,
+          "boundary_pair_count": 2,
+          "valid_person_frames": 249
+        }
+      ],
+      "aggregate": {
+        "shadow_forward_seconds": {
+          "median": 15.17105794698,
+          "mean": 15.154512157042822,
+          "stdev": 0.03812050718530542,
+          "min": 15.11091433186084,
+          "max": 15.181564192287624
+        },
+        "shadow_decode_seconds": {
+          "median": 0.6572975628077984,
+          "mean": 0.6565415213505427,
+          "stdev": 0.016739217352822595,
+          "min": 0.6394370933994651,
+          "max": 0.6728899078443646
+        },
+        "clean_post_forward_seconds": {
+          "median": 14.856671043671668,
+          "mean": 14.826958812773228,
+          "stdev": 0.0741325499619525,
+          "min": 14.742579158395529,
+          "max": 14.881626236252487
+        },
+        "clean_post_decode_seconds": {
+          "median": 0.7723447028547525,
+          "mean": 0.828500130524238,
+          "stdev": 0.1290471237762912,
+          "min": 0.7370450617745519,
+          "max": 0.9761106269434094
+        },
+        "neural_forward_seconds": {
+          "median": 29.967585375532508,
+          "mean": 29.981470969816048,
+          "stdev": 0.06538573012954955,
+          "min": 29.924143350683153,
+          "max": 30.052684183232486
+        },
+        "decode_seconds": {
+          "median": 1.429642265662551,
+          "mean": 1.4850416518747807,
+          "stdev": 0.11345029664829866,
+          "min": 1.4099349696189165,
+          "max": 1.6155477203428745
+        },
+        "geometry_seconds": {
+          "median": 0.6571534117683768,
+          "mean": 0.6713062959412733,
+          "stdev": 0.03494930391977711,
+          "min": 0.6456531528383493,
+          "max": 0.711112323217094
+        },
+        "total_seconds": {
+          "median": 32.19059838168323,
+          "mean": 32.142695616309844,
+          "stdev": 0.0892913136362632,
+          "min": 32.039675070904195,
+          "max": 32.1978133963421
+        },
+        "neural_frame_evaluations": {
+          "median": 101.0,
+          "mean": 101.0,
+          "stdev": 0.0,
+          "min": 101.0,
+          "max": 101.0
+        },
+        "output_frames": {
+          "median": 100.0,
+          "mean": 100.0,
+          "stdev": 0.0,
+          "min": 100.0,
+          "max": 100.0
+        },
+        "fps_neural_frame_evaluations": {
+          "median": 3.3703082425340476,
+          "mean": 3.3687579952810474,
+          "stdev": 0.00734196981464889,
+          "min": 3.360764695233169,
+          "max": 3.375201048075925
+        },
+        "amortized_output_fps": {
+          "median": 3.1064970838473442,
+          "mean": 3.1111427768773785,
+          "stdev": 0.008656430943039781,
+          "min": 3.1058009675700746,
+          "max": 3.121130279214716
+        },
+        "peak_allocated_bytes": {
+          "median": 5632883712.0,
+          "mean": 5632883712.0,
+          "stdev": 0.0,
+          "min": 5632883712.0,
+          "max": 5632883712.0
+        },
+        "baseline_allocated_bytes": {
+          "median": 5028095488.0,
+          "mean": 5028095488.0,
+          "stdev": 0.0,
+          "min": 5028095488.0,
+          "max": 5028095488.0
+        },
+        "incremental_peak_bytes": {
+          "median": 604788224.0,
+          "mean": 604788224.0,
+          "stdev": 0.0,
+          "min": 604788224.0,
+          "max": 604788224.0
+        },
+        "boundary_pair_count": {
+          "median": 2.0,
+          "mean": 2.0,
+          "stdev": 0.0,
+          "min": 2.0,
+          "max": 2.0
+        },
+        "valid_person_frames": {
+          "median": 249.0,
+          "mean": 249.0,
+          "stdev": 0.0,
+          "min": 249.0,
+          "max": 249.0
+        }
+      }
+    }
+  },
+  "summary": {
+    "strict_human3r_seconds": 31.020274475216866,
+    "strict_human3r_fps": 3.2236981036351997,
+    "bridge3r_no_cut_seconds": 31.12503725476563,
+    "bridge3r_no_cut_fps": 3.2128475600358923,
+    "bridge3r_single_cut_seconds": 32.19059838168323,
+    "single_cut_amortized_fps": 3.1064970838473442,
+    "cut_extra_seconds": 1.0655611269176006,
+    "cut_overhead_percent": 3.423485466686309,
+    "strict_peak_allocated_bytes": 5682690048.0,
+    "bridge3r_no_cut_peak_allocated_bytes": 5753952256.0,
+    "bridge3r_single_cut_peak_allocated_bytes": 5632883712.0
+  }
+}

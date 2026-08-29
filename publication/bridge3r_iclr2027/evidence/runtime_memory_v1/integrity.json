@@ -1,0 +1,102 @@
+{
+  "schema_version": "Bridge3R-standardized-runtime-memory-integrity-v1",
+  "source_report": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/runtime_memory_v1/egohumans_fencing002_extreme_l20_gpu4.json",
+  "source_report_sha256": "f8a4322f3aa2673bf82894045f2873bd1ab05a85a4260b8b49670a54f5b5d736",
+  "source_markdown": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/evidence/runtime_memory_v1/egohumans_fencing002_extreme_l20_gpu4.md",
+  "source_markdown_sha256": "84407432cccdc971341a750c4c166d1d520486adb5b703d2e1150274b476b732",
+  "checks": {
+    "schema": true,
+    "input_512": true,
+    "batch_size_one": true,
+    "fp32": true,
+    "autocast_off": true,
+    "tf32_off": true,
+    "one_or_more_warmups": true,
+    "three_or_more_repetitions": true,
+    "clip_100": true,
+    "single_process_declared": true,
+    "boundary_50": true,
+    "case_frame_count": true,
+    "manifest_hash_matches": true,
+    "gpu_index_four": true,
+    "gpu_is_l20": true,
+    "benchmark_script_hash_matches": true,
+    "checkpoint_hash_matches__strict_human3r": true,
+    "checkpoint_hash_matches__bridge3r": true,
+    "route_set_exact": true,
+    "strict_human3r__repetition_count_matches": true,
+    "strict_human3r__all_runtime_finite_positive": true,
+    "strict_human3r__all_peak_finite_positive": true,
+    "strict_human3r__runtime_cv_within_threshold": true,
+    "bridge3r_no_cut__repetition_count_matches": true,
+    "bridge3r_no_cut__all_runtime_finite_positive": true,
+    "bridge3r_no_cut__all_peak_finite_positive": true,
+    "bridge3r_no_cut__runtime_cv_within_threshold": true,
+    "bridge3r_single_cut_transaction__repetition_count_matches": true,
+    "bridge3r_single_cut_transaction__all_runtime_finite_positive": true,
+    "bridge3r_single_cut_transaction__all_peak_finite_positive": true,
+    "bridge3r_single_cut_transaction__runtime_cv_within_threshold": true
+  },
+  "all_checks_pass": true,
+  "stability_threshold_cv_percent": 2.0,
+  "stability": {
+    "strict_human3r": {
+      "total_seconds": [
+        31.138320529833436,
+        31.020274475216866,
+        30.815831589512527
+      ],
+      "mean_seconds": 30.991475531520944,
+      "stdev_seconds": 0.16316192425264664,
+      "cv_percent": 0.5264735591136899,
+      "range_seconds": 0.322488940320909,
+      "peak_allocated_bytes": [
+        5682587648,
+        5682638848,
+        5682690048
+      ],
+      "peak_range_bytes": 102400
+    },
+    "bridge3r_no_cut": {
+      "total_seconds": [
+        31.12503725476563,
+        30.982238334603608,
+        31.53737587761134
+      ],
+      "mean_seconds": 31.214883822326858,
+      "stdev_seconds": 0.2882684984369019,
+      "cv_percent": 0.9234969448475538,
+      "range_seconds": 0.5551375430077314,
+      "peak_allocated_bytes": [
+        5750126592,
+        5750126592,
+        5753952256
+      ],
+      "peak_range_bytes": 3825664
+    },
+    "bridge3r_single_cut_transaction": {
+      "total_seconds": [
+        32.039675070904195,
+        32.19059838168323,
+        32.1978133963421
+      ],
+      "mean_seconds": 32.142695616309844,
+      "stdev_seconds": 0.0892913136362632,
+      "cv_percent": 0.27779659398247547,
+      "range_seconds": 0.1581383254379034,
+      "peak_allocated_bytes": [
+        5632883712,
+        5632883712,
+        5632883712
+      ],
+      "peak_range_bytes": 0
+    }
+  },
+  "derived_comparison": {
+    "no_cut_extra_vs_strict_seconds": 0.10476277954876423,
+    "no_cut_overhead_vs_strict_percent": 0.33772357376290374,
+    "cut_extra_vs_no_cut_seconds": 1.0655611269176006,
+    "cut_overhead_vs_no_cut_percent": 3.423485466686309
+  },
+  "interpretation": "All timings are stable under the preregistered one-warmup/three-repeat single-GPU protocol. This audit verifies file bindings and report self-consistency; process exclusivity was enforced and observed by the launcher but is not independently reconstructable from this JSON."
+}
