@@ -28,7 +28,7 @@ WORKSPACE = SCRIPT.parents[3]
 DEFAULT_OUTPUT = (
     WORKSPACE
     / "ICLR-paper/bridge3r_iclr2027/versions/"
-    "v025_20260830_requirement_consolidation/manuscript/artifacts/"
+    "v030_20260901_fact_audit_and_evidence_revision/manuscript/artifacts/"
     "cross_dataset_viewpoint"
 )
 
@@ -114,6 +114,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--bootstrap-draws", type=int, default=20000)
     parser.add_argument("--seed", type=int, default=20260830)
+    parser.add_argument(
+        "--skip-figure",
+        action="store_true",
+        help="Regenerate numerical artifacts without requiring matplotlib.",
+    )
     return parser.parse_args()
 
 
@@ -236,6 +241,86 @@ def bootstrap_extreme(
     }
 
 
+def bootstrap_viewpoint_interaction(
+    pairs: list[tuple[dict[str, str], dict[str, str]]],
+    spec: DatasetSpec,
+    metric: str,
+    draws: int,
+    seed: int,
+) -> tuple[dict[str, Any], np.ndarray]:
+    """Cluster-bootstrap the extreme-minus-non-extreme method gain.
+
+    One draw resamples recording/capture identifiers jointly, so any
+    within-capture dependence between viewpoint strata is retained.  All
+    finite paired cases belonging to a sampled cluster are then included.
+    Positive values mean that BRIDGE3R's improvement over Strict Human3R is
+    larger in the pre-specified extreme stratum.
+    """
+
+    by_cluster: dict[str, dict[str, list[float]]] = defaultdict(
+        lambda: {"extreme": [], "non_extreme": []}
+    )
+    observed: dict[str, list[float]] = {"extreme": [], "non_extreme": []}
+    for strict, bridge in pairs:
+        a, b = number(strict, metric), number(bridge, metric)
+        if not (math.isfinite(a) and math.isfinite(b)):
+            continue
+        cluster = strict.get(spec.cluster_column)
+        if cluster != bridge.get(spec.cluster_column) or not cluster:
+            raise ValueError(f"invalid {spec.display} interaction cluster")
+        if strict.get(spec.angle_column) != bridge.get(spec.angle_column):
+            raise ValueError(f"invalid {spec.display} paired angle stratum")
+        stratum = (
+            "extreme"
+            if strict.get(spec.angle_column) == "extreme"
+            else "non_extreme"
+        )
+        value = improvement(metric, a, b)
+        by_cluster[cluster][stratum].append(value)
+        observed[stratum].append(value)
+
+    keys = sorted(by_cluster)
+    if not keys or not all(observed.values()):
+        empty = np.full(draws, np.nan, dtype=np.float64)
+        return {
+            "extreme_support": len(observed["extreme"]),
+            "non_extreme_support": len(observed["non_extreme"]),
+            "cluster_count": len(keys),
+            "interaction": None,
+            "ci95": [None, None],
+            "positive_is_larger_extreme_gain": True,
+        }, empty
+
+    point = float(np.mean(observed["extreme"]) - np.mean(observed["non_extreme"]))
+    rng = np.random.default_rng(seed)
+    samples = np.empty(draws, dtype=np.float64)
+    for draw in range(draws):
+        selected = rng.integers(0, len(keys), size=len(keys))
+        values: dict[str, list[float]] = {"extreme": [], "non_extreme": []}
+        for index in selected:
+            cluster = by_cluster[keys[int(index)]]
+            values["extreme"].extend(cluster["extreme"])
+            values["non_extreme"].extend(cluster["non_extreme"])
+        if not all(values.values()):
+            samples[draw] = np.nan
+        else:
+            samples[draw] = float(
+                np.mean(values["extreme"]) - np.mean(values["non_extreme"])
+            )
+    finite_samples = samples[np.isfinite(samples)]
+    if not len(finite_samples):
+        raise RuntimeError(f"no finite interaction draws for {spec.display} {metric}")
+    return {
+        "extreme_support": len(observed["extreme"]),
+        "non_extreme_support": len(observed["non_extreme"]),
+        "cluster_count": len(keys),
+        "interaction": point,
+        "ci95": [float(v) for v in np.percentile(finite_samples, [2.5, 97.5])],
+        "finite_draws": int(len(finite_samples)),
+        "positive_is_larger_extreme_gain": True,
+    }, samples
+
+
 def filter_method(
     rows: list[dict[str, str]], method_column: str, method: str
 ) -> list[dict[str, str]]:
@@ -250,6 +335,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "datasets": {},
     }
     source_paths: set[Path] = set()
+    interaction_samples: dict[str, list[np.ndarray]] = defaultdict(list)
     for dataset_index, spec in enumerate(SPECS):
         all_rows = read_csv(spec.all_csv)
         case_rows = read_csv(spec.case_csv)
@@ -263,6 +349,19 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         extreme_pairs = paired_rows(extreme_rows, spec)
         if len(extreme_strict) != len(extreme_bridge):
             raise ValueError(f"{spec.display} extreme denominator differs by method")
+        interaction: dict[str, Any] = {}
+        all_pairs = paired_rows(case_rows, spec)
+        for metric_index, metric in enumerate(METRICS):
+            result, samples = bootstrap_viewpoint_interaction(
+                all_pairs,
+                spec,
+                metric,
+                int(args.bootstrap_draws),
+                int(args.seed) + 1000 + dataset_index * 100 + metric_index,
+            )
+            interaction[metric] = result
+            interaction_samples[metric].append(samples)
+
         ledger["datasets"][spec.key] = {
             "display": spec.display,
             "camera_metric": spec.camera_label,
@@ -287,6 +386,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     for metric_index, metric in enumerate(metrics)
                 },
             },
+            "viewpoint_interaction": interaction,
         }
 
     macro: dict[str, dict[str, float]] = {}
@@ -312,6 +412,26 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "Coverage_absolute_change": float(np.mean(coverage_changes)),
         }
     ledger["dataset_equal_macro"] = macro
+    macro_interaction: dict[str, Any] = {}
+    for metric in METRICS:
+        points = [
+            ledger["datasets"][spec.key]["viewpoint_interaction"][metric][
+                "interaction"
+            ]
+            for spec in SPECS
+        ]
+        stacked = np.vstack(interaction_samples[metric])
+        finite_columns = np.isfinite(stacked).all(axis=0)
+        samples = stacked[:, finite_columns].mean(axis=0)
+        macro_interaction[metric] = {
+            "interaction": float(np.mean(points)),
+            "ci95": [float(v) for v in np.percentile(samples, [2.5, 97.5])],
+            "dataset_count": len(SPECS),
+            "finite_draws": int(len(samples)),
+            "aggregation": "equal mean of dataset-specific interactions",
+            "positive_is_larger_extreme_gain": True,
+        }
+    ledger["dataset_equal_viewpoint_interaction"] = macro_interaction
     ledger["sources"] = [
         {
             "path": str(path.relative_to(WORKSPACE)),
@@ -383,6 +503,43 @@ def write_csvs(output: Path, ledger: dict[str, Any]) -> None:
         writer = csv.DictWriter(handle, fieldnames=list(paired_rows_out[0]))
         writer.writeheader()
         writer.writerows(paired_rows_out)
+
+    interaction_rows = []
+    for spec in SPECS:
+        for metric, values in ledger["datasets"][spec.key][
+            "viewpoint_interaction"
+        ].items():
+            interaction_rows.append(
+                {
+                    "dataset": spec.display,
+                    "metric": metric,
+                    "extreme_support": values["extreme_support"],
+                    "non_extreme_support": values["non_extreme_support"],
+                    "cluster_count": values["cluster_count"],
+                    "interaction": values["interaction"],
+                    "ci95_low": values["ci95"][0],
+                    "ci95_high": values["ci95"][1],
+                }
+            )
+    for metric, values in ledger["dataset_equal_viewpoint_interaction"].items():
+        interaction_rows.append(
+            {
+                "dataset": "Dataset-equal macro",
+                "metric": metric,
+                "extreme_support": "N/A",
+                "non_extreme_support": "N/A",
+                "cluster_count": "N/A",
+                "interaction": values["interaction"],
+                "ci95_low": values["ci95"][0],
+                "ci95_high": values["ci95"][1],
+            }
+        )
+    with (output / "viewpoint_interaction_statistics.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(interaction_rows[0]))
+        writer.writeheader()
+        writer.writerows(interaction_rows)
 
 
 def tex_escape(value: str) -> str:
@@ -458,6 +615,61 @@ def write_tex(output: Path, ledger: dict[str, Any]) -> None:
         "\n".join(macro_lines) + "\n", encoding="utf-8"
     )
 
+    def cell(values: dict[str, Any], metric: str) -> str:
+        value = values[metric]
+        scale = 1.0
+        digits = 1 if metric in ("W-MPJPE_mm", "WA-MPJPE_mm") else 3
+        point = scale * value["interaction"]
+        low, high = (scale * item for item in value["ci95"])
+        return f"${point:+.{digits}f}\,[{low:+.{digits}f},{high:+.{digits}f}]$"
+
+    full = [
+        r"\begin{tabular}{lrrrr}",
+        r"\toprule",
+        r"Dataset & W (mm) & WA (mm) & IDF1 & Coverage \\",
+        r"\midrule",
+    ]
+    for spec in SPECS:
+        values = ledger["datasets"][spec.key]["viewpoint_interaction"]
+        full.append(
+            f"{spec.display} & {cell(values, 'W-MPJPE_mm')} & "
+            f"{cell(values, 'WA-MPJPE_mm')} & {cell(values, 'IDF1')} & "
+            f"{cell(values, 'Coverage')} \\\\"
+        )
+    values = ledger["dataset_equal_viewpoint_interaction"]
+    full.extend(
+        [
+            r"\midrule",
+            (
+                f"Dataset-equal macro & {cell(values, 'W-MPJPE_mm')} & "
+                f"{cell(values, 'WA-MPJPE_mm')} & {cell(values, 'IDF1')} & "
+                f"{cell(values, 'Coverage')} \\\\"
+            ),
+            r"\bottomrule",
+            r"\end{tabular}",
+        ]
+    )
+    (output / "viewpoint_interaction_full.tex").write_text(
+        "\n".join(full) + "\n", encoding="utf-8"
+    )
+
+    main = [
+        r"\begin{tabular}{lrrrr}",
+        r"\toprule",
+        r"Aggregation & W (mm) & WA (mm) & IDF1 & Coverage \\",
+        r"\midrule",
+        (
+            f"Dataset-equal & {cell(values, 'W-MPJPE_mm')} & "
+            f"{cell(values, 'WA-MPJPE_mm')} & {cell(values, 'IDF1')} & "
+            f"{cell(values, 'Coverage')} \\\\"
+        ),
+        r"\bottomrule",
+        r"\end{tabular}",
+    ]
+    (output / "viewpoint_interaction_main.tex").write_text(
+        "\n".join(main) + "\n", encoding="utf-8"
+    )
+
 
 def write_figure(output: Path, ledger: dict[str, Any]) -> None:
     import matplotlib
@@ -512,6 +724,7 @@ def write_readme(output: Path, ledger: dict[str, Any]) -> None:
     source_lines = "\n".join(
         f"- `{row['path']}` — SHA-256 `{row['sha256']}`" for row in ledger["sources"]
     )
+    interaction = ledger["dataset_equal_viewpoint_interaction"]
     text = f"""# Cross-dataset viewpoint evidence
 
 Generated by `Movie3R/publication/bridge3r_iclr2027/{SCRIPT.name}` from retained
@@ -524,6 +737,13 @@ Dataset-equal macro:
 - extreme/farthest W/WA reduction: {macro['extreme']['W_relative_reduction_percent']:.3f}% / {macro['extreme']['WA_relative_reduction_percent']:.3f}%
 - IDF1 gain: {macro['all']['IDF1_absolute_gain']:+.6f} -> {macro['extreme']['IDF1_absolute_gain']:+.6f}
 - Coverage change: {macro['all']['Coverage_absolute_change']:+.6f} -> {macro['extreme']['Coverage_absolute_change']:+.6f}
+
+Dataset-equal extreme-minus-non-extreme gain interaction (95% cluster-bootstrap CI):
+
+- W-MPJPE: {interaction['W-MPJPE_mm']['interaction']:+.3f} mm, {interaction['W-MPJPE_mm']['ci95']}
+- WA-MPJPE: {interaction['WA-MPJPE_mm']['interaction']:+.3f} mm, {interaction['WA-MPJPE_mm']['ci95']}
+- IDF1: {interaction['IDF1']['interaction']:+.6f}, {interaction['IDF1']['ci95']}
+- Coverage: {interaction['Coverage']['interaction']:+.6f}, {interaction['Coverage']['ci95']}
 
 The macro weights the three datasets equally. Camera ATE is not averaged
 because EgoHumans uses ATE-SE3 while EgoBody and Harmony4D use ATE-Sim3.
@@ -543,7 +763,8 @@ def main() -> None:
     )
     write_csvs(args.output, ledger)
     write_tex(args.output, ledger)
-    write_figure(args.output, ledger)
+    if not args.skip_figure:
+        write_figure(args.output, ledger)
     write_readme(args.output, ledger)
 
 
