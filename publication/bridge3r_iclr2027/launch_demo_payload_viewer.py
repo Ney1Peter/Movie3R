@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import threading
 from pathlib import Path
 
 import cv2
@@ -197,15 +198,31 @@ def main() -> None:
     )
     viewer.server.set_up_direction(args.up_direction)
     viewer.fourd = True
-    centre = np.asarray(payload["centre"], dtype=np.float64)
-    span = float(payload["span"])
+    # Centre the initial view on the first post-cut humans rather than on the
+    # union of the entire trajectory. Large viewpoint cuts can otherwise put
+    # the currently displayed people close to a screen edge.
+    initial_vertices = np.asarray(payload["vertices"][initial], dtype=np.float64)
+    finite_vertices = initial_vertices[np.isfinite(initial_vertices).all(axis=-1)]
+    if len(finite_vertices):
+        lower, upper = np.nanpercentile(finite_vertices.reshape(-1, 3), [1.0, 99.0], axis=0)
+        centre = 0.5 * (lower + upper)
+        span = max(float(np.max(upper - lower)), 1.5)
+    else:
+        centre = np.asarray(payload["centre"], dtype=np.float64)
+        span = float(payload["span"])
     up = np.asarray([0.0, 1.0 if args.up_direction == "+y" else -1.0, 0.0])
 
-    @viewer.server.on_client_connect
-    def _initial_camera(client) -> None:
+    def _centre_camera(client) -> None:
         client.camera.look_at = centre
         client.camera.position = centre + span * np.asarray([1.35, 0.70 * up[1], 1.35])
         client.camera.up_direction = up
+
+    @viewer.server.on_client_connect
+    def _initial_camera(client) -> None:
+        _centre_camera(client)
+        # Browsers may apply their default camera once after the websocket is
+        # established. Re-apply the same view after that initialization turn.
+        threading.Timer(0.35, lambda: _centre_camera(client)).start()
 
     viewer.run()
 
