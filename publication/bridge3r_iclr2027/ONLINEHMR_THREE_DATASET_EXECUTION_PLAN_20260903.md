@@ -86,3 +86,27 @@ is restored. The incomplete archive must not be silently treated as valid data.
 - Paper values are generated from machine-readable aggregate artifacts, not
   manually copied from terminal output.
 
+## 5. Execution ledger
+
+### 2026-09-03: eight available pilot cases completed
+
+- Harmony4D: 4/4 cases completed automatically. Case-macro coverage is
+  0.1167 and IDF1 is 0.0694. W-MPJPE is available for 2/4 cases and
+  WA-MPJPE for 4/4 cases.
+- EgoHumans: 4/4 cases completed automatically. Case-macro coverage is
+  0.1019 and IDF1 is 0.0594. W-MPJPE is available for 1/4 cases and
+  WA-MPJPE for 2/4 cases.
+- All eight cases contain the expected camera-trajectory row count and pass
+  the coordinate-convention round-trip check. The EgoHumans large and extreme
+  cases have native person and camera predictions but zero evaluated
+  cross-shot coverage; these are scientific failures rather than adapter or
+  infrastructure failures and are retained in the denominator.
+- The current pilot audit is 8/12 attempted and 6/12 passing the frozen case
+  gate. The four unattempted cases are exactly the preselected EgoBody cases.
+
+Machine-readable evidence is stored under
+`data/OnlineHMR_work_v1/pilot/`; raw per-case evidence is stored under
+`data/OnlineHMR_work_v1/runs/`. Full evaluation has not been started because
+the requested order is pilot first and the uploaded EgoBody archive is
+truncated. No case, angle stratum, evaluator threshold, or model option has
+been changed after observing these results.
