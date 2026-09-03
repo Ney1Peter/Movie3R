@@ -97,7 +97,10 @@ def main() -> None:
     image_dir = args.image_dir.resolve()
     validate_images(image_dir, frame_count)
     repo = args.repo.resolve()
-    python = args.python.resolve()
+    # Keep the virtual-environment launcher path intact.  Resolving its symlink
+    # to the base interpreter drops pyvenv.cfg discovery and therefore the
+    # environment's installed packages.
+    python = Path(os.path.abspath(args.python))
     for path in (repo / "scripts/run_custom_mt.py", python, WEIGHT_MANIFEST):
         if not path.is_file():
             raise FileNotFoundError(path)

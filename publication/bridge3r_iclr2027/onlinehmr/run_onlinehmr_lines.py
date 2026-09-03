@@ -52,7 +52,10 @@ def main() -> None:
     parser.add_argument("--input-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--gpus", default="0,1,2,3,4")
-    parser.add_argument("--python", type=Path, default=DEFAULT_PYTHON)
+    parser.add_argument(
+        "--python", type=Path, default=DEFAULT_PYTHON,
+        help="Python used only to launch the lightweight invoker; the invoker uses its frozen OnlineHMR environment",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=5400)
     parser.add_argument("--allow-failures", action="store_true")
     args = parser.parse_args()

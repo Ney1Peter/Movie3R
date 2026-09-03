@@ -108,6 +108,7 @@ def main() -> None:
     parser.add_argument("--evaluator-manifest", type=Path, required=True)
     parser.add_argument("--work-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--attempt", default="attempt01")
     parser.add_argument("--lines")
     parser.add_argument("--gpus", default="0,1,2,3,4")
     parser.add_argument("--reserve-gib", type=float, default=50.0)
@@ -136,7 +137,9 @@ def main() -> None:
     work = args.work_root.resolve()
     output = args.output_root.resolve()
     input_root = work / "runtime_inputs" / args.dataset
-    run_root = output / args.dataset / "attempt01"
+    if not re.fullmatch(r"attempt[0-9]{2}", args.attempt):
+        raise ValueError("--attempt must match attemptNN")
+    run_root = output / args.dataset / args.attempt
     state_path = output / args.dataset / "protocol_summary.json"
     state: dict[str, Any] = {
         "schema_version": SCHEMA,
@@ -148,6 +151,7 @@ def main() -> None:
         "evaluator_manifest": str(evaluator_manifest),
         "evaluator_manifest_sha256": sha256(evaluator_manifest),
         "selected_lines": lines,
+        "attempt": args.attempt,
         "gpus": args.gpus,
         "groups": {},
         "runtime_gt_access": False,
