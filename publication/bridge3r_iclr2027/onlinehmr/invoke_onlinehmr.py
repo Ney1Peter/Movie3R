@@ -75,6 +75,19 @@ def validate_images(image_dir: Path, frame_count: int) -> None:
         raise ValueError("staged input contains an empty JPEG")
 
 
+def remove_temporary_case(path: Path, parent: Path) -> int:
+    """Remove only one named, reproducible OnlineHMR intermediate directory."""
+
+    if not path.exists():
+        return 0
+    resolved, root = path.resolve(), parent.resolve()
+    if resolved == root or root not in resolved.parents:
+        raise ValueError(f"unsafe temporary cleanup target: {resolved}")
+    bytes_before = sum(item.stat().st_size for item in resolved.rglob("*") if item.is_file())
+    shutil.rmtree(resolved)
+    return int(bytes_before)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
@@ -136,6 +149,10 @@ def main() -> None:
     root.mkdir(parents=True, exist_ok=True)
     native.mkdir(parents=True, exist_ok=False)
 
+    temporary_parent = repo / "results"
+    temporary_case = temporary_parent / case_id
+    stale_intermediate_bytes = remove_temporary_case(temporary_case, temporary_parent)
+
     command = [
         str(python), "scripts/run_custom_mt.py",
         "--image-dir", str(image_dir),
@@ -192,6 +209,19 @@ def main() -> None:
         and trajectory_rows == frame_count - 1
         and pointclouds
     )
+    cleanup_errors = []
+    reclaimed_intermediate_bytes = 0
+    try:
+        reclaimed_intermediate_bytes = remove_temporary_case(
+            temporary_case, temporary_parent
+        )
+    except Exception as error:  # cleanup never changes the prediction outcome
+        cleanup_errors.append(f"{type(error).__name__}: {error}")
+    try:
+        if source_trajectory.is_file():
+            source_trajectory.unlink()
+    except Exception as error:
+        cleanup_errors.append(f"{type(error).__name__}: {error}")
     payload = {
         **identity,
         "status": "success" if success else "failed",
@@ -223,6 +253,13 @@ def main() -> None:
             {"path": str(path), "bytes": path.stat().st_size, "sha256": sha256(path)}
             for path in pointclouds
         ],
+        "reproducible_intermediate_cleanup": {
+            "temporary_case_root": str(temporary_case),
+            "stale_bytes_removed_before_run": stale_intermediate_bytes,
+            "bytes_removed_after_freeze": reclaimed_intermediate_bytes,
+            "source_camera_log_removed_after_copy": not source_trajectory.exists(),
+            "errors": cleanup_errors,
+        },
         "stdout_log": str(stdout_path),
         "stderr_log": str(stderr_path),
         "stdout_sha256": sha256(stdout_path),
