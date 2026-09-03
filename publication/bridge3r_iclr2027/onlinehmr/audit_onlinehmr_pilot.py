@@ -48,9 +48,9 @@ def main() -> None:
         "harmony4d": args.manifest_root / "harmony4d_formal88.runtime.jsonl",
     }
     attempts = {
-        "egobody": args.egobody_attempt,
-        "egohumans": args.egohumans_attempt,
-        "harmony4d": args.harmony4d_attempt,
+        "egobody": [value for value in args.egobody_attempt.split(",") if value],
+        "egohumans": [value for value in args.egohumans_attempt.split(",") if value],
+        "harmony4d": [value for value in args.harmony4d_attempt.split(",") if value],
     }
     lookup = {}
     records = {}
@@ -64,38 +64,55 @@ def main() -> None:
         dataset, case_id = str(selected["dataset"]), str(selected["case_id"])
         line = lookup[dataset][case_id]
         record = records[dataset][line - 1]
-        root = args.runs_root / dataset / attempts[dataset] / f"line{line:03d}"
+        root = None
+        chosen_attempt = None
+        for attempt in attempts[dataset]:
+            candidate = args.runs_root / dataset / attempt / f"line{line:03d}"
+            if (
+                (candidate / "onlinehmr.runtime.json").is_file()
+                and (candidate / "onlinehmr.evaluation.json").is_file()
+            ):
+                root, chosen_attempt = candidate, attempt
+                break
+        if root is None:
+            chosen_attempt = attempts[dataset][0]
+            root = args.runs_root / dataset / chosen_attempt / f"line{line:03d}"
         raw_path = root / "onlinehmr.runtime.json"
         cache_path = root / "prediction.npz"
         conversion_path = root / "prediction.json"
         evaluation_path = root / "onlinehmr.evaluation.json"
         item: dict[str, Any] = {
-            **selected, "manifest_line": line, "attempt": attempts[dataset],
-            "available": all(path.is_file() for path in (raw_path, cache_path, conversion_path, evaluation_path)),
+            **selected, "manifest_line": line, "attempt": chosen_attempt,
+            "attempted": raw_path.is_file() and evaluation_path.is_file(),
+            "prediction_artifacts_available": cache_path.is_file() and conversion_path.is_file(),
         }
-        if item["available"]:
+        if item["attempted"]:
             raw = json.loads(raw_path.read_text(encoding="utf-8"))
-            conversion = json.loads(conversion_path.read_text(encoding="utf-8"))
             evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
-            with np.load(cache_path, allow_pickle=False) as cache:
-                valid = np.asarray(cache[f"{METHOD}__valid"], dtype=bool)
-            boundary = int(record["boundary_index"])
             value = evaluation["methods"][METHOD]
             item.update({
                 "raw_status": raw.get("status"),
                 "camera_trajectory_rows": raw.get("camera_trajectory_rows"),
                 "expected_camera_trajectory_rows": int(record["clip_length"]) - 1,
                 "native_track_count": raw.get("native_track_count"),
-                "pre_cut_predicted_person_frames": int(valid[:boundary].sum()),
-                "post_cut_predicted_person_frames": int(valid[boundary:].sum()),
                 "coverage": value["coverage"]["coverage"],
-                "coordinate_roundtrip_residual_m": conversion["summary"].get(
-                    "camera_world_roundtrip_max_residual_m"
-                ),
             })
-            residual = item["coordinate_roundtrip_residual_m"]
+            if item["prediction_artifacts_available"]:
+                conversion = json.loads(conversion_path.read_text(encoding="utf-8"))
+                with np.load(cache_path, allow_pickle=False) as cache:
+                    valid = np.asarray(cache[f"{METHOD}__valid"], dtype=bool)
+                boundary = int(record["boundary_index"])
+                item.update({
+                    "pre_cut_predicted_person_frames": int(valid[:boundary].sum()),
+                    "post_cut_predicted_person_frames": int(valid[boundary:].sum()),
+                    "coordinate_roundtrip_residual_m": conversion["summary"].get(
+                        "camera_world_roundtrip_max_residual_m"
+                    ),
+                })
+            residual = item.get("coordinate_roundtrip_residual_m")
             item["passes_case_gate"] = bool(
                 item["raw_status"] == "success"
+                and item["prediction_artifacts_available"]
                 and item["camera_trajectory_rows"] == item["expected_camera_trajectory_rows"]
                 and item["pre_cut_predicted_person_frames"] > 0
                 and item["post_cut_predicted_person_frames"] > 0
@@ -107,7 +124,7 @@ def main() -> None:
             item["passes_case_gate"] = False
         audited.append(item)
 
-    available = sum(item["available"] for item in audited)
+    available = sum(item["attempted"] for item in audited)
     passed = sum(item["passes_case_gate"] for item in audited)
     status = "waiting_for_all_12"
     if available == 12:
@@ -132,7 +149,7 @@ def main() -> None:
     for item in audited:
         lines.append(
             f"| {item['dataset']} | {item['angle_stratum']} | `{item['case_id']}` | "
-            f"{int(item['available'])} | {int(item['passes_case_gate'])} | "
+            f"{int(item['attempted'])} | {int(item['passes_case_gate'])} | "
             f"{item.get('coverage', '—')} | "
             f"{item.get('pre_cut_predicted_person_frames', '—')}/"
             f"{item.get('post_cut_predicted_person_frames', '—')} |"
