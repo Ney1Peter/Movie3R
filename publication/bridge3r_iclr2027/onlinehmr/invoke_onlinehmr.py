@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import signal
 import shutil
 import subprocess
 import time
@@ -98,6 +99,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo", type=Path, default=DEFAULT_REPO)
     parser.add_argument("--python", type=Path, default=DEFAULT_PYTHON)
     parser.add_argument("--timeout-seconds", type=int, default=3600)
+    parser.add_argument(
+        "--stall-timeout-seconds", type=int, default=900,
+        help="fail a case after this many seconds without camera-log progress",
+    )
     return parser.parse_args()
 
 
@@ -152,6 +157,9 @@ def main() -> None:
     temporary_parent = repo / "results"
     temporary_case = temporary_parent / case_id
     stale_intermediate_bytes = remove_temporary_case(temporary_case, temporary_parent)
+    source_trajectory = repo / "logs" / f"{case_id}_images_incremental_all.txt"
+    if source_trajectory.is_file():
+        source_trajectory.unlink()
 
     command = [
         str(python), "scripts/run_custom_mt.py",
@@ -174,27 +182,44 @@ def main() -> None:
     )
     started = time.time()
     timed_out = False
-    try:
-        completed = subprocess.run(
+    stalled = False
+    last_progress = started
+    last_trajectory_size = -1
+    with stdout_path.open("w", encoding="utf-8") as stdout_handle, stderr_path.open(
+        "w", encoding="utf-8"
+    ) as stderr_handle:
+        process = subprocess.Popen(
             command,
             cwd=repo,
             env=environment,
-            capture_output=True,
+            stdout=stdout_handle,
+            stderr=stderr_handle,
             text=True,
-            timeout=int(args.timeout_seconds),
+            start_new_session=True,
         )
-        returncode = int(completed.returncode)
-        stdout, stderr = completed.stdout, completed.stderr
-    except subprocess.TimeoutExpired as error:
-        timed_out = True
-        returncode = 124
-        stdout = error.stdout.decode() if isinstance(error.stdout, bytes) else (error.stdout or "")
-        stderr = error.stderr.decode() if isinstance(error.stderr, bytes) else (error.stderr or "")
+        while process.poll() is None:
+            now = time.time()
+            if source_trajectory.is_file():
+                size = source_trajectory.stat().st_size
+                if size != last_trajectory_size:
+                    last_trajectory_size = size
+                    last_progress = now
+            if now - started > int(args.timeout_seconds):
+                timed_out = True
+            elif now - last_progress > int(args.stall_timeout_seconds):
+                stalled = True
+            if timed_out or stalled:
+                os.killpg(process.pid, signal.SIGTERM)
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL)
+                    process.wait(timeout=30)
+                break
+            time.sleep(5)
+        returncode = int(process.returncode if process.returncode is not None else 124)
     seconds = time.time() - started
-    stdout_path.write_text(stdout, encoding="utf-8")
-    stderr_path.write_text(stderr, encoding="utf-8")
 
-    source_trajectory = repo / "logs" / f"{case_id}_images_incremental_all.txt"
     frozen_trajectory = root / "camera_incremental_all.txt"
     if source_trajectory.is_file():
         shutil.copy2(source_trajectory, frozen_trajectory)
@@ -230,7 +255,9 @@ def main() -> None:
         **identity,
         "status": "success" if success else "failed",
         "failure_reason": None if success else (
-            "timeout" if timed_out else "nonzero_exit_or_incomplete_native_outputs"
+            "wall_time_timeout" if timed_out else
+            "camera_progress_stall_timeout" if stalled else
+            "nonzero_exit_or_incomplete_native_outputs"
         ),
         "dataset": row.get("dataset"),
         "split": row.get("split"),
@@ -242,6 +269,8 @@ def main() -> None:
         "CUDA_VISIBLE_DEVICES": str(int(args.gpu)),
         "returncode": returncode,
         "timed_out": timed_out,
+        "stalled": stalled,
+        "stall_timeout_seconds": int(args.stall_timeout_seconds),
         "wall_time_seconds": seconds,
         "image_dir": str(image_dir),
         "native_root": str(native),
