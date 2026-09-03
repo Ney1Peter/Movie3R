@@ -20,6 +20,14 @@ DEFAULT_PYTHON = WORKSPACE / "Movie3R/.venv/bin/python"
 SCHEMA = "Bridge3R-OnlineHMR-parallel-runtime-v1"
 
 
+def line_tag(lines: list[int]) -> str:
+    explicit = "-".join(f"{line:03d}" for line in lines)
+    if len(explicit) <= 120:
+        return explicit
+    digest = hashlib.sha256(",".join(map(str, lines)).encode("ascii")).hexdigest()[:16]
+    return f"{len(lines):03d}_sha256_{digest}"
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -132,7 +140,7 @@ def main() -> None:
         "runtime_gt_access": False,
         "cases": results,
     }
-    name = "summary.lines_" + "-".join(f"{line:03d}" for line in lines) + ".json"
+    name = "summary.lines_" + line_tag(lines) + ".json"
     atomic_json(output_root / name, payload)
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     if payload["failed_cases"] and not args.allow_failures:

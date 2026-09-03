@@ -110,3 +110,33 @@ Machine-readable evidence is stored under
 the requested order is pilot first and the uploaded EgoBody archive is
 truncated. No case, angle stratum, evaluator threshold, or model option has
 been changed after observing these results.
+
+## 6. Frozen continuation commands
+
+The EgoBody path now uses a one-pass nested-ZIP streamer: it extracts only the
+JPEGs named by the frozen cases and never materializes the approximately
+353-GB inner `kinect_color.zip`. Evaluator-only release assets and GT caches are
+kept physically separate from the RGB-only OnlineHMR input directories. The
+rebuilt runtime and evaluator manifests must reproduce the historical SHA-256
+values `8a5861bd...b02b` and `87144f01...534f`, respectively, or execution
+stops before inference.
+
+After a complete `data/EgoBody.zip` is present, run the four already selected
+pilot rows without changing their order or configuration:
+
+```bash
+Movie3R/.venv/bin/python \
+  Movie3R/publication/bridge3r_iclr2027/onlinehmr/run_onlinehmr_egobody.py \
+  --outer data/EgoBody.zip \
+  --runtime-manifest data/OnlineHMR_work_v1/manifests/egobody_cs150_test.runtime.jsonl \
+  --work-root data/OnlineHMR_work_v1/work_egobody \
+  --output-root data/OnlineHMR_work_v1/runs \
+  --attempt attempt01 --lines 15,89,34,76 --gpus 0,1,2,3
+```
+
+Refresh the 12-case audit next. If the frozen pilot gate passes, run three
+clean formal attempts sequentially so no GPU is shared by two OnlineHMR
+processes: EgoHumans `attempt02`, Harmony4D `attempt04`, and EgoBody
+`attempt02`. Each formal dataset may use GPUs 0--4, one case per GPU. Raw
+prediction failures remain in the fixed denominator and are not rerun for
+quality reasons.
