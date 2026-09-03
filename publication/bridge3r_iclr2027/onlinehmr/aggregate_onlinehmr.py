@@ -118,7 +118,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=("egobody", "egohumans", "harmony4d"), required=True)
     parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--run-root", type=Path, required=True)
+    parser.add_argument(
+        "--run-root", type=Path, action="append", required=True,
+        help="attempt root in priority order; may be supplied more than once",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--lines", help="optional subset for pilot aggregation")
     parser.add_argument("--require-complete", action="store_true")
@@ -139,12 +142,19 @@ def main() -> None:
 
     rows: list[dict[str, Any]] = []
     missing = []
+    run_roots = [path.resolve() for path in args.run_root]
     for line in selected:
         record = manifest_rows[line - 1]
         case_id = str(record["case_id"])
-        evaluation = args.run_root.resolve() / f"line{line:03d}/onlinehmr.evaluation.json"
-        raw_path = args.run_root.resolve() / f"line{line:03d}/onlinehmr.runtime.json"
-        if not evaluation.is_file() or not raw_path.is_file():
+        evaluation = None
+        raw_path = None
+        for run_root in run_roots:
+            candidate_evaluation = run_root / f"line{line:03d}/onlinehmr.evaluation.json"
+            candidate_raw = run_root / f"line{line:03d}/onlinehmr.runtime.json"
+            if candidate_evaluation.is_file() and candidate_raw.is_file():
+                evaluation, raw_path = candidate_evaluation, candidate_raw
+                break
+        if evaluation is None or raw_path is None:
             missing.append(case_id)
             continue
         payload = json.loads(evaluation.read_text(encoding="utf-8"))
@@ -211,6 +221,7 @@ def main() -> None:
         "method": METHOD,
         "manifest": str(manifest),
         "manifest_sha256": sha256(manifest),
+        "run_roots_priority_order": [str(path) for path in run_roots],
         "selected_lines": selected,
         "expected_cases": len(selected),
         "observed_cases": len(rows),
