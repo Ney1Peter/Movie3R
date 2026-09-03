@@ -115,7 +115,7 @@ def main() -> None:
         if status == "success":
             if not prediction.is_file() or not conversion.is_file():
                 subprocess.run([
-                    str(args.adapter_python.resolve()), str(CONVERTER),
+                    os.path.abspath(args.adapter_python), str(CONVERTER),
                     "--native-root", str(Path(raw["native_root"]).resolve()),
                     "--camera-trajectory", str(Path(raw["camera_trajectory"]).resolve()),
                     "--manifest", str(runtime_manifest), "--line", str(line),
@@ -150,7 +150,7 @@ def main() -> None:
                 atomic_json(eval_runtime, eval_payload)
             if not evaluation.is_file():
                 subprocess.run([
-                    str(args.evaluator_python.resolve()), str(evaluator_script),
+                    os.path.abspath(args.evaluator_python), str(evaluator_script),
                     "--cache", str(prediction), "--runtime-report", str(eval_runtime),
                     "--gt-root", str(args.gt_root.resolve()), "--output", str(evaluation),
                 ], cwd=WORKSPACE, check=True)

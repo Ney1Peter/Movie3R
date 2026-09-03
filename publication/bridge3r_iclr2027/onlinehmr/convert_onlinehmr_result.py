@@ -256,7 +256,15 @@ def pack(
         }
         return arrays, {"native_tracks": 0, "valid_person_frames": 0, "empty_prediction": True}
 
-    model = SMPL(gender="neutral").to(device).eval()
+    # The upstream SMPL wrapper hard-codes ``data/smpl`` relative to the
+    # repository working directory.  Resolve that dependency locally without
+    # imposing a cwd requirement on the publication adapter.
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(ONLINEHMR_REPO)
+        model = SMPL(gender="neutral").to(device).eval()
+    finally:
+        os.chdir(original_cwd)
     active = [[] for _ in range(frame_count)]
     reconstructed = []
     for mapped_id, track in enumerate(tracks):
