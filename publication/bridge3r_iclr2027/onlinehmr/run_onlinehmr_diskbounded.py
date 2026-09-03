@@ -140,7 +140,7 @@ def main() -> None:
     if not re.fullmatch(r"attempt[0-9]{2}", args.attempt):
         raise ValueError("--attempt must match attemptNN")
     run_root = output / args.dataset / args.attempt
-    state_path = output / args.dataset / "protocol_summary.json"
+    state_path = output / args.dataset / f"protocol_summary.{args.attempt}.json"
     state: dict[str, Any] = {
         "schema_version": SCHEMA,
         "status": "running",
@@ -168,7 +168,7 @@ def main() -> None:
 
     for group_index, (entry, group_lines) in enumerate(groups.items(), 1):
         group_token = token(entry)
-        metadata = output / args.dataset / "stage_metadata" / group_token
+        metadata = output / args.dataset / "stage_metadata" / args.attempt / group_token
         line_text = ",".join(str(line) for line in group_lines)
         group_state: dict[str, Any] = {
             "entry": entry, "lines": group_lines, "status": "staging",
