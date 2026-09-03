@@ -166,6 +166,10 @@ def main() -> None:
             "CUDA_HOME": "/usr/local/cuda-11.8",
             "PATH": "/usr/local/cuda-11.8/bin:" + environment.get("PATH", ""),
             "PYTHONUNBUFFERED": "1",
+            # The upstream custom-video script contains a debugging breakpoint
+            # before its documented invalid-box skip.  Disable interactive
+            # debugging without changing the skip or any model computation.
+            "PYTHONBREAKPOINT": "0",
         }
     )
     started = time.time()
