@@ -47,6 +47,31 @@ def atomic_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(partial, path)
 
 
+def historical_evaluator_manifest(source: Path, destination: Path, expanded_root: Path) -> int:
+    """Restore the frozen manifest's provenance-only historical path prefix."""
+
+    raw = source.read_bytes()
+    current = (str(expanded_root.resolve()) + "/").encode("utf-8")
+    historical = (
+        str((WORKSPACE / "data/EgoBody_work_v20/metadata").resolve()) + "/"
+    ).encode("utf-8")
+    occurrences = raw.count(current)
+    if occurrences <= 0:
+        raise ValueError("rebuilt evaluator contains no current metadata provenance paths")
+    normalized = raw.replace(current, historical)
+    if current in normalized:
+        raise AssertionError("metadata provenance path normalization was incomplete")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.is_file():
+        if destination.read_bytes() != normalized:
+            raise RuntimeError(f"existing frozen evaluator differs: {destination}")
+    else:
+        partial = destination.with_suffix(destination.suffix + ".partial")
+        partial.write_bytes(normalized)
+        os.replace(partial, destination)
+    return occurrences
+
+
 def run(command: list[str], log: Path) -> None:
     log.parent.mkdir(parents=True, exist_ok=True)
     completed = subprocess.run(command, cwd=WORKSPACE, capture_output=True, text=True)
@@ -143,14 +168,24 @@ def main() -> None:
         "--output-dir", str(manifests), "--split", "test",
     ], work / "logs/build_manifest.log")
     rebuilt_runtime = manifests / "egobody_cs150_test.runtime.jsonl"
-    evaluator = manifests / "egobody_cs150_test.evaluator.jsonl"
+    rebuilt_evaluator = manifests / "egobody_cs150_test.evaluator.jsonl"
     if sha256(rebuilt_runtime) != EXPECTED_RUNTIME_SHA256 or rebuilt_runtime.read_bytes() != runtime.read_bytes():
         raise ValueError("rebuilt EgoBody runtime manifest differs from frozen manifest")
+    evaluator = work / "frozen_manifests/egobody_cs150_test.evaluator.jsonl"
+    normalized_paths = historical_evaluator_manifest(
+        rebuilt_evaluator, evaluator, assets / "expanded"
+    )
     if sha256(evaluator) != EXPECTED_EVALUATOR_SHA256:
         raise ValueError("rebuilt EgoBody evaluator manifest differs from frozen evaluator")
     state.update({
         "evaluator_manifest": str(evaluator),
         "evaluator_manifest_sha256": sha256(evaluator),
+        "rebuilt_evaluator_manifest": str(rebuilt_evaluator),
+        "rebuilt_evaluator_manifest_sha256": sha256(rebuilt_evaluator),
+        "provenance_only_paths_normalized": normalized_paths,
+        "historical_metadata_prefix": str(
+            (WORKSPACE / "data/EgoBody_work_v20/metadata").resolve()
+        ),
     })
 
     explicit_lines = "-".join(f"{line:03d}" for line in lines)
