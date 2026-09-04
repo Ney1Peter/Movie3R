@@ -52,6 +52,27 @@ def atomic_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(partial, path)
 
 
+def normalize_w_contract(path: Path) -> None:
+    """Correct stale prose metadata without changing frozen metric values."""
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    contract = payload.get("evaluation_contract")
+    if not isinstance(contract, dict):
+        return
+    stale = contract.pop(
+        "w_unavailable_when_fewer_than_two_pre_cut_matched_times", None
+    )
+    if stale is None:
+        return
+    contract.update({
+        "w_fit_uses_only_physical_frames_zero_and_one": True,
+        "w_fit_may_use_one_or_two_initial_frames_with_accepted_matches": True,
+        "later_detections_never_replace_a_missed_initial_frame": True,
+        "w_unavailable_when_no_accepted_match_in_fixed_initial_window": True,
+    })
+    atomic_json(path, payload)
+
+
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
         json.loads(line)
@@ -187,6 +208,7 @@ def main() -> None:
             })
         else:
             raise ValueError(f"unknown raw status {status!r}")
+        normalize_w_contract(evaluation)
         payload = json.loads(evaluation.read_text(encoding="utf-8"))
         value = payload["methods"][METHOD]
         outputs.append({
