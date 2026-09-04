@@ -250,54 +250,103 @@ def main() -> None:
         evaluation = root / "onlinehmr.evaluation.json"
         status = str(raw.get("status"))
         if status == "success":
-            if not prediction.is_file() or not conversion.is_file():
-                subprocess.run([
-                    os.path.abspath(args.adapter_python), str(CONVERTER),
-                    "--native-root", str(Path(raw["native_root"]).resolve()),
-                    "--camera-trajectory", str(Path(raw["camera_trajectory"]).resolve()),
-                    "--manifest", str(runtime_manifest), "--line", str(line),
-                    "--output", str(prediction), "--metadata-output", str(conversion),
-                    "--method", METHOD, "--device", args.adapter_device,
-                ], cwd=WORKSPACE, check=True)
-            eval_payload = {
-                "schema_version": "Bridge3R-OnlineHMR-evaluator-runtime-v1",
-                "case_id": case_id,
-                "split": record["split"],
-                "record": record,
-                "methods": [METHOD],
-                "manifest_line": line,
-                "runtime_manifest": str(runtime_manifest),
-                "runtime_manifest_sha256": sha256(runtime_manifest),
-                "evaluator_manifest": str(evaluator_manifest),
-                "evaluator_manifest_sha256": sha256(evaluator_manifest),
-                "raw_inference_status": status,
-                "raw_inference_runtime": str(raw_path),
-                "raw_inference_runtime_sha256": sha256(raw_path),
-                "prediction_cache": str(prediction),
-                "prediction_cache_sha256": sha256(prediction),
-                "conversion_metadata": str(conversion),
-                "conversion_metadata_sha256": sha256(conversion),
-                "runtime_gt_access": False,
-                "gt_used_only_after_inference": True,
-            }
-            if eval_runtime.is_file():
-                if json.loads(eval_runtime.read_text(encoding="utf-8")) != eval_payload:
-                    raise RuntimeError(f"stale evaluator runtime at line {line}")
-            else:
-                atomic_json(eval_runtime, eval_payload)
-            if not evaluation.is_file():
-                subprocess.run([
-                    os.path.abspath(args.evaluator_python), str(evaluator_script),
-                    "--cache", str(prediction), "--runtime-report", str(eval_runtime),
-                    "--gt-root", str(args.gt_root.resolve()), "--output", str(evaluation),
-                ], cwd=WORKSPACE, check=True)
-            attach_same_evaluator_metrics(
-                args.dataset,
-                prediction,
-                record,
-                args.gt_root.resolve(),
-                evaluation,
-            )
+            retained_invalid = False
+            if evaluation.is_file():
+                retained = json.loads(evaluation.read_text(encoding="utf-8"))
+                retained_invalid = (
+                    retained.get("methods", {}).get(METHOD, {}).get("status")
+                    == "invalid_output"
+                )
+            if not retained_invalid:
+                conversion_error = None
+                if not prediction.is_file() or not conversion.is_file():
+                    try:
+                        subprocess.run([
+                            os.path.abspath(args.adapter_python), str(CONVERTER),
+                            "--native-root", str(Path(raw["native_root"]).resolve()),
+                            "--camera-trajectory", str(Path(raw["camera_trajectory"]).resolve()),
+                            "--manifest", str(runtime_manifest), "--line", str(line),
+                            "--output", str(prediction), "--metadata-output", str(conversion),
+                            "--method", METHOD, "--device", args.adapter_device,
+                        ], cwd=WORKSPACE, check=True)
+                    except subprocess.CalledProcessError as error:
+                        conversion_error = (
+                            "prediction_conversion_failed: "
+                            f"exit_status={error.returncode}"
+                        )
+                if conversion_error is not None:
+                    failed = failed_result(
+                        args.dataset, record, args.gt_root.resolve(), conversion_error
+                    )
+                    failed.update({
+                        "status": "invalid_output",
+                        "failure_stage": "prediction_validation_and_conversion",
+                        "same_internal_evaluator": {
+                            "status": "unavailable",
+                            "failure_reason": conversion_error,
+                            "W-MPJPE_mm": None,
+                            "WA-MPJPE_mm": None,
+                            "w_available": False,
+                            "wa_available": False,
+                        },
+                    })
+                    atomic_json(evaluation, {
+                        "schema_version": f"Bridge3R-OnlineHMR-{args.dataset}-evaluation-v1",
+                        "protocol": record["protocol"],
+                        "case_id": case_id,
+                        "record_runtime_fields": record,
+                        "methods": {METHOD: failed},
+                        "inputs": {
+                            "prediction_cache": None,
+                            "runtime_report": str(raw_path),
+                        },
+                        "evaluation_contract": {
+                            "runtime_gt_access": False,
+                            "gt_used_only_in_evaluator": True,
+                            "invalid_native_output_counts_as_zero_coverage": True,
+                            "test_tuning": False,
+                        },
+                    })
+                else:
+                    eval_payload = {
+                        "schema_version": "Bridge3R-OnlineHMR-evaluator-runtime-v1",
+                        "case_id": case_id,
+                        "split": record["split"],
+                        "record": record,
+                        "methods": [METHOD],
+                        "manifest_line": line,
+                        "runtime_manifest": str(runtime_manifest),
+                        "runtime_manifest_sha256": sha256(runtime_manifest),
+                        "evaluator_manifest": str(evaluator_manifest),
+                        "evaluator_manifest_sha256": sha256(evaluator_manifest),
+                        "raw_inference_status": status,
+                        "raw_inference_runtime": str(raw_path),
+                        "raw_inference_runtime_sha256": sha256(raw_path),
+                        "prediction_cache": str(prediction),
+                        "prediction_cache_sha256": sha256(prediction),
+                        "conversion_metadata": str(conversion),
+                        "conversion_metadata_sha256": sha256(conversion),
+                        "runtime_gt_access": False,
+                        "gt_used_only_after_inference": True,
+                    }
+                    if eval_runtime.is_file():
+                        if json.loads(eval_runtime.read_text(encoding="utf-8")) != eval_payload:
+                            raise RuntimeError(f"stale evaluator runtime at line {line}")
+                    else:
+                        atomic_json(eval_runtime, eval_payload)
+                    if not evaluation.is_file():
+                        subprocess.run([
+                            os.path.abspath(args.evaluator_python), str(evaluator_script),
+                            "--cache", str(prediction), "--runtime-report", str(eval_runtime),
+                            "--gt-root", str(args.gt_root.resolve()), "--output", str(evaluation),
+                        ], cwd=WORKSPACE, check=True)
+                    attach_same_evaluator_metrics(
+                        args.dataset,
+                        prediction,
+                        record,
+                        args.gt_root.resolve(),
+                        evaluation,
+                    )
         elif status == "failed":
             value = failed_result(
                 args.dataset, record, args.gt_root.resolve(),
@@ -327,8 +376,10 @@ def main() -> None:
         payload = json.loads(evaluation.read_text(encoding="utf-8"))
         value = payload["methods"][METHOD]
         same_evaluator = value.get("same_internal_evaluator", {})
+        evaluation_status = str(value.get("status") or "success")
         outputs.append({
             "line": line, "case_id": case_id, "raw_status": status,
+            "evaluation_status": evaluation_status,
             "evaluation": str(evaluation), "evaluation_sha256": sha256(evaluation),
             "coverage": value["coverage"]["coverage"],
             "precision": value["coverage"]["precision"],
@@ -339,7 +390,7 @@ def main() -> None:
         })
         print(
             f"[OnlineHMR consume {args.dataset} line {line:03d}] "
-            f"{status} coverage={outputs[-1]['coverage']:.6f}", flush=True,
+            f"{evaluation_status} coverage={outputs[-1]['coverage']:.6f}", flush=True,
         )
     summary = {
         "schema_version": SCHEMA,

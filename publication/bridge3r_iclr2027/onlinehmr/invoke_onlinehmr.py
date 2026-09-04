@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import signal
 import shutil
@@ -74,6 +75,23 @@ def validate_images(image_dir: Path, frame_count: int) -> None:
         )
     if any(path.stat().st_size <= 0 for path in images):
         raise ValueError("staged input contains an empty JPEG")
+
+
+def validate_trajectory(path: Path, frame_count: int) -> tuple[bool, str | None]:
+    """Lightweight validation before declaring a native output usable."""
+
+    try:
+        rows = [line.split() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        if len(rows) != frame_count - 1 or any(len(row) != 8 for row in rows):
+            return False, "invalid_camera_trajectory_shape"
+        values = [[float(token) for token in row] for row in rows]
+        if any(not math.isfinite(token) for row in values for token in row):
+            return False, "nonfinite_camera_trajectory"
+        if any(row[0] <= 0 for row in values):
+            return False, "nonpositive_camera_scale"
+    except (OSError, UnicodeError, ValueError):
+        return False, "unreadable_camera_trajectory"
+    return True, None
 
 
 def remove_temporary_case(path: Path, parent: Path) -> int:
@@ -227,15 +245,21 @@ def main() -> None:
     global_results = native / "global_results"
     pointclouds = sorted(global_results.glob("*.ply")) if global_results.is_dir() else []
     trajectory_rows = 0
+    trajectory_valid = False
+    trajectory_failure_reason = "missing_camera_trajectory"
     if frozen_trajectory.is_file():
         trajectory_rows = sum(
             bool(line.strip())
             for line in frozen_trajectory.read_text(encoding="utf-8").splitlines()
         )
+        trajectory_valid, trajectory_failure_reason = validate_trajectory(
+            frozen_trajectory, frame_count
+        )
     success = bool(
         returncode == 0
         and frozen_trajectory.is_file()
         and trajectory_rows == frame_count - 1
+        and trajectory_valid
         and pointclouds
     )
     cleanup_errors = []
@@ -257,6 +281,7 @@ def main() -> None:
         "failure_reason": None if success else (
             "wall_time_timeout" if timed_out else
             "camera_progress_stall_timeout" if stalled else
+            trajectory_failure_reason if not trajectory_valid else
             "nonzero_exit_or_incomplete_native_outputs"
         ),
         "dataset": row.get("dataset"),
@@ -282,6 +307,7 @@ def main() -> None:
         "camera_trajectory": str(frozen_trajectory) if frozen_trajectory.is_file() else None,
         "camera_trajectory_sha256": sha256(frozen_trajectory) if frozen_trajectory.is_file() else None,
         "camera_trajectory_rows": trajectory_rows,
+        "camera_trajectory_valid": trajectory_valid,
         "scene_pointclouds": [
             {"path": str(path), "bytes": path.stat().st_size, "sha256": sha256(path)}
             for path in pointclouds

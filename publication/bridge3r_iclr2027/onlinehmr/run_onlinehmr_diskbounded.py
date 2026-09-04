@@ -170,6 +170,43 @@ def main() -> None:
         group_token = token(entry)
         metadata = output / args.dataset / "stage_metadata" / args.attempt / group_token
         line_text = ",".join(str(line) for line in group_lines)
+        if args.dataset == "egohumans":
+            inner_archive, stage_root, _ = egohuman_paths(work, entry)
+        else:
+            inner_archive = work / "nested" / entry
+            h4d_token = "_".join(PurePosixPath(entry).with_suffix("").parts)
+            stage_root = work / "staging" / h4d_token
+        evaluation_paths = [
+            run_root / f"line{line:03d}/onlinehmr.evaluation.json"
+            for line in group_lines
+        ]
+        if all(path.is_file() for path in evaluation_paths):
+            group_state = {
+                "entry": entry,
+                "lines": group_lines,
+                "status": "complete",
+                "evaluations": [
+                    {"path": str(path), "bytes": path.stat().st_size}
+                    for path in evaluation_paths
+                ],
+                "resumed_from_existing_evaluations": True,
+            }
+            if not args.keep_staging:
+                for line in group_lines:
+                    remove_inside(input_root / str(rows[line - 1]["case_id"]), input_root)
+                remove_inside(stage_root, work / "staging")
+                remove_inside(
+                    inner_archive,
+                    work / ("archives" if args.dataset == "egohumans" else "nested"),
+                )
+                group_state["reproducible_staging_removed"] = True
+            state["groups"][entry] = group_state
+            atomic_json(state_path, state)
+            print(
+                f"[{group_index}/{len(groups)}] reuse complete {entry}: {line_text}",
+                flush=True,
+            )
+            continue
         group_state: dict[str, Any] = {
             "entry": entry, "lines": group_lines, "status": "staging",
         }
@@ -178,7 +215,6 @@ def main() -> None:
         print(f"[{group_index}/{len(groups)}] staging {entry}: {line_text}", flush=True)
 
         if args.dataset == "egohumans":
-            inner_archive, stage_root, _ = egohuman_paths(work, entry)
             run([
                 str(MOVIE_PYTHON), str(EGOHUMAN_STAGER),
                 "--outer", str(args.archive.resolve()), "--entry", entry,
@@ -188,9 +224,6 @@ def main() -> None:
                 "--reserve-gib", str(args.reserve_gib),
             ], metadata / "stage.log")
         else:
-            inner_archive = work / "nested" / entry
-            h4d_token = "_".join(PurePosixPath(entry).with_suffix("").parts)
-            stage_root = work / "staging" / h4d_token
             run([
                 str(MOVIE_PYTHON), str(H4D_STAGER),
                 "--outer", str(args.archive.resolve()), "--entry", entry,
@@ -229,14 +262,14 @@ def main() -> None:
             "--evaluator-python", str(MOVIE_PYTHON), "--adapter-device", "cpu",
         ], output / args.dataset / "logs" / f"{group_token}.evaluation.log")
 
-        evaluation_paths = [run_root / f"line{line:03d}/onlinehmr.evaluation.json" for line in group_lines]
         missing = [str(path) for path in evaluation_paths if not path.is_file()]
         if missing:
             raise FileNotFoundError(missing[0])
         group_state.update({
             "status": "complete",
             "evaluations": [
-                {"path": str(path), "sha256": sha256(path)} for path in evaluation_paths
+                {"path": str(path), "bytes": path.stat().st_size}
+                for path in evaluation_paths
             ],
         })
         if not args.keep_staging:
