@@ -73,6 +73,97 @@ def normalize_w_contract(path: Path) -> None:
     atomic_json(path, payload)
 
 
+def attach_same_evaluator_metrics(
+    dataset: str,
+    prediction: Path,
+    record: dict[str, Any],
+    gt_root: Path,
+    evaluation: Path,
+) -> None:
+    """Add W/WA computed by the exact internal dataset evaluator.
+
+    The public-method evaluator deliberately uses one shared alignment across
+    datasets.  The frozen BRIDGE3R protocols do not: EgoBody uses its CS150
+    shared-clip override, while EgoHumans and Harmony4D retain the v15
+    per-track W/WA definition.  Keeping both results prevents a cross-contract
+    subtraction while avoiding any model rerun.
+    """
+
+    import numpy as np
+
+    from versions.v15.harmony4d import evaluate_harmony as frozen
+    from versions.v15.harmony4d.topology import CommonTopology
+
+    payload = json.loads(evaluation.read_text(encoding="utf-8"))
+    value = payload["methods"][METHOD]
+    try:
+        if dataset == "egobody":
+            from versions.v20.egobody import evaluate_egobody as exact
+
+            gt, identities = exact.load_gt(record, gt_root)
+            evaluator = exact.evaluate_method
+            implementation = "versions.v20.egobody.evaluate_egobody.evaluate_method"
+            alignment_scope = (
+                "one clip-level shared Sim(3) fitted from the earliest two "
+                "accepted pre-cut time points"
+            )
+        elif dataset == "egohumans":
+            from versions.v19.egohumans.evaluate_egohumans import load_gt
+
+            gt, identities = load_gt(record, gt_root, CommonTopology.load())
+            evaluator = frozen.evaluate_method
+            implementation = "versions.v15.harmony4d.evaluate_harmony.evaluate_method"
+            alignment_scope = "per-track similarity fitted from its earliest two accepted matches"
+        elif dataset == "harmony4d":
+            gt, identities = frozen.load_gt(record, gt_root, CommonTopology.load())
+            evaluator = frozen.evaluate_method
+            implementation = "versions.v15.harmony4d.evaluate_harmony.evaluate_method"
+            alignment_scope = "per-track similarity fitted from its earliest two accepted matches"
+        else:
+            raise ValueError(dataset)
+        with np.load(prediction, allow_pickle=False) as cache:
+            arrays = frozen.method_arrays(cache, METHOD)
+            exact_value = evaluator(
+                METHOD,
+                arrays,
+                gt,
+                identities,
+                int(record["boundary_index"]),
+                float(record["fps"]),
+            )
+        named = exact_value["multi_thumbs_named_provisional"]
+        exact_coverage = float(exact_value["coverage"]["coverage"])
+        exact_idf1 = float(exact_value["identity"]["idf1"])
+        if not np.isclose(exact_coverage, value["coverage"]["coverage"], atol=1e-12):
+            raise ValueError("same-evaluator Coverage differs from public adapter")
+        if not np.isclose(exact_idf1, value["identity"]["idf1"], atol=1e-12):
+            raise ValueError("same-evaluator IDF1 differs from public adapter")
+        w = named["w_mpjpe_mm"]["mean"]
+        wa = named["wa_mpjpe_mm"]["mean"]
+        result = {
+            "status": "available",
+            "implementation": implementation,
+            "alignment_scope": alignment_scope,
+            "W-MPJPE_mm": w,
+            "WA-MPJPE_mm": wa,
+            "w_available": w is not None,
+            "wa_available": wa is not None,
+            "Coverage": exact_coverage,
+            "IDF1": exact_idf1,
+        }
+    except Exception as error:
+        result = {
+            "status": "unavailable",
+            "failure_reason": f"{type(error).__name__}: {error}",
+            "W-MPJPE_mm": None,
+            "WA-MPJPE_mm": None,
+            "w_available": False,
+            "wa_available": False,
+        }
+    value["same_internal_evaluator"] = result
+    atomic_json(evaluation, payload)
+
+
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
         json.loads(line)
@@ -183,6 +274,13 @@ def main() -> None:
                     "--cache", str(prediction), "--runtime-report", str(eval_runtime),
                     "--gt-root", str(args.gt_root.resolve()), "--output", str(evaluation),
                 ], cwd=WORKSPACE, check=True)
+            attach_same_evaluator_metrics(
+                args.dataset,
+                prediction,
+                record,
+                args.gt_root.resolve(),
+                evaluation,
+            )
         elif status == "failed":
             value = failed_result(
                 args.dataset, record, args.gt_root.resolve(),
@@ -211,13 +309,16 @@ def main() -> None:
         normalize_w_contract(evaluation)
         payload = json.loads(evaluation.read_text(encoding="utf-8"))
         value = payload["methods"][METHOD]
+        same_evaluator = value.get("same_internal_evaluator", {})
         outputs.append({
             "line": line, "case_id": case_id, "raw_status": status,
             "evaluation": str(evaluation), "evaluation_sha256": sha256(evaluation),
             "coverage": value["coverage"]["coverage"],
             "precision": value["coverage"]["precision"],
             "idf1": value["identity"]["idf1"],
-            "w_available": value["world_alignment"]["w_available"],
+            "w_available": same_evaluator.get(
+                "w_available", value["world_alignment"]["w_available"]
+            ),
         })
         print(
             f"[OnlineHMR consume {args.dataset} line {line:03d}] "

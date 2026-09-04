@@ -20,6 +20,7 @@ METHOD = "onlinehmr_official"
 SCHEMA = "Bridge3R-OnlineHMR-publication-aggregate-v1"
 METRICS = (
     "W-MPJPE_mm", "WA-MPJPE_mm", "MPJPE_mm", "PA-MPJPE_mm", "MPVPE_mm",
+    "AdapterShared-W-MPJPE_mm", "AdapterShared-WA-MPJPE_mm",
     "ATE-Sim3_m", "ATE-SE3_m", "RPE-translation_m", "RPE-rotation_deg",
     "Camera-seam-translation_m", "Camera-seam-rotation_deg", "Human-seam_mm",
     "IDF1", "IDs", "Coverage", "Precision",
@@ -224,6 +225,14 @@ def main() -> None:
             raise ValueError(f"unexpected method at line {line}")
         value = payload["methods"][METHOD]
         named = value.get("multi_thumbs_named_provisional", {})
+        same_evaluator = value.get("same_internal_evaluator")
+        if (
+            args.require_complete
+            and raw.get("status") == "success"
+            and not isinstance(same_evaluator, dict)
+        ):
+            raise ValueError(f"missing same-internal-evaluator metrics at line {line}")
+        comparable = same_evaluator if isinstance(same_evaluator, dict) else {}
         coverage = value.get("coverage", {})
         identity = value.get("identity", {})
         camera = value.get("camera", {})
@@ -241,8 +250,18 @@ def main() -> None:
             "failure_reason": raw.get("failure_reason"),
             "wall_time_seconds": finite(raw.get("wall_time_seconds")),
             "native_track_count": int(raw.get("native_track_count", 0)),
-            "W-MPJPE_mm": nested_mean(named, "w_mpjpe_mm", "mean"),
-            "WA-MPJPE_mm": nested_mean(named, "wa_mpjpe_mm", "mean"),
+            "W-MPJPE_mm": (
+                finite(comparable.get("W-MPJPE_mm"))
+                if same_evaluator is not None
+                else nested_mean(named, "w_mpjpe_mm", "mean")
+            ),
+            "WA-MPJPE_mm": (
+                finite(comparable.get("WA-MPJPE_mm"))
+                if same_evaluator is not None
+                else nested_mean(named, "wa_mpjpe_mm", "mean")
+            ),
+            "AdapterShared-W-MPJPE_mm": nested_mean(named, "w_mpjpe_mm", "mean"),
+            "AdapterShared-WA-MPJPE_mm": nested_mean(named, "wa_mpjpe_mm", "mean"),
             "MPJPE_mm": nested_mean(named, "mpjpe_mm", "mean"),
             "PA-MPJPE_mm": nested_mean(named, "pa_mpjpe_mm", "mean"),
             "MPVPE_mm": nested_mean(named, "mpvpe_mm", "mean"),
@@ -257,8 +276,16 @@ def main() -> None:
             "IDs": finite(identity.get("ids_total")),
             "Coverage": finite(coverage.get("coverage")),
             "Precision": finite(coverage.get("precision")),
-            "W_available": bool(value.get("world_alignment", {}).get("w_available")),
-            "WA_available": bool(value.get("world_alignment", {}).get("wa_available")),
+            "W_available": bool(
+                comparable.get("w_available")
+                if same_evaluator is not None
+                else value.get("world_alignment", {}).get("w_available")
+            ),
+            "WA_available": bool(
+                comparable.get("wa_available")
+                if same_evaluator is not None
+                else value.get("world_alignment", {}).get("wa_available")
+            ),
             "camera_reportable": bool(camera.get("reportable")),
             "evaluation": str(evaluation),
             "evaluation_sha256": sha256(evaluation),
@@ -315,6 +342,11 @@ def main() -> None:
         "confidence_intervals": confidence,
         "runtime_gt_access": False,
         "conditional_errors_accompanied_by_availability": True,
+        "w_wa_metric_contract": (
+            "W-MPJPE and WA-MPJPE use the same frozen dataset evaluator as "
+            "the corresponding BRIDGE3R row; adapter-shared values are retained "
+            "as explicitly named diagnostics"
+        ),
         "cases": rows,
     }
     output = args.output_dir.resolve()
