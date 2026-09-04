@@ -13,6 +13,8 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
+import numpy as np
+
 
 METHOD = "onlinehmr_official"
 SCHEMA = "Bridge3R-OnlineHMR-publication-aggregate-v1"
@@ -106,6 +108,59 @@ def unit_macro(rows: list[dict[str, Any]], scope: str) -> dict[str, Any]:
     return output
 
 
+def bootstrap_intervals(
+    rows: list[dict[str, Any]],
+    *,
+    cluster_key: str,
+    scope: str,
+    samples: int,
+    seed: int,
+) -> list[dict[str, Any]]:
+    """Cluster-bootstrap metric means without imputing unavailable geometry."""
+
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for index, row in enumerate(rows):
+        cluster = str(row.get(cluster_key, f"case-{index:06d}"))
+        buckets.setdefault(cluster, []).append(row)
+    clusters = sorted(buckets)
+    if not clusters:
+        raise ValueError("cannot bootstrap an empty result")
+    rng = np.random.default_rng(seed)
+    draws = rng.integers(0, len(clusters), size=(samples, len(clusters)))
+    output: list[dict[str, Any]] = []
+    for metric in METRICS:
+        cluster_values = []
+        for cluster in clusters:
+            values = [row[metric] for row in buckets[cluster] if row[metric] is not None]
+            cluster_values.append(mean(values) if values else float("nan"))
+        values_array = np.asarray(cluster_values, dtype=np.float64)
+        distribution = []
+        for draw in draws:
+            sampled = values_array[draw]
+            sampled = sampled[np.isfinite(sampled)]
+            if sampled.size:
+                distribution.append(float(sampled.mean()))
+        finite_values = values_array[np.isfinite(values_array)]
+        estimate = float(finite_values.mean()) if finite_values.size else None
+        if distribution:
+            low, high = np.quantile(np.asarray(distribution), [0.025, 0.975]).tolist()
+        else:
+            low, high = None, None
+        output.append({
+            "scope": scope,
+            "metric": metric,
+            "estimate": estimate,
+            "ci95_low": low,
+            "ci95_high": high,
+            "available_clusters": int(finite_values.size),
+            "total_clusters": len(clusters),
+            "bootstrap_samples": samples,
+            "seed": seed,
+            "availability_policy": "finite clusters only; no missing-geometry imputation",
+        })
+    return output
+
+
 def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -125,7 +180,11 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--lines", help="optional subset for pilot aggregation")
     parser.add_argument("--require-complete", action="store_true")
+    parser.add_argument("--bootstrap-samples", type=int, default=10000)
+    parser.add_argument("--seed", type=int, default=20260903)
     args = parser.parse_args()
+    if args.bootstrap_samples < 1000:
+        raise ValueError("--bootstrap-samples must be at least 1000")
 
     manifest = args.manifest.resolve()
     manifest_rows = [
@@ -215,6 +274,29 @@ def main() -> None:
         if subset:
             angle_rows.append({"angle_stratum": label, **summarize(subset, "case-macro")})
             angle_rows.append({"angle_stratum": label, **unit_macro(subset, "independent-unit-macro")})
+    confidence: dict[str, Any] = {
+        "case_macro": bootstrap_intervals(
+            rows, cluster_key="case_id", scope="case-macro",
+            samples=args.bootstrap_samples, seed=args.seed,
+        ),
+        "independent_unit_macro": bootstrap_intervals(
+            rows, cluster_key="unit", scope="independent-unit-macro",
+            samples=args.bootstrap_samples, seed=args.seed,
+        ),
+        "angle_strata": {},
+    }
+    for label in sorted({row["angle_stratum"] for row in rows}):
+        subset = [row for row in rows if row["angle_stratum"] == label]
+        confidence["angle_strata"][label] = {
+            "case_macro": bootstrap_intervals(
+                subset, cluster_key="case_id", scope="case-macro",
+                samples=args.bootstrap_samples, seed=args.seed,
+            ),
+            "independent_unit_macro": bootstrap_intervals(
+                subset, cluster_key="unit", scope="independent-unit-macro",
+                samples=args.bootstrap_samples, seed=args.seed,
+            ),
+        }
     payload = {
         "schema_version": SCHEMA,
         "dataset": args.dataset,
@@ -230,6 +312,7 @@ def main() -> None:
         "case_macro": case_summary,
         "independent_unit_macro": independent_summary,
         "angle_summaries": angle_rows,
+        "confidence_intervals": confidence,
         "runtime_gt_access": False,
         "conditional_errors_accompanied_by_availability": True,
         "cases": rows,
@@ -260,6 +343,21 @@ def main() -> None:
         output / "onlinehmr_failures.csv",
         [row for row in rows if row["raw_status"] != "success" or row["Coverage"] in (None, 0.0)],
         fields,
+    )
+    confidence_rows = confidence["case_macro"] + confidence["independent_unit_macro"]
+    for label, scopes in confidence["angle_strata"].items():
+        for values in scopes.values():
+            confidence_rows.extend(
+                {**value, "angle_stratum": label} for value in values
+            )
+    write_csv(
+        output / "onlinehmr_confidence_intervals.csv",
+        confidence_rows,
+        [
+            "angle_stratum", "scope", "metric", "estimate", "ci95_low",
+            "ci95_high", "available_clusters", "total_clusters",
+            "bootstrap_samples", "seed", "availability_policy",
+        ],
     )
     print(json.dumps({
         "dataset": args.dataset,
