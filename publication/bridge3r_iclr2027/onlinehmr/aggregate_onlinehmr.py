@@ -75,6 +75,8 @@ def summarize(rows: list[dict[str, Any]], scope: str) -> dict[str, Any]:
         "case_count": len(rows),
         "successful_inference_cases": sum(row["raw_status"] == "success" for row in rows),
         "failed_inference_cases": sum(row["raw_status"] != "success" for row in rows),
+        "valid_output_cases": sum(row["evaluation_status"] == "success" for row in rows),
+        "invalid_output_cases": sum(row["evaluation_status"] == "invalid_output" for row in rows),
         "W_available_cases": sum(bool(row["W_available"]) for row in rows),
         "WA_available_cases": sum(bool(row["WA_available"]) for row in rows),
         "camera_reportable_cases": sum(bool(row["camera_reportable"]) for row in rows),
@@ -247,7 +249,8 @@ def main() -> None:
             "sequence": record.get("sequence"),
             "angle_stratum": angle(case_id),
             "raw_status": raw.get("status"),
-            "failure_reason": raw.get("failure_reason"),
+            "evaluation_status": str(value.get("status") or "success"),
+            "failure_reason": value.get("failure_reason") or raw.get("failure_reason"),
             "wall_time_seconds": finite(raw.get("wall_time_seconds")),
             "native_track_count": int(raw.get("native_track_count", 0)),
             "W-MPJPE_mm": (
@@ -353,14 +356,15 @@ def main() -> None:
     atomic_json(output / "onlinehmr_aggregate.json", payload)
     fields = [
         "line", "case_id", "unit", "sequence", "angle_stratum", "raw_status",
-        "failure_reason", "wall_time_seconds", "native_track_count", *METRICS,
+        "evaluation_status", "failure_reason", "wall_time_seconds", "native_track_count", *METRICS,
         "W_available", "WA_available", "camera_reportable", "evaluation",
         "evaluation_sha256",
     ]
     write_csv(output / "onlinehmr_case_metrics.csv", rows, fields)
     summary_fields = [
         "scope", "case_count", "unit_count", "successful_inference_cases",
-        "failed_inference_cases", *METRICS, "W_available_cases", "WA_available_cases",
+        "failed_inference_cases", "valid_output_cases", "invalid_output_cases",
+        *METRICS, "W_available_cases", "WA_available_cases",
         "camera_reportable_cases",
     ]
     write_csv(
@@ -373,7 +377,10 @@ def main() -> None:
     )
     write_csv(
         output / "onlinehmr_failures.csv",
-        [row for row in rows if row["raw_status"] != "success" or row["Coverage"] in (None, 0.0)],
+        [
+            row for row in rows
+            if row["evaluation_status"] != "success" or row["Coverage"] in (None, 0.0)
+        ],
         fields,
     )
     confidence_rows = confidence["case_macro"] + confidence["independent_unit_macro"]

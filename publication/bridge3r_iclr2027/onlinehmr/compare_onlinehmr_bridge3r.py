@@ -236,13 +236,16 @@ def main() -> None:
             raise ValueError(f"aggregate/case CSV mismatch for {key}")
         primary = aggregate[spec.primary_scope]
         case_scope = aggregate["case_macro"]
-        successful = int(case_scope["successful_inference_cases"])
+        successful = int(case_scope["valid_output_cases"])
         zero_coverage = sum(number(row.get("Coverage")) == 0.0 for row in online_rows)
         results[key] = {
             "display": spec.display,
             "expected_cases": spec.expected,
             "observed_cases": len(pairs),
-            "successful_inference_cases": successful,
+            "valid_output_cases": successful,
+            "native_process_successful_cases": int(
+                case_scope["successful_inference_cases"]
+            ),
             "zero_coverage_cases": zero_coverage,
             "primary_scope": spec.primary_scope,
             "camera_metric": spec.camera_label,
@@ -302,12 +305,12 @@ def main() -> None:
 \\resizebox{\\textwidth}{!}{%
 \\begin{tabular}{llrrrrrrlr}
 \\toprule
-Dataset & Method & Completed & W $\\downarrow$ & WA $\\downarrow$ & ATE$^{*}$ $\\downarrow$ & IDF1 $\\uparrow$ & Coverage $\\uparrow$ & $N_W/N_{WA}$ & $N_{\\mathrm{cam}}$ \\\\
+Dataset & Method & Valid output & W $\\downarrow$ & WA $\\downarrow$ & ATE$^{*}$ $\\downarrow$ & IDF1 $\\uparrow$ & Coverage $\\uparrow$ & $N_W/N_{WA}$ & $N_{\\mathrm{cam}}$ \\\\
 \\midrule
 """ + "\n".join(latex_rows) + """
 \\bottomrule
 \\end{tabular}}
-\\parbox{0.99\\textwidth}{\\footnotesize W, WA, and ATE are conditional errors and must be read with $N_W/N_{WA}$, $N_{\\mathrm{cam}}$, and Coverage. W and WA are in mm. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Completed counts native inference completion; zero-match cases remain in the fixed Coverage and IDF1 denominators.}
+\\parbox{0.99\\textwidth}{\\footnotesize W, WA, and ATE are conditional errors and must be read with $N_W/N_{WA}$, $N_{\\mathrm{cam}}$, and Coverage. W and WA are in mm. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Valid output excludes failed processes and structurally invalid native outputs; both remain in the fixed Coverage and IDF1 denominators as zero.}
 """
     atomic_text(output / "onlinehmr_public_reference.tex", latex)
     print(json.dumps({"output": str(output), "datasets": list(results)}, indent=2))
