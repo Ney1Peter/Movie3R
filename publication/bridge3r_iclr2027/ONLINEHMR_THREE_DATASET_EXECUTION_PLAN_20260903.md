@@ -60,19 +60,16 @@ availability.
 
 ## 3. Current archive audit
 
-- `EgoHuman.zip`: central directory and Zip64 end records are present.
-- `Harmony4D.zip`: central directory and Zip64 end records are present.
-- `EgoBody.zip`: incomplete as uploaded on 2026-09-03. Its size is
-  253,431,283,712 bytes, while the local header declares
-  `kinect_color.zip` alone as 352,747,775,690 uncompressed bytes and
-  352,801,606,863 packed bytes. Both `unzip` and `7z` report a missing/corrupt
-  central directory. The available file ends inside that payload, so its
-  formal four pilot cases cannot be staged.
-
-Work therefore proceeds immediately with the eight EgoHumans/Harmony4D pilot
-cases and all method-independent adapter tests. The four frozen EgoBody pilot
-cases are queued without changing selection; they run after a complete archive
-is restored. The incomplete archive must not be silently treated as valid data.
+- `EgoHuman.zip` and `Harmony4D.zip` have readable central directories and
+  Zip64 end records.
+- The restored `EgoBody.zip` is 359,069,231,957 bytes and contains the complete
+  approximately 353-GB nested RGB archive. Its central directory, selected RGB
+  stream, release assets, and all 129 frozen runtime rows were verified once
+  before execution.
+- Runtime identity is enforced by the small frozen manifests and by keeping the
+  source archives unchanged throughout each attempt. Large source archives are
+  not repeatedly hashed during execution because that would compete with the
+  disk-bounded staging path without changing the scientific protocol.
 
 ## 4. Reproducibility and stopping rules
 
@@ -88,7 +85,7 @@ is restored. The incomplete archive must not be silently treated as valid data.
 
 ## 5. Execution ledger
 
-### 2026-09-03: eight available pilot cases completed
+### 2026-09-04: all twelve pilot cases completed
 
 - Harmony4D: 4/4 cases completed automatically. Case-macro coverage is
   0.1167 and IDF1 is 0.0694. W-MPJPE is available for 2/4 cases and
@@ -101,15 +98,20 @@ is restored. The incomplete archive must not be silently treated as valid data.
   cases have native person and camera predictions but zero evaluated
   cross-shot coverage; these are scientific failures rather than adapter or
   infrastructure failures and are retained in the denominator.
-- The current pilot audit is 8/12 attempted and 6/12 passing the frozen case
-  gate. The four unattempted cases are exactly the preselected EgoBody cases.
+- Before EgoBody was restored, the interim audit was 8/12 attempted and 6/12
+  passing; this interim count did not trigger any protocol change.
+- EgoBody: 4/4 cases completed automatically. Case-macro Coverage is 0.4925,
+  IDF1 is 0.3481, W-MPJPE is available for 3/4 cases, and WA-MPJPE for 4/4.
+- The final frozen pilot audit is 12/12 attempted and 10/12 passing. It therefore
+  passes the preregistered gate without changing samples, model options,
+  matching thresholds, or viewpoint strata. The two non-passing cases remain
+  the EgoHumans large/extreme zero-Coverage scientific failures.
 
 Machine-readable evidence is stored under
 `data/OnlineHMR_work_v1/pilot/`; raw per-case evidence is stored under
-`data/OnlineHMR_work_v1/runs/`. Full evaluation has not been started because
-the requested order is pilot first and the uploaded EgoBody archive is
-truncated. No case, angle stratum, evaluator threshold, or model option has
-been changed after observing these results.
+`data/OnlineHMR_work_v1/runs/`. The EgoHumans 90-case formal attempt began only
+after the pilot gate passed. No case, angle stratum, evaluator threshold, or
+model option was changed after observing the pilot results.
 
 ## 6. Frozen continuation commands
 
