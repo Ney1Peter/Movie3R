@@ -274,7 +274,8 @@ def main() -> None:
             f"{f(primary.get('W-MPJPE_mm'))} & {f(primary.get('WA-MPJPE_mm'))} & "
             f"{f(primary.get(spec.camera_online), 3)} & {f(primary.get('IDF1'), 3)} & "
             f"{f(primary.get('Coverage'), 3)} & "
-            f"{int(case_scope['W_available_cases'])}/{int(case_scope['WA_available_cases'])} \\\\"
+            f"{int(case_scope['W_available_cases'])}/{int(case_scope['WA_available_cases'])} & "
+            f"{int(case_scope['camera_reportable_cases'])} \\\\"
         )
 
     payload = {
@@ -299,14 +300,14 @@ def main() -> None:
         writer.writerows(csv_rows)
     latex = """% Generated availability-aware OnlineHMR evidence. Do not edit by hand.
 \\resizebox{\\textwidth}{!}{%
-\\begin{tabular}{llrrrrrrl}
+\\begin{tabular}{llrrrrrrlr}
 \\toprule
-Dataset & Method & Completed & W $\\downarrow$ & WA $\\downarrow$ & ATE$^{*}$ $\\downarrow$ & IDF1 $\\uparrow$ & Coverage $\\uparrow$ & $N_W/N_{WA}$ \\\\
+Dataset & Method & Completed & W $\\downarrow$ & WA $\\downarrow$ & ATE$^{*}$ $\\downarrow$ & IDF1 $\\uparrow$ & Coverage $\\uparrow$ & $N_W/N_{WA}$ & $N_{\\mathrm{cam}}$ \\\\
 \\midrule
 """ + "\n".join(latex_rows) + """
 \\bottomrule
 \\end{tabular}}
-\\parbox{0.99\\textwidth}{\\footnotesize W and WA are conditional errors in mm and must be read with $N_W/N_{WA}$ and Coverage. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Completed counts native inference completion; zero-match cases remain in the fixed Coverage and IDF1 denominators.}
+\\parbox{0.99\\textwidth}{\\footnotesize W, WA, and ATE are conditional errors and must be read with $N_W/N_{WA}$, $N_{\\mathrm{cam}}$, and Coverage. W and WA are in mm. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Completed counts native inference completion; zero-match cases remain in the fixed Coverage and IDF1 denominators.}
 """
     atomic_text(output / "onlinehmr_public_reference.tex", latex)
     print(json.dumps({"output": str(output), "datasets": list(results)}, indent=2))
