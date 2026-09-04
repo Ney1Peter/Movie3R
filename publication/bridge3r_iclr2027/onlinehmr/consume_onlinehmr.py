@@ -101,8 +101,8 @@ def attach_same_evaluator_metrics(
             from versions.v20.egobody import evaluate_egobody as exact
 
             gt, identities = exact.load_gt(record, gt_root)
-            evaluator = exact.evaluate_method
-            implementation = "versions.v20.egobody.evaluate_egobody.evaluate_method"
+            evaluator = None
+            implementation = "versions.v20.egobody.evaluate_egobody.shared_cs150_alignment"
             alignment_scope = (
                 "one clip-level shared Sim(3) fitted from the earliest two "
                 "accepted pre-cut time points"
@@ -123,23 +123,40 @@ def attach_same_evaluator_metrics(
             raise ValueError(dataset)
         with np.load(prediction, allow_pickle=False) as cache:
             arrays = frozen.method_arrays(cache, METHOD)
-            exact_value = evaluator(
-                METHOD,
-                arrays,
-                gt,
-                identities,
-                int(record["boundary_index"]),
-                float(record["fps"]),
-            )
-        named = exact_value["multi_thumbs_named_provisional"]
-        exact_coverage = float(exact_value["coverage"]["coverage"])
-        exact_idf1 = float(exact_value["identity"]["idf1"])
+            if dataset == "egobody":
+                assignments = exact.frame_assignments(arrays, gt)
+                shared = exact.shared_cs150_alignment(
+                    arrays, gt, int(record["boundary_index"])
+                )
+                w = shared["w_mpjpe_mm"]["mean"]
+                wa = shared["wa_mpjpe_mm"]["mean"]
+                exact_coverage = float(
+                    sum(len(row) for row in assignments)
+                    / max(int(np.asarray(gt["visible"], dtype=bool).sum()), 1)
+                )
+                exact_idf1 = float(
+                    frozen.identity_metrics(
+                        arrays, assignments, identities, gt["visible"]
+                    )["idf1"]
+                )
+            else:
+                exact_value = evaluator(
+                    METHOD,
+                    arrays,
+                    gt,
+                    identities,
+                    int(record["boundary_index"]),
+                    float(record["fps"]),
+                )
+                named = exact_value["multi_thumbs_named_provisional"]
+                w = named["w_mpjpe_mm"]["mean"]
+                wa = named["wa_mpjpe_mm"]["mean"]
+                exact_coverage = float(exact_value["coverage"]["coverage"])
+                exact_idf1 = float(exact_value["identity"]["idf1"])
         if not np.isclose(exact_coverage, value["coverage"]["coverage"], atol=1e-12):
             raise ValueError("same-evaluator Coverage differs from public adapter")
         if not np.isclose(exact_idf1, value["identity"]["idf1"], atol=1e-12):
             raise ValueError("same-evaluator IDF1 differs from public adapter")
-        w = named["w_mpjpe_mm"]["mean"]
-        wa = named["wa_mpjpe_mm"]["mean"]
         result = {
             "status": "available",
             "implementation": implementation,
