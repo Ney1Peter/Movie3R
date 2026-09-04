@@ -291,7 +291,7 @@ def main() -> None:
             ),
             "camera_reportable": bool(camera.get("reportable")),
             "evaluation": str(evaluation),
-            "evaluation_sha256": sha256(evaluation),
+            "evaluation_bytes": evaluation.stat().st_size,
         })
     if args.require_complete and missing:
         raise FileNotFoundError(f"missing {len(missing)} evaluations; examples={missing[:3]}")
@@ -358,7 +358,7 @@ def main() -> None:
         "line", "case_id", "unit", "sequence", "angle_stratum", "raw_status",
         "evaluation_status", "failure_reason", "wall_time_seconds", "native_track_count", *METRICS,
         "W_available", "WA_available", "camera_reportable", "evaluation",
-        "evaluation_sha256",
+        "evaluation_bytes",
     ]
     write_csv(output / "onlinehmr_case_metrics.csv", rows, fields)
     summary_fields = [

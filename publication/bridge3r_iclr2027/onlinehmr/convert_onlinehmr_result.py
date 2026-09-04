@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -23,14 +22,6 @@ WORKSPACE = SCRIPT.parents[4]
 ONLINEHMR_REPO = WORKSPACE / "external_baselines/Video-OnlineHMR"
 if str(ONLINEHMR_REPO) not in sys.path:
     sys.path.insert(0, str(ONLINEHMR_REPO))
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(16 * 1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def jsonable(value: Any) -> Any:
@@ -200,7 +191,7 @@ def load_tracks(root: Path, case_id: str, frame_count: int) -> list[dict[str, An
             {
                 "label": label,
                 "path": path,
-                "path_sha256": sha256(path),
+                "path_bytes": path.stat().st_size,
                 "frame_ids": frames[indices],
                 "pred_shape": raw["pred_shape"][indices].astype(np.float32),
                 "pred_rotmat": raw["pred_rotmat"][indices].astype(np.float32),
@@ -349,12 +340,12 @@ def main() -> None:
         "summary": summary,
         "camera_audit": camera_audit,
         "cache": str(args.output.resolve()),
-        "cache_sha256": sha256(args.output.resolve()),
+        "cache_bytes": args.output.resolve().stat().st_size,
         "native_root": str(args.native_root.resolve()),
         "camera_trajectory": str(args.camera_trajectory.resolve()),
-        "camera_trajectory_sha256": sha256(args.camera_trajectory.resolve()),
+        "camera_trajectory_bytes": args.camera_trajectory.resolve().stat().st_size,
         "native_track_files": [
-            {"path": str(track["path"]), "sha256": track["path_sha256"]}
+            {"path": str(track["path"]), "bytes": track["path_bytes"]}
             for track in tracks
         ],
         "method": str(args.method),

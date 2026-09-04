@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import os
@@ -57,14 +56,6 @@ SPECS = {
         "ATE-Sim3_m", "ATE_Sim3_m", "ATE-Sim3", "case_macro",
     ),
 }
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(16 * 1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -259,11 +250,11 @@ def main() -> None:
             "paired_by_angle": angle_results,
             "sources": {
                 "online_case_csv": str(online_csv),
-                "online_case_csv_sha256": sha256(online_csv),
+                "online_case_csv_bytes": online_csv.stat().st_size,
                 "online_aggregate": str(aggregate_json),
-                "online_aggregate_sha256": sha256(aggregate_json),
+                "online_aggregate_bytes": aggregate_json.stat().st_size,
                 "bridge3r_case_csv": str(spec.internal_csv),
-                "bridge3r_case_csv_sha256": sha256(spec.internal_csv),
+                "bridge3r_case_csv_bytes": spec.internal_csv.stat().st_size,
                 "bridge3r_method_key": spec.bridge_key,
             },
         }

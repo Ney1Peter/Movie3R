@@ -300,16 +300,18 @@ def main() -> None:
         "image_dir": str(image_dir),
         "native_root": str(native),
         "native_track_files": [
-            {"path": str(path), "bytes": path.stat().st_size, "sha256": sha256(path)}
+            {"path": str(path), "bytes": path.stat().st_size}
             for path in track_files
         ],
         "native_track_count": len(track_files),
         "camera_trajectory": str(frozen_trajectory) if frozen_trajectory.is_file() else None,
-        "camera_trajectory_sha256": sha256(frozen_trajectory) if frozen_trajectory.is_file() else None,
+        "camera_trajectory_bytes": (
+            frozen_trajectory.stat().st_size if frozen_trajectory.is_file() else None
+        ),
         "camera_trajectory_rows": trajectory_rows,
         "camera_trajectory_valid": trajectory_valid,
         "scene_pointclouds": [
-            {"path": str(path), "bytes": path.stat().st_size, "sha256": sha256(path)}
+            {"path": str(path), "bytes": path.stat().st_size}
             for path in pointclouds
         ],
         "reproducible_intermediate_cleanup": {
@@ -321,8 +323,8 @@ def main() -> None:
         },
         "stdout_log": str(stdout_path),
         "stderr_log": str(stderr_path),
-        "stdout_sha256": sha256(stdout_path),
-        "stderr_sha256": sha256(stderr_path),
+        "stdout_bytes": stdout_path.stat().st_size,
+        "stderr_bytes": stderr_path.stat().st_size,
         "input_contract": "exact ordered staged JPEGs; no video re-encoding",
         "runtime_gt_access": False,
         "gt_camera_used": False,

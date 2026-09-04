@@ -223,6 +223,8 @@ def main() -> None:
     )
     runtime_rows = read_jsonl(runtime_manifest)
     evaluator_rows = read_jsonl(evaluator_manifest)
+    runtime_manifest_sha256 = sha256(runtime_manifest)
+    evaluator_manifest_sha256 = sha256(evaluator_manifest)
     if [row["case_id"] for row in runtime_rows] != [row["case_id"] for row in evaluator_rows]:
         raise ValueError("runtime/evaluator manifests differ")
     lines = [int(value) for value in args.lines.split(",") if value.strip()]
@@ -240,7 +242,7 @@ def main() -> None:
         raw = json.loads(raw_path.read_text(encoding="utf-8"))
         if (
             raw.get("case_id") != case_id
-            or raw.get("manifest_sha256") != sha256(runtime_manifest)
+            or raw.get("manifest_sha256") != runtime_manifest_sha256
             or raw.get("runtime_gt_access") is not False
         ):
             raise ValueError(f"raw runtime provenance mismatch at line {line}")
@@ -316,22 +318,33 @@ def main() -> None:
                         "methods": [METHOD],
                         "manifest_line": line,
                         "runtime_manifest": str(runtime_manifest),
-                        "runtime_manifest_sha256": sha256(runtime_manifest),
+                        "runtime_manifest_sha256": runtime_manifest_sha256,
                         "evaluator_manifest": str(evaluator_manifest),
-                        "evaluator_manifest_sha256": sha256(evaluator_manifest),
+                        "evaluator_manifest_sha256": evaluator_manifest_sha256,
                         "raw_inference_status": status,
                         "raw_inference_runtime": str(raw_path),
-                        "raw_inference_runtime_sha256": sha256(raw_path),
+                        "raw_inference_runtime_bytes": raw_path.stat().st_size,
                         "prediction_cache": str(prediction),
-                        "prediction_cache_sha256": sha256(prediction),
+                        "prediction_cache_bytes": prediction.stat().st_size,
                         "conversion_metadata": str(conversion),
-                        "conversion_metadata_sha256": sha256(conversion),
+                        "conversion_metadata_bytes": conversion.stat().st_size,
                         "runtime_gt_access": False,
                         "gt_used_only_after_inference": True,
                     }
                     if eval_runtime.is_file():
-                        if json.loads(eval_runtime.read_text(encoding="utf-8")) != eval_payload:
-                            raise RuntimeError(f"stale evaluator runtime at line {line}")
+                        retained_runtime = json.loads(
+                            eval_runtime.read_text(encoding="utf-8")
+                        )
+                        for key in (
+                            "case_id", "record", "methods", "manifest_line",
+                            "runtime_manifest", "evaluator_manifest",
+                            "raw_inference_status", "runtime_gt_access",
+                            "gt_used_only_after_inference",
+                        ):
+                            if retained_runtime.get(key) != eval_payload.get(key):
+                                raise RuntimeError(
+                                    f"stale evaluator runtime at line {line}: {key}"
+                                )
                     else:
                         atomic_json(eval_runtime, eval_payload)
                     if not evaluation.is_file():
@@ -361,7 +374,7 @@ def main() -> None:
                 "inputs": {
                     "prediction_cache": None,
                     "runtime_report": str(raw_path),
-                    "runtime_report_sha256": sha256(raw_path),
+                    "runtime_report_bytes": raw_path.stat().st_size,
                 },
                 "evaluation_contract": {
                     "runtime_gt_access": False,
@@ -380,7 +393,7 @@ def main() -> None:
         outputs.append({
             "line": line, "case_id": case_id, "raw_status": status,
             "evaluation_status": evaluation_status,
-            "evaluation": str(evaluation), "evaluation_sha256": sha256(evaluation),
+            "evaluation": str(evaluation), "evaluation_bytes": evaluation.stat().st_size,
             "coverage": value["coverage"]["coverage"],
             "precision": value["coverage"]["precision"],
             "idf1": value["identity"]["idf1"],
@@ -401,9 +414,9 @@ def main() -> None:
         "successful_inference_cases": sum(row["raw_status"] == "success" for row in outputs),
         "failed_inference_cases": sum(row["raw_status"] == "failed" for row in outputs),
         "runtime_manifest": str(runtime_manifest),
-        "runtime_manifest_sha256": sha256(runtime_manifest),
+        "runtime_manifest_sha256": runtime_manifest_sha256,
         "evaluator_manifest": str(evaluator_manifest),
-        "evaluator_manifest_sha256": sha256(evaluator_manifest),
+        "evaluator_manifest_sha256": evaluator_manifest_sha256,
         "runtime_gt_access": False,
         "cases": outputs,
     }
