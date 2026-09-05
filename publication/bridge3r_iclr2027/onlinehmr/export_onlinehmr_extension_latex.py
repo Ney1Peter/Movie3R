@@ -289,6 +289,46 @@ def export_harmony_paired(root: Path, payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def export_mvhuman_viewpoint_paired(root: Path) -> str:
+    method = paired_bridge(root, "mvhuman_mvh150")
+    lines = [
+        "% Auto-generated paired MVHuman viewpoint analysis.",
+        "\\begin{tabular}{lrrrrr}",
+        "\\toprule",
+        "Stratum & Online Anchor & BRIDGE3R Anchor & Online cam. rot. & BRIDGE3R cam. rot. & Cam. gain [95\\% CI] \\\\",
+        "\\midrule",
+    ]
+    for key, label in (
+        ("small", "small"),
+        ("medium", "medium"),
+        ("large", "large"),
+        ("very_large", "very-large"),
+        ("extreme", "extreme"),
+    ):
+        group = method.get("angle_strata", {}).get(key, {})
+        anchor = group.get("Anchor-MPJPE_mm", {})
+        camera = group.get("Camera-rotation_deg", {})
+        online_anchor = anchor.get("online", {}).get("mean")
+        bridge_anchor = anchor.get("internal", {}).get("mean")
+        online_camera = camera.get("online", {}).get("mean")
+        bridge_camera = camera.get("internal", {}).get("mean")
+        gain = camera.get("internal_advantage", {})
+        interval = gain.get("ci95")
+        gain_text = (
+            "--"
+            if gain.get("mean") is None or not interval
+            else f"{float(gain['mean']):.1f} [{float(interval[0]):.1f},{float(interval[1]):.1f}]"
+        )
+        lines.append(
+            f"{label}"
+            f" & {number(online_anchor)} & {number(bridge_anchor)}"
+            f" & {number(online_camera)} & {number(bridge_camera)}"
+            f" & {gain_text} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}", ""])
+    return "\n".join(lines)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign-root", type=Path, required=True)
@@ -309,6 +349,7 @@ def main() -> None:
         "harmony4d_multicut_onlinehmr_paired.tex": export_harmony_paired(
             root, payloads["harmony4d_multicut"]
         ),
+        "mvhuman_onlinehmr_viewpoint_paired.tex": export_mvhuman_viewpoint_paired(root),
     }
     for name, value in fragments.items():
         atomic_text(output / name, value)
