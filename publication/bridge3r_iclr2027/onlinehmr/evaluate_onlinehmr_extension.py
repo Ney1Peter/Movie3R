@@ -98,6 +98,7 @@ def evaluate_harmony(
         load_gt,
         method_arrays,
     )
+    from versions.v15.harmony4d import evaluate_harmony as frozen  # type: ignore
 
     boundaries = [int(value) for value in evaluator["boundaries"]]
     topology = CommonTopology.load()
@@ -105,20 +106,91 @@ def evaluate_harmony(
     gt, identities = load_gt(evaluator, extracted, topology)
     with np.load(prediction, allow_pickle=False) as cache:
         arrays = method_arrays(cache, METHOD)
-        aggregate = evaluate_method(
-            METHOD, arrays, gt, identities, boundaries[0], float(evaluator["fps"])
-        )
-        seams = {}
-        for boundary in boundaries:
-            boundary_result = evaluate_method(
-                METHOD, arrays, gt, identities, boundary, float(evaluator["fps"])
+        try:
+            aggregate = evaluate_method(
+                METHOD, arrays, gt, identities, boundaries[0], float(evaluator["fps"])
             )
-            seams[str(boundary)] = {
-                "cut_seam": boundary_result["cut_seam"],
-                "boundary_camera_rpe_translation_m": boundary_result["camera"]["boundary_rpe_translation_m"],
-                "boundary_camera_rpe_rotation_deg": boundary_result["camera"]["boundary_rpe_rotation_deg"],
+            seams = {}
+            for boundary in boundaries:
+                boundary_result = evaluate_method(
+                    METHOD, arrays, gt, identities, boundary, float(evaluator["fps"])
+                )
+                seams[str(boundary)] = {
+                    "cut_seam": boundary_result["cut_seam"],
+                    "boundary_camera_rpe_translation_m": boundary_result["camera"]["boundary_rpe_translation_m"],
+                    "boundary_camera_rpe_rotation_deg": boundary_result["camera"]["boundary_rpe_rotation_deg"],
+                }
+            aggregate["cut_seams"] = seams
+        except ValueError as error:
+            if "No initial matched people for shared world fit" not in str(error):
+                raise
+            # Preserve a valid fixed-denominator record when OnlineHMR has no
+            # accepted person in the two immutable initial frames.  W/WA and
+            # human seam errors are genuinely unavailable, while coverage,
+            # IDF1 and camera-centre ATE remain well-defined under the same
+            # frozen matching threshold.
+            assignments = []
+            matched_count = 0
+            for frame in range(len(gt["cameras_c2w"])):
+                valid = np.flatnonzero(arrays["valid"][frame].astype(bool))
+                gt_valid = np.flatnonzero(gt["visible"][frame].astype(bool))
+                local, costs = frozen.frame_assignment(
+                    arrays["cameras_c2w"][frame], arrays["joints_world"][frame, valid],
+                    gt["cameras_c2w"][frame], gt["joints_world"][frame, gt_valid],
+                )
+                local = [
+                    (row, column) for row, column in local
+                    if float(costs[row, column]) <= frozen.MAX_ASSIGNMENT_COST_M
+                ]
+                pairs = [(int(valid[row]), int(gt_valid[column])) for row, column in local]
+                assignments.append(pairs)
+                matched_count += len(pairs)
+            visible = int(np.asarray(gt["visible"], dtype=bool).sum())
+            predicted = int(np.asarray(arrays["valid"], dtype=bool).sum())
+            centres = np.asarray(arrays["cameras_c2w"][:, :3, 3], dtype=np.float64)
+            target_centres = np.asarray(gt["cameras_c2w"][:, :3, 3], dtype=np.float64)
+            camera_fit = frozen.fit_similarity(target_centres, centres)
+            ate = np.linalg.norm(frozen.apply_similarity(centres, camera_fit) - target_centres, axis=1)
+            seams = {}
+            for boundary in boundaries:
+                predicted_relative = np.linalg.inv(arrays["cameras_c2w"][boundary - 1]) @ arrays["cameras_c2w"][boundary]
+                gt_relative = np.linalg.inv(gt["cameras_c2w"][boundary - 1]) @ gt["cameras_c2w"][boundary]
+                seams[str(boundary)] = {
+                    "cut_seam": {
+                        "available": True,
+                        "root_excess_m": None,
+                        "joint_excess_m": None,
+                        "vertex_excess_m": None,
+                        "camera_translation_excess_m": None,
+                        "camera_rotation_excess_deg": frozen.rotation_error_deg(predicted_relative, gt_relative),
+                    },
+                    "boundary_camera_rpe_translation_m": None,
+                    "boundary_camera_rpe_rotation_deg": frozen.rotation_error_deg(predicted_relative, gt_relative),
+                }
+            aggregate = {
+                "method": METHOD,
+                "status": "evaluator_unavailable_insufficient_initial_match",
+                "failure_reason": str(error),
+                "multi_thumbs_named_provisional": {
+                    "w_mpjpe_mm": frozen.summarize([]),
+                    "wa_mpjpe_mm": frozen.summarize([]),
+                    "ate_sim3_m": frozen.summarize(ate),
+                },
+                "coverage": {
+                    "visible_gt_person_frames": visible,
+                    "matched_person_frames": matched_count,
+                    "missed_person_frames": visible - matched_count,
+                    "predicted_person_frames": predicted,
+                    "false_positive_detections": max(predicted - matched_count, 0),
+                    "coverage": matched_count / max(visible, 1),
+                    "precision": matched_count / max(predicted, 1),
+                    "recall": matched_count / max(visible, 1),
+                    "minimum_visible_vertex_fraction": frozen.MIN_VISIBLE_VERTEX_FRACTION,
+                    "maximum_assignment_cost_m": frozen.MAX_ASSIGNMENT_COST_M,
+                },
+                "identity": frozen.identity_metrics(arrays, assignments, identities, gt["visible"]),
+                "cut_seams": seams,
             }
-        aggregate["cut_seams"] = seams
     atomic_json(output, jsonable({
         "schema_version": "Bridge3R-OnlineHMR-Harmony4D-multicut-evaluation-v1",
         "protocol": evaluator["protocol"],
