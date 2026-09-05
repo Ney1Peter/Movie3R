@@ -72,19 +72,33 @@ def number(value: Any) -> float:
 
 
 def cluster_bootstrap(
-    values: list[tuple[str, float]], *, samples: int, seed: int
+    values: list[tuple[str, float]], *, samples: int, seed: int,
+    unit_macro: bool = False,
 ) -> tuple[float, float, float]:
-    point = float(np.mean([value for _, value in values]))
     buckets: dict[str, list[float]] = {}
     for unit, value in values:
         buckets.setdefault(unit, []).append(value)
     units = sorted(buckets)
+    if unit_macro:
+        unit_values = np.asarray(
+            [np.mean(buckets[unit]) for unit in units], dtype=np.float64
+        )
+        point = float(np.mean(unit_values))
+    else:
+        point = float(np.mean([value for _, value in values]))
     rng = np.random.default_rng(seed)
     distribution = np.empty(samples, dtype=np.float64)
     for index in range(samples):
         selected = rng.integers(0, len(units), size=len(units))
-        draw = [value for unit_index in selected for value in buckets[units[unit_index]]]
-        distribution[index] = np.mean(draw)
+        if unit_macro:
+            distribution[index] = np.mean(unit_values[selected])
+        else:
+            draw = [
+                value
+                for unit_index in selected
+                for value in buckets[units[unit_index]]
+            ]
+            distribution[index] = np.mean(draw)
     low, high = np.quantile(distribution, [0.025, 0.975]).tolist()
     return point, float(low), float(high)
 
@@ -98,6 +112,7 @@ def paired_metric(
     samples: int,
     seed: int,
     conditional: bool,
+    unit_macro: bool,
 ) -> dict[str, Any]:
     differences: list[tuple[str, float]] = []
     online_values, bridge_values = [], []
@@ -119,7 +134,9 @@ def paired_metric(
             "available_units": 0,
             "conditional_on_onlinehmr_availability": conditional,
         }
-    point, low, high = cluster_bootstrap(differences, samples=samples, seed=seed)
+    point, low, high = cluster_bootstrap(
+        differences, samples=samples, seed=seed, unit_macro=unit_macro
+    )
     return {
         "estimate_bridge3r_benefit": point,
         "ci95_low": low,
@@ -131,6 +148,7 @@ def paired_metric(
         "conditional_on_onlinehmr_availability": conditional,
         "direction": "positive favours BRIDGE3R",
         "bootstrap_unit": "recording/capture",
+        "point_aggregation": "independent-unit-macro" if unit_macro else "case-macro",
         "bootstrap_samples": samples,
         "seed": seed,
     }
@@ -204,6 +222,7 @@ def main() -> None:
                 samples=args.bootstrap_samples,
                 seed=args.seed + dataset_index,
                 conditional=conditional,
+                unit_macro=spec.primary_scope == "independent_unit_macro",
             )
             for name, (online_column, bridge_column, higher, conditional) in metrics.items()
         }
@@ -219,6 +238,7 @@ def main() -> None:
                     samples=args.bootstrap_samples,
                     seed=args.seed + dataset_index,
                     conditional=conditional,
+                    unit_macro=spec.primary_scope == "independent_unit_macro",
                 )
                 for name, (online_column, bridge_column, higher, conditional) in metrics.items()
             }
@@ -285,7 +305,7 @@ def main() -> None:
         "ci95_low", "ci95_high", "onlinehmr_mean_on_shared_support",
         "bridge3r_mean_on_shared_support", "available_cases", "available_units",
         "conditional_on_onlinehmr_availability", "direction", "bootstrap_unit",
-        "bootstrap_samples", "seed",
+        "point_aggregation", "bootstrap_samples", "seed",
     ]
     output.mkdir(parents=True, exist_ok=True)
     with (output / "onlinehmr_bridge3r_paired.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -304,6 +324,37 @@ Dataset & Method & Valid output & W $\\downarrow$ & WA $\\downarrow$ & ATE$^{*}$
 \\parbox{0.99\\textwidth}{\\footnotesize W, WA, and ATE are conditional errors and must be read with $N_W/N_{WA}$, $N_{\\mathrm{cam}}$, and Coverage. W and WA are in mm. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Valid output excludes failed processes and structurally invalid native outputs; both remain in the fixed Coverage and IDF1 denominators as zero.}
 """
     atomic_text(output / "onlinehmr_public_reference.tex", latex)
+    paired_rows = []
+    for key in args.datasets:
+        result = results[key]
+        comparisons = result["paired_bridge3r_benefit"]
+
+        def gain_cell(metric: str, digits: int) -> str:
+            value = comparisons[metric]
+            point = number(value.get("estimate_bridge3r_benefit"))
+            low = number(value.get("ci95_low"))
+            high = number(value.get("ci95_high"))
+            if not all(np.isfinite(item) for item in (point, low, high)):
+                return "\\textemdash{}"
+            return f"{point:.{digits}f} [{low:.{digits}f}, {high:.{digits}f}]"
+
+        paired_rows.append(
+            f"{result['display']} & {gain_cell('W-MPJPE_mm', 1)} & "
+            f"{gain_cell('WA-MPJPE_mm', 1)} & "
+            f"{gain_cell(result['camera_metric'], 3)} & "
+            f"{gain_cell('IDF1', 3)} & {gain_cell('Coverage', 3)} \\\\"
+        )
+    paired_latex = """% Generated paired BRIDGE3R advantage over OnlineHMR. Do not edit by hand.
+\\resizebox{\\textwidth}{!}{%
+\\begin{tabular}{lrrrrr}
+\\toprule
+Dataset & W gain [95\\% CI] & WA gain [95\\% CI] & ATE$^{*}$ gain [95\\% CI] & IDF1 gain [95\\% CI] & Coverage gain [95\\% CI] \\\\
+\\midrule
+""" + "\n".join(paired_rows) + """
+\\bottomrule
+\\end{tabular}}
+"""
+    atomic_text(output / "onlinehmr_paired_advantage.tex", paired_latex)
     print(json.dumps({"output": str(output), "datasets": list(results)}, indent=2))
 
 
