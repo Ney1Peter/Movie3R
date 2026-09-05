@@ -37,6 +37,13 @@ MULTICUT_METRICS = {
     "Boundary-camera-rotation_deg": "mean_boundary_camera_relative_rotation_deg",
     "Boundary-camera-translation_m": "mean_boundary_camera_relative_translation_m",
 }
+HIGHER_IS_BETTER = {"Coverage", "IDF1"}
+HARMONY_METRICS = {
+    "W-MPJPE_mm": ("multi_thumbs_named_provisional", "w_mpjpe_mm", "mean"),
+    "WA-MPJPE_mm": ("multi_thumbs_named_provisional", "wa_mpjpe_mm", "mean"),
+    "ATE-Sim3_m": ("multi_thumbs_named_provisional", "ate_sim3_m", "mean"),
+    "IDF1": ("identity", "idf1"),
+}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -70,9 +77,17 @@ def parse_method(value: str) -> tuple[str, str]:
     return label, key
 
 
-def load_internal(directory: Path) -> dict[str, dict[str, Any]]:
+def nested(value: Any, *keys: str) -> Any:
+    for key in keys:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+    return value
+
+
+def load_internal(directory: Path, pattern: str) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
-    for path in sorted(directory.glob("*.json")):
+    for path in sorted(directory.glob(pattern)):
         payload = read_json(path)
         case_id = payload.get("case_id")
         if case_id is None:
@@ -126,7 +141,7 @@ def summarize_group(
             ),
             "advantage_sign": (
                 "online_minus_internal_for_lower_is_better_metrics; "
-                "internal_minus_online_for_Coverage"
+                "internal_minus_online_for_higher_is_better_metrics"
             ),
         }
     return result
@@ -136,6 +151,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--online-aggregate", type=Path, required=True)
     parser.add_argument("--internal-metrics-dir", type=Path, required=True)
+    parser.add_argument("--internal-file-glob", default="*.json")
     parser.add_argument("--method", action="append", type=parse_method, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--bootstrap-seed", type=int, default=20260905)
@@ -146,10 +162,15 @@ def main() -> None:
     if int(online.get("missing_case_count", -1)) != 0:
         raise RuntimeError("paired comparison requires a complete OnlineHMR aggregate")
     protocol = str(online["protocol"])
-    if protocol not in {"CS150", "MVH150", "MC150-3", "MC150-4"}:
+    harmony = protocol == "Bridge3R-Harmony4D-MultiCut-v1"
+    if protocol not in {"CS150", "MVH150", "MC150-3", "MC150-4"} and not harmony:
         raise ValueError(f"unsupported paired protocol: {protocol}")
-    metrics = MULTICUT_METRICS if protocol.startswith("MC150") else SINGLE_METRICS
-    internal = load_internal(args.internal_metrics_dir.resolve())
+    metrics = (
+        HARMONY_METRICS if harmony
+        else MULTICUT_METRICS if protocol.startswith("MC150")
+        else SINGLE_METRICS
+    )
+    internal = load_internal(args.internal_metrics_dir.resolve(), args.internal_file_glob)
     online_ids = [str(row["case_id"]) for row in online["cases"]]
     missing = [case_id for case_id in online_ids if case_id not in internal]
     if missing:
@@ -167,7 +188,11 @@ def main() -> None:
                 raise KeyError(f"{case_id}: missing internal method {method_key}")
             for display, source in metrics.items():
                 online_value = finite(online_case.get(display))
-                internal_value = finite(method.get("metrics", {}).get(source, {}).get("mean"))
+                internal_value = (
+                    finite(nested(method, *source))
+                    if harmony
+                    else finite(method.get("metrics", {}).get(source, {}).get("mean"))
+                )
                 rows.append({
                     "case_id": case_id,
                     "cluster": cluster,
@@ -179,11 +204,41 @@ def main() -> None:
                     "internal": internal_value,
                     "internal_advantage": (
                         None if online_value is None or internal_value is None
-                        else online_value - internal_value
+                        else (
+                            internal_value - online_value
+                            if display in HIGHER_IS_BETTER
+                            else online_value - internal_value
+                        )
+                    ),
+                })
+            if harmony:
+                seams = [
+                    finite(nested(value, "cut_seam", "root_excess_m"))
+                    for _, value in sorted(
+                        method.get("cut_seams", {}).items(), key=lambda item: int(item[0])
+                    )
+                ]
+                seams = [value for value in seams if value is not None]
+                online_seam = finite(online_case.get("Seam-root_m"))
+                internal_seam = None if not seams else float(np.mean(seams))
+                rows.append({
+                    "case_id": case_id,
+                    "cluster": cluster,
+                    "angle_stratum": stratum,
+                    "internal_method": method_label,
+                    "internal_method_key": method_key,
+                    "metric": "Seam-root_m",
+                    "online": online_seam,
+                    "internal": internal_seam,
+                    "internal_advantage": (
+                        None if online_seam is None or internal_seam is None
+                        else online_seam - internal_seam
                     ),
                 })
             online_coverage = finite(online_case.get("Coverage"))
-            internal_coverage = finite(method.get("coverage", {}).get("valid_frame_coverage"))
+            internal_coverage = finite(
+                method.get("coverage", {}).get("coverage" if harmony else "valid_frame_coverage")
+            )
             rows.append({
                 "case_id": case_id,
                 "cluster": cluster,
