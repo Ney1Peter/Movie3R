@@ -158,6 +158,7 @@ def main() -> None:
             "fixed_denominator": expected,
             "successful_inference_cases": aggregate["successful_inference_cases"],
             "failed_inference_cases": aggregate["failed_inference_cases"],
+            "failure_reason_counts": aggregate.get("failure_reason_counts", {}),
             "valid_geometry_cases": aggregate["valid_geometry_cases"],
             "coverage": coverage,
             "coverage_support": coverage_n,

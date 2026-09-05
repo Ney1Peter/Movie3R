@@ -174,6 +174,41 @@ def export_harmony(payload: dict[str, Any]) -> str:
     )
 
 
+def export_availability(payloads: dict[str, dict[str, Any]]) -> str:
+    labels = (
+        ("harmony4d_multicut", "Harmony4D, two cuts"),
+        ("aist_cs150", "AIST++, one cut"),
+        ("aist_mc150_3", "AIST++, two cuts"),
+        ("aist_mc150_4", "AIST++, three cuts"),
+        ("mvhuman_mvh150", "MVHuman, one cut"),
+    )
+    lines = [
+        "% Auto-generated fixed-denominator OnlineHMR availability accounting.",
+        "\\begin{tabular}{lrrrrrl}",
+        "\\toprule",
+        "Protocol & $N$ & Successful & Valid geom. & Completion & Coverage & Failure reason \\\\",
+        "\\midrule",
+    ]
+    for key, label in labels:
+        payload = payloads[key]
+        n = int(payload["fixed_manifest_denominator"])
+        completion, _ = metric(payload, "Completion")
+        coverage, _ = metric(payload, "Coverage")
+        reasons = payload.get("failure_reason_counts", {})
+        failure = "; ".join(
+            f"non-finite camera ({count})" if reason == "nonfinite_camera_trajectory"
+            else f"{str(reason).replace('_', '-')} ({count})"
+            for reason, count in sorted(reasons.items())
+        ) or "--"
+        lines.append(
+            f"{label} & {n} & {int(payload['successful_inference_cases'])}"
+            f" & {int(payload['valid_geometry_cases'])}"
+            f" & {percent(completion)} & {percent(coverage)} & {failure} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}", ""])
+    return "\n".join(lines)
+
+
 def export_boundary_scaling(payloads: dict[str, dict[str, Any]]) -> str:
     lines = [
         "% Auto-generated OnlineHMR repeated-cut boundary diagnostics.",
@@ -343,6 +378,7 @@ def main() -> None:
         "aist_mc150-4_onlinehmr_row.tex": export_multicut(payloads["aist_mc150_4"]),
         "mvhuman_onlinehmr_row.tex": export_mvhuman(payloads["mvhuman_mvh150"]),
         "harmony4d_multicut_onlinehmr_row.tex": export_harmony(payloads["harmony4d_multicut"]),
+        "onlinehmr_extension_availability.tex": export_availability(payloads),
         "aist_multicut_onlinehmr_boundaries.tex": export_boundary_scaling(payloads),
         "mvhuman_onlinehmr_angle_strata.tex": export_angle_strata(payloads["mvhuman_mvh150"]),
         "onlinehmr_extension_paired_bridge3r.tex": export_paired_bridge(root, payloads),

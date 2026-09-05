@@ -157,6 +157,7 @@ def main() -> None:
             "protocol": protocol,
             "raw_status": raw.get("status"),
             "evaluation_status": value.get("status", "ok"),
+            "failure_reason": raw.get("failure_reason") or value.get("failure_reason"),
             "wall_time_seconds": finite(raw.get("wall_time_seconds")),
             "native_track_count": int(raw.get("native_track_count", 0)),
             "Coverage": coverage,
@@ -224,6 +225,14 @@ def main() -> None:
         "missing_cases": missing,
         "successful_inference_cases": sum(row["raw_status"] == "success" for row in rows),
         "failed_inference_cases": sum(row["raw_status"] != "success" for row in rows),
+        "failure_reason_counts": {
+            reason: sum(row.get("failure_reason") == reason for row in rows)
+            for reason in sorted({
+                str(row["failure_reason"])
+                for row in rows
+                if row.get("failure_reason")
+            })
+        },
         "valid_geometry_cases": sum(row["evaluation_status"] in {"ok", None} for row in rows),
         "overall": overall,
         "bootstrap_95_ci": intervals,
