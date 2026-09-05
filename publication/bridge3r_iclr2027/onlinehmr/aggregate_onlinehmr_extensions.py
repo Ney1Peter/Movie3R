@@ -28,6 +28,8 @@ AIST_METRICS = {
 }
 MULTICUT_METRICS = {
     **{key: value for key, value in AIST_METRICS.items() if not key.startswith("Seam-")},
+    "Camera-rotation_deg": "post_first_cut_camera_relative_rotation_deg",
+    "Camera-translation_m": "post_first_cut_camera_relative_translation_m",
     "Seam-root_mm": "mean_boundary_seam_root_excess_mm",
     "Seam-orientation_deg": "mean_boundary_seam_orientation_excess_deg",
     "Boundary-camera-rotation_deg": "mean_boundary_camera_relative_rotation_deg",
