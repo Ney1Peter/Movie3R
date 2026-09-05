@@ -232,6 +232,7 @@ def pack(
     tracks: list[dict[str, Any]],
     device: torch.device,
     batch_size: int,
+    include_vertices: bool = True,
 ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
     from lib.models.smpl import SMPL
 
@@ -239,12 +240,15 @@ def pack(
     if not tracks:
         arrays = {
             "cameras_c2w": cameras,
-            "vertices_world": np.full((frame_count, 1, 6890, 3), np.nan, np.float32),
             "joints_world": np.full((frame_count, 1, 24, 3), np.nan, np.float32),
             "persistent_ids": np.full((frame_count, 1), -1, np.int32),
             "native_ids": np.full((frame_count, 1), -1, np.int32),
             "valid": np.zeros((frame_count, 1), np.uint8),
         }
+        if include_vertices:
+            arrays["vertices_world"] = np.full(
+                (frame_count, 1, 6890, 3), np.nan, np.float32
+            )
         return arrays, {"native_tracks": 0, "valid_person_frames": 0, "empty_prediction": True}
 
     # The upstream SMPL wrapper hard-codes ``data/smpl`` relative to the
@@ -264,7 +268,10 @@ def pack(
         for frame in track["frame_ids"]:
             active[int(frame)].append(mapped_id)
     people = max(max(map(len, active), default=0), 1)
-    vertices = np.full((frame_count, people, 6890, 3), np.nan, np.float32)
+    vertices = (
+        np.full((frame_count, people, 6890, 3), np.nan, np.float32)
+        if include_vertices else None
+    )
     joints = np.full((frame_count, people, 24, 3), np.nan, np.float32)
     persistent = np.full((frame_count, people), -1, np.int32)
     native = np.full((frame_count, people), -1, np.int32)
@@ -279,7 +286,8 @@ def pack(
             translation = cameras[frame, :3, 3]
             world_vertices = camera_vertices[index] @ rotation.T + translation
             world_joints = camera_joints[index] @ rotation.T + translation
-            vertices[frame, slot] = world_vertices
+            if vertices is not None:
+                vertices[frame, slot] = world_vertices
             joints[frame, slot] = world_joints
             persistent[frame, slot] = mapped_id
             native[frame, slot] = mapped_id
@@ -293,12 +301,13 @@ def pack(
         raise ValueError(f"camera/world round-trip residual is too large: {max_roundtrip}")
     arrays = {
         "cameras_c2w": cameras,
-        "vertices_world": vertices,
         "joints_world": joints,
         "persistent_ids": persistent,
         "native_ids": native,
         "valid": valid,
     }
+    if vertices is not None:
+        arrays["vertices_world"] = vertices
     return arrays, {
         "native_tracks": len(tracks),
         "raw_to_packed_id": {str(track["label"]): index for index, track in enumerate(tracks)},
@@ -322,13 +331,24 @@ def main() -> None:
     parser.add_argument("--method", default=METHOD)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--omit-vertices",
+        action="store_true",
+        help="store joints/cameras/IDs only for evaluators that do not use surfaces",
+    )
     args = parser.parse_args()
 
     row = read_row(args.manifest.resolve(), int(args.line))
     frame_count = int(row["clip_length"])
     cameras, camera_audit = load_camera(args.camera_trajectory.resolve(), frame_count)
     tracks = load_tracks(args.native_root.resolve(), str(row["case_id"]), frame_count)
-    arrays, summary = pack(cameras, tracks, torch.device(args.device), int(args.batch_size))
+    arrays, summary = pack(
+        cameras,
+        tracks,
+        torch.device(args.device),
+        int(args.batch_size),
+        include_vertices=not args.omit_vertices,
+    )
     prefix = str(args.method) + "__"
     packed = {prefix + key: value for key, value in arrays.items()}
     atomic_npz(args.output.resolve(), packed)
@@ -350,6 +370,7 @@ def main() -> None:
         ],
         "method": str(args.method),
         "topology": "official neutral SMPL-6890 / first 24 official SMPL joints",
+        "vertices_retained": not args.omit_vertices,
         "coordinate_contract": (
             "native camera-coordinate SMPL transformed by OnlineHMR's independent "
             "incremental MASt3R-SLAM c2w trajectory"

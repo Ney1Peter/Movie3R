@@ -171,24 +171,42 @@ def evaluate_method(
         if source is not None and target is not None:
             orientation.append(rotation_error_deg(source, target))
     seam_root, seam_orientation, seam_camera_rotation, seam_camera_translation = [], [], [], []
-    for cut in cuts:
+    boundary_metrics = []
+    for boundary_order, cut in enumerate(cuts, 1):
         post = int(cut) + 1
+        boundary_row: dict[str, Any] = {
+            "boundary_order": boundary_order,
+            "cut_index": int(cut),
+            "seam_root_excess_mm": None,
+            "seam_orientation_excess_deg": None,
+            "camera_relative_rotation_deg": None,
+            "camera_relative_translation_m": None,
+        }
         if metric_valid[int(cut)] and metric_valid[post]:
-            seam_root.append(float(np.linalg.norm(
+            root_value = float(np.linalg.norm(
                 (aligned_root[post] - aligned_root[int(cut)]) - (gt_root[post] - gt_root[int(cut)])
-            )))
+            ))
+            seam_root.append(root_value)
+            boundary_row["seam_root_excess_mm"] = 1000.0 * root_value
             before_pred, after_pred = torso_rotation(aligned[int(cut)]), torso_rotation(aligned[post])
             before_gt, after_gt = torso_rotation(gt[int(cut)]), torso_rotation(gt[post])
             if all(value is not None for value in (before_pred, after_pred, before_gt, after_gt)):
-                seam_orientation.append(rotation_error_deg(
+                orientation_value = rotation_error_deg(
                     before_pred.T @ after_pred,  # type: ignore[union-attr]
                     before_gt.T @ after_gt,  # type: ignore[union-attr]
-                ))
+                )
+                seam_orientation.append(orientation_value)
+                boundary_row["seam_orientation_excess_deg"] = orientation_value
         if all(np.isfinite(value).all() for value in (pred_cameras[int(cut)], pred_cameras[post], gt_cameras[int(cut)], gt_cameras[post])):
             predicted_relative = np.linalg.inv(pred_cameras[int(cut)]) @ pred_cameras[post]
             gt_relative = np.linalg.inv(gt_cameras[int(cut)]) @ gt_cameras[post]
-            seam_camera_rotation.append(rotation_error_deg(predicted_relative[:3, :3], gt_relative[:3, :3]))
-            seam_camera_translation.append(float(np.linalg.norm(predicted_relative[:3, 3] - gt_relative[:3, 3])))
+            rotation_value = rotation_error_deg(predicted_relative[:3, :3], gt_relative[:3, :3])
+            translation_value = float(np.linalg.norm(predicted_relative[:3, 3] - gt_relative[:3, 3]))
+            seam_camera_rotation.append(rotation_value)
+            seam_camera_translation.append(translation_value)
+            boundary_row["camera_relative_rotation_deg"] = rotation_value
+            boundary_row["camera_relative_translation_m"] = translation_value
+        boundary_metrics.append(boundary_row)
     anchor_camera = pred_cameras[0]
     post_camera_rotation, post_camera_translation = [], []
     for frame in range(first_post, EXPECTED_FRAMES):
@@ -219,6 +237,7 @@ def evaluate_method(
             "definition": "one Sim(3) fitted on valid first-shot body-12 points only; reused without re-fitting after every RGB cut",
             "scale": fit[0], "rotation": fit[1], "translation": fit[2],
         },
+        "boundary_metrics": boundary_metrics,
         "selected_detection_index_per_frame": selected_indices,
     }
 
