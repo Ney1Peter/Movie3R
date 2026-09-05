@@ -109,7 +109,11 @@ def main() -> None:
     }
     if state_path.is_file():
         previous = json.loads(state_path.read_text(encoding="utf-8"))
-        if previous.get("runtime_manifest") != str(runtime_manifest) or previous.get("selected_lines") != lines:
+        previous_lines = set(int(value) for value in previous.get("selected_lines", []))
+        if (
+            previous.get("runtime_manifest") != str(runtime_manifest)
+            or not previous_lines.issubset(set(lines))
+        ):
             raise RuntimeError("existing protocol state belongs to a different frozen run")
         state["cases"] = previous.get("cases", {})
     atomic_json(state_path, state)
