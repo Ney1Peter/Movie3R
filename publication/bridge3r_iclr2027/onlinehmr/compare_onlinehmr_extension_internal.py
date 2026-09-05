@@ -133,11 +133,16 @@ def summarize_group(
     result: dict[str, Any] = {}
     for index, metric in enumerate(sorted({str(row["metric"]) for row in rows})):
         selected = [row for row in rows if row["metric"] == metric]
+        paired = [
+            row for row in selected
+            if finite(row.get("online")) is not None
+            and finite(row.get("internal")) is not None
+        ]
         result[metric] = {
-            "online": mean_ci_clustered(selected, "online", seed + index * 11, samples),
-            "internal": mean_ci_clustered(selected, "internal", seed + index * 11 + 1, samples),
+            "online": mean_ci_clustered(paired, "online", seed + index * 11, samples),
+            "internal": mean_ci_clustered(paired, "internal", seed + index * 11 + 1, samples),
             "internal_advantage": mean_ci_clustered(
-                selected, "internal_advantage", seed + index * 11 + 2, samples
+                paired, "internal_advantage", seed + index * 11 + 2, samples
             ),
             "advantage_sign": (
                 "online_minus_internal_for_lower_is_better_metrics; "
