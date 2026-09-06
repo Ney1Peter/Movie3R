@@ -1,0 +1,93 @@
+{
+  "source_prediction_checks": {
+    "egohumans": {
+      "all_arrays_equal_to_frozen_source": true,
+      "rgb_hashes_match": true,
+      "identity_arrays_unchanged": true,
+      "selected_frames": [
+        15,
+        32,
+        42,
+        49,
+        50,
+        61,
+        74
+      ],
+      "full_clip_idf1": 0.951048951048951
+    },
+    "case_01": {
+      "all_arrays_equal_to_frozen_source": true,
+      "rgb_hashes_match": true,
+      "identity_arrays_unchanged": true,
+      "selected_frames": [
+        12,
+        32,
+        49,
+        50,
+        75,
+        99,
+        100,
+        125,
+        149
+      ],
+      "full_clip_idf1": 0.5594405594405595
+    },
+    "case_02": {
+      "all_arrays_equal_to_frozen_source": true,
+      "rgb_hashes_match": true,
+      "identity_arrays_unchanged": true,
+      "selected_frames": [
+        12,
+        32,
+        49,
+        50,
+        75,
+        99,
+        100,
+        125,
+        149
+      ],
+      "full_clip_idf1": 0.5993975903614458
+    }
+  },
+  "figure_checks": {
+    "Shot3R_teaser_v1_panorama": {
+      "svg_parses": true,
+      "text_not_below_canvas": true,
+      "pdf_is_one_page": true,
+      "png_size": [
+        3600,
+        1760
+      ],
+      "pdf_bytes": 2851470
+    },
+    "Shot3R_teaser_v1_temporal": {
+      "svg_parses": true,
+      "text_not_below_canvas": true,
+      "pdf_is_one_page": true,
+      "png_size": [
+        3600,
+        1272
+      ],
+      "pdf_bytes": 2620757
+    },
+    "Shot3R_three_shot_candidate_NOT_recommended": {
+      "svg_parses": true,
+      "text_not_below_canvas": true,
+      "pdf_is_one_page": true,
+      "png_size": [
+        3600,
+        1250
+      ],
+      "pdf_bytes": 2166668
+    }
+  },
+  "source_results_modified": false,
+  "continuous_video": {
+    "width": 1600,
+    "height": 720,
+    "r_frame_rate": "20/1",
+    "duration": "3.000000",
+    "nb_frames": "60"
+  }
+}

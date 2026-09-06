@@ -1,0 +1,512 @@
+[
+  {
+    "source": "/tmp/shot3r_human3r_fig1_reference.png",
+    "file": "01_风格参考/Human3R_论文首页.png",
+    "bytes": 689993,
+    "sha256": "7d76df31dd43b435f285c6ea47541e935d062dd6b253bb6cfb4a1cf49f6586aa"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f015.jpg",
+    "file": "02_原始视频帧/EgoHumans/f015.jpg",
+    "bytes": 1087923,
+    "sha256": "376cd8d92c67adf2836187bd809311f0e00d08b87388828f58740007af3c4d60"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f032.jpg",
+    "file": "02_原始视频帧/EgoHumans/f032.jpg",
+    "bytes": 1121371,
+    "sha256": "e7e87697fd728fd26629268193f9fbf96c585850e8f365e708916d537c1aa209"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f042.jpg",
+    "file": "02_原始视频帧/EgoHumans/f042.jpg",
+    "bytes": 1112463,
+    "sha256": "9368fb5afd57d74b29eb34c2fd9df063beb73adab8c4641f5bec43476476d747"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f049.jpg",
+    "file": "02_原始视频帧/EgoHumans/f049.jpg",
+    "bytes": 1121736,
+    "sha256": "c7e24c15b861a509ab490fcf40a445b38d4f9f2d837b89f82eeaff1488060c5c"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f050.jpg",
+    "file": "02_原始视频帧/EgoHumans/f050.jpg",
+    "bytes": 809410,
+    "sha256": "fee24c9429ed6e67a775438f53a886bd2f917ca4af50b6dece9e779f62856bd7"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f061.jpg",
+    "file": "02_原始视频帧/EgoHumans/f061.jpg",
+    "bytes": 787598,
+    "sha256": "a1eff9955e4ccdeb6718ad59e602254a6901f2e0dd556e295fc1d261c5e9b243"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/rgb/f074.jpg",
+    "file": "02_原始视频帧/EgoHumans/f074.jpg",
+    "bytes": 777390,
+    "sha256": "e175b31809fe2c8de6fcacae26514be442df17ab4dc109b7e40587d61ebc5947"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f015_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f015_transparent.png",
+    "bytes": 74227,
+    "sha256": "5b40f4b23bbcf5216b6a714f359afcca7cadd0ecc71df9b9162953b72cf19d5b"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f032_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f032_transparent.png",
+    "bytes": 84606,
+    "sha256": "ddd09aa9768ad089cabc164be40c3259f11d710408c469ef26681e686f714d54"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f042_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f042_transparent.png",
+    "bytes": 88873,
+    "sha256": "8fd14049b6f88bc24df572f2ad4ceb67d85ad7e2a1fa9c81d928a52192aac344"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f049_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f049_transparent.png",
+    "bytes": 58375,
+    "sha256": "66941478fcc730faabdd7fa281177c2519d4a8eaad9c4fbb2977ba745e1f386f"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f050_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f050_transparent.png",
+    "bytes": 83243,
+    "sha256": "327085d486d2dc32084c3c4b5f3d498e36446309a9fca1de601c654039aa608e"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f061_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f061_transparent.png",
+    "bytes": 85872,
+    "sha256": "bcee13c5ecad49030961e090a8315e8ee85d748d7497f6c59dd88a17e58dfa23"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/f074_transparent.png",
+    "file": "03_重建效果参考/EgoHumans/f074_transparent.png",
+    "bytes": 82655,
+    "sha256": "1ffe2fd00b03da0480aae75923dd654a2064567e3c8f08a86a815e1791fe8f88"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/world_a.png",
+    "file": "03_重建效果参考/EgoHumans/world_a.png",
+    "bytes": 677490,
+    "sha256": "b8476293f5070b9cdc0eb62520b6f3d3eb220e3bf16f0f23680d4b3d78853f31"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/world_b.png",
+    "file": "03_重建效果参考/EgoHumans/world_b.png",
+    "bytes": 840945,
+    "sha256": "33bc8f0e39b725df022330cb238050f45792c6ff518b2d4c465df6d1b64ad034"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/renders/world_c.png",
+    "file": "03_重建效果参考/EgoHumans/world_c.png",
+    "bytes": 691728,
+    "sha256": "531913f10473d816e265cc49d0c0f3111f6133515c246fe1f8e9ebdf527c1c2f"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/provenance.json",
+    "file": "07_素材溯源与检查/EgoHumans_provenance.json",
+    "bytes": 5337,
+    "sha256": "30d100f721390bf50e44f63db49f172c032fb87ed8313f03d3ac001e93b4355d"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/egohumans_mesh_contact_sheet.jpg",
+    "file": "03_重建效果参考/EgoHumans_重建总览.jpg",
+    "bytes": 48783,
+    "sha256": "7da2d5281d92cdb3c251f5a49db005eae525c6be3c761dd4d500a0d9546eead1"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f012.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f012.jpg",
+    "bytes": 173615,
+    "sha256": "3f5d02144eb13d30952d057a14af5832e1488dba08194c7467d638d2643e5f50"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f032.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f032.jpg",
+    "bytes": 172543,
+    "sha256": "6ce440b6007b36fc120390c1f6b1251bea7c696372bb3dbddba3498b442b29db"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f049.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f049.jpg",
+    "bytes": 171448,
+    "sha256": "ef04018b93c6a3cc10af302fad539c721cb4702bcb754bc200233b2bd21f8e60"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f050.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f050.jpg",
+    "bytes": 186402,
+    "sha256": "89fea852fdd08b64b72506a48766f93c28509c8c1e0a4e835e2a343ddd1a17a1"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f075.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f075.jpg",
+    "bytes": 183933,
+    "sha256": "5d1ae6bc480605fb5caf2bd10186708f219692bde309736b815b0a062c17aa45"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f099.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f099.jpg",
+    "bytes": 185494,
+    "sha256": "b2463dff115f0ca1b473d9bc6443cfca9ce1e265bda2327f7b8f4f1532c07273"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f100.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f100.jpg",
+    "bytes": 169106,
+    "sha256": "38ce73be5576934679e4aa70cc9dc0cc18c1f44af922a130cdc3f7bee00a13b1"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f125.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f125.jpg",
+    "bytes": 168797,
+    "sha256": "3ca3abde15e02d6e752869a4195eb696084a2ff83c4803b1fef2d7728e5e8136"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/rgb/f149.jpg",
+    "file": "02_原始视频帧/Harmony4D_case01/f149.jpg",
+    "bytes": 164487,
+    "sha256": "5e70b38984f9c3417e57bbab44fd611becfb96f9d45ca6c6470efbeea3908244"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f012_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f012_transparent.png",
+    "bytes": 18773,
+    "sha256": "80d20c8166f9ca9282fe885adeee17b900a714f4c0c5eaacafcf47f5126ccce2"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f032_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f032_transparent.png",
+    "bytes": 20380,
+    "sha256": "25448869a81407561db0179ee493751a9637d66564b691064e82882574539158"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f049_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f049_transparent.png",
+    "bytes": 20576,
+    "sha256": "7703aa871f46b812c39fd74d02f05af05adc71fecb13bbb7cd0906d5286c6718"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f050_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f050_transparent.png",
+    "bytes": 20183,
+    "sha256": "a79c4ab29725343d4f6ff176ca61ccea7d379a6517711bc04dd1950e3e08ed3e"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f075_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f075_transparent.png",
+    "bytes": 18936,
+    "sha256": "0505e360e6cf1ba9617ebaed603025ad2beee6adc3ffddb86ba0580229cee814"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f099_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f099_transparent.png",
+    "bytes": 20850,
+    "sha256": "b632e30e9e7044cbb49f6b683d6738c8009cd57fb93c734fc82e9df737bac914"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f100_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f100_transparent.png",
+    "bytes": 15547,
+    "sha256": "a96f30c6fdc3c44761a83d2892485cf636a912c209d0fc072bcf75eae49b8696"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f125_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f125_transparent.png",
+    "bytes": 15674,
+    "sha256": "df8d4a896fb1be18ad6863d6600f69d6129197e71ca6a73b1e89bd5dc066000f"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/renders/f149_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case01/f149_transparent.png",
+    "bytes": 16508,
+    "sha256": "cd992b7676ea9a4b0ac0c7727c29e17a71a346ca72531285aabebbf4112eedbb"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_01/provenance.json",
+    "file": "07_素材溯源与检查/Harmony4D_case01_provenance.json",
+    "bytes": 6357,
+    "sha256": "cc96a1574275d60e9bed02e09faa0ca4579309b0657d1a393dd2b11bccb2db3b"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/case_01_mesh_contact_sheet.jpg",
+    "file": "03_重建效果参考/Harmony4D_case01_重建总览.jpg",
+    "bytes": 34340,
+    "sha256": "6fe15160dea5512403def14e69651aab54851d7ea1fa456424b46af3c6d8d688"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f012.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f012.jpg",
+    "bytes": 172638,
+    "sha256": "5c6b4712f2a3c50f49bf9b82fba9fda4c8aaa36a4e35575800df4f20c928505b"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f032.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f032.jpg",
+    "bytes": 172299,
+    "sha256": "f0a90de09bd4c11f328cbbdb5ba694ead29e05c74d8b937d367f46deefd8b5af"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f049.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f049.jpg",
+    "bytes": 168000,
+    "sha256": "6d4d2d503cd64a288893aa6f8ecce45f1fb8f5118dd592f49a343f524823e2ca"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f050.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f050.jpg",
+    "bytes": 185239,
+    "sha256": "a1b1e3113b7a198a74c01585e2eff29d18de242bd902075a555938d4d49e5161"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f075.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f075.jpg",
+    "bytes": 185477,
+    "sha256": "687c010e58815408e13aefcaf8e583085c3804db499ae62b18fd7f3eb416f52e"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f099.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f099.jpg",
+    "bytes": 188638,
+    "sha256": "a703a94eeab60af6074c90f69763ced74fbdd6d283d3bd1850ef16ea4a4833db"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f100.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f100.jpg",
+    "bytes": 162208,
+    "sha256": "8e70ef6fb054d0eb3e9586bc98fec607d3455202319cce340fb2c50a0ed2d2ae"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f125.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f125.jpg",
+    "bytes": 163561,
+    "sha256": "3df642ae99828260677f47fba593220a10275251a12ec3ea402a71bd21220147"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/rgb/f149.jpg",
+    "file": "02_原始视频帧/Harmony4D_case02/f149.jpg",
+    "bytes": 167245,
+    "sha256": "12b0bdd604d00cdd1cc315779844962221d783c72e151a550008e21f13ec8d90"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f012_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f012_transparent.png",
+    "bytes": 19247,
+    "sha256": "6154cb01293a7fb16e8e6f7205df1bd194196284acdcfdfbce58aa7527d1be32"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f032_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f032_transparent.png",
+    "bytes": 18860,
+    "sha256": "03277bbe84a15923bf4c231a2ee822f117f69387186b8891de9c84b8c25b9615"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f049_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f049_transparent.png",
+    "bytes": 18400,
+    "sha256": "e99b227e51c7d1f247dcf2b6ebac107c6e21ce88cfe8ac01ca791e4772d45ecd"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f050_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f050_transparent.png",
+    "bytes": 14224,
+    "sha256": "6ab565e4e07ae13c0098fecff1a0926ce4e5b61e210f7dc7118fcad35039b0c7"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f075_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f075_transparent.png",
+    "bytes": 14178,
+    "sha256": "8a4677dba5395b47a96c454d19b4f7acf9dc33b7bcfb1fa1fd8bae9539d5bd94"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f099_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f099_transparent.png",
+    "bytes": 13669,
+    "sha256": "d7212f20b0d5f897f0645ed5054fae12a4444721759fe551941cb4ecb6a64174"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f100_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f100_transparent.png",
+    "bytes": 14222,
+    "sha256": "0453778aeee54a22f90e70f0860248d335489e4d243ca72fed2a3746b2d1be19"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f125_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f125_transparent.png",
+    "bytes": 17119,
+    "sha256": "47f1ed9858d69c06361c5248f5d9f169c9d39ed19ca34832df85e648d5f318ea"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/renders/f149_transparent.png",
+    "file": "03_重建效果参考/Harmony4D_case02/f149_transparent.png",
+    "bytes": 13036,
+    "sha256": "6b95cf05ee4c11c95e70d4c5427fd5fb4899e57d653d0a357cc309a578f719fb"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/case_02/provenance.json",
+    "file": "07_素材溯源与检查/Harmony4D_case02_provenance.json",
+    "bytes": 6325,
+    "sha256": "bc424349e32552f8424db137474dea44d0a390910f6a0cbf3de529305a23f160"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/case_02_mesh_contact_sheet.jpg",
+    "file": "03_重建效果参考/Harmony4D_case02_重建总览.jpg",
+    "bytes": 32545,
+    "sha256": "fff3dabec63a4a5f137d7b05cb05a955dbcc014d9ce3b9d16f444c73bd36f378"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/candidate_rgb_contact_sheet.jpg",
+    "file": "02_原始视频帧/候选RGB总览.jpg",
+    "bytes": 408598,
+    "sha256": "ac8334f85bbd8d8beb2ae92e9ef1fbde145544d59d28b514d7897630064a7781"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/assets/egohumans/continuous/Shot3R_continuous_real_predictions.mp4",
+    "file": "02_原始视频帧/EgoHumans/连续RGB与重建参考.mp4",
+    "bytes": 843153,
+    "sha256": "72f486931c2ee45cd7fbf49f0d087831379a8f4ce205e239031529f7c0a24110"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_panorama.pdf",
+    "file": "04_已有图稿_仅供内容参考/全景版/Shot3R_teaser_v1_panorama.pdf",
+    "bytes": 2851470,
+    "sha256": "930014604e1bddf5769b6f74132dfb7d3a4018e719b21d20733b7f02b5d31e37"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_panorama.png",
+    "file": "04_已有图稿_仅供内容参考/全景版/Shot3R_teaser_v1_panorama.png",
+    "bytes": 2851055,
+    "sha256": "ef0c56aabd7b2739deab799c2b8bf0929f641b458b38d311640ba30b1233f4bd"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_panorama.svg",
+    "file": "04_已有图稿_仅供内容参考/全景版/Shot3R_teaser_v1_panorama.svg",
+    "bytes": 1642381,
+    "sha256": "a5508a8c9ac4b34419a96aa8500cbb9d5d397c41e653e94dd31a50586821c149"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_panorama_preview.png",
+    "file": "04_已有图稿_仅供内容参考/全景版/Shot3R_teaser_v1_panorama_preview.png",
+    "bytes": 966269,
+    "sha256": "43ca0b5e9491664363aab9af49624f29cf471a797987bdb750e91b32390e6747"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_temporal.pdf",
+    "file": "04_已有图稿_仅供内容参考/时间展开版/Shot3R_teaser_v1_temporal.pdf",
+    "bytes": 2620757,
+    "sha256": "64190dc9b138a74b49b22629f1cf010a977a7f135ccaaafc8c490c9784fd2892"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_temporal.png",
+    "file": "04_已有图稿_仅供内容参考/时间展开版/Shot3R_teaser_v1_temporal.png",
+    "bytes": 1879453,
+    "sha256": "2c1ab8a444111bbbe561240a735ffe3d6ac2240b671874a6961043c6cc4344cd"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_temporal.svg",
+    "file": "04_已有图稿_仅供内容参考/时间展开版/Shot3R_teaser_v1_temporal.svg",
+    "bytes": 1133671,
+    "sha256": "5d78b783ea3b48a89d81e0a93bafabc9c9756c0aaa30c956e906cead76ba1984"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_teaser_v1_temporal_preview.png",
+    "file": "04_已有图稿_仅供内容参考/时间展开版/Shot3R_teaser_v1_temporal_preview.png",
+    "bytes": 588523,
+    "sha256": "8365d086bc6b572d7b44a75421c7101c1c85865d66e4973e867de2d34361b31f"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_three_shot_candidate_NOT_recommended.pdf",
+    "file": "04_已有图稿_仅供内容参考/三镜头诊断草稿_非推荐成品/Shot3R_three_shot_candidate_NOT_recommended.pdf",
+    "bytes": 2166668,
+    "sha256": "c8ccd46a3afbc5320833ba544b8e6c904db29ea7da21dc1526b77f1351f082ac"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_three_shot_candidate_NOT_recommended.png",
+    "file": "04_已有图稿_仅供内容参考/三镜头诊断草稿_非推荐成品/Shot3R_three_shot_candidate_NOT_recommended.png",
+    "bytes": 1545070,
+    "sha256": "9c4f980d454772e5f9db11b229a3b563d6b4ec839b1b5a335c378e85f2a19e21"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_three_shot_candidate_NOT_recommended.svg",
+    "file": "04_已有图稿_仅供内容参考/三镜头诊断草稿_非推荐成品/Shot3R_three_shot_candidate_NOT_recommended.svg",
+    "bytes": 682634,
+    "sha256": "70de535fd5115b41c00e7aee0bca1bdf18297e8f49675cb82542d99fc3809943"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/figures/Shot3R_three_shot_candidate_NOT_recommended_preview.png",
+    "file": "04_已有图稿_仅供内容参考/三镜头诊断草稿_非推荐成品/Shot3R_three_shot_candidate_NOT_recommended_preview.png",
+    "bytes": 483432,
+    "sha256": "8f60206e81bda6a7302706df92ca609fcd18d71165330ceed48257f4d5a81572"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_concept_template.pptx",
+    "file": "05_可编辑文件/Shot3R_concept_template.pptx",
+    "bytes": 36229,
+    "sha256": "50dd39a6978ec585bd50837b4e9af8b5f670c5d78dabb9113a81f45da3a1460a"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_teaser_editable.pptx",
+    "file": "05_可编辑文件/Shot3R_teaser_editable.pptx",
+    "bytes": 1251575,
+    "sha256": "e0e12809084413abf8d4d05996aa8c18128dfa328d8c16e56fb40aef910ff043"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_teaser_temporal_editable.pptx",
+    "file": "05_可编辑文件/Shot3R_teaser_temporal_editable.pptx",
+    "bytes": 875480,
+    "sha256": "cc6827e0b8de0fd545bcbbd687903743b89df87933b53fb59874889dd57bffad"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_concept_template.svg",
+    "file": "05_可编辑文件/Shot3R_concept_template.svg",
+    "bytes": 7583,
+    "sha256": "c9b3eb0536fcf997374a91a014c5181d919502f281fdbd34a69c039a014c9bbe"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_concept_template.png",
+    "file": "05_可编辑文件/Shot3R_concept_template.png",
+    "bytes": 153203,
+    "sha256": "2e56c20cd377ed364b2b7c9318937f4e40a9fdf170d2e0333e315cc05c180a52"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/Shot3R_concept_template.pdf",
+    "file": "05_可编辑文件/Shot3R_concept_template.pdf",
+    "bytes": 20374,
+    "sha256": "858365762567a7665d797d2ffbd7e2dbcccbe8c7437ec873faf0cf664c9a2b11"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/editable/生成提示词_三镜头三人_中英文.md",
+    "file": "06_提示词与图注/生成提示词_三镜头三人_中英文.md",
+    "bytes": 6958,
+    "sha256": "bd76437c961050679cef56f96049028b100cfb8984e5bd9c9b814411a3c6032a"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/CAPTIONS_ZH_EN.md",
+    "file": "07_素材溯源与检查/旧真实结果图注_不是新概念图图注.md",
+    "bytes": 3318,
+    "sha256": "7b63a45d8399d41ff6a0f5183388a891130f8071f3f2d17d0be9af7b00d7a6cf"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/validation_report.json",
+    "file": "07_素材溯源与检查/原素材校验报告.json",
+    "bytes": 1899,
+    "sha256": "55a9cc146b30743a87f4af3e8a6d18188963251f1275c10eaba8cf2c701c45c5"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/candidate_metrics.json",
+    "file": "07_素材溯源与检查/旧真实候选指标_不用于概念图.json",
+    "bytes": 1090,
+    "sha256": "d32fddf64337dcc3337c75f81a5786aba40848d29579abb99940e9507ef0a7e5"
+  },
+  {
+    "source": "/data/wangzheng/iJCV-CODE/Movie3R/publication/shot3r_teaser_v1_20260906/selection/exact_boundary_f049_f050.jpg",
+    "file": "07_素材溯源与检查/真实相邻边界帧_含漏检.jpg",
+    "bytes": 48531,
+    "sha256": "76bfce7bd4d3e9995c3db12b50cc9052a06bb7d86875a96af91b0246edca4e84"
+  }
+]

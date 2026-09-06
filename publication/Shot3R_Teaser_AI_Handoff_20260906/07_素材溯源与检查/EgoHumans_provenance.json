@@ -1,0 +1,141 @@
+{
+  "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+  "source_cache": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301.npz",
+  "source_cache_sha256": "df7e2fbc0bca4ff1924ff9e2bfd6f90f32ba25d5aa72d3be02581b216770ab8e",
+  "source_runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/test/predictions/legoassemble__003_legoassemble-002/ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301.runtime.json",
+  "source_runtime_sha256": "1c4f38414df96301f2f478e7a9dd147120cfb57ffbbcaa5d9ee9d74df6ff68fc",
+  "protocol": "Movie3R-EgoHumans-CS100-v1",
+  "fps": 20.0,
+  "boundaries": [
+    50
+  ],
+  "angle_degrees_evaluator_annotation_only": [
+    176.74916252624004
+  ],
+  "idf1_full_evaluation_clip": 0.951048951048951,
+  "displayed_frames": [
+    {
+      "clip_frame_zero_based": 15,
+      "source_frame": 266,
+      "camera": "cam03",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 0.75,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000015.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f015.jpg",
+      "rgb_sha256": "376cd8d92c67adf2836187bd809311f0e00d08b87388828f58740007af3c4d60",
+      "valid_persistent_ids": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "clip_frame_zero_based": 32,
+      "source_frame": 283,
+      "camera": "cam03",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 1.6,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000032.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f032.jpg",
+      "rgb_sha256": "e7e87697fd728fd26629268193f9fbf96c585850e8f365e708916d537c1aa209",
+      "valid_persistent_ids": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "clip_frame_zero_based": 42,
+      "source_frame": 293,
+      "camera": "cam03",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 2.1,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000042.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f042.jpg",
+      "rgb_sha256": "9368fb5afd57d74b29eb34c2fd9df063beb73adab8c4641f5bec43476476d747",
+      "valid_persistent_ids": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "clip_frame_zero_based": 49,
+      "source_frame": 300,
+      "camera": "cam03",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 2.45,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000049.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f049.jpg",
+      "rgb_sha256": "c7e24c15b861a509ab490fcf40a445b38d4f9f2d837b89f82eeaff1488060c5c",
+      "valid_persistent_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 50,
+      "source_frame": 301,
+      "camera": "cam04",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 2.5,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000050.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f050.jpg",
+      "rgb_sha256": "fee24c9429ed6e67a775438f53a886bd2f917ca4af50b6dece9e779f62856bd7",
+      "valid_persistent_ids": [
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 61,
+      "source_frame": 312,
+      "camera": "cam04",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 3.05,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000061.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f061.jpg",
+      "rgb_sha256": "a1eff9955e4ccdeb6718ad59e602254a6901f2e0dd556e295fc1d261c5e9b243",
+      "valid_persistent_ids": [
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 74,
+      "source_frame": 325,
+      "camera": "cam04",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 3.7,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_model_replay_rgb/000074.jpg",
+      "copied_rgb": "assets/egohumans/rgb/f074.jpg",
+      "rgb_sha256": "e175b31809fe2c8de6fcacae26514be442df17ab4dc109b7e40587d61ebc5947",
+      "valid_persistent_ids": [
+        2,
+        0,
+        1
+      ]
+    }
+  ],
+  "metrics_source": "/data/wangzheng/iJCV-CODE/Movie3R/output/v19_egohumans/test/summary/case_metrics.csv",
+  "color_mapping": {
+    "0": "#e86755",
+    "1": "#14a6a0",
+    "2": "#8569d0",
+    "3": "#dba02d",
+    "4": "#447dc9",
+    "5": "#d0669f",
+    "6": "#698843",
+    "7": "#5b6a84",
+    "8": "#b06c46",
+    "9": "#6fc4bf"
+  },
+  "geometry_modified": false,
+  "ids_relabelled": false,
+  "ground_truth_geometry_used": false,
+  "full_sequence_prediction_prefix": "locked transaction(m3_b0_only)",
+  "display_only": "One fixed y-axis sign convention and one fixed virtual camera per sequence. Neutral ground is a display aid, not a reconstructed plane.",
+  "rgb_note": "Exact copies of existing staged RGB; EgoHumans staged JPEGs were decoded/re-encoded by the previous exporter, not archive-byte-identical. Faces were already anonymized in source."
+}

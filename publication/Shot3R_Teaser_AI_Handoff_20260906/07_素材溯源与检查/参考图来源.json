@@ -1,0 +1,16 @@
+{
+  "paper": "/data/wangzheng/iJCV-CODE/paper/Human3R-ori.pdf",
+  "page": 1,
+  "source_render": "/tmp/shot3r_human3r_fig1_reference.png",
+  "source_size": [
+    1391,
+    1800
+  ],
+  "crop_pixels": [
+    235,
+    353,
+    1156,
+    608
+  ],
+  "operation": "crop of existing paper figure; no generated visual"
+}
