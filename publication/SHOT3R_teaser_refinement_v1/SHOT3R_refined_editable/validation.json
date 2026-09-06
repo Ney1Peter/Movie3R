@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-06",
+  "pptx_opened_and_exported_with_libreoffice": true,
+  "pptx_render_visually_checked": true,
+  "svg_render_visually_checked": true,
+  "pptx_unique_object_ids": 136,
+  "pptx_image_objects": 25,
+  "svg_image_objects": 25,
+  "svg_text_objects": 31,
+  "all_embedded_images_decode": true,
+  "original_rgb_count": 9,
+  "top_representative_frames": [261, 291, 321],
+  "reconstruction_temporal_frames": [251, 261, 311, 331],
+  "independently_editable_reconstruction_raster_layers": 13,
+  "background_from_prediction": true,
+  "meshes_from_prediction": true,
+  "mesh_geometry_modified": false,
+  "new_three_shot_inference_executed": false,
+  "source_upload_preserved": true
+}

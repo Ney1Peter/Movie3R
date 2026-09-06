@@ -1,0 +1,132 @@
+[
+  {
+    "name": "pointcloud_background",
+    "path": "pointcloud_background.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id0_t251",
+    "path": "person_id0_t251.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id1_t251",
+    "path": "person_id1_t251.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id2_t251",
+    "path": "person_id2_t251.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id0_t261",
+    "path": "person_id0_t261.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id1_t261",
+    "path": "person_id1_t261.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id2_t261",
+    "path": "person_id2_t261.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id0_t311",
+    "path": "person_id0_t311.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id1_t311",
+    "path": "person_id1_t311.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id2_t311",
+    "path": "person_id2_t311.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id0_t331",
+    "path": "person_id0_t331.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id1_t331",
+    "path": "person_id1_t331.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  },
+  {
+    "name": "person_id2_t331",
+    "path": "person_id2_t331.png",
+    "box": [
+      145,
+      308,
+      1306,
+      431
+    ]
+  }
+]

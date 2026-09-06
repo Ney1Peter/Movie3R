@@ -1,0 +1,74 @@
+[
+  {
+    "shot": 1,
+    "frame_in_shot": 1,
+    "camera": "cam03",
+    "source_frame": 251,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/01_约0度_cam03/01_t0.0s_frame00251.jpg",
+    "middle_top": false
+  },
+  {
+    "shot": 1,
+    "frame_in_shot": 2,
+    "camera": "cam03",
+    "source_frame": 261,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/01_约0度_cam03/02_t0.5s_frame00261.jpg",
+    "middle_top": true
+  },
+  {
+    "shot": 1,
+    "frame_in_shot": 3,
+    "camera": "cam03",
+    "source_frame": 271,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/01_约0度_cam03/03_t1.0s_frame00271.jpg",
+    "middle_top": false
+  },
+  {
+    "shot": 2,
+    "frame_in_shot": 1,
+    "camera": "cam06",
+    "source_frame": 281,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/02_约99度_cam06/04_t1.5s_frame00281.jpg",
+    "middle_top": false
+  },
+  {
+    "shot": 2,
+    "frame_in_shot": 2,
+    "camera": "cam06",
+    "source_frame": 291,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/02_约99度_cam06/05_t2.0s_frame00291.jpg",
+    "middle_top": true
+  },
+  {
+    "shot": 2,
+    "frame_in_shot": 3,
+    "camera": "cam06",
+    "source_frame": 301,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/02_约99度_cam06/06_t2.5s_frame00301.jpg",
+    "middle_top": false
+  },
+  {
+    "shot": 3,
+    "frame_in_shot": 1,
+    "camera": "cam04",
+    "source_frame": 311,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/03_约177度_cam04/07_t3.0s_frame00311.jpg",
+    "middle_top": false
+  },
+  {
+    "shot": 3,
+    "frame_in_shot": 2,
+    "camera": "cam04",
+    "source_frame": 321,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/03_约177度_cam04/08_t3.5s_frame00321.jpg",
+    "middle_top": true
+  },
+  {
+    "shot": 3,
+    "frame_in_shot": 3,
+    "camera": "cam04",
+    "source_frame": 331,
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/publication/Shot3R_Teaser_AI_Handoff_20260906/02_原始视频帧/EgoHumans/大角度三视角_连续时间九帧/03_约177度_cam04/09_t4.0s_frame00331.jpg",
+    "middle_top": false
+  }
+]

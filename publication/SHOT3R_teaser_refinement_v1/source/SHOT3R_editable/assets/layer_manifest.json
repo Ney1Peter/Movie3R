@@ -1,0 +1,86 @@
+[
+  {
+    "name": "human_lavender_motion",
+    "path": "human_lavender_motion.png",
+    "box": [
+      592,
+      425,
+      771,
+      673
+    ],
+    "x": 592,
+    "y": 425,
+    "w": 179,
+    "h": 248
+  },
+  {
+    "name": "human_coral_motion",
+    "path": "human_coral_motion.png",
+    "box": [
+      776,
+      409,
+      918,
+      575
+    ],
+    "x": 776,
+    "y": 409,
+    "w": 142,
+    "h": 166
+  },
+  {
+    "name": "human_cyan_motion",
+    "path": "human_cyan_motion.png",
+    "box": [
+      944,
+      458,
+      1114,
+      698
+    ],
+    "x": 944,
+    "y": 458,
+    "w": 170,
+    "h": 240
+  },
+  {
+    "name": "blocks_render",
+    "path": "blocks_render.png",
+    "box": [
+      690,
+      546,
+      947,
+      655
+    ],
+    "x": 690,
+    "y": 546,
+    "w": 257,
+    "h": 109
+  },
+  {
+    "name": "pointcloud_background",
+    "path": "pointcloud_background.png",
+    "box": [
+      145,
+      308,
+      1451,
+      739
+    ],
+    "x": 145,
+    "y": 308,
+    "w": 1306,
+    "h": 431
+  },
+  {
+    "name": "reconstruction_combined",
+    "path": "reconstruction_combined.png",
+    "box": [
+      145,
+      308,
+      1451,
+      739
+    ],
+    "x": 145,
+    "y": 308,
+    "w": 1306,
+    "h": 431
+  }
+]
