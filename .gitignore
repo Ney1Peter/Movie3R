@@ -86,3 +86,18 @@ outputs/
 publication/bridge3r_iclr2027/multicut/runs/*.npz
 publication/bridge3r_iclr2027/multicut/runs/.gpu_locks/
 src/croco/models/curope/cuda_12.4.0_550.54.14_linux.run
+
+# Local environments and regenerable publication export intermediates.
+.venv/
+publication/shot3r_teaser_v1_20260906/editable/_python_deps/
+publication/shot3r_teaser_v1_20260906/editable/ppt_render_check/
+publication/shot3r_teaser_v1_20260906/delivery/*.zip
+publication/SHOT3R_teaser_refinement_v1/work/
+publication/SHOT3R_teaser_refinement_v1/SHOT3R_refined_editable_v1.zip
+publication/Shot3R_Teaser_AI_Handoff_20260906.zip
+
+# Retain only the small, publication-curated geometry needed to reproduce the
+# editable teaser. The global tensor/checkpoint exclusions still apply elsewhere.
+!publication/shot3r_teaser_v1_20260906/assets/**/*.npz
+!publication/shot3r_teaser_v1_20260906/assets/**/*.npy
+!publication/SHOT3R_teaser_refinement_v1/SHOT3R_refined_editable/geometry/*.npz
