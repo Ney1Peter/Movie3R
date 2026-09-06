@@ -1,0 +1,32 @@
+[
+  {
+    "file": "Shot3R_teaser_editable.pptx",
+    "source": "figures/Shot3R_teaser_v1_panorama.svg",
+    "text_boxes": 29,
+    "pictures": 9,
+    "vector_shapes": 21,
+    "connectors": 7,
+    "raster_people_not_vector_meshes": true,
+    "conceptual_not_result": false
+  },
+  {
+    "file": "Shot3R_teaser_temporal_editable.pptx",
+    "source": "figures/Shot3R_teaser_v1_temporal.svg",
+    "text_boxes": 18,
+    "pictures": 12,
+    "vector_shapes": 29,
+    "connectors": 3,
+    "raster_people_not_vector_meshes": true,
+    "conceptual_not_result": false
+  },
+  {
+    "file": "Shot3R_concept_template.pptx",
+    "source": "editable/Shot3R_concept_template.svg",
+    "text_boxes": 20,
+    "pictures": 0,
+    "vector_shapes": 16,
+    "connectors": 14,
+    "raster_people_not_vector_meshes": false,
+    "conceptual_not_result": true
+  }
+]

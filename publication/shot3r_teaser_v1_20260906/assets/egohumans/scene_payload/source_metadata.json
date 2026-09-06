@@ -1,0 +1,68 @@
+{
+  "schema_version": "Bridge3R-demo-pointcloud-replay-v1",
+  "dataset": "egohumans",
+  "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+  "method": "bridge3r",
+  "scene_channel_available": true,
+  "scene_source": "the method's own frozen checkpoint replay",
+  "human_camera_geometry_source": "immutable formal test cache",
+  "checkpoint": "/data/wangzheng/iJCV-CODE/Movie3R/output/v14_cut_first_cross_source/v14_cut_first_cross_source_multihuman_p0_e6/checkpoint-final.pth",
+  "checkpoint_flags": {
+    "enable_v8_pose_prompt": true,
+    "enable_v8_human_latent_corr": true,
+    "enable_v8_human_trans_corr": false,
+    "enable_v8_head_lora": true,
+    "v9_oracle_correction_gate_enabled": true,
+    "v9_oracle_correction_cache_enabled": false,
+    "v14_1_event_only_head_lora": true
+  },
+  "frame_indices": [
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74
+  ],
+  "cut_index_in_payload": 5,
+  "gt_used": false,
+  "external_baseline_geometry_borrowed": false,
+  "timing": {
+    "shadow": {
+      "frames": 51,
+      "seconds": 13.73622281756252,
+      "fps": 3.7128110600239883,
+      "peak_vram_bytes": 5483805696.0
+    },
+    "clean_reset_post": {
+      "frames": 25,
+      "seconds": 6.217549812048674,
+      "fps": 4.0208765117657395,
+      "peak_vram_bytes": 5417061888.0
+    }
+  }
+}

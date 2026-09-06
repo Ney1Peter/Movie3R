@@ -1,0 +1,168 @@
+{
+  "case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19",
+  "source_cache": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_02.npz",
+  "source_cache_sha256": "31f3ffae9cbe5d5c6a03f5da3b21652ae1c89db62f456461284e9814020ba6c5",
+  "source_runtime": "/data/wangzheng/iJCV-CODE/Movie3R/publication/bridge3r_iclr2027/multicut/runs/case_02.runtime.json",
+  "source_runtime_sha256": "11ad0dde0bc024fd62d62c436f3b41060927218f78203bd6430cc6535a849b36",
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+  "fps": 30.0,
+  "boundaries": [
+    50,
+    100
+  ],
+  "angle_degrees_evaluator_annotation_only": [
+    179.49329959862425,
+    177.69630266357794
+  ],
+  "idf1_full_evaluation_clip": 0.5993975903614458,
+  "displayed_frames": [
+    {
+      "clip_frame_zero_based": 12,
+      "source_frame": 13,
+      "camera": "cam18",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 0.4,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00013.jpg",
+      "copied_rgb": "assets/case_02/rgb/f012.jpg",
+      "rgb_sha256": "5c6b4712f2a3c50f49bf9b82fba9fda4c8aaa36a4e35575800df4f20c928505b",
+      "valid_persistent_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "clip_frame_zero_based": 32,
+      "source_frame": 33,
+      "camera": "cam18",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 1.0666666666666667,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00033.jpg",
+      "copied_rgb": "assets/case_02/rgb/f032.jpg",
+      "rgb_sha256": "f0a90de09bd4c11f328cbbdb5ba694ead29e05c74d8b937d367f46deefd8b5af",
+      "valid_persistent_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "clip_frame_zero_based": 49,
+      "source_frame": 50,
+      "camera": "cam18",
+      "shot_one_based": 1,
+      "seconds_from_clip_start": 1.6333333333333333,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam18/images/00050.jpg",
+      "copied_rgb": "assets/case_02/rgb/f049.jpg",
+      "rgb_sha256": "6d4d2d503cd64a288893aa6f8ecce45f1fb8f5118dd592f49a343f524823e2ca",
+      "valid_persistent_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "clip_frame_zero_based": 50,
+      "source_frame": 51,
+      "camera": "cam15",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 1.6666666666666667,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam15/images/00051.jpg",
+      "copied_rgb": "assets/case_02/rgb/f050.jpg",
+      "rgb_sha256": "a1b1e3113b7a198a74c01585e2eff29d18de242bd902075a555938d4d49e5161",
+      "valid_persistent_ids": [
+        2,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 75,
+      "source_frame": 76,
+      "camera": "cam15",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 2.5,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam15/images/00076.jpg",
+      "copied_rgb": "assets/case_02/rgb/f075.jpg",
+      "rgb_sha256": "687c010e58815408e13aefcaf8e583085c3804db499ae62b18fd7f3eb416f52e",
+      "valid_persistent_ids": [
+        2,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 99,
+      "source_frame": 100,
+      "camera": "cam15",
+      "shot_one_based": 2,
+      "seconds_from_clip_start": 3.3,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam15/images/00100.jpg",
+      "copied_rgb": "assets/case_02/rgb/f099.jpg",
+      "rgb_sha256": "a703a94eeab60af6074c90f69763ced74fbdd6d283d3bd1850ef16ea4a4833db",
+      "valid_persistent_ids": [
+        2,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 100,
+      "source_frame": 101,
+      "camera": "cam19",
+      "shot_one_based": 3,
+      "seconds_from_clip_start": 3.3333333333333335,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam19/images/00101.jpg",
+      "copied_rgb": "assets/case_02/rgb/f100.jpg",
+      "rgb_sha256": "8e70ef6fb054d0eb3e9586bc98fec607d3455202319cce340fb2c50a0ed2d2ae",
+      "valid_persistent_ids": [
+        2,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 125,
+      "source_frame": 126,
+      "camera": "cam19",
+      "shot_one_based": 3,
+      "seconds_from_clip_start": 4.166666666666667,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam19/images/00126.jpg",
+      "copied_rgb": "assets/case_02/rgb/f125.jpg",
+      "rgb_sha256": "3df642ae99828260677f47fba593220a10275251a12ec3ea402a71bd21220147",
+      "valid_persistent_ids": [
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "clip_frame_zero_based": 149,
+      "source_frame": 150,
+      "camera": "cam19",
+      "shot_one_based": 3,
+      "seconds_from_clip_start": 4.966666666666667,
+      "source_rgb": "/data/wangzheng/iJCV-CODE/data/Bridge3R_multicut_harmony4d/staging/train_11_karate3/11_karate3/001_karate3/exo/cam19/images/00150.jpg",
+      "copied_rgb": "assets/case_02/rgb/f149.jpg",
+      "rgb_sha256": "12b0bdd604d00cdd1cc315779844962221d783c72e151a550008e21f13ec8d90",
+      "valid_persistent_ids": [
+        2,
+        1
+      ]
+    }
+  ],
+  "color_mapping": {
+    "0": "#e86755",
+    "1": "#14a6a0",
+    "2": "#8569d0",
+    "3": "#dba02d",
+    "4": "#447dc9",
+    "5": "#d0669f",
+    "6": "#698843",
+    "7": "#5b6a84",
+    "8": "#b06c46",
+    "9": "#6fc4bf"
+  },
+  "geometry_modified": false,
+  "ids_relabelled": false,
+  "ground_truth_geometry_used": false,
+  "full_sequence_prediction_prefix": "bridge3r",
+  "display_only": "One fixed y-axis sign convention and one fixed virtual camera per sequence. Neutral ground is a display aid, not a reconstructed plane.",
+  "rgb_note": "Exact copies of existing staged RGB; EgoHumans staged JPEGs were decoded/re-encoded by the previous exporter, not archive-byte-identical. Faces were already anonymized in source."
+}
