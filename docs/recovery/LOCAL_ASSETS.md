@@ -23,6 +23,11 @@ The current paper workspace is:
 The prior stable local snapshot retained for comparison is v067. Intermediate
 paper versions and rendering/build caches are not required for recovery.
 
+The retained EgoHumans visualization workspaces and the currently active
+viewer are indexed in
+`publication/EGOHUMANS_VISUALIZATION_CATALOG_20260916.md`. The catalog is
+tracked as provenance; its large rendering payloads remain local.
+
 ## Regeneration policy
 
 - PDF previews can be regenerated from PPTX and should not be retained beside
@@ -33,4 +38,3 @@ paper versions and rendering/build caches are not required for recovery.
   need a second copy in the code repository.
 - Provenance manifests and selection lists are retained in Git even when their
   large image/mesh payloads are removed.
-
