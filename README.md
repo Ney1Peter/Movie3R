@@ -1,127 +1,71 @@
-# Movie3R
+# Shot3R
 
-Movie3R 是基于 Human3R 的多镜头人体重建研究项目。
+Shot3R performs streaming reconstruction of cameras, visible people, and scene
+geometry across shot transitions. The repository directory retains the
+historical name `Movie3R`, but the current paper method is **Shot3R**.
 
-## 正式版本
+At a transition, the previous recurrent state is read temporarily to infer the
+inter-shot relation, while a separately reinitialized state becomes the only
+state propagated through the new shot. Geometry-based person association and
+a shared world transform place the new-shot outputs in the common coordinate
+frame without propagating the old recurrent state.
 
-仓库现在明确维护三条独立版本线：
+## Start here
 
-| 版本 | 定位 | 状态 |
-|---|---|---|
-| Movie3R-Learned V9.0 | 4-frame AABB 学习式 correction 与 LoRA 权重 | 冻结训练版 |
-| Movie3R-Single V12.0 | 单人 short-shot 显式 similarity re-anchoring | 当前默认单人版 |
-| Movie3R-Multi V13.0 | GT-ID 多人 shared-Boundary 几何 | 独立研究版 |
+- Disaster recovery and server migration: [`docs/recovery/README.md`](docs/recovery/README.md)
+- Dataset and protocol inventory: [`docs/recovery/DATASETS_AND_PROTOCOLS.md`](docs/recovery/DATASETS_AND_PROTOCOLS.md)
+- Model-weight manifest: [`docs/recovery/WEIGHTS.md`](docs/recovery/WEIGHTS.md)
+- Experiment/result map: [`docs/recovery/EXPERIMENTS.md`](docs/recovery/EXPERIMENTS.md)
+- External baseline commits and patches: [`docs/recovery/BASELINES.md`](docs/recovery/BASELINES.md)
+- Paper-facing method/code map: [`publication/bridge3r_iclr2027/METHOD_TO_CODE_FACT_AUDIT_20260829.md`](publication/bridge3r_iclr2027/METHOD_TO_CODE_FACT_AUDIT_20260829.md)
 
-统一版本入口、tag、checkpoint hash 和运行命令见：
+## Current reproducibility snapshot
 
-```text
-versions/README.md
-```
+The lightweight snapshot under
+[`publication/shot3r_reproducibility_20260916/`](publication/shot3r_reproducibility_20260916/)
+contains frozen numerical summaries, per-case metrics used by the paper,
+training logs, runtime measurements, traditional-registration controls, and
+the audited causal cut detector. It deliberately excludes raw datasets, full
+per-frame predictions, virtual environments, licensed body models, and
+multi-gigabyte reconstruction checkpoints.
 
-## 当前默认单人版
+The final Shot3R checkpoint is identified by SHA-256
+`de2430ed5adcfd9ba919d49f88364f964063b3d0b43848ffada709b444828265`.
+Consult the weight manifest before downloading or replacing any checkpoint.
 
-当前默认方法正式编号为 **Movie3R-Single V12.0**。它由历史 V14.7 实验冻结而来，
-面向 short shot 和稀疏 camera cuts 的流式重对齐：
+## Main implementation
 
-```text
-pre-decode Human3R hard reset
--> Fixed Explicit
--> V16 bounded torso-motion rotation
--> V11.4 fused DA3/Keypoint shared shot scale
--> one explicit translation
--> one fixed shot-level Boundary
-```
-
-Conditional VGGT 和 V14.2 continuity 默认关闭。该版本改善 short-horizon
-camera-human placement，但存在 scene trade-off，且不适用于无限长度多 cut mapping。
-
-单人版结果、入口和冻结范围见：
-
-```text
-versions/v12/LATEST_MODEL.md
-versions/v12/README.md
-versions/v12/docs/V14_7_SHOT_AWARE_UNIFORM_SIMILARITY_REANCHORING.md
-versions/v12/docs/CURRENT_MODEL_FULL_ARCHITECTURE_AND_ABLATION.md
-versions/v12/docs/V14_6_ALIGNMENT_COMPONENT_NECESSITY_AUDIT.md
-```
-
-V9 已训练权重保存在 `checkpoints/v9_mixed_60h_pose_human_lora_bs10/`；V13 当前是
-严格 GT-ID Oracle 研究版。Native WHO 和 precision-first frozen appearance WHO 都未通过
-部署 gate，不应描述成已经完成可部署跨镜头 Re-ID。
-
-V2-V8 及其他失败/诊断实验仍保留在历史目录，不作为当前默认方法：
-
-```text
-archive/20260721/
-docs/movie3r/archive_v2_v6/
-docs/movie3r/archive_v7/
-docs/movie3r/archive_v8/
-```
-
-## 快速开始
-
-### 环境安装
-
-详见：
-
-```text
-docs/env_setup_h800_cuda124.md
-```
-
-### 推理
-
-```bash
-PYTHONPATH=src:. ./.venv/bin/python demo.py \
-  --model_path src/human3r_896L.pth \
-  --seq_path examples/video.mp4 \
-  --output_dir output/demo
-```
-
-### 训练
-
-```bash
-cd src
-./train.sh [num_gpus] [epochs] [batch_size]
-```
-
-训练代码仍保留历史实验路径。需要复现正式 V9 训练时，应使用
-`movie3r-v9-trained` tag 和 `versions/v9/` 中的冻结配置，不要直接使用当前
-master 猜测训练状态。
-
-## 项目结构
-
-```text
-Movie3R/
-├── src/                  # 模型、训练、推理代码
-├── config/               # 训练配置
-├── scripts/              # 数据处理、诊断、扫描脚本
-├── docs/                 # 文档
-│   └── movie3r/
-│       ├── archive_v7/
-│       └── archive_v2_v6/
-├── versions/
-│   ├── v9/              # V9 冻结配置、入口与训练文档
-│   ├── v12/             # 单人正式代码、viewer、实验与文档
-│   └── v13/             # 多人研究代码、viewer 与文档
-├── tasklist/             # 当前 TODO 和历史记录
-└── examples/             # 本地示例数据，通常不进入 git
-```
-
-## 文档入口
-
-| 文档 | 内容 |
+| Component | Location |
 |---|---|
-| `versions/README.md` | V9、单人 V12、多人 V13 的正式版本目录 |
-| `versions/v12/LATEST_MODEL.md` | 当前默认单人版冻结说明 |
-| `docs/movie3r/README.md` | 完整研究文档入口 |
-| `versions/v9/docs/README.md` | V9 历史训练文档入口 |
-| `versions/v13/docs/V20_PHASE1_GT_ID_MULTIHUMAN_CONSENSUS_V2.md` | 当前有效多人几何结论 |
-| `docs/movie3r/archive_v7/README.md` | V7 历史归档说明 |
-| `docs/movie3r/archive_v2_v6/README.md` | V2-V6 历史归档说明 |
-| `docs/train_code_explanation.md` | 训练代码流程解析 |
-| `docs/inference.md` | 原版 Human3R 推理说明 |
-| `tasklist/TODO.md` | 当前阶段 TODO |
+| Recurrent backbone and typed alignment representations | `src/dust3r/model.py` |
+| Training and loss implementation | `src/train.py`, `src/dust3r/losses.py` |
+| Frozen final training configuration | `config/train_v14_1_cut_first_cross_source_multihuman_p0.yaml` |
+| Shot-transition detector | `versions/v14/causal_image_detector.py` |
+| Streaming state transition and shared transform | `versions/v20/egobody/deployment_runtime.py` |
+| Cross-shot identity association | `versions/v19/egohumans/causal_identity.py` |
+| Dataset-independent boundary transaction | `publication/bridge3r_iclr2027/bridge3r.py` |
+| Traditional-registration controls | `experiments/registration_baselines/` |
+
+Some directories and identifiers retain the earlier `bridge3r` or `Movie3R`
+names for path compatibility. They are historical implementation names, not
+separate paper methods.
+
+## Environment
+
+The frozen server used Python 3.10.19, PyTorch 2.4.0+cu124, CUDA 12.4, and
+eight NVIDIA L20 GPUs. Recreate the environment from
+`requirements_Movie3R.txt` and follow `docs/recovery/ENVIRONMENT.md`; do not
+copy the local `.venv` directory.
+
+## Data and weights
+
+No raw benchmark data or multi-gigabyte checkpoint is stored in Git. Download
+datasets from their official sources and restore the paths documented in
+`docs/recovery/DATASETS_AND_PROTOCOLS.md`. Licensed SMPL/SMPL-X assets must be
+obtained under their original licenses.
 
 ## License
 
-本项目基于 Human3R / CUT3R 相关代码扩展，遵循其原始许可证约束。
+This project extends Human3R/CUT3R-related code and retains the applicable
+upstream license requirements. Dataset, body-model, and external-baseline
+licenses remain separate.

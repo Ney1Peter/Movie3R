@@ -1,0 +1,19 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrr}
+\toprule
+Method & Angle\_stratum & Coverage & IDF1 & W & WA & MPJPE & MPVPE\\
+\midrule
+TRACE (official, subject=4) & extreme & 5.11\% & 4.80\% & 2895.0 & 656.4 & 270.3 & 335.5\\
+TRACE (official, subject=4) & large & 6.86\% & 7.29\% & 2868.8 & 797.6 & 273.8 & 335.0\\
+TRACE (official, subject=4) & medium & 7.42\% & 6.94\% & 2365.7 & 736.3 & 294.9 & 365.2\\
+TRACE (official, subject=4) & small & 5.05\% & 5.36\% & 2471.3 & 725.7 & 274.3 & 340.4\\
+PromptHMR (official SPEC) & extreme & 4.95\% & 4.99\% & 1575.1 & 840.1 & 148.1 & 172.1\\
+PromptHMR (official SPEC) & large & 8.42\% & 7.90\% & 1454.5 & 522.1 & 256.7 & 301.2\\
+PromptHMR (official SPEC) & medium & 4.58\% & 4.48\% & 1208.5 & 509.8 & 205.0 & 244.8\\
+PromptHMR (official SPEC) & small & 2.27\% & 2.32\% & 1109.8 & 296.4 & 194.7 & 239.4\\
+PromptHMR (no--SPEC adapter) & extreme & 4.96\% & 4.96\% & 1641.4 & 871.8 & 160.6 & 187.6\\
+PromptHMR (no--SPEC adapter) & large & 8.19\% & 7.79\% & 1314.9 & 526.3 & 266.9 & 313.4\\
+PromptHMR (no--SPEC adapter) & medium & 4.52\% & 4.43\% & 1616.6 & 506.8 & 202.0 & 243.2\\
+PromptHMR (no--SPEC adapter) & small & 2.17\% & 2.26\% & 410.5 & 274.1 & 185.4 & 232.8\\
+\bottomrule
+\end{tabular}}

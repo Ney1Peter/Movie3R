@@ -1,0 +1,765 @@
+From bd3a7c482b587591c0b1b8daacb60dde639da55c Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Sun, 23 Aug 2026 21:49:55 +0800
+Subject: [PATCH] docs: record PromptHMR assets and local helpers
+
+---
+ PROMPTHMR_ASSET_MANIFEST.json       | 224 +++++++++++++++++++
+ PROMPTHMR_GATE_A_B_AUDIT.md         | 152 +++++++++++++
+ scripts/derive_smplx2smpl_joints.py | 334 ++++++++++++++++++++++++++++
+ scripts/with_local_cache.sh         |  15 ++
+ 4 files changed, 725 insertions(+)
+ create mode 100644 PROMPTHMR_ASSET_MANIFEST.json
+ create mode 100644 PROMPTHMR_GATE_A_B_AUDIT.md
+ create mode 100755 scripts/derive_smplx2smpl_joints.py
+ create mode 100755 scripts/with_local_cache.sh
+
+diff --git a/PROMPTHMR_ASSET_MANIFEST.json b/PROMPTHMR_ASSET_MANIFEST.json
+new file mode 100644
+index 0000000..cb37aa9
+--- /dev/null
++++ b/PROMPTHMR_ASSET_MANIFEST.json
+@@ -0,0 +1,224 @@
++{
++  "schema_version": 1,
++  "sealed_at": "2026-08-22T00:10:00+08:00",
++  "repository_commit": "3b566b7dbb28ce506c7ea972c18693f4c705ce8c",
++  "scope": "PromptHMR non-SPEC constructor and prediction dependencies only; no dataset inference",
++  "cache_environment": {
++    "entrypoint": "scripts/with_local_cache.sh",
++    "HF_HOME": "data/cache/huggingface",
++    "HF_HUB_CACHE": "data/cache/huggingface/hub",
++    "HF_HUB_OFFLINE": "1",
++    "TORCH_HOME": "data/cache/torch",
++    "TRANSFORMERS_OFFLINE": "1"
++  },
++  "required_files": [
++    {
++      "id": "phmr_config",
++      "path": "data/pretrain/phmr/config.yaml",
++      "bytes": 346,
++      "sha256": "31142aaac12a7ef60adba77c85addffad1ea466a6555717b24c3fbed079a2447"
++    },
++    {
++      "id": "phmr_checkpoint",
++      "path": "data/pretrain/phmr/checkpoint.ckpt",
++      "bytes": 2298622395,
++      "sha256": "a3ef04ef8a12c3068682b03c62c95f8959cd8554424e105c63bf97f6c8e97e99"
++    },
++    {
++      "id": "phmr_video_config",
++      "path": "data/pretrain/phmr_vid/prhmr_release_002.yaml",
++      "bytes": 1854,
++      "sha256": "58cd9c28907e31cd1757c9282e5b75ceb00a6ac54facadee03dae5a4a0725fd9"
++    },
++    {
++      "id": "phmr_video_checkpoint",
++      "path": "data/pretrain/phmr_vid/prhmr_release_002.ckpt",
++      "bytes": 165618162,
++      "sha256": "e40f6318073becc10238f2fdaed7b2523d0b90e45d4f1ffe078e8fcc8d765785"
++    },
++    {
++      "id": "vitpose_checkpoint",
++      "path": "data/pretrain/vitpose-h-coco_25.pth",
++      "bytes": 2549009242,
++      "sha256": "72dbd9d9a7b708dfc3acb004ae3c44145cc94378a0693d64e6c86ba57c3afb2f"
++    },
++    {
++      "id": "kprcnn_checkpoint",
++      "path": "data/pretrain/sam2_ckpts/keypoint_rcnn_5ad38f.pkl",
++      "bytes": 490574901,
++      "sha256": "e6118384ba2858dfabae1239f8036d13a46a37bc72d4647f598bd7241ba0840d"
++    },
++    {
++      "id": "sam2_checkpoint",
++      "path": "data/pretrain/sam2_ckpts/sam2_hiera_tiny.pt",
++      "bytes": 155906050,
++      "sha256": "65b50056e05bcb13694174f51bb6da89c894b57b75ccdf0ba6352c597c5d1125"
++    },
++    {
++      "id": "droid_checkpoint",
++      "path": "data/pretrain/droidcalib.pth",
++      "bytes": 16049525,
++      "sha256": "67c5b78f727fb5ea7a6bf31fafe2f20c8982a56ca0b4f880ab46769a244b0a6f"
++    },
++    {
++      "id": "metaclip_openclip",
++      "path": "data/cache/huggingface/hub/models--timm--vit_large_patch14_clip_224.metaclip_2pt5b/snapshots/1c09b97e09fb19bba2bf4548c9c7cca4b87f7888/open_clip_pytorch_model.bin",
++      "bytes": 1710639510,
++      "sha256": "8982bc381934bb39006c26e370d12da1f1eff5748762489f7b22e1a350975061"
++    },
++    {
++      "id": "metric3d_vit_large",
++      "path": "data/cache/torch/hub/checkpoints/metric_depth_vit_large_800k.pth",
++      "bytes": 1647972663,
++      "sha256": "15328ffc42b528b95f188687418f6f03b3f123eb34ccdbd686c112abbea6d972"
++    },
++    {
++      "id": "deeplabv3_resnet50",
++      "path": "data/cache/torch/hub/checkpoints/deeplabv3_resnet50_coco-cd0a2569.pth",
++      "bytes": 168312152,
++      "sha256": "cd0a25694c4a0f7106b38f4938bf90a874f2f241cc410b8f63c7024399538f06"
++    },
++    {
++      "id": "torchvision_hub_source_archive",
++      "path": "data/cache/sources/torchvision-v0.10.0.zip",
++      "bytes": 11141825,
++      "sha256": "9d673f88a61ef537e5d4c3c6bc51778dcb77885bdf32e00961db45686f9fe055"
++    },
++    {
++      "id": "smplx2smpl_joints",
++      "path": "data/body_models/smplx2smpl_joints.npy",
++      "bytes": 2765528,
++      "sha256": "c661b225a9d9183c5842f5e87af82c77b070b0dbf28966d51c59835ae5395bea"
++    },
++    {
++      "id": "smplx_neutral",
++      "path": "data/body_models/smplx/SMPLX_NEUTRAL.npz",
++      "bytes": 108752058,
++      "sha256": "376021446ddc86e99acacd795182bbef903e61d33b76b9d8b359c2b0865bd992"
++    },
++    {
++      "id": "smpl_neutral",
++      "path": "data/body_models/smpl/SMPL_NEUTRAL.pkl",
++      "bytes": 247186228,
++      "sha256": "4924f235e63f7c5d5b690acedf736419c2edb846a2d69fc0956169615fa75688"
++    },
++    {
++      "id": "smplx2smpl_conversion",
++      "path": "data/body_models/smplx2smpl.pkl",
++      "bytes": 578019251,
++      "sha256": "c1d912d121ad98132e4492d8e7a0f1a8cf4412811e14a7ef8cb337bb48eef99e"
++    }
++  ],
++  "assets": {
++    "metaclip_openclip": {
++      "repo": "timm/vit_large_patch14_clip_224.metaclip_2pt5b",
++      "revision": "1c09b97e09fb19bba2bf4548c9c7cca4b87f7888",
++      "filename": "open_clip_pytorch_model.bin",
++      "path": "data/cache/huggingface/hub/models--timm--vit_large_patch14_clip_224.metaclip_2pt5b/snapshots/1c09b97e09fb19bba2bf4548c9c7cca4b87f7888/open_clip_pytorch_model.bin",
++      "bytes": 1710639510,
++      "sha256": "8982bc381934bb39006c26e370d12da1f1eff5748762489f7b22e1a350975061",
++      "source_class": "public upstream Hugging Face/OpenCLIP dependency; not a PromptHMR-official hosted file"
++    },
++    "metric3d_vit_large": {
++      "repo": "JUGGHM/Metric3D",
++      "revision": "80d2d1410afb4b23cd9d18c6be9144483d4b70b6",
++      "filename": "metric_depth_vit_large_800k.pth",
++      "path": "data/cache/torch/hub/checkpoints/metric_depth_vit_large_800k.pth",
++      "bytes": 1647972663,
++      "sha256": "15328ffc42b528b95f188687418f6f03b3f123eb34ccdbd686c112abbea6d972",
++      "source_class": "public Metric3D upstream dependency; not a PromptHMR-official hosted file"
++    },
++    "deeplabv3_resnet50": {
++      "url": "https://download.pytorch.org/models/deeplabv3_resnet50_coco-cd0a2569.pth",
++      "path": "data/cache/torch/hub/checkpoints/deeplabv3_resnet50_coco-cd0a2569.pth",
++      "bytes": 168312152,
++      "sha256": "cd0a25694c4a0f7106b38f4938bf90a874f2f241cc410b8f63c7024399538f06",
++      "source_class": "official public PyTorch model asset"
++    },
++    "torchvision_hub_source": {
++      "repo": "pytorch/vision",
++      "revision": "v0.10.0",
++      "archive_path": "data/cache/sources/torchvision-v0.10.0.zip",
++      "runtime_path": "data/cache/torch/hub/pytorch_vision_v0.10.0",
++      "bytes": 11141825,
++      "sha256": "9d673f88a61ef537e5d4c3c6bc51778dcb77885bdf32e00961db45686f9fe055",
++      "source_class": "official public GitHub tag archive"
++    },
++    "smplx2smpl_joints": {
++      "path": "data/body_models/smplx2smpl_joints.npy",
++      "bytes": 2765528,
++      "sha256": "c661b225a9d9183c5842f5e87af82c77b070b0dbf28966d51c59835ae5395bea",
++      "shape": [
++        33,
++        10475
++      ],
++      "storage_dtype": "float64",
++      "runtime_dtype": "float32",
++      "formula": "concatenate(SMPL_NEUTRAL.J_regressor[24], public J_regressor_extra[9]) @ smplx2smpl['matrix']",
++      "source_hashes": {
++        "SMPL_NEUTRAL.pkl": "4924f235e63f7c5d5b690acedf736419c2edb846a2d69fc0956169615fa75688",
++        "J_regressor_extra.npy": "cc968ea4f9855571e82f90203280836b01f13ee42a8e1b89d8d580b801242a89",
++        "smplx2smpl.pkl": "c1d912d121ad98132e4492d8e7a0f1a8cf4412811e14a7ef8cb337bb48eef99e"
++      },
++      "checkpoint_audit": {
++        "checkpoint_sha256": "a3ef04ef8a12c3068682b03c62c95f8959cd8554424e105c63bf97f6c8e97e99",
++        "checkpoint_buffer_shape": [
++          33,
++          10475
++        ],
++        "derived_float32_max_abs_error": 2.9802322387695312e-08,
++        "strict_load_shape_compatible": true
++      },
++      "source_class": "local derived helper using user-authorized body models and a public nine-joint regressor; do not redistribute"
++    }
++  },
++  "offline_smokes": {
++    "ClipEncoder": {
++      "status": "PASS",
++      "parameters_after_stock_visual_removal": 124437761,
++      "checkpoint_coverage": "150/150 CLIP encoder tensors plus 2/2 ln_proj tensors; no visual tensors are retained in the PHMR checkpoint"
++    },
++    "Metric3D_ViT_L": {
++      "status": "PASS",
++      "class": "DepthModel",
++      "parameters": 411941915,
++      "network_guard": "torch.hub.urlopen replaced with fail-closed stub"
++    },
++    "DeepLabV3": {
++      "status": "PASS",
++      "class": "DeepLabV3",
++      "parameters": 42004074,
++      "call": "torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights=DeepLabV3_ResNet50_Weights.DEFAULT)",
++      "network_guard": "torch.hub.urlopen replaced with fail-closed stub"
++    },
++    "PHMR_strict_load": {
++      "status": "PASS",
++      "parameters": 479514846,
++      "checkpoint_tensors": 765,
++      "strict_checkpoint_coverage": "765/765",
++      "smplx_joint_buffer_shape_after_load": [
++        33,
++        10475
++      ],
++      "gpu_peak_allocated_bytes": 4602445824
++    }
++  },
++  "intentionally_absent": {
++    "SPEC_checkpoint": {
++      "reason": "MPG/SPEC use right unconfirmed; never downloaded, imported, or loaded",
++      "impact": "blocks only the unmodified official-default pipeline; no-SPEC results require an explicit adapter label"
++    },
++    "SMPLX_neutral_array_f32_slim.npz": {
++      "official_google_drive_id": "1v9Qy7ZXWcTM8_a9K2nSLyyVrJMFYcUOk",
++      "reason": "official Google Drive is unreachable from this host; gdown produced no file and the direct request timed out after 30 seconds",
++      "impact": "MCS export only; does not block prediction, results.pkl, or frozen NPZ conversion",
++      "unknown_mirror_used": false,
++      "fabricated_replacement_used": false
++    }
++  },
++  "disk": {
++    "local_cache_human_readable": "3.4G",
++    "environment_human_readable": "7.3G",
++    "filesystem_free_human_readable": "147G"
++  }
++}
+diff --git a/PROMPTHMR_GATE_A_B_AUDIT.md b/PROMPTHMR_GATE_A_B_AUDIT.md
+new file mode 100644
+index 0000000..b3aa709
+--- /dev/null
++++ b/PROMPTHMR_GATE_A_B_AUDIT.md
+@@ -0,0 +1,152 @@
++# PromptHMR Gate A/B audit
++
++Date: 2026-08-22 (Asia/Shanghai)
++Repository commit: `3b566b7dbb28ce506c7ea972c18693f4c705ce8c`
++Scope reached: Gate A complete; Gate B environment, local caches, and all lawful non-SPEC prediction assets complete; offline PHMR strict-load passed; Development not started.
++
++## 1. Gate A: scientific comparability
++
++### Decision
++
++PromptHMR is a valuable multi-person baseline for EgoBody, EgoHumans, and Harmony4D. It is not a single-person method:
++
++- the default video path detects several people, propagates a SAM2 mask per person, and retains native temporal `track_id` values;
++- the image model predicts all prompted people in a frame jointly (`TRANSFORMER: cross-person`);
++- the video head runs per native track and produces temporally coherent SMPL-X parameters;
++- masked DROID-Calib estimates one camera trajectory, and `world.py` applies that same trajectory to every person, producing one world frame per input sequence;
++- `camera_world` exports `Rwc/Twc` and the inverse `Rcw/Tcw`, while every person exports `smplx_world`.
++
++The relevant entry point is the world-video pipeline used by `scripts/demo_video.py` / `pipeline.Pipeline`. It accepts either a video or an ordered JPEG directory. `scripts/demo_phmr.py` is single-view and is not a valid baseline for the three current multi-person video datasets. `scripts/eval_phmr.py` only covers the repository's stock benchmark annotations and is not the execution entry point for our frozen manifests.
++
++### Important limitation relative to Bridge3R
++
++PromptHMR supports a moving or static **single monocular camera sequence**, but has no explicit shot-boundary reset, cross-shot transaction, multi-camera gauge alignment, or camera-stitching module. Its default path assumes:
++
++- one continuous SLAM problem;
++- one focal length / principal point for the whole input;
++- one tracker propagation over the whole input.
++
++Therefore a frozen CS150 input formed by concatenating two views at frame 75 is a legitimate end-to-end robustness comparison, but it is not a native multi-camera mode of PromptHMR. The paper must disclose that PromptHMR is run unchanged over the concatenated RGB sequence and that it has no boundary-aware state reset. This mismatch is part of the problem being evaluated, not a reason to hide crashes, missed people, ID breaks, or low coverage.
++
++### Fair protocol implication
++
++For a direct table, run the default moving-camera world-video path on exactly the same prediction-only RGB manifests and keep all failures in coverage. Do not use the single-image demo, inject GT boxes/IDs/calibration, manually repair cross-view identities, or set `--static-camera` merely because it improves a Development case. Any no-SPEC execution must be named an adapted variant rather than the unmodified official default.
++
++## 2. License gates
++
++PromptHMR itself is licensed only for non-commercial scientific research/education/artistic use and prohibits redistribution. Raw checkpoints, body models, repository code, and raw `results.pkl` files must not be included in a public artifact.
++
++The embedded `pipeline/spec/cam_calib.py` states that use requires a valid MPG license agreement or a right granted by an authorized party. The stock `Pipeline.__call__` executes `run_cam_calib(..., method='spec')` unconditionally before tracking; merely setting `use_spec_calib: false` does **not** prevent SPEC execution. Consequently:
++
++- `data/pretrain/camcalib_sa_biased_l2.ckpt` was deliberately not downloaded;
++- no SPEC module/model import or inference was executed in this audit;
++- the official-default Development run remains blocked until the user confirms a valid right;
++- without that right, a code adapter must skip the `run_cam_calib` block and disable the later SPEC gravity transform, and results must be labeled `PromptHMR (no-SPEC adapter)`.
++
++The existing SMPL/SMPL-X symlinks target the user's local licensed Movie3R assets. No body model was copied or downloaded from a community mirror. The constructor helper `data/body_models/smplx2smpl_joints.npy` was derived locally from those authorized SMPL assets plus the public nine-extra-joint regressor already present in both the ROMP and TRAM checkouts. The final 33-row helper is shape-compatible with, and agrees within `2.9802322e-08` of, the same buffer stored in the PromptHMR image checkpoint. It is a local derived asset and must not be redistributed. `data/body_models/smplx/SMPLX_neutral_array_f32_slim.npz` remains absent and only blocks the final MCS export; `results.pkl` is written before that export.
++
++## 3. Gate B: pinned environment
++
++Environment: `external_baselines/.venvs/prompthmr-py311-pt24`
++
++- Python 3.11.14
++- PyTorch 2.4.0+cu121
++- torchvision 0.19.0+cu121
++- xformers 0.0.27.post2
++- torch-scatter 2.1.2+pt24cu121
++- hydra-core 1.3.2
++- detectron2 0.8
++- droid-backends-intr 0.3
++- lietorch 0.3
++- sam2 1.5
++- L20 CUDA tensor/NMS smoke passed
++- `python -m pip check`: `No broken requirements found.`
++
++The four precompiled wheels were installed with `--no-deps`, after which the missing declared runtime dependencies were installed at explicit versions: `hydra-core==1.3.2`, `black==24.10.0`, `cloudpickle==3.1.1`, and `tensorboard==2.18.0`.
++
++## 4. Fixed community mirror and verified assets
++
++Google Drive is unreachable from this server. The files below were obtained from or verified against the **community mirror** (not an official PromptHMR host):
++
++- repository: `Datawhale/spring-festival-wushu-robot-replication-model`
++- immutable revision: `1e405a216a0addd3af510bdfb845820ec5ba625a`
++- resolve base: `https://huggingface.co/Datawhale/spring-festival-wushu-robot-replication-model/resolve/1e405a216a0addd3af510bdfb845820ec5ba625a/`
++- network transport on this server used `hf-mirror.com`, while the repository/revision and content hashes stayed fixed.
++
++| Relative path | Bytes | SHA256 | Status |
++|---|---:|---|---|
++| `data/wheels/detectron2-0.8-cp311-cp311-linux_x86_64.whl` | 1,826,728 | `8841904e00012b7592f0b40295f3032872c62f95c6738d2c1beaadc0a59a89ad` | downloaded, verified, installed |
++| `data/wheels/droid_backends_intr-0.3-cp311-cp311-linux_x86_64.whl` | 897,742 | `460e9de141dd23abc3c88cf5c9b9a188ccc3ae3f2dd7e197cf57c0619ad43c44` | downloaded, verified, installed |
++| `data/wheels/lietorch-0.3-cp311-cp311-linux_x86_64.whl` | 3,312,980 | `4170400d6423c85c0ef4761b02a6d41c729978baef47ebb401e07c44cb79e7bb` | downloaded, verified, installed |
++| `data/wheels/sam2-1.5-cp311-cp311-linux_x86_64.whl` | 551,119 | `a4d9276dd4fe65f80b71b52bc1c094352d0c67557207d19ce6f11195e75c5b83` | downloaded, verified, installed |
++| `data/pretrain/phmr/config.yaml` | 346 | `31142aaac12a7ef60adba77c85addffad1ea466a6555717b24c3fbed079a2447` | downloaded, verified |
++| `data/pretrain/phmr/checkpoint.ckpt` | 2,298,622,395 | `a3ef04ef8a12c3068682b03c62c95f8959cd8554424e105c63bf97f6c8e97e99` | downloaded, verified |
++| `data/pretrain/phmr_vid/prhmr_release_002.yaml` | 1,854 | `58cd9c28907e31cd1757c9282e5b75ceb00a6ac54facadee03dae5a4a0725fd9` | downloaded, verified |
++| `data/pretrain/phmr_vid/prhmr_release_002.ckpt` | 165,618,162 | `e40f6318073becc10238f2fdaed7b2523d0b90e45d4f1ffe078e8fcc8d765785` | downloaded, verified |
++| `data/pretrain/vitpose-h-coco_25.pth` | 2,549,009,242 | `72dbd9d9a7b708dfc3acb004ae3c44145cc94378a0693d64e6c86ba57c3afb2f` | downloaded, verified |
++| `data/pretrain/sam2_ckpts/keypoint_rcnn_5ad38f.pkl` | 490,574,901 | `e6118384ba2858dfabae1239f8036d13a46a37bc72d4647f598bd7241ba0840d` | downloaded, verified |
++| `data/pretrain/droidcalib.pth` | 16,049,525 | `67c5b78f727fb5ea7a6bf31fafe2f20c8982a56ca0b4f880ab46769a244b0a6f` | pre-existing; hash matches pinned mirror tree |
++| `data/pretrain/sam2_ckpts/sam2_hiera_tiny.pt` | 155,906,050 | `65b50056e05bcb13694174f51bb6da89c894b57b75ccdf0ba6352c597c5d1125` | pre-existing; hash matches pinned mirror tree |
++
++No file from the mirror is described as official. All large downloads used `.part` plus SHA256 verification before the final name.
++
++### Public runtime caches
++
++These upstream public assets are frozen in PromptHMR-local caches. Formal commands must set `TORCH_HOME`, `HF_HOME`, `HF_HUB_CACHE`, `HF_HUB_OFFLINE=1`, and `TRANSFORMERS_OFFLINE=1`; `scripts/with_local_cache.sh` provides that fail-closed environment.
++
++| Asset | Upstream revision | Bytes | SHA256 | Local path |
++|---|---|---:|---|---|
++| MetaCLIP ViT-L/14 OpenCLIP weights | `timm/vit_large_patch14_clip_224.metaclip_2pt5b@1c09b97e09fb19bba2bf4548c9c7cca4b87f7888` | 1,710,639,510 | `8982bc381934bb39006c26e370d12da1f1eff5748762489f7b22e1a350975061` | `data/cache/huggingface/hub/models--timm--vit_large_patch14_clip_224.metaclip_2pt5b/.../open_clip_pytorch_model.bin` |
++| Metric3D ViT-L | `JUGGHM/Metric3D@80d2d1410afb4b23cd9d18c6be9144483d4b70b6` | 1,647,972,663 | `15328ffc42b528b95f188687418f6f03b3f123eb34ccdbd686c112abbea6d972` | `data/cache/torch/hub/checkpoints/metric_depth_vit_large_800k.pth` |
++| DeepLabV3-ResNet50 weights | PyTorch model URL, filename hash prefix `cd0a2569` | 168,312,152 | `cd0a25694c4a0f7106b38f4938bf90a874f2f241cc410b8f63c7024399538f06` | `data/cache/torch/hub/checkpoints/deeplabv3_resnet50_coco-cd0a2569.pth` |
++| torchvision Hub source | official GitHub tag `pytorch/vision:v0.10.0` | 11,141,825 | `9d673f88a61ef537e5d4c3c6bc51778dcb77885bdf32e00961db45686f9fe055` | `data/cache/sources/torchvision-v0.10.0.zip` |
++| Derived SMPL-X-domain joint helper | local formula and checkpoint audit | 2,765,528 | `c661b225a9d9183c5842f5e87af82c77b070b0dbf28966d51c59835ae5395bea` | `data/body_models/smplx2smpl_joints.npy` |
++
++The MetaCLIP cache is the 1.71 GB Hugging Face/OpenCLIP inference checkpoint selected by the installed `open_clip` version, not the separate 5.13 GB upstream training package. The exact cache revision, blob hash, and `refs/main` were recorded before enabling offline mode.
++
++## 5. Completed non-SPEC smoke tests
++
++- Four binary wheels import successfully, including `detectron2._C`, `droid_backends_intr`, and `lietorch_backends`.
++- torchvision CUDA NMS succeeds on GPU 0.
++- SAM2 tiny checkpoint strictly loads into the repository's video predictor: 38,945,986 parameters, CUDA, eval mode.
++- Detectron2 Keypoint R-CNN checkpoint loads through `DefaultPredictor`: 122,217,702 parameters, CUDA, eval mode.
++- ViTPose-H checkpoint loads: 637,210,905 parameters, CUDA, eval mode.
++- DROID-Calib checkpoint loads strictly after the four stock output slices used by `Droid.load_weights`: 4,002,565 parameters, no missing/unexpected keys.
++- The PromptHMR image checkpoint parses as 765 state tensors / 574,471,058 parameters.
++- The PromptHMR video checkpoint parses as 251 state tensors / 41,379,104 parameters.
++- Config parsing confirms the image model is `dinov2_vitl14`, 896 px, cross-person prompts; the video head has maximum native window 120 and 12 transformer layers.
++- `ClipEncoder()` constructs with `HF_HUB_OFFLINE=1`: MetaCLIP loads from the local revision, its unused visual tower is removed as in stock code, and 124,437,761 parameters remain.
++- `metric3d_vit_large(pretrain=True)` loads from the local Torch cache while `torch.hub.urlopen` is replaced by a fail-closed stub: `DepthModel`, 411,941,915 parameters, eval mode.
++- The exact stock DeepLab call `torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights=DeepLabV3_ResNet50_Weights.DEFAULT)` succeeds with the same network stub: `DeepLabV3`, 42,004,074 parameters, eval mode. This is a hard dependency of the default SAM2 tracking path, not an optional fallback.
++- The custom SMPL-X wrapper loads the 33-by-10,475 locally derived helper. Its float32 values differ from the official checkpoint buffer by at most `2.9802322e-08`; the checkpoint expects the same shape.
++- Full `prompt_hmr.load_model(...)` construction with the local caches and `load_state_dict(strict=True)` succeeds on an L20: `PHMR`, 479,514,846 parameters, eval mode, GPU peak allocation 4,602,445,824 bytes.
++
++No EgoBody, Holdout, or Test frames were used in these smokes.
++
++## 6. Remaining Gate B blockers and non-blocking omissions
++
++### Blocking the official default
++
++1. Valid SPEC/MPG use right is unconfirmed; the SPEC checkpoint was deliberately not downloaded or loaded. This is the only remaining asset/license blocker for the unmodified official-default pipeline. A fully skipped SPEC import/call must be reported as `PromptHMR (no-SPEC adapter)`.
++
++### Not blocking the default SAM2 + Detectron2 path
++
++- `data/pretrain/yolo11x.pt` is referenced in `Pipeline.data_dict` but is not consumed by the default `tracker: sam2` + `detector_type: detectron2` branch. It is only relevant to a ByteTrack/YOLO variant and should not delay the default pilot.
++- `sam_vit_h_4b8939.pth` is unused by the default SAM2-tiny tracker.
++- `SMPLX_neutral_array_f32_slim.npz` is needed for MCS export, not for prediction, `results.pkl`, or the frozen NPZ conversion. Upstream `scripts/fetch_smplx.sh` identifies the official Google Drive file as `1v9Qy7ZXWcTM8_a9K2nSLyyVrJMFYcUOk`. Both `gdown` and a direct 30-second `drive.usercontent.google.com` request produced no file because Google Drive is unreachable from this host. No unknown mirror or fabricated replacement was used. Its absence must still be disclosed if the stock MCS export is claimed.
++
++## 7. Next safe commands
++
++Current non-SPEC verification:
++
++```bash
++cd /data/wangzheng/iJCV-CODE/external_baselines/PromptHMR
++../.venvs/prompthmr-py311-pt24/bin/python -m pip check
++scripts/with_local_cache.sh ../.venvs/prompthmr-py311-pt24/bin/python \
++  -c "from prompt_hmr import load_model; load_model('data/pretrain/phmr/checkpoint.ckpt')"
++sha256sum data/body_models/smplx2smpl_joints.npy \
++  data/cache/torch/hub/checkpoints/metric_depth_vit_large_800k.pth \
++  data/cache/torch/hub/checkpoints/deeplabv3_resnet50_coco-cd0a2569.pth
++```
++
++The non-SPEC assets are now sealed. If the user cannot confirm SPEC rights, use only the disclosed no-SPEC adapter that completely skips the SPEC import/call and gravity transform; do not merely flip `use_spec_calib`, and do not call that result the official default. Run only Development until configuration, failure policy, and no-output accounting are frozen; do not touch Holdout/Test from this asset audit.
+diff --git a/scripts/derive_smplx2smpl_joints.py b/scripts/derive_smplx2smpl_joints.py
+new file mode 100755
+index 0000000..d25a31b
+--- /dev/null
++++ b/scripts/derive_smplx2smpl_joints.py
+@@ -0,0 +1,334 @@
++#!/usr/bin/env python3
++"""Derive PromptHMR's SMPL-joint regressor on the SMPL-X vertex domain.
++
++This script does not download or redistribute body-model data.  It derives a
++small helper from SMPL/SMPL-X assets already present in the local PromptHMR
++checkout and records enough information to reproduce and audit the result.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import pickle
++from datetime import datetime, timezone
++from pathlib import Path
++
++import numpy as np
++from scipy import sparse
++import torch
++
++
++EXPECTED_SMPL_NATIVE_JOINTS = 24
++EXPECTED_SMPL_EXTRA_JOINTS = 9
++EXPECTED_PROMPTHMR_JOINTS = EXPECTED_SMPL_NATIVE_JOINTS + EXPECTED_SMPL_EXTRA_JOINTS
++EXPECTED_SMPL_VERTICES = 6890
++EXPECTED_SMPLX_VERTICES = 10475
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as stream:
++        for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def load_inputs(
++    smpl_path: Path,
++    extra_regressor_path: Path,
++    conversion_path: Path,
++) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
++    with smpl_path.open("rb") as stream:
++        smpl_data = pickle.load(stream, encoding="latin1")
++    with conversion_path.open("rb") as stream:
++        conversion_data = pickle.load(stream, encoding="latin1")
++
++    smpl_j_regressor = smpl_data["J_regressor"]
++    if sparse.issparse(smpl_j_regressor):
++        smpl_j_regressor = smpl_j_regressor.toarray()
++    smpl_j_regressor = np.asarray(smpl_j_regressor, dtype=np.float64)
++    extra_j_regressor = np.asarray(
++        np.load(extra_regressor_path, allow_pickle=False), dtype=np.float64
++    )
++    smplx2smpl = np.asarray(conversion_data["matrix"], dtype=np.float64)
++
++    expected_j_shape = (EXPECTED_SMPL_NATIVE_JOINTS, EXPECTED_SMPL_VERTICES)
++    expected_extra_shape = (EXPECTED_SMPL_EXTRA_JOINTS, EXPECTED_SMPL_VERTICES)
++    expected_conversion_shape = (EXPECTED_SMPL_VERTICES, EXPECTED_SMPLX_VERTICES)
++    if smpl_j_regressor.shape != expected_j_shape:
++        raise ValueError(
++            f"Unexpected neutral-SMPL J_regressor shape: "
++            f"{smpl_j_regressor.shape}, expected {expected_j_shape}"
++        )
++    if extra_j_regressor.shape != expected_extra_shape:
++        raise ValueError(
++            f"Unexpected extra-joint regressor shape: "
++            f"{extra_j_regressor.shape}, expected {expected_extra_shape}"
++        )
++    if smplx2smpl.shape != expected_conversion_shape:
++        raise ValueError(
++            f"Unexpected SMPL-X-to-SMPL matrix shape: "
++            f"{smplx2smpl.shape}, expected {expected_conversion_shape}"
++        )
++    if (
++        not np.isfinite(smpl_j_regressor).all()
++        or not np.isfinite(extra_j_regressor).all()
++        or not np.isfinite(smplx2smpl).all()
++    ):
++        raise ValueError("Input regressors contain non-finite values")
++    return smpl_j_regressor, extra_j_regressor, smplx2smpl
++
++
++def validate(
++    combined_j_regressor: np.ndarray,
++    smplx2smpl: np.ndarray,
++    smplx_joint_regressor: np.ndarray,
++) -> dict[str, float | int | list[int]]:
++    expected_shape = (EXPECTED_PROMPTHMR_JOINTS, EXPECTED_SMPLX_VERTICES)
++    if smplx_joint_regressor.shape != expected_shape:
++        raise ValueError(
++            f"Unexpected derived regressor shape: "
++            f"{smplx_joint_regressor.shape}, expected {expected_shape}"
++        )
++    if not np.isfinite(smplx_joint_regressor).all():
++        raise ValueError("Derived regressor contains non-finite values")
++
++    rng = np.random.default_rng(20260821)
++    vertices64 = rng.standard_normal((4, EXPECTED_SMPLX_VERTICES, 3))
++    direct64 = np.einsum("jk,bkc->bjc", smplx_joint_regressor, vertices64)
++    composed64 = np.einsum(
++        "ji,bic->bjc",
++        combined_j_regressor,
++        np.einsum("ik,bkc->bic", smplx2smpl, vertices64),
++    )
++    error64 = direct64 - composed64
++
++    # PromptHMR calls torch.from_numpy(...).float(), so explicitly audit the
++    # numerical error after the same float32 conversion used at runtime.
++    j32 = combined_j_regressor.astype(np.float32)
++    conversion32 = smplx2smpl.astype(np.float32)
++    derived32 = smplx_joint_regressor.astype(np.float32)
++    vertices32 = vertices64.astype(np.float32)
++    direct32 = np.einsum("jk,bkc->bjc", derived32, vertices32)
++    composed32 = np.einsum(
++        "ji,bic->bjc",
++        j32,
++        np.einsum("ik,bkc->bic", conversion32, vertices32),
++    )
++    error32 = direct32 - composed32
++
++    stats: dict[str, float | int | list[int]] = {
++        "derived_shape": list(smplx_joint_regressor.shape),
++        "derived_nonzero_count": int(np.count_nonzero(smplx_joint_regressor)),
++        "smpl_native_j_row_sum_max_abs_error_from_one": float(
++            np.max(
++                np.abs(
++                    combined_j_regressor[:EXPECTED_SMPL_NATIVE_JOINTS].sum(axis=1)
++                    - 1.0
++                )
++            )
++        ),
++        "smpl_extra_j_row_sum_max_abs_error_from_one": float(
++            np.max(
++                np.abs(
++                    combined_j_regressor[EXPECTED_SMPL_NATIVE_JOINTS:].sum(axis=1)
++                    - 1.0
++                )
++            )
++        ),
++        "smplx2smpl_row_sum_max_abs_error_from_one": float(
++            np.max(np.abs(smplx2smpl.sum(axis=1) - 1.0))
++        ),
++        "derived_native_row_sum_max_abs_error_from_one": float(
++            np.max(
++                np.abs(
++                    smplx_joint_regressor[:EXPECTED_SMPL_NATIVE_JOINTS].sum(axis=1)
++                    - 1.0
++                )
++            )
++        ),
++        "derived_extra_row_sum_max_abs_error_from_one": float(
++            np.max(
++                np.abs(
++                    smplx_joint_regressor[EXPECTED_SMPL_NATIVE_JOINTS:].sum(axis=1)
++                    - 1.0
++                )
++            )
++        ),
++        "associativity_float64_max_abs_error": float(np.max(np.abs(error64))),
++        "associativity_float64_rms_error": float(np.sqrt(np.mean(error64**2))),
++        "associativity_float32_max_abs_error": float(np.max(np.abs(error32))),
++        "associativity_float32_rms_error": float(np.sqrt(np.mean(error32**2))),
++    }
++
++    if stats["derived_native_row_sum_max_abs_error_from_one"] > 1e-12:
++        raise ValueError(f"Native SMPL rows are not translation equivariant: {stats}")
++    # The public nine-joint regressor itself has row-sum residuals up to
++    # 1.3836e-4. Preserve that source exactly instead of silently renormalizing
++    # it; the official PromptHMR checkpoint contains the same residuals.
++    if stats["derived_extra_row_sum_max_abs_error_from_one"] > 2e-4:
++        raise ValueError(f"Extra-joint row sums exceed the source tolerance: {stats}")
++    if stats["associativity_float64_max_abs_error"] > 1e-12:
++        raise ValueError(f"Float64 composition check failed: {stats}")
++    if stats["associativity_float32_max_abs_error"] > 2e-6:
++        raise ValueError(f"Float32 PromptHMR-runtime composition check failed: {stats}")
++    return stats
++
++
++def validate_checkpoint(
++    checkpoint_path: Path,
++    smplx_joint_regressor: np.ndarray,
++) -> dict[str, float | int | list[int] | str | bool]:
++    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
++    checkpoint_regressor = (
++        checkpoint["state_dict"]["smplx.smpl_joints"].detach().cpu().numpy()
++    )
++    runtime_regressor = smplx_joint_regressor.astype(np.float32)
++    if checkpoint_regressor.shape != runtime_regressor.shape:
++        raise ValueError(
++            f"Checkpoint expects {checkpoint_regressor.shape}, but the derived "
++            f"PromptHMR runtime buffer has {runtime_regressor.shape}"
++        )
++    max_abs_error = float(np.max(np.abs(checkpoint_regressor - runtime_regressor)))
++    mismatch_count = int(np.count_nonzero(checkpoint_regressor != runtime_regressor))
++    if max_abs_error > 5e-7:
++        raise ValueError(
++            f"Derived regressor does not reproduce the checkpoint buffer: "
++            f"max_abs_error={max_abs_error}"
++        )
++    return {
++        "checkpoint_path": str(checkpoint_path),
++        "checkpoint_sha256": sha256(checkpoint_path),
++        "checkpoint_buffer_shape": list(checkpoint_regressor.shape),
++        "derived_float32_shape": list(runtime_regressor.shape),
++        "max_abs_error": max_abs_error,
++        "bitwise_mismatch_count": mismatch_count,
++        "strict_load_shape_compatible": True,
++    }
++
++
++def parse_args() -> argparse.Namespace:
++    parser = argparse.ArgumentParser()
++    parser.add_argument(
++        "--smpl",
++        type=Path,
++        default=Path("data/body_models/smpl/SMPL_NEUTRAL.pkl"),
++    )
++    parser.add_argument(
++        "--extra-j-regressor",
++        type=Path,
++        default=Path("../ROMP/assets/smpl_model_data/J_regressor_extra.npy"),
++        help=(
++            "Public SPIN/ROMP-style regressor for the nine extra SMPL joints "
++            "retained by the PromptHMR checkpoint"
++        ),
++    )
++    parser.add_argument(
++        "--smplx2smpl",
++        type=Path,
++        default=Path("data/body_models/smplx2smpl.pkl"),
++    )
++    parser.add_argument(
++        "--checkpoint",
++        type=Path,
++        default=Path("data/pretrain/phmr/checkpoint.ckpt"),
++        help="Official PromptHMR image checkpoint used only for shape/value audit",
++    )
++    parser.add_argument(
++        "--output",
++        type=Path,
++        default=Path("data/body_models/smplx2smpl_joints.npy"),
++    )
++    parser.add_argument(
++        "--provenance",
++        type=Path,
++        default=Path("data/body_models/smplx2smpl_joints.provenance.json"),
++    )
++    return parser.parse_args()
++
++
++def main() -> None:
++    args = parse_args()
++    for input_path in (
++        args.smpl,
++        args.extra_j_regressor,
++        args.smplx2smpl,
++        args.checkpoint,
++    ):
++        if not input_path.is_file():
++            raise FileNotFoundError(input_path)
++
++    smpl_j_regressor, extra_j_regressor, smplx2smpl = load_inputs(
++        args.smpl, args.extra_j_regressor, args.smplx2smpl
++    )
++    combined_j_regressor = np.concatenate(
++        [smpl_j_regressor, extra_j_regressor], axis=0
++    )
++    # For any SMPL-X vertices Vx, first converting to SMPL vertices and then
++    # regressing joints gives J_combined @ (M_x2s @ Vx). Associativity gives
++    # the 33-row PromptHMR regressor (J_combined @ M_x2s) on Vx directly.
++    smplx_joint_regressor = combined_j_regressor @ smplx2smpl
++    validation = validate(combined_j_regressor, smplx2smpl, smplx_joint_regressor)
++    checkpoint_validation = validate_checkpoint(args.checkpoint, smplx_joint_regressor)
++
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    np.save(args.output, smplx_joint_regressor, allow_pickle=False)
++    roundtrip = np.load(args.output, allow_pickle=False)
++    if not np.array_equal(roundtrip, smplx_joint_regressor):
++        raise RuntimeError("Saved regressor failed byte-independent NumPy round trip")
++
++    provenance = {
++        "schema_version": 1,
++        "created_utc": datetime.now(timezone.utc).isoformat(),
++        "formula": (
++            "concatenate(SMPL_NEUTRAL.J_regressor, J_regressor_extra_9) "
++            "@ smplx2smpl['matrix']"
++        ),
++        "purpose": (
++            "24 native SMPL plus 9 public extra joints regressed directly from "
++            "the 10475 SMPL-X vertices; consumed by "
++            "prompt_hmr/smpl_family/smpl_wrapper.py"
++        ),
++        "storage_dtype": str(smplx_joint_regressor.dtype),
++        "runtime_dtype": (
++            "float32 (PromptHMR loads the NumPy array with torch.from_numpy(...).float())"
++        ),
++        "inputs": {
++            "smpl_neutral": {
++                "path": str(args.smpl),
++                "resolved_path": str(args.smpl.resolve()),
++                "sha256": sha256(args.smpl),
++            },
++            "extra_j_regressor": {
++                "path": str(args.extra_j_regressor),
++                "resolved_path": str(args.extra_j_regressor.resolve()),
++                "sha256": sha256(args.extra_j_regressor),
++                "source_note": (
++                    "Public nine-joint SMPL helper in the locally cloned ROMP "
++                    "baseline; identical SHA256 to the locally cloned TRAM copy"
++                ),
++            },
++            "smplx2smpl": {
++                "path": str(args.smplx2smpl),
++                "resolved_path": str(args.smplx2smpl.resolve()),
++                "sha256": sha256(args.smplx2smpl),
++            },
++        },
++        "validation": validation,
++        "checkpoint_validation": checkpoint_validation,
++        "output": {
++            "path": str(args.output),
++            "bytes": args.output.stat().st_size,
++            "sha256": sha256(args.output),
++        },
++    }
++    args.provenance.write_text(
++        json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
++    )
++    print(json.dumps(provenance, indent=2, sort_keys=True))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/with_local_cache.sh b/scripts/with_local_cache.sh
+new file mode 100755
+index 0000000..ab5a5fa
+--- /dev/null
++++ b/scripts/with_local_cache.sh
+@@ -0,0 +1,15 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# Run a PromptHMR command against the audited, repository-local caches.  The
++# offline flags are intentional: a frozen experiment must fail closed instead
++# of silently fetching a newer asset or writing to a user's default cache.
++repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++export TORCH_HOME="${repo_root}/data/cache/torch"
++export HF_HOME="${repo_root}/data/cache/huggingface"
++export HF_HUB_CACHE="${HF_HOME}/hub"
++export HF_HUB_OFFLINE=1
++export TRANSFORMERS_OFFLINE=1
++export HF_HUB_DISABLE_TELEMETRY=1
++
++exec "$@"

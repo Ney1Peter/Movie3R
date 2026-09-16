@@ -1,0 +1,52 @@
+{
+  "dataset": "egohumans",
+  "errors": [],
+  "evaluated_case_count": 24,
+  "evaluator_unavailable_case_count": 4,
+  "evaluator_unavailable_cases": [
+    {
+      "case_id": "ego_holdout_badminton_002_badminton_extreme_cam01_cam13_b00301",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "retained_in_fixed_denominator": true
+    },
+    {
+      "case_id": "ego_holdout_basketball_005_basketball_large_cam05_cam01_b00251",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "retained_in_fixed_denominator": true
+    },
+    {
+      "case_id": "ego_holdout_tennis_003_tennis_large_cam07_cam01_b00601",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "retained_in_fixed_denominator": true
+    },
+    {
+      "case_id": "ego_holdout_tennis_003_tennis_small_cam09_cam10_b00601",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "retained_in_fixed_denominator": true
+    }
+  ],
+  "expected_case_count": 24,
+  "frozen_config": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/config/frozen_egohumans.json",
+  "gate_role": "executability and leakage check only; no parameter selection",
+  "parameter_changes_after_gate_allowed": false,
+  "passed": true,
+  "schema_version": "Shot3R-traditional-registration-Holdout-gate-v1",
+  "split": "holdout",
+  "status_counts": {
+    "r0": {
+      "ok": 24
+    },
+    "r1": {
+      "ok": 24
+    },
+    "r2": {
+      "ok": 18,
+      "ransac_failed": 6
+    },
+    "r3": {
+      "icp_failed": 11,
+      "ok": 7,
+      "ransac_failed": 6
+    }
+  }
+}

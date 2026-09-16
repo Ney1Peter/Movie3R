@@ -1,0 +1,217 @@
+{
+  "experiment": "causal_detector_leave_one_source_out",
+  "input": "/data/wangzheng/iJCV-CODE/Movie3R/output/archive/20260721/v10_detector_probe/image_feature_round1/detector_pair_features.csv",
+  "feature_names": [
+    "ahash_hamming",
+    "blur_l1",
+    "dhash_hamming",
+    "edge_l1",
+    "flow_mean",
+    "flow_median",
+    "flow_p95",
+    "gray_l1",
+    "gray_l2",
+    "gray_ncc_change",
+    "hsv_hist_chisq",
+    "orb_good_matches",
+    "orb_good_ratio",
+    "orb_homography_inlier_ratio",
+    "orb_kp0",
+    "orb_kp1",
+    "orb_mean_dist",
+    "rgb_hist_chisq",
+    "rgb_l1",
+    "rgb_l2"
+  ],
+  "excluded_features": [
+    "transition_angle_deg",
+    "source",
+    "pattern_id",
+    "future_frames"
+  ],
+  "history": 3,
+  "epochs": 120,
+  "seed": 20260805,
+  "folds": [
+    {
+      "static_logistic": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.7843137254901961,
+        "f1": 0.8307692307692308,
+        "precision": 0.7105263157894737,
+        "recall": 1.0,
+        "fpr": 0.4583333333333333,
+        "brier": 0.18494047053163695
+      },
+      "mlp": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 1.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "fpr": 0.0,
+        "brier": 0.0008256233111661758
+      },
+      "gru": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 1.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "fpr": 0.0,
+        "brier": 0.0008413707880105868
+      },
+      "source": "avatarrex",
+      "test_groups": 2,
+      "train_groups": 6
+    },
+    {
+      "static_logistic": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9313725490196079,
+        "f1": 0.9391304347826087,
+        "precision": 0.8852459016393442,
+        "recall": 1.0,
+        "fpr": 0.14583333333333334,
+        "brier": 0.049165075899802436
+      },
+      "mlp": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.8921568627450981,
+        "f1": 0.907563025210084,
+        "precision": 0.8307692307692308,
+        "recall": 1.0,
+        "fpr": 0.22916666666666666,
+        "brier": 0.07789535023671351
+      },
+      "gru": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9411764705882353,
+        "f1": 0.9473684210526315,
+        "precision": 0.9,
+        "recall": 1.0,
+        "fpr": 0.125,
+        "brier": 0.037736667860675
+      },
+      "source": "mvhuman100",
+      "test_groups": 2,
+      "train_groups": 6
+    },
+    {
+      "static_logistic": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9803921568627451,
+        "f1": 0.9811320754716981,
+        "precision": 1.0,
+        "recall": 0.9629629629629629,
+        "fpr": 0.0,
+        "brier": 0.01583509068841634
+      },
+      "mlp": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9607843137254902,
+        "f1": 0.9615384615384616,
+        "precision": 1.0,
+        "recall": 0.9259259259259259,
+        "fpr": 0.0,
+        "brier": 0.023089145146257973
+      },
+      "gru": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9803921568627451,
+        "f1": 0.9811320754716981,
+        "precision": 1.0,
+        "recall": 0.9629629629629629,
+        "fpr": 0.0,
+        "brier": 0.016384232670513286
+      },
+      "source": "mvhuman200",
+      "test_groups": 2,
+      "train_groups": 6
+    },
+    {
+      "static_logistic": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9509803921568627,
+        "f1": 0.9514563106796117,
+        "precision": 1.0,
+        "recall": 0.9074074074074074,
+        "fpr": 0.0,
+        "brier": 0.04624079937580234
+      },
+      "mlp": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 0.9411764705882353,
+        "f1": 0.9411764705882353,
+        "precision": 1.0,
+        "recall": 0.8888888888888888,
+        "fpr": 0.0,
+        "brier": 0.04566755295698457
+      },
+      "gru": {
+        "count": 102,
+        "positive": 54,
+        "threshold": 0.5,
+        "accuracy": 1.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "fpr": 0.0,
+        "brier": 0.005545650020857649
+      },
+      "source": "thuman",
+      "test_groups": 2,
+      "train_groups": 6
+    }
+  ],
+  "macro": {
+    "static_logistic": {
+      "f1": 0.9256220129257874,
+      "fpr": 0.15104166666666666,
+      "brier": 0.07404535912391452,
+      "accuracy": 0.911764705882353,
+      "recall": 0.9675925925925926
+    },
+    "mlp": {
+      "f1": 0.9525694893341952,
+      "fpr": 0.057291666666666664,
+      "brier": 0.036869417912780554,
+      "accuracy": 0.9485294117647058,
+      "recall": 0.9537037037037037
+    },
+    "gru": {
+      "f1": 0.9821251241310824,
+      "fpr": 0.03125,
+      "brier": 0.01512698033501413,
+      "accuracy": 0.9803921568627451,
+      "recall": 0.9907407407407407
+    }
+  },
+  "selection": {
+    "selected": "gru",
+    "rule": "max macro F1 subject to FPR non-inferior and Brier delta <= 0.02"
+  },
+  "runtime": "causal adjacent RGB statistics only; no Human3R, camera, SMPL, GT or future frame"
+}

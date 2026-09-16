@@ -55,6 +55,11 @@ def load_payload(root: Path) -> dict[str, object]:
     all_display_vertices = []
     depth_paths = sorted((root / "depth").glob("*.npy"))
     conf_paths = sorted((root / "conf").glob("*.npy"))
+    # Only explicit hybrid references use a separate backprojection camera.
+    # Ordinary method payloads retain the original camera/depth interpretation.
+    point_camera_paths = sorted((root / "point_camera").glob("*.npz"))
+    if point_camera_paths and [p.name for p in point_camera_paths] != [p.name for p in camera_paths]:
+        raise ValueError("Point-camera/display-camera filenames must match")
     if depth_paths and len(depth_paths) != len(colour_paths):
         raise ValueError(f"Depth/frame mismatch: depth={len(depth_paths)}, color={len(colour_paths)}")
     if conf_paths and len(conf_paths) != len(colour_paths):
@@ -71,6 +76,11 @@ def load_payload(root: Path) -> dict[str, object]:
         with np.load(camera_path, allow_pickle=False) as camera:
             pose = np.asarray(camera["pose"], dtype=np.float32)
             intrinsics = np.asarray(camera["intrinsics"], dtype=np.float32)
+        point_pose, point_intrinsics = pose, intrinsics
+        if point_camera_paths:
+            with np.load(point_camera_paths[frame_index], allow_pickle=False) as camera:
+                point_pose = np.asarray(camera["pose"], dtype=np.float32)
+                point_intrinsics = np.asarray(camera["intrinsics"], dtype=np.float32)
         # ``demo.py --save`` stores camera-space z depth.  Reconstruct the
         # camera-space pointmap and then use the payload's own camera pose to
         # place it in the same world frame as that method's meshes.  External
@@ -86,14 +96,14 @@ def load_payload(root: Path) -> dict[str, object]:
             if confidence.shape != (height, width):
                 confidence = cv2.resize(confidence, (width, height), interpolation=cv2.INTER_NEAREST)
             yy, xx = np.indices((height, width), dtype=np.float32)
-            fx, fy = float(intrinsics[0, 0]), float(intrinsics[1, 1])
-            cx, cy = float(intrinsics[0, 2]), float(intrinsics[1, 2])
+            fx, fy = float(point_intrinsics[0, 0]), float(point_intrinsics[1, 1])
+            cx, cy = float(point_intrinsics[0, 2]), float(point_intrinsics[1, 2])
             if not np.isfinite([fx, fy]).all() or min(abs(fx), abs(fy)) < 1e-6:
                 raise ValueError(f"Invalid intrinsics in {camera_path}: {intrinsics}")
             camera_points = np.stack(
                 ((xx - cx) * depth / fx, (yy - cy) * depth / fy, depth), axis=-1
             )
-            world_points = camera_points @ pose[:3, :3].T + pose[:3, 3]
+            world_points = camera_points @ point_pose[:3, :3].T + point_pose[:3, 3]
             valid_scene = (
                 np.isfinite(world_points).all(axis=-1)
                 & np.isfinite(depth)

@@ -1,0 +1,3614 @@
+{
+  "dataset": "MVHuman",
+  "fixed_manifest_denominator": 50,
+  "internal_methods": {
+    "m0_strict_human3r": {
+      "angle_strata": {
+        "extreme": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                218.30716676906317,
+                342.6818359169403
+              ],
+              "cluster_support": 10,
+              "mean": 278.4647534569581
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -156.7550046551142,
+                -18.508363519937433
+              ],
+              "cluster_support": 10,
+              "mean": -85.32906767236673
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                174.08644498894614,
+                215.43756940792588
+              ],
+              "cluster_support": 10,
+              "mean": 193.13568578459135
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                145.5122645835336,
+                307.4935916905087
+              ],
+              "cluster_support": 10,
+              "mean": 224.6808246207856
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -171.99879212750938,
+                -4.063946666618673
+              ],
+              "cluster_support": 10,
+              "mean": -84.82464429772673
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                117.76754797870895,
+                162.73776825898918
+              ],
+              "cluster_support": 10,
+              "mean": 139.85618032305885
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                101.4651126555272,
+                148.33853793895074
+              ],
+              "cluster_support": 10,
+              "mean": 126.05864442597083
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                13.67617531419096,
+                63.26336673802425
+              ],
+              "cluster_support": 10,
+              "mean": 37.14391041923214
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                160.25425067381445,
+                166.4970515182416
+              ],
+              "cluster_support": 10,
+              "mean": 163.202554845203
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.4807369925504057,
+                2.191938988871094
+              ],
+              "cluster_support": 10,
+              "mean": 1.8257954026994327
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.15751108869611477,
+                0.9112027638292883
+              ],
+              "cluster_support": 10,
+              "mean": 0.5402103419315862
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.223842180196415,
+                2.5296621873041585
+              ],
+              "cluster_support": 10,
+              "mean": 2.366005744631019
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9913333333333332,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9966666666666667
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.008666666666666689,
+                0.020000000000000007
+              ],
+              "cluster_support": 10,
+              "mean": 0.014666666666666684
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9786666666666667,
+                0.9860000000000001
+              ],
+              "cluster_support": 10,
+              "mean": 0.982
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                62.003951170482104,
+                79.59425244966233
+              ],
+              "cluster_support": 10,
+              "mean": 71.28091752329154
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                3.033705206070245,
+                24.82801824905107
+              ],
+              "cluster_support": 10,
+              "mean": 12.92207251765854
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                79.72341054532298,
+                88.69356069761703
+              ],
+              "cluster_support": 10,
+              "mean": 84.20299004095007
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.523324167717412,
+                31.309469169263092
+              ],
+              "cluster_support": 10,
+              "mean": 29.405697948243972
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -1.9782627650730469,
+                2.8317608093426774
+              ],
+              "cluster_support": 10,
+              "mean": 0.5127560046080266
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.5899082178634,
+                32.0823016667165
+              ],
+              "cluster_support": 10,
+              "mean": 29.918453952851998
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                133.46448091906822,
+                159.57192895906215
+              ],
+              "cluster_support": 9,
+              "mean": 147.837903052996
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -125.74356426948867,
+                -94.66368312134483
+              ],
+              "cluster_support": 9,
+              "mean": -110.67699562170911
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                26.910411716536743,
+                47.15026092070383
+              ],
+              "cluster_support": 9,
+              "mean": 37.1609074312869
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                202.1237522355943,
+                482.46234595578176
+              ],
+              "cluster_support": 9,
+              "mean": 335.34569481658764
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -314.8721729031801,
+                -35.7762659579133
+              ],
+              "cluster_support": 9,
+              "mean": -168.40116999309123
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                123.1826461022243,
+                213.9476455137363
+              ],
+              "cluster_support": 9,
+              "mean": 166.94452482349644
+            }
+          }
+        },
+        "large": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                186.14999469953983,
+                294.7541735264681
+              ],
+              "cluster_support": 10,
+              "mean": 238.00402096921567
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -59.68700215612396,
+                49.3561087390932
+              ],
+              "cluster_support": 10,
+              "mean": -6.733951983172082
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                193.17458936434687,
+                270.3556939343657
+              ],
+              "cluster_support": 10,
+              "mean": 231.27006898604358
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                137.1437412017018,
+                268.4650383248103
+              ],
+              "cluster_support": 10,
+              "mean": 202.10700899838275
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -63.71633461446878,
+                51.62870455226059
+              ],
+              "cluster_support": 10,
+              "mean": -6.102544315557308
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                156.38561438030465,
+                235.6073985783671
+              ],
+              "cluster_support": 10,
+              "mean": 196.00446468282547
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                59.817463289091855,
+                122.20814351860645
+              ],
+              "cluster_support": 10,
+              "mean": 92.2524323509903
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -14.610442711783033,
+                48.688856218649406
+              ],
+              "cluster_support": 10,
+              "mean": 16.171137790900083
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                105.2690743327013,
+                111.14557735892096
+              ],
+              "cluster_support": 10,
+              "mean": 108.4235701418904
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.4727738510415322,
+                2.2603719899710812
+              ],
+              "cluster_support": 10,
+              "mean": 1.8698487569858215
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.29693973175045074,
+                1.0417577503985616
+              ],
+              "cluster_support": 10,
+              "mean": 0.39433228607339255
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.7722090891348643,
+                2.7437994517255286
+              ],
+              "cluster_support": 10,
+              "mean": 2.2641810430592137
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.992,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9973333333333333
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.0026666666666667173,
+                0.018000000000000016
+              ],
+              "cluster_support": 10,
+              "mean": 0.011333333333333362
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9813333333333333,
+                0.9906666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.9860000000000001
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                34.0499558640384,
+                66.21670867718292
+              ],
+              "cluster_support": 10,
+              "mean": 50.57709899698206
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -5.090641059385094,
+                27.06887164555111
+              ],
+              "cluster_support": 10,
+              "mean": 9.952926312991769
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                57.709299316425415,
+                63.17424687380391
+              ],
+              "cluster_support": 10,
+              "mean": 60.53002530997382
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                25.396204530488948,
+                29.305798903205346
+              ],
+              "cluster_support": 10,
+              "mean": 27.46731752225362
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.5902952959346456,
+                3.2086411596966578
+              ],
+              "cluster_support": 10,
+              "mean": 1.8754899066389537
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.715398483375672,
+                31.652907305561786
+              ],
+              "cluster_support": 10,
+              "mean": 29.34280742889257
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                100.5195892174442,
+                130.42403423867503
+              ],
+              "cluster_support": 9,
+              "mean": 115.89592095582445
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -70.87820831896329,
+                -48.02645963708693
+              ],
+              "cluster_support": 9,
+              "mean": -60.33472534245571
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                49.0986430660341,
+                63.625283902750695
+              ],
+              "cluster_support": 9,
+              "mean": 55.56119561336874
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                336.0137556520062,
+                1058.542044796469
+              ],
+              "cluster_support": 9,
+              "mean": 684.1832494355394
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -871.5281025897029,
+                -110.1173031432428
+              ],
+              "cluster_support": 9,
+              "mean": -467.4350656877516
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                134.1269644008418,
+                300.68130394309395
+              ],
+              "cluster_support": 9,
+              "mean": 216.74818374778783
+            }
+          }
+        },
+        "medium": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                128.61802287247025,
+                230.41749418102117
+              ],
+              "cluster_support": 10,
+              "mean": 175.84406086274942
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -75.50661018695037,
+                49.964138739039335
+              ],
+              "cluster_support": 10,
+              "mean": -12.833329046700342
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                134.33527188155333,
+                195.13502883129553
+              ],
+              "cluster_support": 10,
+              "mean": 163.01073181604906
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                103.53706919149252,
+                213.2998319183766
+              ],
+              "cluster_support": 10,
+              "mean": 153.51203938956445
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -86.4445390126691,
+                14.432145308192059
+              ],
+              "cluster_support": 10,
+              "mean": -33.14987348631031
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                100.60430464893668,
+                137.68806353902355
+              ],
+              "cluster_support": 10,
+              "mean": 120.36216590325414
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                38.93108421091432,
+                84.80873107998961
+              ],
+              "cluster_support": 10,
+              "mean": 60.194543607954664
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -13.460213684907696,
+                31.97168733572753
+              ],
+              "cluster_support": 10,
+              "mean": 10.681563451245687
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                68.57217178682866,
+                73.12197301171959
+              ],
+              "cluster_support": 10,
+              "mean": 70.87610705920034
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.141680199291714,
+                2.0263809250620484
+              ],
+              "cluster_support": 10,
+              "mean": 1.51897465931074
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.7591747543327296,
+                0.1724027030864075
+              ],
+              "cluster_support": 10,
+              "mean": -0.2278430636493755
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.199865652490161,
+                1.3821245548765633
+              ],
+              "cluster_support": 10,
+              "mean": 1.291131595661365
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9893333333333334,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9960000000000001
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.010666666666666703,
+                0.02266666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.017333333333333357
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.976,
+                0.9800000000000001
+              ],
+              "cluster_support": 10,
+              "mean": 0.9786666666666667
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                22.902776729138203,
+                46.447789884447
+              ],
+              "cluster_support": 10,
+              "mean": 33.365209990111595
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -5.243367561173629,
+                19.789695104333994
+              ],
+              "cluster_support": 10,
+              "mean": 7.634276326200935
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                37.00858555820137,
+                46.021983967740624
+              ],
+              "cluster_support": 10,
+              "mean": 40.999486316312534
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                24.782679319356365,
+                28.809352716311782
+              ],
+              "cluster_support": 10,
+              "mean": 26.759905843428317
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.46283788315257546,
+                4.049610106681872
+              ],
+              "cluster_support": 10,
+              "mean": 2.234848427863929
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.40000627167793,
+                31.692199621179984
+              ],
+              "cluster_support": 10,
+              "mean": 28.994754271292244
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                48.14547947127438,
+                94.44385970964805
+              ],
+              "cluster_support": 9,
+              "mean": 66.72302105597886
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -65.41165291794508,
+                -23.706040694874666
+              ],
+              "cluster_support": 9,
+              "mean": -40.209313194149054
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                21.536990829315656,
+                30.551351665300746
+              ],
+              "cluster_support": 9,
+              "mean": 26.51370786182982
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                77.84219230091661,
+                611.8444142379559
+              ],
+              "cluster_support": 9,
+              "mean": 323.7767627955921
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -475.6593966004848,
+                42.95636491006302
+              ],
+              "cluster_support": 9,
+              "mean": -192.06598733145097
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                98.71010597408332,
+                165.2358473297656
+              ],
+              "cluster_support": 9,
+              "mean": 131.71077546414116
+            }
+          }
+        },
+        "small": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                102.62339651616571,
+                181.779675383326
+              ],
+              "cluster_support": 10,
+              "mean": 133.84783077703005
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -60.80200655976272,
+                73.48709204715372
+              ],
+              "cluster_support": 10,
+              "mean": 6.091143246661934
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                102.46194694265725,
+                189.1344703094823
+              ],
+              "cluster_support": 10,
+              "mean": 139.93897402369197
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                82.46902946987788,
+                162.29961788314625
+              ],
+              "cluster_support": 10,
+              "mean": 113.4008040702877
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -73.42837982689078,
+                42.40593061796175
+              ],
+              "cluster_support": 10,
+              "mean": -10.82164998337129
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                76.32959311458853,
+                136.168393261796
+              ],
+              "cluster_support": 10,
+              "mean": 102.5791540869164
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                35.81651349330338,
+                57.392038846359455
+              ],
+              "cluster_support": 10,
+              "mean": 46.530401293531355
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -13.243188154391321,
+                7.506813625904214
+              ],
+              "cluster_support": 10,
+              "mean": -2.713972540511184
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                42.89191086051887,
+                44.582174551815946
+              ],
+              "cluster_support": 10,
+              "mean": 43.81642875302016
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.7337187688815162,
+                1.3970128674306648
+              ],
+              "cluster_support": 10,
+              "mean": 1.0554360031036627
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.5094916328961359,
+                0.25574984864610045
+              ],
+              "cluster_support": 10,
+              "mean": -0.12301513119970468
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.8609932880035963,
+                1.0074093900785277
+              ],
+              "cluster_support": 10,
+              "mean": 0.9324208719039581
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 1.0
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.00933333333333337,
+                0.017333333333333357
+              ],
+              "cluster_support": 10,
+              "mean": 0.013333333333333364
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9826666666666666,
+                0.9906666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.9866666666666667
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                20.399637502072164,
+                35.28962627308211
+              ],
+              "cluster_support": 10,
+              "mean": 27.745026646495326
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -4.554330191955297,
+                7.49278903771059
+              ],
+              "cluster_support": 10,
+              "mean": 1.634134878039078
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.08149744430373,
+                33.51618581724915
+              ],
+              "cluster_support": 10,
+              "mean": 29.379161524534403
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                24.204798621939993,
+                28.121550800138348
+              ],
+              "cluster_support": 10,
+              "mean": 26.084748763205482
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.7725350493933237,
+                4.391269421161563
+              ],
+              "cluster_support": 10,
+              "mean": 2.5748713831417827
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                25.923568192888975,
+                31.256442771140808
+              ],
+              "cluster_support": 10,
+              "mean": 28.659620146347265
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                33.99625334211299,
+                45.151918645392264
+              ],
+              "cluster_support": 10,
+              "mean": 39.90657297731828
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -26.662599702205974,
+                -16.228378563387214
+              ],
+              "cluster_support": 10,
+              "mean": -22.185493098465578
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                13.97144563609527,
+                20.710518100772088
+              ],
+              "cluster_support": 10,
+              "mean": 17.7210798788527
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                61.12494989513394,
+                153.4106597489021
+              ],
+              "cluster_support": 10,
+              "mean": 103.1409481054421
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -74.60351913234403,
+                37.901833054145605
+              ],
+              "cluster_support": 10,
+              "mean": -13.980385726669292
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                69.26049274828917,
+                108.64330914926185
+              ],
+              "cluster_support": 10,
+              "mean": 89.16056237877281
+            }
+          }
+        },
+        "very_large": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                214.76000805439355,
+                313.88916697715825
+              ],
+              "cluster_support": 10,
+              "mean": 261.47951576696323
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -129.84957919294618,
+                5.957501061650383
+              ],
+              "cluster_support": 10,
+              "mean": -59.89805843211445
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                174.59931653501232,
+                233.78176246299935
+              ],
+              "cluster_support": 10,
+              "mean": 201.5814573348488
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                143.04629715474147,
+                276.28659722859766
+              ],
+              "cluster_support": 10,
+              "mean": 206.06399791114762
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -141.4767492587777,
+                8.782533416978666
+              ],
+              "cluster_support": 10,
+              "mean": -62.81943304862828
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                119.64704179336174,
+                167.37978529682593
+              ],
+              "cluster_support": 10,
+              "mean": 143.24456486251933
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                139.64246668454865,
+                158.96217523970105
+              ],
+              "cluster_support": 10,
+              "mean": 149.8238564087568
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -23.180560643855134,
+                -3.297238118792839
+              ],
+              "cluster_support": 10,
+              "mean": -13.698460509068585
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                134.65913071361115,
+                137.6761099116903
+              ],
+              "cluster_support": 10,
+              "mean": 136.1253958996882
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.1647993303969666,
+                2.5867652367277736
+              ],
+              "cluster_support": 10,
+              "mean": 2.39281151880664
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.40600911633447123,
+                0.15428904287942555
+              ],
+              "cluster_support": 10,
+              "mean": -0.13225810669195767
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.0620007880650624,
+                2.5148535594151875
+              ],
+              "cluster_support": 10,
+              "mean": 2.260553412114682
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 1.0
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.016000000000000025,
+                0.020000000000000018
+              ],
+              "cluster_support": 10,
+              "mean": 0.018666666666666686
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9800000000000001,
+                0.984
+              ],
+              "cluster_support": 10,
+              "mean": 0.9813333333333334
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                73.02599604046975,
+                84.81339420565754
+              ],
+              "cluster_support": 10,
+              "mean": 78.94324080283113
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -13.769799889526528,
+                2.8228369340802004
+              ],
+              "cluster_support": 10,
+              "mean": -6.072794721820415
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                69.78062858074155,
+                77.04974058675342
+              ],
+              "cluster_support": 10,
+              "mean": 72.87044608101073
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.851341400732647,
+                29.22520212933548
+              ],
+              "cluster_support": 10,
+              "mean": 27.988621256937613
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.787840751800596,
+                3.768700563434353
+              ],
+              "cluster_support": 10,
+              "mean": 1.6274969829502155
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.341740560195916,
+                31.730691202705113
+              ],
+              "cluster_support": 10,
+              "mean": 29.61611823988782
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                71.18812781298989,
+                130.36031546320635
+              ],
+              "cluster_support": 10,
+              "mean": 102.4246855696601
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -93.17338622992605,
+                -36.02273486478148
+              ],
+              "cluster_support": 10,
+              "mean": -65.9199635175468
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.000200733483837,
+                45.01648414649046
+              ],
+              "cluster_support": 10,
+              "mean": 36.50472205211331
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                396.8371401853174,
+                886.676395082393
+              ],
+              "cluster_support": 10,
+              "mean": 627.3515948369156
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -764.7332624559806,
+                -249.44999454373217
+              ],
+              "cluster_support": 10,
+              "mean": -489.78627525124756
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                104.48468062368198,
+                175.38311667367128
+              ],
+              "cluster_support": 10,
+              "mean": 137.56531958566802
+            }
+          }
+        }
+      },
+      "label": "Human3R",
+      "overall": {
+        "Anchor-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              188.79144834250374,
+              247.49766711904954
+            ],
+            "cluster_support": 10,
+            "mean": 217.52803636658334
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -71.85905004119118,
+              11.130359261263987
+            ],
+            "cluster_support": 10,
+            "mean": -31.74065277753834
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              164.81577034030695,
+              210.69359698237264
+            ],
+            "cluster_support": 10,
+            "mean": 185.78738358904494
+          }
+        },
+        "Anchor-root_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              148.148715167984,
+              215.0006075109041
+            ],
+            "cluster_support": 10,
+            "mean": 179.95293499803358
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -74.61235061826457,
+              -3.3846343538230252
+            ],
+            "cluster_support": 10,
+            "mean": -39.54362902631878
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              124.2486185010295,
+              154.71867702367007
+            ],
+            "cluster_support": 10,
+            "mean": 140.40930597171484
+          }
+        },
+        "Camera-rotation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              82.38214522611653,
+              106.62359351738472
+            ],
+            "cluster_support": 10,
+            "mean": 94.97197561744079
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -1.7804887660758646,
+              21.896800265259618
+            ],
+            "cluster_support": 10,
+            "mean": 9.51683572235963
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              103.59030871364367,
+              105.42756717914035
+            ],
+            "cluster_support": 10,
+            "mean": 104.4888113398004
+          }
+        },
+        "Camera-translation_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              1.5433010384516919,
+              1.9352461191342938
+            ],
+            "cluster_support": 10,
+            "mean": 1.7325732681812596
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -0.17554652476467464,
+              0.34776356063410624
+            ],
+            "cluster_support": 10,
+            "mean": 0.09028526529278821
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              1.6956992472259012,
+              1.9534407561050562
+            ],
+            "cluster_support": 10,
+            "mean": 1.822858533474048
+          }
+        },
+        "Coverage": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.9946666666666668,
+              1.0
+            ],
+            "cluster_support": 10,
+            "mean": 0.998
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.011333333333333364,
+              0.018400000000000014
+            ],
+            "cluster_support": 10,
+            "mean": 0.01506666666666669
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.9807999999999999,
+              0.9853333333333332
+            ],
+            "cluster_support": 10,
+            "mean": 0.9829333333333332
+          }
+        },
+        "Orientation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              45.77016500678393,
+              58.75840339503827
+            ],
+            "cluster_support": 10,
+            "mean": 52.38229879194232
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -1.8583107969583879,
+              13.614264677092823
+            ],
+            "cluster_support": 10,
+            "mean": 5.214123062613981
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              55.14758952038577,
+              60.594465443198764
+            ],
+            "cluster_support": 10,
+            "mean": 57.596421854556304
+          }
+        },
+        "PA-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              25.99069888254666,
+              29.106875743190855
+            ],
+            "cluster_support": 10,
+            "mean": 27.5412582668138
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -0.03164463165043569,
+              3.4487952294503947
+            ],
+            "cluster_support": 10,
+            "mean": 1.7650925410405816
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              26.913328100980337,
+              31.528146367122552
+            ],
+            "cluster_support": 10,
+            "mean": 29.30635080785438
+          }
+        },
+        "Seam-orientation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              86.83802181239344,
+              99.64225222175985
+            ],
+            "cluster_support": 10,
+            "mean": 93.56221683091441
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              -66.45061490929078,
+              -51.417349033180265
+            ],
+            "cluster_support": 10,
+            "mean": -59.19242284223296
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              30.361053977480346,
+              38.00594190769455
+            ],
+            "cluster_support": 10,
+            "mean": 34.36979398868147
+          }
+        },
+        "Seam-root_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              270.03359397544324,
+              568.0824078776587
+            ],
+            "cluster_support": 10,
+            "mean": 412.6526977202777
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              -440.16487771693215,
+              -106.69183085235315
+            ],
+            "cluster_support": 10,
+            "mean": -265.718864189145
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              114.27419731624441,
+              177.1384343410375
+            ],
+            "cluster_support": 10,
+            "mean": 146.93383353113273
+          }
+        }
+      }
+    },
+    "m15_bridge3r_full": {
+      "angle_strata": {
+        "extreme": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                253.6389429092198,
+                362.1636762482389
+              ],
+              "cluster_support": 10,
+              "mean": 304.9373738712921
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -178.67559414435684,
+                -46.80821305872329
+              ],
+              "cluster_support": 10,
+              "mean": -111.80168808670074
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                174.15282550650895,
+                215.18179237944975
+              ],
+              "cluster_support": 10,
+              "mean": 193.13568578459135
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                174.09290171648266,
+                318.9532318194464
+              ],
+              "cluster_support": 10,
+              "mean": 242.92013525992985
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -192.55468166532108,
+                -24.99188175873192
+              ],
+              "cluster_support": 10,
+              "mean": -103.06395493687096
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                118.37719624280734,
+                162.94339511305725
+              ],
+              "cluster_support": 10,
+              "mean": 139.85618032305885
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                55.82447433912251,
+                122.45158633245259
+              ],
+              "cluster_support": 10,
+              "mean": 88.29614555146672
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                39.50479828352105,
+                108.12719065531944
+              ],
+              "cluster_support": 10,
+              "mean": 74.90640929373627
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                160.29863258116555,
+                166.46896891906823
+              ],
+              "cluster_support": 10,
+              "mean": 163.202554845203
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.3061053116047932,
+                2.041138567837038
+              ],
+              "cluster_support": 10,
+              "mean": 1.6782027797099286
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.21539034755819186,
+                1.1723862169666277
+              ],
+              "cluster_support": 10,
+              "mean": 0.6878029649210905
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.2242440580652927,
+                2.5263746053875464
+              ],
+              "cluster_support": 10,
+              "mean": 2.366005744631019
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9913333333333334,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9966666666666667
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.008666666666666689,
+                0.019999999999999997
+              ],
+              "cluster_support": 10,
+              "mean": 0.014666666666666684
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9786666666666667,
+                0.9860000000000001
+              ],
+              "cluster_support": 10,
+              "mean": 0.982
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                46.18947154792539,
+                84.19562226888164
+              ],
+              "cluster_support": 10,
+              "mean": 65.79140840587897
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.033043602843861,
+                36.798373909572106
+              ],
+              "cluster_support": 10,
+              "mean": 18.411581635071094
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                79.66494720701952,
+                88.63565803476415
+              ],
+              "cluster_support": 10,
+              "mean": 84.20299004095007
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.432009517909933,
+                31.445030705118395
+              ],
+              "cluster_support": 10,
+              "mean": 29.438018942117186
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -1.9750154795953194,
+                2.7615711486711563
+              ],
+              "cluster_support": 10,
+              "mean": 0.48043501073481354
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.560136205496296,
+                32.06065233820878
+              ],
+              "cluster_support": 10,
+              "mean": 29.918453952851998
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                78.24567811200485,
+                154.99111917519642
+              ],
+              "cluster_support": 9,
+              "mean": 118.8498729464605
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -117.52892145960527,
+                -40.23795744036959
+              ],
+              "cluster_support": 9,
+              "mean": -81.6889655151736
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                27.05820509898733,
+                47.05368932852635
+              ],
+              "cluster_support": 9,
+              "mean": 37.1609074312869
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                183.68848062842943,
+                696.0429739216723
+              ],
+              "cluster_support": 9,
+              "mean": 422.113109671059
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -550.3839563844856,
+                12.78687414127224
+              ],
+              "cluster_support": 9,
+              "mean": -255.16858484756256
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                122.60384043484922,
+                213.6345039627268
+              ],
+              "cluster_support": 9,
+              "mean": 166.94452482349644
+            }
+          }
+        },
+        "large": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                222.70652927156323,
+                353.2452506690659
+              ],
+              "cluster_support": 10,
+              "mean": 278.99677015746096
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -142.51429960511138,
+                20.427947332981677
+              ],
+              "cluster_support": 10,
+              "mean": -47.72670117141741
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                191.96067146683404,
+                269.2982861472396
+              ],
+              "cluster_support": 10,
+              "mean": 231.27006898604358
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                146.86630817134986,
+                306.39019888106367
+              ],
+              "cluster_support": 10,
+              "mean": 218.8301112620426
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -132.05840294516486,
+                59.935453677731736
+              ],
+              "cluster_support": 10,
+              "mean": -22.82564657921717
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                155.47215564845504,
+                236.28950151934097
+              ],
+              "cluster_support": 10,
+              "mean": 196.00446468282547
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                49.35023420052484,
+                114.08239687757535
+              ],
+              "cluster_support": 10,
+              "mean": 80.6775520797862
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -5.612146621118999,
+                59.887529526097765
+              ],
+              "cluster_support": 10,
+              "mean": 27.74601806210419
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                105.26180927982799,
+                111.14001716134159
+              ],
+              "cluster_support": 10,
+              "mean": 108.4235701418904
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.287494773406542,
+                2.2234349566668064
+              ],
+              "cluster_support": 10,
+              "mean": 1.755214728456314
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.20255998816211448,
+                1.1349763213321824
+              ],
+              "cluster_support": 10,
+              "mean": 0.5089663146029001
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.7771245338158563,
+                2.7436410603803254
+              ],
+              "cluster_support": 10,
+              "mean": 2.2641810430592137
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.992,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9973333333333333
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.0026666666666667173,
+                0.018666666666666665
+              ],
+              "cluster_support": 10,
+              "mean": 0.011333333333333362
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9813333333333334,
+                0.9906666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.9860000000000001
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                37.48107056002103,
+                70.81719503632065
+              ],
+              "cluster_support": 10,
+              "mean": 54.691595560795676
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -9.631394700518273,
+                23.195825465832208
+              ],
+              "cluster_support": 10,
+              "mean": 5.838429749178145
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                57.698411645850165,
+                63.19418229748062
+              ],
+              "cluster_support": 10,
+              "mean": 60.53002530997382
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                25.457427785318686,
+                29.359443396029167
+              ],
+              "cluster_support": 10,
+              "mean": 27.509077790825025
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.5237399964874669,
+                3.168080616828673
+              ],
+              "cluster_support": 10,
+              "mean": 1.833729638067543
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.732460966414003,
+                31.6788474784431
+              ],
+              "cluster_support": 10,
+              "mean": 29.34280742889257
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                76.77221541057317,
+                118.20368591013452
+              ],
+              "cluster_support": 9,
+              "mean": 97.87703844449969
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -60.17358132310105,
+                -23.40911421495611
+              ],
+              "cluster_support": 9,
+              "mean": -42.31584283113096
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                48.91630107150325,
+                63.686530196649514
+              ],
+              "cluster_support": 9,
+              "mean": 55.56119561336874
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                316.20539148006407,
+                977.8351757357428
+              ],
+              "cluster_support": 9,
+              "mean": 633.1367099254091
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -841.9925706126992,
+                -57.009667206198976
+              ],
+              "cluster_support": 9,
+              "mean": -416.3885261776213
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                135.44249343969426,
+                301.95257754332596
+              ],
+              "cluster_support": 9,
+              "mean": 216.74818374778783
+            }
+          }
+        },
+        "medium": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                145.59807124498462,
+                318.35479476266306
+              ],
+              "cluster_support": 10,
+              "mean": 221.287691734723
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -160.91780133798082,
+                33.06710348818859
+              ],
+              "cluster_support": 10,
+              "mean": -58.27695991867391
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                135.13569520132458,
+                194.85521567948183
+              ],
+              "cluster_support": 10,
+              "mean": 163.01073181604906
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                95.49927417044974,
+                274.12486588408245
+              ],
+              "cluster_support": 10,
+              "mean": 168.73178436932272
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -147.53724133694556,
+                26.91508320953189
+              ],
+              "cluster_support": 10,
+              "mean": -48.369618466068566
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                100.43277829773965,
+                137.94602112156468
+              ],
+              "cluster_support": 10,
+              "mean": 120.36216590325414
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                52.97123977196561,
+                102.15471566371654
+              ],
+              "cluster_support": 10,
+              "mean": 78.17734380380641
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -30.3085642337815,
+                16.54102208496485
+              ],
+              "cluster_support": 10,
+              "mean": -7.301236744606081
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                68.56882465670425,
+                73.13623730512553
+              ],
+              "cluster_support": 10,
+              "mean": 70.87610705920034
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.210174432733763,
+                2.618021875950615
+              ],
+              "cluster_support": 10,
+              "mean": 1.9156351299327217
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -1.3373574360401959,
+                0.10505201288270892
+              ],
+              "cluster_support": 10,
+              "mean": -0.6245035342713567
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.2030360222441199,
+                1.3845447727876592
+              ],
+              "cluster_support": 10,
+              "mean": 1.291131595661365
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9893333333333334,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 0.9960000000000001
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.010666666666666703,
+                0.02266666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.017333333333333357
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.976,
+                0.9800000000000001
+              ],
+              "cluster_support": 10,
+              "mean": 0.9786666666666667
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                32.445851589959204,
+                79.49961807741967
+              ],
+              "cluster_support": 10,
+              "mean": 54.48335179979762
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -34.75753541756054,
+                4.963839707371713
+              ],
+              "cluster_support": 10,
+              "mean": -13.483865483485085
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                37.10229303561655,
+                46.068107857838235
+              ],
+              "cluster_support": 10,
+              "mean": 40.999486316312534
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                24.87620126878752,
+                28.80089850401801
+              ],
+              "cluster_support": 10,
+              "mean": 26.830931716332874
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.3683867068407263,
+                4.018203104793946
+              ],
+              "cluster_support": 10,
+              "mean": 2.1638225549593697
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.256097220275716,
+                31.670785943172167
+              ],
+              "cluster_support": 10,
+              "mean": 28.994754271292244
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                50.37508191513381,
+                85.66362577726836
+              ],
+              "cluster_support": 9,
+              "mean": 66.6540082838776
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -56.16932415629892,
+                -26.055084817566033
+              ],
+              "cluster_support": 9,
+              "mean": -40.14030042204778
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                21.678956031991532,
+                30.348487724993756
+              ],
+              "cluster_support": 9,
+              "mean": 26.51370786182982
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                167.73756308071017,
+                573.7393975404451
+              ],
+              "cluster_support": 9,
+              "mean": 363.1429611342004
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                -444.30652939504336,
+                -28.37193498247324
+              ],
+              "cluster_support": 9,
+              "mean": -231.43218567005928
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 9,
+              "ci95": [
+                98.50328132434522,
+                164.53371466213855
+              ],
+              "cluster_support": 9,
+              "mean": 131.71077546414116
+            }
+          }
+        },
+        "small": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                135.16903807023377,
+                366.2530538365148
+              ],
+              "cluster_support": 10,
+              "mean": 237.9880406703963
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -242.59590576370096,
+                32.22531368975879
+              ],
+              "cluster_support": 10,
+              "mean": -98.04906664670426
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                102.98730968407784,
+                188.93854583632861
+              ],
+              "cluster_support": 10,
+              "mean": 139.93897402369197
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                88.65220064795419,
+                333.49451411072255
+              ],
+              "cluster_support": 10,
+              "mean": 192.31082959817192
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -239.45505038522438,
+                28.80134831917058
+              ],
+              "cluster_support": 10,
+              "mean": -89.7316755112555
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                76.25820692984442,
+                136.34092898766093
+              ],
+              "cluster_support": 10,
+              "mean": 102.5791540869164
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                61.65878561489431,
+                116.40552562069848
+              ],
+              "cluster_support": 10,
+              "mean": 89.40423901121686
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -72.6210986482693,
+                -18.745848504945197
+              ],
+              "cluster_support": 10,
+              "mean": -45.58781025819669
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                42.90759992934343,
+                44.582009906696584
+              ],
+              "cluster_support": 10,
+              "mean": 43.81642875302016
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.3387128042308827,
+                2.7909891294221207
+              ],
+              "cluster_support": 10,
+              "mean": 2.075258283006517
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -1.9183284389389754,
+                -0.3510162602245368
+              ],
+              "cluster_support": 10,
+              "mean": -1.1428374111025592
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.8614207898434575,
+                1.0063316771510196
+              ],
+              "cluster_support": 10,
+              "mean": 0.9324208719039581
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 1.0
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.00933333333333337,
+                0.017333333333333357
+              ],
+              "cluster_support": 10,
+              "mean": 0.013333333333333364
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9826666666666666,
+                0.9906666666666668
+              ],
+              "cluster_support": 10,
+              "mean": 0.9866666666666667
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                29.25271197939902,
+                73.35025899396307
+              ],
+              "cluster_support": 10,
+              "mean": 50.614543537708954
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -42.89286049167546,
+                -2.114661997609234
+              ],
+              "cluster_support": 10,
+              "mean": -21.235382013174554
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.093005373987175,
+                33.656082270843456
+              ],
+              "cluster_support": 10,
+              "mean": 29.379161524534403
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                24.30946645169341,
+                28.05766587019097
+              ],
+              "cluster_support": 10,
+              "mean": 26.118610302492264
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.7106932997249128,
+                4.345901060704169
+              ],
+              "cluster_support": 10,
+              "mean": 2.541009843854993
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                25.949155869950637,
+                31.19736982599648
+              ],
+              "cluster_support": 10,
+              "mean": 28.659620146347265
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                34.40420670926397,
+                88.0758943427684
+              ],
+              "cluster_support": 10,
+              "mean": 57.22774626165102
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -69.53039329064248,
+                -17.166257517482467
+              ],
+              "cluster_support": 10,
+              "mean": -39.506666382798315
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                14.174763351326295,
+                20.68448832672073
+              ],
+              "cluster_support": 10,
+              "mean": 17.7210798788527
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                50.874361082931166,
+                500.50754456581205
+              ],
+              "cluster_support": 10,
+              "mean": 243.2859182274939
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -408.610880823037,
+                41.85253877717894
+              ],
+              "cluster_support": 10,
+              "mean": -154.12535584872109
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                69.04695484908473,
+                108.80705876045853
+              ],
+              "cluster_support": 10,
+              "mean": 89.16056237877281
+            }
+          }
+        },
+        "very_large": {
+          "Anchor-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                208.86001297923065,
+                330.3278188396344
+              ],
+              "cluster_support": 10,
+              "mean": 261.7968934549712
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -142.51131932677916,
+                8.674681276379996
+              ],
+              "cluster_support": 10,
+              "mean": -60.21543612012238
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                174.29579033235015,
+                234.11508833672735
+              ],
+              "cluster_support": 10,
+              "mean": 201.5814573348488
+            }
+          },
+          "Anchor-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                109.36432845199897,
+                272.4331187436752
+              ],
+              "cluster_support": 10,
+              "mean": 182.3737040696458
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -136.5452601372915,
+                38.76767466140155
+              ],
+              "cluster_support": 10,
+              "mean": -39.12913920712647
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                119.02283200254752,
+                167.3324142768052
+              ],
+              "cluster_support": 10,
+              "mean": 143.24456486251933
+            }
+          },
+          "Camera-rotation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                64.4277985863393,
+                139.51537604158275
+              ],
+              "cluster_support": 10,
+              "mean": 101.98674735561708
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -3.340131569363681,
+                72.01586398062162
+              ],
+              "cluster_support": 10,
+              "mean": 34.13864854407113
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                134.684279606902,
+                137.67634381320397
+              ],
+              "cluster_support": 10,
+              "mean": 136.1253958996882
+            }
+          },
+          "Camera-translation_m": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.6028097453110293,
+                2.5227358178006973
+              ],
+              "cluster_support": 10,
+              "mean": 2.059433444146829
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.2652452067765955,
+                0.6304509620412277
+              ],
+              "cluster_support": 10,
+              "mean": 0.2011199679678531
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                2.059141618305867,
+                2.5177693430377635
+              ],
+              "cluster_support": 10,
+              "mean": 2.260553412114682
+            }
+          },
+          "Coverage": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "cluster_support": 10,
+              "mean": 1.0
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.016000000000000025,
+                0.020000000000000018
+              ],
+              "cluster_support": 10,
+              "mean": 0.018666666666666686
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                0.9800000000000001,
+                0.984
+              ],
+              "cluster_support": 10,
+              "mean": 0.9813333333333334
+            }
+          },
+          "Orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                55.605198787174515,
+                88.18348393813474
+              ],
+              "cluster_support": 10,
+              "mean": 73.24494765865835
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -15.786843670668958,
+                17.493236171461504
+              ],
+              "cluster_support": 10,
+              "mean": -0.3745015776476336
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                69.73743819973649,
+                77.07399049880313
+              ],
+              "cluster_support": 10,
+              "mean": 72.87044608101073
+            }
+          },
+          "PA-MPJPE_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                26.90433899057427,
+                29.35864005521291
+              ],
+              "cluster_support": 10,
+              "mean": 28.095603939848626
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -0.8068090007373485,
+                3.7076743741764564
+              ],
+              "cluster_support": 10,
+              "mean": 1.520514300039202
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.418754529326982,
+                31.79581248691134
+              ],
+              "cluster_support": 10,
+              "mean": 29.61611823988782
+            }
+          },
+          "Seam-orientation_deg": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                68.63022471680277,
+                133.83116706180326
+              ],
+              "cluster_support": 10,
+              "mean": 101.805348442584
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -98.58367663422358,
+                -29.53243186786441
+              ],
+              "cluster_support": 10,
+              "mean": -65.30062639047071
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                27.033551934875995,
+                45.01220021650649
+              ],
+              "cluster_support": 10,
+              "mean": 36.50472205211331
+            }
+          },
+          "Seam-root_mm": {
+            "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+            "internal": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                330.43489584197965,
+                836.8101094835179
+              ],
+              "cluster_support": 10,
+              "mean": 563.0541027662952
+            },
+            "internal_advantage": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                -719.0472682044885,
+                -183.79537262441679
+              ],
+              "cluster_support": 10,
+              "mean": -425.48878318062725
+            },
+            "online": {
+              "bootstrap_samples": 10000,
+              "case_support": 10,
+              "ci95": [
+                104.57643156648075,
+                175.01984367928054
+              ],
+              "cluster_support": 10,
+              "mean": 137.56531958566802
+            }
+          }
+        }
+      },
+      "label": "BRIDGE3R",
+      "overall": {
+        "Anchor-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              207.92995201627164,
+              319.56443216559796
+            ],
+            "cluster_support": 10,
+            "mean": 261.00135397776864
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -148.5831924390787,
+              -9.318425163313766
+            ],
+            "cluster_support": 10,
+            "mean": -75.21397038872374
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              164.8037632769951,
+              210.5441204104437
+            ],
+            "cluster_support": 10,
+            "mean": 185.78738358904494
+          }
+        },
+        "Anchor-root_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              144.36874636233398,
+              267.3166070153389
+            ],
+            "cluster_support": 10,
+            "mean": 201.03331291182258
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -129.48654044472408,
+              0.6632367074222587
+            ],
+            "cluster_support": 10,
+            "mean": -60.624006940107726
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              124.0592833019061,
+              155.06362883456205
+            ],
+            "cluster_support": 10,
+            "mean": 140.40930597171484
+          }
+        },
+        "Camera-rotation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              75.29396128526095,
+              99.59680400079324
+            ],
+            "cluster_support": 10,
+            "mean": 87.70840556037865
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              4.669017227452538,
+              29.174325428244053
+            ],
+            "cluster_support": 10,
+            "mean": 16.780405779421763
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              103.57214751378348,
+              105.40155311796069
+            ],
+            "cluster_support": 10,
+            "mean": 104.4888113398004
+          }
+        },
+        "Camera-translation_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              1.6337476457560511,
+              2.1448260434497044
+            ],
+            "cluster_support": 10,
+            "mean": 1.8967488730504625
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -0.4189370118840536,
+              0.2856532114904325
+            ],
+            "cluster_support": 10,
+            "mean": -0.0738903395764144
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              1.6959769048423796,
+              1.9572194493596098
+            ],
+            "cluster_support": 10,
+            "mean": 1.822858533474048
+          }
+        },
+        "Coverage": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.9946666666666668,
+              1.0
+            ],
+            "cluster_support": 10,
+            "mean": 0.998
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.011200000000000035,
+              0.018400000000000017
+            ],
+            "cluster_support": 10,
+            "mean": 0.01506666666666669
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              0.9807999999999999,
+              0.9853333333333332
+            ],
+            "cluster_support": 10,
+            "mean": 0.9829333333333332
+          }
+        },
+        "Orientation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              48.28434046085083,
+              72.5749168071218
+            ],
+            "cluster_support": 10,
+            "mean": 59.76516939256792
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -12.534369300532129,
+              7.8190761970736
+            ],
+            "cluster_support": 10,
+            "mean": -2.1687475380116057
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              55.17437876293978,
+              60.58905305144442
+            ],
+            "cluster_support": 10,
+            "mean": 57.596421854556304
+          }
+        },
+        "PA-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              26.012702053237206,
+              29.158401966152734
+            ],
+            "cluster_support": 10,
+            "mean": 27.598448538323197
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              -0.08983280321471286,
+              3.399660271371718
+            ],
+            "cluster_support": 10,
+            "mean": 1.707902269531184
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 50,
+            "ci95": [
+              26.917991230498444,
+              31.539607726087663
+            ],
+            "cluster_support": 10,
+            "mean": 29.30635080785438
+          }
+        },
+        "Seam-orientation_deg": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              75.18378571073404,
+              99.64552233608883
+            ],
+            "cluster_support": 10,
+            "mean": 88.10126008757213
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              -65.57007369712795,
+              -41.46165127655247
+            ],
+            "cluster_support": 10,
+            "mean": -53.73146609889067
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              30.37104771603278,
+              37.947214206807686
+            ],
+            "cluster_support": 10,
+            "mean": 34.36979398868147
+          }
+        },
+        "Seam-root_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              292.0826435316965,
+              604.1589624009223
+            ],
+            "cluster_support": 10,
+            "mean": 443.1688348194449
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              -484.5308060531328,
+              -126.11839560890716
+            ],
+            "cluster_support": 10,
+            "mean": -296.23500128831216
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 47,
+            "ci95": [
+              113.62304090316343,
+              176.9581658363695
+            ],
+            "cluster_support": 10,
+            "mean": 146.93383353113273
+          }
+        }
+      }
+    }
+  },
+  "online_method": "onlinehmr_official",
+  "pairing_contract": {
+    "cluster": "subject when present; otherwise case",
+    "conditional_geometry_uses_pairwise_finite_support": true,
+    "coverage_uses_full_fixed_denominator": true,
+    "same_case_ids": true,
+    "same_frozen_evaluator_metric_definitions": true
+  },
+  "protocol": "MVH150",
+  "schema_version": "Bridge3R-OnlineHMR-extension-paired-comparison-v1"
+}

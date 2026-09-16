@@ -1,0 +1,35 @@
+{
+  "artifact": "final Shot3R model training curve",
+  "source_log": "/data/wangzheng/iJCV-CODE/Movie3R/checkpoints/v9_mixed_60h_pose_human_lora_bs10/train.log",
+  "source_log_sha256": "7ce3c82c88e12af52d7d15e2891fc7bf9ffc4622d5a6a3674f2091e20c7f79c6",
+  "recovery_precision": "precision printed in the retained text log",
+  "training_epochs": 72,
+  "optimizer_updates": 7200,
+  "validation_epochs": [
+    0,
+    6,
+    12,
+    18,
+    24,
+    30,
+    36,
+    42,
+    48,
+    54,
+    60,
+    66,
+    72
+  ],
+  "validation_datasets": [
+    "avatarrex_aabb",
+    "avatarrex_aaaa",
+    "thuman_aabb",
+    "thuman_aaaa"
+  ],
+  "initial_training_loss": 2.2939,
+  "final_training_loss": 0.0711,
+  "initial_validation_monitor": 1.95665,
+  "final_validation_monitor": 0.0849,
+  "training_time_from_log": "1 day, 5:28:44",
+  "reported_checkpoint": "Movie3R/checkpoints/v9_mixed_60h_pose_human_lora_bs10/checkpoint-final.pth"
+}

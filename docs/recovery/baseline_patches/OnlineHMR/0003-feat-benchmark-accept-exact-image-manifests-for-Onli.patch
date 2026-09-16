@@ -1,0 +1,114 @@
+From 157ae880fb75921c65fa039166edae09a90ed029 Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Thu, 3 Sep 2026 20:56:29 +0800
+Subject: [PATCH 3/3] feat(benchmark): accept exact image manifests for
+ OnlineHMR
+
+---
+ scripts/run_custom_mt.py | 58 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 44 insertions(+), 14 deletions(-)
+
+diff --git a/scripts/run_custom_mt.py b/scripts/run_custom_mt.py
+index 22d5a82..820ed1f 100644
+--- a/scripts/run_custom_mt.py
++++ b/scripts/run_custom_mt.py
+@@ -408,7 +408,21 @@ if __name__=='__main__':
+     parser.add_argument("--save_dir", default="./res_human_camera")
+     parser.add_argument("--no-viz", action="store_true")
+     parser.add_argument("--calib", type=bool)
+-    parser.add_argument("--video", type=str, required=True, help="path to the input video")
++    input_group = parser.add_mutually_exclusive_group(required=True)
++    input_group.add_argument("--video", type=str, help="path to the input video")
++    input_group.add_argument(
++        "--image-dir",
++        type=str,
++        help=(
++            "ordered JPEG folder used by reproducible benchmark adapters; "
++            "the parent-folder name becomes the sequence identifier"
++        ),
++    )
++    parser.add_argument(
++        "--no-render",
++        action="store_true",
++        help="skip the unused offscreen renderer during quantitative inference",
++    )
+     parser.add_argument("--smooth-method", type=str, default='ema', 
+                        choices=['none', 'ema'],
+                        help='Smoothing method for camera poses: none, moving_avg, ema, kalman')
+@@ -464,20 +478,33 @@ if __name__=='__main__':
+ 
+     print(f"Split video to frames and register camera calibration")
+     # File and folders
+-    file = args.video
+-    root = os.path.dirname(file)
+-    seq = os.path.basename(file).split('.')[0]
++    if args.image_dir is not None:
++        img_folder = os.path.abspath(args.image_dir)
++        if not os.path.isdir(img_folder):
++            raise FileNotFoundError(img_folder)
++        root = os.path.dirname(img_folder)
++        seq = os.path.basename(root.rstrip(os.sep))
++    else:
++        file = args.video
++        root = os.path.dirname(file)
++        seq = os.path.basename(file).split('.')[0]
+ 
+     seq_folder = f'results/{seq}'
+-    img_folder = f'{seq_folder}/images'
+     depth_img_folder = f'{seq_folder}/depth_images'
+     os.makedirs(seq_folder, exist_ok=True)
+-    os.makedirs(img_folder, exist_ok=True)
+     os.makedirs(depth_img_folder, exist_ok=True)
+ 
+-    print('Extracting frames ...')
+-    nframes = video2frames(file, img_folder)
++    if args.image_dir is None:
++        img_folder = f'{seq_folder}/images'
++        os.makedirs(img_folder, exist_ok=True)
++        print('Extracting frames ...')
++        nframes = video2frames(file, img_folder)
++    else:
++        nframes = len(glob(f'{img_folder}/*.jpg'))
++        print(f'Using {nframes} ordered benchmark JPEG frames without re-encoding ...')
+     imgfiles = sorted(glob(f'{img_folder}/*.jpg'))
++    if not imgfiles:
++        raise FileNotFoundError(f'No JPEG frames found in {img_folder}')
+ 
+     name_prefix = seq
+     out_gif = f"human_camera_{name_prefix}.gif"
+@@ -531,10 +558,13 @@ if __name__=='__main__':
+         save_dir, seq_name = eval.prepare_savedir(args, dataset)
+         traj_file = save_dir / f"{seq_name}.txt"
+         recon_file = save_dir / f"{seq_name}.ply"
+-        if traj_file.exists():
+-            traj_file.unlink()
+-        if recon_file.exists():
+-            recon_file.unlink()
++        incremental_all_file = save_dir / f"{name_prefix}_{seq_name}_incremental_all.txt"
++        incremental_kf_file = save_dir / f"{name_prefix}_{seq_name}_incremental_kf.txt"
++        for stale_output in (
++            traj_file, recon_file, incremental_all_file, incremental_kf_file
++        ):
++            if stale_output.exists():
++                stale_output.unlink()
+     
+     tracker = FrameTracker(mast3r_model, keyframes, device)
+     last_msg = WindowMsg()
+@@ -590,7 +620,7 @@ if __name__=='__main__':
+             print(f"EMA absolute max: {ema_clamp_absolute_max}")
+ 
+     # Offscreen renderer
+-    visualize_hcgif = True
++    visualize_hcgif = not args.no_render
+     visualize_depth = True
+     angle = 180
+     w, h = 800, 600
+@@ -1096,7 +1126,7 @@ if __name__=='__main__':
+             vid_length = len(imgfiles)
+             # Use semi-online mode (False) for better tracking stability, matching tram's approach
+             globals()['_deva'], globals()['_result_saver'] = get_deva_tracker(
+-                vid_length, "./output_deva", online_mode=False
++                vid_length, os.path.join(seq_folder, "output_deva"), online_mode=False
+             )
+             globals()['_deva_initialized'] = True
+             globals()['_deva_track_with_mask'] = track_with_mask

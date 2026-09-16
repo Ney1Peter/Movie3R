@@ -1,0 +1,62 @@
+diff --git a/lib/camera/masked_droid_slam.py b/lib/camera/masked_droid_slam.py
+index 55e8af2..b309dc7 100755
+--- a/lib/camera/masked_droid_slam.py
++++ b/lib/camera/masked_droid_slam.py
+@@ -1,3 +1,4 @@
++import os
+ import sys
+ sys.path.insert(0, 'thirdparty/DROID-SLAM/droid_slam')
+ sys.path.insert(0, 'thirdparty/DROID-SLAM')
+@@ -47,8 +48,14 @@ def run_metric_slam(img_folder, masks=None, calib=None, is_static=False):
+     torch.cuda.empty_cache()
+ 
+     ##### Estimate Metric Depth #####
+-    repo = "isl-org/ZoeDepth"
+-    model_zoe_n = torch.hub.load(repo, "ZoeD_N", pretrained=True)
++    # Prefer the locally prepared copy of the same official ZoeDepth release so
++    # repository download time is never counted as inference latency.
++    local_repo = "data/cache/torch/hub/isl-org_ZoeDepth_main"
++    model_zoe_n = (
++        torch.hub.load(local_repo, "ZoeD_N", pretrained=True, source="local")
++        if os.path.isdir(local_repo)
++        else torch.hub.load("isl-org/ZoeDepth", "ZoeD_N", pretrained=True)
++    )
+     _ = model_zoe_n.eval()
+     model_zoe_n = model_zoe_n.to('cuda')
+ 
+@@ -219,4 +226,3 @@ def test_slam(imagedir, masks, calib, stride=10, max_frame=50):
+ 
+     return reprojection_error, static_camera
+ 
+-
+diff --git a/lib/pipeline/tools.py b/lib/pipeline/tools.py
+index e88d900..df31d3d 100755
+--- a/lib/pipeline/tools.py
++++ b/lib/pipeline/tools.py
+@@ -1,3 +1,5 @@
++import os
++
+ import cv2
+ from tqdm import tqdm
+ import numpy as np
+@@ -49,7 +51,13 @@ def detect_segment_track(imgfiles, out_path, thresh=0.5, min_size=None,
+     # ViTDet
+     cfg_path = 'data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py'
+     detectron2_cfg = LazyConfig.load(str(cfg_path))
+-    detectron2_cfg.train.init_checkpoint = "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    # Use the byte-identical official checkpoint from the local benchmark
++    # cache.  This avoids counting a network download as inference latency.
++    local_checkpoint = 'data/pretrain/model_final_f05665.pkl'
++    detectron2_cfg.train.init_checkpoint = (
++        local_checkpoint if os.path.isfile(local_checkpoint)
++        else "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    )
+     for i in range(3):
+         detectron2_cfg.model.roi_heads.box_predictors[i].test_score_thresh = 0.25
+     detector = DefaultPredictor_Lazy(detectron2_cfg)
+@@ -260,5 +268,3 @@ def box_iou(box1, box2):
+     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
+     inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
+     return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
+-
+-

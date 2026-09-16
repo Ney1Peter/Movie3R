@@ -1,0 +1,72 @@
+From 352efc5793e454e7d9995224f06114b68dc295c3 Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Mon, 7 Sep 2026 00:41:32 +0800
+Subject: [PATCH] feat(josh): support licensed local weights and isolated
+ caches
+
+Add optional local SAM3 and MASt3R checkpoint inputs and JOSH_CACHE_DIR while retaining upstream defaults. Pin the tested TRAM import fix. Keep licensed weights, datasets, bytecode and run outputs outside version control.
+---
+ josh/inference.py      |  9 +++++++--
+ preprocess/run_sam3.py | 13 ++++++++++++-
+ third_party/tram       |  2 +-
+ 3 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/josh/inference.py b/josh/inference.py
+index 598d64b..bd97022 100644
+--- a/josh/inference.py
++++ b/josh/inference.py
+@@ -141,7 +141,8 @@ def inference(scene_model, device, cfg: JOSHConfig) -> OptimizedResult:
+     import tempfile
+ 
+     # cache_dir = tempfile.mkdtemp()
+-    cache_dir = "data/mast3r_results"
++    # Optional isolated storage only; no algorithm or default setting changes.
++    cache_dir = os.environ.get("JOSH_CACHE_DIR", "data/mast3r_results")
+     assert len(img_files) == len(mask_files)
+     imgs, masks, num_frames, img_idx, new_file_list = load_images_and_masks(
+         img_files,
+@@ -234,7 +235,11 @@ if __name__ == "__main__":
+     cfg.num_frames = args.num_frames
+     cfg.visualize_results = args.visualize
+     device = "cuda" if torch.cuda.is_available() else "cpu"
+-    scene_model = AsymmetricMASt3R.from_pretrained("naver/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric").to(device).eval()
++    scene_model_source = os.environ.get(
++        "JOSH_MAST3R_CKPT",
++        "naver/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric",
++    )
++    scene_model = AsymmetricMASt3R.from_pretrained(scene_model_source).to(device).eval()
+ 
+     result = inference(scene_model=scene_model, device=device, cfg=cfg)
+     save_result = {}
+diff --git a/preprocess/run_sam3.py b/preprocess/run_sam3.py
+index 0d71c8b..3a0b383 100644
+--- a/preprocess/run_sam3.py
++++ b/preprocess/run_sam3.py
+@@ -31,8 +31,19 @@ from sam3.model_builder import build_sam3_video_predictor
+ 
+ parser = argparse.ArgumentParser()
+ parser.add_argument('--input_folder', type=str, default='input')
++parser.add_argument(
++    '--checkpoint', type=str, default=os.environ.get('JOSH_SAM3_CKPT'),
++    help='Optional local official SAM3 checkpoint; defaults to the upstream HF loader.',
++)
+ args = parser.parse_args()
+-video_predictor = build_sam3_video_predictor()
++predictor_kwargs = {}
++if args.checkpoint is not None:
++    if not os.path.isfile(args.checkpoint):
++        raise FileNotFoundError(args.checkpoint)
++    # The predictor forwards checkpoint_path; its native builder skips the
++    # Hugging Face downloader whenever that path is provided.
++    predictor_kwargs = dict(checkpoint_path=args.checkpoint)
++video_predictor = build_sam3_video_predictor(**predictor_kwargs)
+ video_path = os.path.join(args.input_folder, "rgb")  # a JPEG folder or an MP4 video file
+ video_frames_for_vis = sorted(glob.glob(os.path.join(video_path, "*.jpg")))
+ 
+diff --git a/third_party/tram b/third_party/tram
+index 4861c11..fd987b3 160000
+--- a/third_party/tram
++++ b/third_party/tram
+@@ -1 +1 @@
+-Subproject commit 4861c112f3c148201326680a50c9199650da6088
++Subproject commit fd987b394cea189c2e0834326272dda0354704b0

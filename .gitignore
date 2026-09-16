@@ -58,6 +58,14 @@ src/checkpoints
 experiments
 checkpoints/
 
+# Keep the lightweight, paper-facing traditional-registration implementation.
+# Other experiment workspaces remain local because they contain generated data.
+!experiments/
+experiments/*
+!experiments/registration_baselines/
+!experiments/registration_baselines/**/*.py
+!experiments/registration_baselines/**/*.sh
+
 # examples
 tmp
 command
@@ -89,15 +97,27 @@ src/croco/models/curope/cuda_12.4.0_550.54.14_linux.run
 
 # Local environments and regenerable publication export intermediates.
 .venv/
-publication/shot3r_teaser_v1_20260906/editable/_python_deps/
-publication/shot3r_teaser_v1_20260906/editable/ppt_render_check/
-publication/shot3r_teaser_v1_20260906/delivery/*.zip
-publication/SHOT3R_teaser_refinement_v1/work/
-publication/SHOT3R_teaser_refinement_v1/SHOT3R_refined_editable_v1.zip
+publication/shot3r_teaser_v1_20260906/
+publication/SHOT3R_teaser_refinement_v1/
+publication/Shot3R_Teaser_AI_Handoff_20260906/
 publication/Shot3R_Teaser_AI_Handoff_20260906.zip
 
-# Retain only the small, publication-curated geometry needed to reproduce the
-# editable teaser. The global tensor/checkpoint exclusions still apply elsewhere.
-!publication/shot3r_teaser_v1_20260906/assets/**/*.npz
-!publication/shot3r_teaser_v1_20260906/assets/**/*.npy
-!publication/SHOT3R_teaser_refinement_v1/SHOT3R_refined_editable/geometry/*.npz
+# Superseded visualization workspaces are local-only. The current editable
+# figures are documented in the recovery manifest and are not needed for
+# numerical reproduction.
+publication/Shot3R_EgoHumans_*/
+publication/Shot3R_Harmony4D_*/
+publication/Shot3R_MVHuman_*/
+publication/Shot3R_Qualitative_*/
+publication/Shot3R_ThreeCases_*/
+publication/Shot3R_pipeline_real_assets_*/
+publication/runtime_benchmark_7methods_h4d150_20260908/runs/
+publication/runtime_benchmark_7methods_h4d150_20260908/runs_*_archive/
+publication/runtime_benchmark_7methods_h4d150_20260908/dependencies/
+
+# The audited detector is only 25 KB and belongs to the reproducibility
+# snapshot. Large reconstruction checkpoints remain excluded globally.
+!publication/shot3r_reproducibility_20260916/weights/SELECTED_MODEL.pt
+
+# Licensed body-model assets are restored separately; see docs/recovery/WEIGHTS.md.
+src/models/smplx/smplx_npz.zip

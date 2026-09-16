@@ -1,0 +1,50 @@
+[
+  {
+    "case_count": 195,
+    "causal_detector_fps_mean": 8.497770793169511,
+    "causal_detector_seconds_mean": 17.797662117217595,
+    "deployed_single_method_fps_available": false,
+    "frozen_candidate_postprocess_case_count": 195,
+    "frozen_candidate_postprocess_fps_mean": 954.2940551934263,
+    "frozen_candidate_postprocess_seconds_mean": 0.31377756058310086,
+    "gpu_peak_memory_available": false,
+    "process_peak_host_rss_gib_max": 12.969352722167969,
+    "split": "development",
+    "strict_human3r_forward_fps_mean": 3.5011577726801466,
+    "strict_human3r_forward_fps_median": 3.515430764704665,
+    "timing_contract": "component and whole multi-method protocol wall-clock diagnostics on recorded GPUs/shared server; the whole protocol includes model loads, multiple baselines, oracle/detector paths and I/O, so it is not deployed single-method end-to-end throughput; not hardware-normalized; host RSS only; GPU peak memory unmeasured",
+    "whole_multi_method_protocol_seconds_mean": 310.5882705597398
+  },
+  {
+    "case_count": 48,
+    "causal_detector_fps_mean": 7.661862368983339,
+    "causal_detector_seconds_mean": 20.115651832330816,
+    "deployed_single_method_fps_available": false,
+    "frozen_candidate_postprocess_case_count": 48,
+    "frozen_candidate_postprocess_fps_mean": 805.485232201912,
+    "frozen_candidate_postprocess_seconds_mean": 0.31105836579808965,
+    "gpu_peak_memory_available": false,
+    "process_peak_host_rss_gib_max": 12.940364837646484,
+    "split": "holdout",
+    "strict_human3r_forward_fps_mean": 3.3526070033727926,
+    "strict_human3r_forward_fps_median": 3.3565824344134794,
+    "timing_contract": "component and whole multi-method protocol wall-clock diagnostics on recorded GPUs/shared server; the whole protocol includes model loads, multiple baselines, oracle/detector paths and I/O, so it is not deployed single-method end-to-end throughput; not hardware-normalized; host RSS only; GPU peak memory unmeasured",
+    "whole_multi_method_protocol_seconds_mean": 407.22520880550536
+  },
+  {
+    "case_count": 129,
+    "causal_detector_fps_mean": 7.651001231541585,
+    "causal_detector_seconds_mean": 20.347487802097444,
+    "deployed_single_method_fps_available": false,
+    "frozen_candidate_postprocess_case_count": 129,
+    "frozen_candidate_postprocess_fps_mean": 689.8762307451805,
+    "frozen_candidate_postprocess_seconds_mean": 0.4169985765100334,
+    "gpu_peak_memory_available": false,
+    "process_peak_host_rss_gib_max": 12.950042724609375,
+    "split": "test",
+    "strict_human3r_forward_fps_mean": 3.0444151977127567,
+    "strict_human3r_forward_fps_median": 3.1053039747913127,
+    "timing_contract": "component and whole multi-method protocol wall-clock diagnostics on recorded GPUs/shared server; the whole protocol includes model loads, multiple baselines, oracle/detector paths and I/O, so it is not deployed single-method end-to-end throughput; not hardware-normalized; host RSS only; GPU peak memory unmeasured",
+    "whole_multi_method_protocol_seconds_mean": 491.789928397763
+  }
+]

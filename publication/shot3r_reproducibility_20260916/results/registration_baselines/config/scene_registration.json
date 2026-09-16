@@ -1,0 +1,32 @@
+{
+  "schema_version": "Shot3R-traditional-scene-registration-config-v1",
+  "random_seed": 20260915,
+  "definition": "Offline post-hoc FPFH mutual matching and global RANSAC from the two complete Human3R shot point clouds, followed by point-to-plane ICP. No GT or Shot3R transform initializes registration.",
+  "direction": "shot B to shot A",
+  "selection_contract": "One dataset-level setting selected on the complete Development split; no per-case oracle and no Holdout/Test tuning.",
+  "failure_fallback": "Exact R0 identity transform with the case retained in the fixed denominator.",
+  "datasets": {
+    "egobody": {
+      "configuration_id": "development-frozen-egobody-d310eee57843",
+      "candidate_id": "r3_v018_loose",
+      "voxel_size_m": 0.18,
+      "ransac_distance_factor": 2.0,
+      "icp_distance_factor": 1.5,
+      "min_scene_points": 300,
+      "min_correspondences": 20,
+      "min_fitness": 0.03,
+      "max_inlier_rmse_m": 0.35
+    },
+    "egohumans": {
+      "configuration_id": "development-frozen-egohumans-d310eee57843",
+      "candidate_id": "r3_v008_strict",
+      "voxel_size_m": 0.08,
+      "ransac_distance_factor": 1.5,
+      "icp_distance_factor": 1.0,
+      "min_scene_points": 300,
+      "min_correspondences": 20,
+      "min_fitness": 0.08,
+      "max_inlier_rmse_m": 0.2
+    }
+  }
+}

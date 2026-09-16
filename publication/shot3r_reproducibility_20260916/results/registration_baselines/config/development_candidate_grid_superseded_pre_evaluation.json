@@ -1,0 +1,26 @@
+{
+  "schema_version": "Shot3R-registration-development-grid-v1",
+  "status": "superseded before any full-Development evaluation",
+  "superseded_reason": "The initial Cartesian R3 grid contained 48 combinations; it was replaced before full-Development GT evaluation by an explicit paired design that covers the same parameter ranges without redundant cross-products.",
+  "random_seed": 20260915,
+  "r1": {
+    "max_pair_cost": [0.20, 0.35, 0.50]
+  },
+  "r2": {
+    "max_pair_cost": [0.20, 0.35, 0.50],
+    "inlier_threshold_m": [0.10, 0.20, 0.30],
+    "ransac_trials": [256],
+    "min_inlier_ratio": [0.40, 0.60]
+  },
+  "r3": {
+    "voxel_size_m": [0.08, 0.12, 0.18],
+    "ransac_distance_factor": [1.5, 2.0],
+    "icp_distance_factor": [1.0, 1.5],
+    "min_scene_points": [300],
+    "min_correspondences": [20],
+    "min_fitness": [0.03, 0.08],
+    "max_inlier_rmse_m": [0.20, 0.35]
+  },
+  "selection_rule": "one dataset-level setting per method selected on Development aggregate W-MPJPE, with ATE and failure rate as recorded tie-breakers; never per-case",
+  "test_access": false
+}

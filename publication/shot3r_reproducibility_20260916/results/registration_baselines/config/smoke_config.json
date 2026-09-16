@@ -1,0 +1,24 @@
+{
+  "schema_version": "Shot3R-registration-config-v1",
+  "configuration_id": "smoke-not-for-test",
+  "random_seed": 20260915,
+  "r1": {
+    "max_pair_cost": 0.35
+  },
+  "r2": {
+    "max_pair_cost": 0.35,
+    "inlier_threshold_m": 0.20,
+    "ransac_trials": 256,
+    "min_inlier_ratio": 0.40
+  },
+  "r3": {
+    "voxel_size_m": 0.12,
+    "ransac_distance_factor": 2.0,
+    "icp_distance_factor": 1.5,
+    "min_scene_points": 300,
+    "min_correspondences": 20,
+    "min_fitness": 0.03,
+    "max_inlier_rmse_m": 0.35
+  },
+  "status": "smoke only; must be replaced by Development-frozen config before Holdout/Test"
+}

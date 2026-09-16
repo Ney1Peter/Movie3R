@@ -1,0 +1,218 @@
+From 76a238cca23447a24efba3fec4e8d971dc759136 Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Wed, 2 Sep 2026 23:35:30 +0800
+Subject: [PATCH 1/3] docs(onlinehmr): add setup and weight download checklist
+
+---
+ ...GE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md | 202 ++++++++++++++++++
+ 1 file changed, 202 insertions(+)
+ create mode 100644 BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
+
+diff --git a/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md b/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
+new file mode 100644
+index 0000000..8350c55
+--- /dev/null
++++ b/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
+@@ -0,0 +1,202 @@
++# OnlineHMR 配置与权重下载清单
++
++更新时间：2026-09-02  
++用途：BRIDGE3R 的非商业学术 baseline 比较  
++本地仓库：`/data/wangzheng/iJCV-CODE/external_baselines/Video-OnlineHMR`  
++代码版本：`beta_test_w_tracking@5236d22`  
++正式多人入口：`scripts/run_custom_mt.py`
++
++## 1. 当前结论
++
++代码及 MASt3R-SLAM、DEVA 子模块已经克隆完整，但 OnlineHMR 专用推理
++环境尚未建立，主要推理权重和辅助文件尚未放入仓库。因此目前还不能
++启动正式 pilot。
++
++用户已确认：OnlineHMR 仅用于本地、非商业、学术论文比较，不重新分发
++OnlineHMR、SMPL、SPEC、MASt3R 或其他第三方代码与权重。
++
++最方便的交付方式是保持原始文件名，将下载内容打包为：
++
++```text
++/data/wangzheng/iJCV-CODE/data/OnlineHMR_weights.zip
++```
++
++不需要手工整理到最终目录。上传后由实验端完成解压、SHA-256 记录、软链接、
++环境配置和推理 smoke test。
++
++## 2. 必须下载的文件
++
++### 2.1 OnlineHMR 主模型
++
++| 文件 | 官方链接 | 最终目标路径 | 当前状态 |
++|---|---|---|---|
++| `checkpoint.pth.tar` | [Google Drive](https://drive.google.com/file/d/1bbMhJyk9Qk5Ub01y7MJG5xFzRRkKB2Mm/view) | `results/onlinehmr/checkpoint.pth.tar` | 缺失 |
++
++这是 `run_custom_mt.py` 实际加载的人体模型权重，必须下载。
++
++### 2.2 OnlineHMR 官方辅助文件夹
++
++下载整个官方文件夹：
++
++- [OnlineHMR extra files（Google Drive）](https://drive.google.com/drive/folders/1GWQKcrpJl84g9ouG5L3S1uy-eIloZJGI?usp=sharing)
++
++文件夹应至少包含：
++
++```text
++cascade_mask_rcnn_vitdet_h_75ep.py
++downsample_mat.pkl
++J_regressor_extra.npy
++J_regressor_h36m.npy
++kintree_table.pkl
++smpl_mean_params.npz
++colors.txt
++```
++
++最终会分别放入：
++
++```text
++data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py
++data/smpl/downsample_mat.pkl
++data/smpl/J_regressor_extra.npy
++data/smpl/J_regressor_h36m.npy
++data/smpl/kintree_table.pkl
++data/smpl/smpl_mean_params.npz
++data/colors.txt
++```
++
++当前以上文件均缺失。
++
++### 2.3 多人检测、分割与跟踪
++
++| 文件 | 官方链接 | 最终目标路径 | 当前状态 |
++|---|---|---|---|
++| `DEVA-propagation.pth` | [GitHub Release](https://github.com/hkchengrex/Tracking-Anything-with-DEVA/releases/download/v1.0/DEVA-propagation.pth) | `data/pretrain/DEVA-propagation.pth` | 缺失 |
++| `sam_vit_h_4b8939.pth` | [Meta 官方下载](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) | `data/pretrain/sam_vit_h_4b8939.pth` | 缺失 |
++| `model_final_f05665.pkl` | [Detectron2 ViTDet](https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl) | 本地模型缓存，由配置自动解析 | 缺失 |
++
++Detectron2 权重原则上可以在首次运行时自动下载，但服务器外网不稳定，建议
++一并手工下载并上传。
++
++### 2.4 MoGe-v2 metric-depth 模型
++
++| 文件 | 官方链接 | 最终目标路径 | 当前状态 |
++|---|---|---|---|
++| `model.pt` | [Hugging Face 页面](https://huggingface.co/Ruicheng/moge-2-vitl-normal) / [直接下载](https://huggingface.co/Ruicheng/moge-2-vitl-normal/resolve/main/model.pt) | `data/pretrain/mogev2_model.pt` | 缺失 |
++
++下载后的文件名可以保持 `model.pt`；部署时会改为代码要求的
++`mogev2_model.pt`。
++
++### 2.5 MASt3R-SLAM 模型
++
++以下三个文件都应下载：
++
++| 文件 | 官方链接 | 最终目标目录 | 当前状态 |
++|---|---|---|---|
++| `MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric.pth` | [Naver Labs](https://download.europe.naverlabs.com/ComputerVision/MASt3R/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric.pth) | `checkpoints/` | 缺失 |
++| `MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth` | [Naver Labs](https://download.europe.naverlabs.com/ComputerVision/MASt3R/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth) | `checkpoints/` | 缺失 |
++| `MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_codebook.pkl` | [Naver Labs](https://download.europe.naverlabs.com/ComputerVision/MASt3R/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_codebook.pkl) | `checkpoints/` | 缺失 |
++
++## 3. 本机已有，无需重复下载
++
++### 3.1 SPEC 相机校准模型
++
++已有文件：
++
++```text
++/data/wangzheng/iJCV-CODE/external_baselines/PromptHMR/data/pretrain/camcalib_sa_biased_l2.ckpt
++```
++
++文件大小为 `301310109` bytes。配置时将通过本地软链接复用到：
++
++```text
++data/pretrain/camcalib_sa_biased_l2.ckpt
++```
++
++### 3.2 SMPL body models
++
++本机已有：
++
++```text
++/data/wangzheng/iJCV-CODE/Movie3R/src/models/smpl/SMPL_NEUTRAL.pkl
++/data/wangzheng/iJCV-CODE/Movie3R/src/models/smpl/SMPL_MALE.pkl
++/data/wangzheng/iJCV-CODE/Movie3R/src/models/smpl/SMPL_FEMALE.pkl
++```
++
++配置时将软链接到 `data/smpl/`，不复制，也不放入论文或公开代码包。
++
++## 4. 当前 pilot 不需要下载
++
++以下文件出现在作者下载脚本中，但不是当前自定义多人视频推理的必要资产：
++
++| 资源 | 原因 |
++|---|---|
++| HMR2.0b `epoch=35-step=1000000.ckpt` | 用于训练初始化；当前推理由完整的 OnlineHMR `checkpoint.pth.tar` 加载模型参数 |
++| `pascal_occluders.pkl` | 训练阶段遮挡增强数据 |
++| `emdb2_results.zip` | 作者预计算的 EMDB 结果，不参与我们的三数据集实验 |
++| OnlineHMR 训练数据 | 本任务只运行官方预训练模型推理，不重新训练 |
++
++若之后确实需要重新训练，HMR2.0b 的官方链接是：
++
++- [HMR2.0b checkpoint](https://drive.google.com/file/d/1W4fcp8mwS19Rg_A7MoTS1lc7JafqTGu-/view?usp=sharing)
++
++## 5. 还需要配置的软件环境
++
++这部分不需要用户手工下载，权重到齐后由实验端配置。官方建议环境为：
++
++```text
++Python 3.11.5
++PyTorch 2.5.1
++torchvision 0.20.1
++CUDA 12.4 build
++```
++
++还需安装和验证：
++
++1. OnlineHMR `requirements.txt`；
++2. MASt3R-SLAM 及其 `mast3r`、`in3d` 扩展；
++3. Detectron2；
++4. PyTorch3D；
++5. MoGe；
++6. Tracking-Anything-with-DEVA；
++7. `torchcodec==0.1`；
++8. CUDA 编译扩展与当前 GPU 驱动兼容性。
++
++计划建立独立环境：
++
++```text
++/data/wangzheng/iJCV-CODE/external_baselines/.venvs/onlinehmr-py311-pt25
++```
++
++不会修改已经完成 TRACE、PromptHMR 和 GVHMR 实验的现有环境。
++
++## 6. 文件到齐后的验证流程
++
++1. 对所有下载文件记录文件大小和 SHA-256；
++2. 建立 SPEC、SMPL 的本地软链接；
++3. 建立独立 Python/CUDA 环境并完成 `pip check`；
++4. 验证 OnlineHMR、MASt3R-SLAM、DEVA、Detectron2、PyTorch3D 和 MoGe 导入；
++5. 在作者示例或一条短视频上验证官方多人入口；
++6. 在一条 EgoHumans 极端视角、150 帧双镜头样本上运行 smoke test；
++7. 验证切镜前后均有人体、持续 ID 和有限相机轨迹；
++8. 通过后运行固定的 12 条 angle-stratified pilot，而不是直接启动 307 条全量实验。
++
++官方多人推理命令形式为：
++
++```bash
++python scripts/run_custom_mt.py \
++  --video /path/to/input.mp4 \
++  --no-viz \
++  --calib false \
++  --depth-mask
++```
++
++正式实验会固定 RGB、帧区间和 evaluator，不提供 GT 相机、GT 身份、人工检测框
++或单独的 shot 对齐。
++
++## 7. 官方参考
++
++- [OnlineHMR GitHub](https://github.com/Tsukasane/Video-OnlineHMR)
++- [OnlineHMR README](https://github.com/Tsukasane/Video-OnlineHMR/blob/beta_test_w_tracking/README.md)
++- 本地官方模型脚本：[`scripts/download_models.sh`](scripts/download_models.sh)
++- 本地辅助文件脚本：[`scripts/download_extra.sh`](scripts/download_extra.sh)
++

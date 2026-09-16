@@ -1,0 +1,28 @@
+{
+  "dataset": "egobody",
+  "errors": [],
+  "evaluated_case_count": 48,
+  "evaluator_unavailable_case_count": 0,
+  "evaluator_unavailable_cases": [],
+  "expected_case_count": 48,
+  "frozen_config": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/config/frozen_egobody.json",
+  "gate_role": "executability and leakage check only; no parameter selection",
+  "parameter_changes_after_gate_allowed": false,
+  "passed": true,
+  "schema_version": "Shot3R-traditional-registration-Holdout-gate-v1",
+  "split": "holdout",
+  "status_counts": {
+    "r0": {
+      "ok": 48
+    },
+    "r1": {
+      "ok": 48
+    },
+    "r2": {
+      "ok": 48
+    },
+    "r3": {
+      "ok": 48
+    }
+  }
+}

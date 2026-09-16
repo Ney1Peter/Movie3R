@@ -1,0 +1,2938 @@
+{
+  "schema_version": "Movie3R-v16-Harmony4D-multisequence-summary-v1",
+  "sources": [
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/01_hugging.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/03_grappling2.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/05_sword2.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/06_sword3.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/08_ballroom2.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/15_mma4.json",
+    "/data/wangzheng/iJCV-CODE/Movie3R/output/v17_harmony4d/unified_half_translation_audit/per_sequence/16_mma5.json"
+  ],
+  "method": "bridge3r_unified_half_translation",
+  "parent": "v16_0_m15_geometry",
+  "title": "Bridge3R unified half-translation Harmony4D audit",
+  "case_count": 88,
+  "manifest_case_count": 100,
+  "evaluator_unavailable_count": 12,
+  "skipped_cases": [
+    {
+      "case_id": "h4d_test_08_ballroom2_007_ballroom2_large_cam07_cam08_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_007_ballroom2_medium_cam03_cam05_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_007_ballroom2_small_cam04_cam17_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_008_ballroom2_large_cam07_cam08_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_008_ballroom2_medium_cam03_cam05_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_008_ballroom2_small_cam04_cam17_b00301",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_009_ballroom2_large_cam07_cam08_b00359",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_009_ballroom2_medium_cam03_cam05_b00359",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_009_ballroom2_small_cam04_cam17_b00359",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_010_ballroom2_large_cam07_cam08_b00162",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_010_ballroom2_medium_cam03_cam05_b00162",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    },
+    {
+      "case_id": "h4d_test_08_ballroom2_010_ballroom2_small_cam04_cam17_b00162",
+      "status": "evaluator_unavailable",
+      "reason": "ValueError: No initial matched people for shared world fit",
+      "method_independent": false,
+      "evaluations_affected": 4,
+      "legacy_method_independent_field": true,
+      "availability_scope": "shared_internal_legacy_initial_match"
+    }
+  ],
+  "sequence_count": 7,
+  "sequences": [
+    "01_hugging",
+    "03_grappling2",
+    "05_sword2",
+    "06_sword3",
+    "08_ballroom2",
+    "15_mma4",
+    "16_mma5"
+  ],
+  "protocol": {
+    "frames": 150,
+    "pre_frames": 75,
+    "post_frames": 75,
+    "aggregation_primary": "clip_macro",
+    "uncertainty": "hierarchical sequence-then-clip bootstrap",
+    "paired_test_unit": "sequence",
+    "test_used_for_parameter_selection": true,
+    "exclusion_rule": "shared-internal legacy evaluator unavailable only; not an external inference failure",
+    "evaluator_unavailable_scope": "prediction-dependent initial-match fit in the legacy shared internal evaluator"
+  },
+  "gate": {
+    "enabled": false,
+    "applied_cases": 88,
+    "accepted": null,
+    "fallback": null,
+    "strata": null
+  },
+  "methods": {
+    "m0_strict_human3r": {
+      "display_name": "Strict Human3R",
+      "case_count": 88,
+      "sequence_count": 7,
+      "clip_macro": {
+        "W-MPJPE_mm": 496.6014559441846,
+        "WA-MPJPE_mm": 259.607643933763,
+        "MPJPE_mm": 98.29895430748121,
+        "PA-MPJPE_mm": 65.65777460634442,
+        "MPVPE_mm": 116.71553280786861,
+        "Accel_mm_frame2": 96.16491482824652,
+        "RTE_H3R_percent": 5.904440475418529,
+        "ROE_joint_proxy_deg": 16.5548927082006,
+        "Jitter_H3R": 472.37170216555734,
+        "Foot_sliding_cm": 6.406163465910844,
+        "ATE_Sim3_m": 0.1419821519386462,
+        "ATE_SE3_m": 0.44454547608123723,
+        "Boundary_camera_t_m": 0.8641246443473961,
+        "Boundary_camera_R_deg": 10.98776220331009,
+        "Boundary_root_m": 0.4246236483373648,
+        "Post_root_m": 0.6046523878612241,
+        "Seam_root_m": 0.2865822520778482,
+        "Seam_CHRGE_m": 0.44439966959665894,
+        "Pair_vector_m": 0.3697443697081812,
+        "IDs": 3.8181818181818183,
+        "IDF1": 0.5527066102634252,
+        "Coverage": 0.9153030303030303,
+        "Detection_precision": 0.5862821491828185
+      },
+      "sequence_macro": {
+        "W-MPJPE_mm": 537.3200969430779,
+        "WA-MPJPE_mm": 263.5922727984321,
+        "MPJPE_mm": 95.842949939713,
+        "PA-MPJPE_mm": 64.31414601454365,
+        "MPVPE_mm": 113.96568051182234,
+        "Accel_mm_frame2": 96.02599816634051,
+        "RTE_H3R_percent": 7.492777159221865,
+        "ROE_joint_proxy_deg": 17.358599131166052,
+        "Jitter_H3R": 465.8225399620536,
+        "Foot_sliding_cm": 6.420156277552784,
+        "ATE_Sim3_m": 0.17861699471234202,
+        "ATE_SE3_m": 0.756730200419449,
+        "Boundary_camera_t_m": 0.9639213381982925,
+        "Boundary_camera_R_deg": 10.914286555426019,
+        "Boundary_root_m": 0.5452173364117352,
+        "Post_root_m": 0.6338749177208757,
+        "Seam_root_m": 0.3845296986162925,
+        "Seam_CHRGE_m": 0.584709182117073,
+        "Pair_vector_m": 0.3409936199449965,
+        "IDs": 3.801445578231293,
+        "IDF1": 0.5155842991475362,
+        "Coverage": 0.86796626984127,
+        "Detection_precision": 0.550324888273973
+      },
+      "clip_distributions": {
+        "W-MPJPE_mm": {
+          "count": 88,
+          "mean": 496.6014559441846,
+          "median": 382.37394072651347,
+          "p90": 818.9856477660431,
+          "p95": 999.6837860058399,
+          "std": 340.6874199715862
+        },
+        "WA-MPJPE_mm": {
+          "count": 88,
+          "mean": 259.607643933763,
+          "median": 246.4611902544473,
+          "p90": 373.52046751053297,
+          "p95": 403.06494608524287,
+          "std": 81.62115641804088
+        },
+        "MPJPE_mm": {
+          "count": 88,
+          "mean": 98.29895430748121,
+          "median": 93.71535780917617,
+          "p90": 125.63768719409713,
+          "p95": 132.7211251396242,
+          "std": 17.890971088487685
+        },
+        "PA-MPJPE_mm": {
+          "count": 88,
+          "mean": 65.65777460634442,
+          "median": 62.877759321673636,
+          "p90": 80.92060692418143,
+          "p95": 85.09917616307158,
+          "std": 10.399042351181334
+        },
+        "MPVPE_mm": {
+          "count": 88,
+          "mean": 116.71553280786861,
+          "median": 111.97910814654315,
+          "p90": 146.89111670697764,
+          "p95": 155.3791106285622,
+          "std": 21.984271806818295
+        },
+        "Accel_mm_frame2": {
+          "count": 88,
+          "mean": 96.16491482824652,
+          "median": 85.01881025583347,
+          "p90": 143.76347243010628,
+          "p95": 164.67762863694713,
+          "std": 40.36278962817462
+        },
+        "RTE_H3R_percent": {
+          "count": 88,
+          "mean": 5.904440475418529,
+          "median": 4.722714017853466,
+          "p90": 8.934931004518203,
+          "p95": 14.61745811792657,
+          "std": 3.4884127908268976
+        },
+        "ROE_joint_proxy_deg": {
+          "count": 88,
+          "mean": 16.5548927082006,
+          "median": 12.169176803550886,
+          "p90": 27.025149058445944,
+          "p95": 32.07465903608349,
+          "std": 16.103903209655616
+        },
+        "Jitter_H3R": {
+          "count": 88,
+          "mean": 472.37170216555734,
+          "median": 431.3984781895769,
+          "p90": 741.5149878856317,
+          "p95": 845.7487020935441,
+          "std": 228.77469487423693
+        },
+        "Foot_sliding_cm": {
+          "count": 88,
+          "mean": 6.406163465910844,
+          "median": 5.50687134118558,
+          "p90": 9.988400023507808,
+          "p95": 11.511171092778609,
+          "std": 2.5653534275738625
+        },
+        "ATE_Sim3_m": {
+          "count": 88,
+          "mean": 0.1419821519386462,
+          "median": 0.10429053348676948,
+          "p90": 0.24511236036086204,
+          "p95": 0.33861874278143284,
+          "std": 0.11949513150307531
+        },
+        "ATE_SE3_m": {
+          "count": 88,
+          "mean": 0.44454547608123723,
+          "median": 0.24750108841308854,
+          "p90": 0.8623665122231023,
+          "p95": 1.368400088201499,
+          "std": 0.7345927287625481
+        },
+        "Boundary_camera_t_m": {
+          "count": 88,
+          "mean": 0.8641246443473961,
+          "median": 0.6969839423316873,
+          "p90": 1.5028609986371801,
+          "p95": 1.7270203558475319,
+          "std": 0.7188736303431059
+        },
+        "Boundary_camera_R_deg": {
+          "count": 88,
+          "mean": 10.98776220331009,
+          "median": 7.294462685013871,
+          "p90": 19.80353930981162,
+          "p95": 27.026693486661912,
+          "std": 16.284523578355923
+        },
+        "Boundary_root_m": {
+          "count": 88,
+          "mean": 0.4246236483373648,
+          "median": 0.29859937836702954,
+          "p90": 0.8319390293989825,
+          "p95": 1.0879298336806198,
+          "std": 0.40700587713374586
+        },
+        "Post_root_m": {
+          "count": 88,
+          "mean": 0.6046523878612241,
+          "median": 0.5307831375341803,
+          "p90": 0.9874100545712083,
+          "p95": 1.1401670580531842,
+          "std": 0.33904840417636795
+        },
+        "Seam_root_m": {
+          "count": 87,
+          "mean": 0.2865822520778482,
+          "median": 0.20004622892288174,
+          "p90": 0.5844244125644608,
+          "p95": 0.7209009623995444,
+          "std": 0.2747941294460799
+        },
+        "Seam_CHRGE_m": {
+          "count": 87,
+          "mean": 0.44439966959665894,
+          "median": 0.36957933133184845,
+          "p90": 0.7519015206415212,
+          "p95": 1.2782267629080493,
+          "std": 0.3450068887767695
+        },
+        "Pair_vector_m": {
+          "count": 88,
+          "mean": 0.3697443697081812,
+          "median": 0.29109003310533277,
+          "p90": 0.48653968465147235,
+          "p95": 0.6796585066803053,
+          "std": 0.4322898687921022
+        },
+        "IDs": {
+          "count": 88,
+          "mean": 3.8181818181818183,
+          "median": 2.0,
+          "p90": 11.0,
+          "p95": 13.0,
+          "std": 4.286727546491758
+        },
+        "IDF1": {
+          "count": 88,
+          "mean": 0.5527066102634252,
+          "median": 0.4865660670419599,
+          "p90": 0.8801090669566949,
+          "p95": 0.9015174443626872,
+          "std": 0.2157768933601877
+        },
+        "Coverage": {
+          "count": 88,
+          "mean": 0.9153030303030303,
+          "median": 0.9633333333333334,
+          "p90": 1.0,
+          "p95": 1.0,
+          "std": 0.11953153123972868
+        },
+        "Detection_precision": {
+          "count": 88,
+          "mean": 0.5862821491828185,
+          "median": 0.6186628521353643,
+          "p90": 0.8366307463212335,
+          "p95": 0.9035027191923223,
+          "std": 0.2011585053200678
+        }
+      },
+      "hierarchical_bootstrap_ci95": {
+        "W-MPJPE_mm": {
+          "low": 375.41464433491,
+          "high": 715.8683298407242,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "WA-MPJPE_mm": {
+          "low": 215.16113666088847,
+          "high": 315.1997451701849,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPJPE_mm": {
+          "low": 89.54938206650877,
+          "high": 102.4662214844894,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "PA-MPJPE_mm": {
+          "low": 61.05334637132248,
+          "high": 68.28951289710312,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPVPE_mm": {
+          "low": 105.52870924582676,
+          "high": 122.36954018231836,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Accel_mm_frame2": {
+          "low": 70.23049196318803,
+          "high": 121.03744691917012,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "RTE_H3R_percent": {
+          "low": 4.8502077612373125,
+          "high": 10.849815792333755,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ROE_joint_proxy_deg": {
+          "low": 13.230309778477132,
+          "high": 22.009630054695155,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Jitter_H3R": {
+          "low": 300.69545684678775,
+          "high": 617.5784644585345,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Foot_sliding_cm": {
+          "low": 4.732354080189137,
+          "high": 8.073113123864127,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_Sim3_m": {
+          "low": 0.08970132617939369,
+          "high": 0.3234179299501326,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_SE3_m": {
+          "low": 0.21867642625805922,
+          "high": 1.721352009931357,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_t_m": {
+          "low": 0.6076181965473604,
+          "high": 1.4524337798110045,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_R_deg": {
+          "low": 7.8163638377816245,
+          "high": 14.873121274175439,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_root_m": {
+          "low": 0.32937286858922554,
+          "high": 0.8707335480656203,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Post_root_m": {
+          "low": 0.476976292309434,
+          "high": 0.8118899961254278,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_root_m": {
+          "low": 0.24490783600161553,
+          "high": 0.6016998040469597,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_CHRGE_m": {
+          "low": 0.3146154528745809,
+          "high": 0.9328492330306895,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Pair_vector_m": {
+          "low": 0.2441562376442461,
+          "high": 0.46891636369781997,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDs": {
+          "low": 2.202380952380952,
+          "high": 5.574404761904761,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDF1": {
+          "low": 0.40312396009631324,
+          "high": 0.6268718427737268,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Coverage": {
+          "low": 0.7279077380952381,
+          "high": 0.9560112670068027,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Detection_precision": {
+          "low": 0.41833072222733664,
+          "high": 0.6841894620671125,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        }
+      }
+    },
+    "m15_safe_boundary_permutation_causal_gru": {
+      "display_name": "Movie3R-v15",
+      "case_count": 88,
+      "sequence_count": 7,
+      "clip_macro": {
+        "W-MPJPE_mm": 618.48028005757,
+        "WA-MPJPE_mm": 287.29419910356586,
+        "MPJPE_mm": 97.93186353364304,
+        "PA-MPJPE_mm": 65.5398951961835,
+        "MPVPE_mm": 116.08162657091985,
+        "Accel_mm_frame2": 97.95356528453122,
+        "RTE_H3R_percent": 7.180497624519853,
+        "ROE_joint_proxy_deg": 16.124562618514982,
+        "Jitter_H3R": 483.57579881809073,
+        "Foot_sliding_cm": 6.379651092034249,
+        "ATE_Sim3_m": 0.0203916664003567,
+        "ATE_SE3_m": 0.3199660543872495,
+        "Boundary_camera_t_m": 1.1238120246971264,
+        "Boundary_camera_R_deg": 10.603677695615533,
+        "Boundary_root_m": 1.0315020785914553,
+        "Post_root_m": 0.8843044280554918,
+        "Seam_root_m": 0.876316706319757,
+        "Seam_CHRGE_m": 0.694185358466519,
+        "Pair_vector_m": 0.36221100806439616,
+        "IDs": 3.0681818181818183,
+        "IDF1": 0.636104889431971,
+        "Coverage": 0.9125378787878787,
+        "Detection_precision": 0.5842626299180957
+      },
+      "sequence_macro": {
+        "W-MPJPE_mm": 606.9188170942608,
+        "WA-MPJPE_mm": 273.12075086688975,
+        "MPJPE_mm": 95.17654941863732,
+        "PA-MPJPE_mm": 64.29061959991084,
+        "MPVPE_mm": 113.00673649372163,
+        "Accel_mm_frame2": 96.19473422050434,
+        "RTE_H3R_percent": 7.902799227952485,
+        "ROE_joint_proxy_deg": 16.72906150057711,
+        "Jitter_H3R": 472.41292201259495,
+        "Foot_sliding_cm": 6.346805660111342,
+        "ATE_Sim3_m": 0.02150426975097929,
+        "ATE_SE3_m": 0.41166855124067625,
+        "Boundary_camera_t_m": 1.2895910231672552,
+        "Boundary_camera_R_deg": 10.509446764351324,
+        "Boundary_root_m": 0.9463519251720044,
+        "Post_root_m": 0.8043243895292985,
+        "Seam_root_m": 0.8624907514772587,
+        "Seam_CHRGE_m": 0.6777890532018848,
+        "Pair_vector_m": 0.33891279980320516,
+        "IDs": 2.9944727891156466,
+        "IDF1": 0.5964110371303893,
+        "Coverage": 0.8616354875283446,
+        "Detection_precision": 0.5452107199680822
+      },
+      "clip_distributions": {
+        "W-MPJPE_mm": {
+          "count": 88,
+          "mean": 618.48028005757,
+          "median": 575.0150253361048,
+          "p90": 927.6522427052107,
+          "p95": 1028.418633915228,
+          "std": 359.47535865732186
+        },
+        "WA-MPJPE_mm": {
+          "count": 88,
+          "mean": 287.29419910356586,
+          "median": 298.98357278025867,
+          "p90": 386.0106911917493,
+          "p95": 428.17293335067694,
+          "std": 91.92001198806395
+        },
+        "MPJPE_mm": {
+          "count": 88,
+          "mean": 97.93186353364304,
+          "median": 93.47867675165186,
+          "p90": 124.30938556575657,
+          "p95": 132.2840067159433,
+          "std": 17.6776771064264
+        },
+        "PA-MPJPE_mm": {
+          "count": 88,
+          "mean": 65.5398951961835,
+          "median": 62.84634923761958,
+          "p90": 80.62679297950491,
+          "p95": 85.09531906888611,
+          "std": 10.407298786379354
+        },
+        "MPVPE_mm": {
+          "count": 88,
+          "mean": 116.08162657091985,
+          "median": 111.26019467728443,
+          "p90": 148.31843356244198,
+          "p95": 152.60427704357392,
+          "std": 21.659700937554828
+        },
+        "Accel_mm_frame2": {
+          "count": 88,
+          "mean": 97.95356528453122,
+          "median": 89.98049208005921,
+          "p90": 136.93965567960117,
+          "p95": 153.87718913696048,
+          "std": 35.33722450410456
+        },
+        "RTE_H3R_percent": {
+          "count": 88,
+          "mean": 7.180497624519853,
+          "median": 6.464978054581817,
+          "p90": 13.28238625727133,
+          "p95": 14.600939832495369,
+          "std": 3.7365246237502747
+        },
+        "ROE_joint_proxy_deg": {
+          "count": 88,
+          "mean": 16.124562618514982,
+          "median": 11.816348315349261,
+          "p90": 26.61380887094374,
+          "p95": 32.95226646355386,
+          "std": 16.136860140351267
+        },
+        "Jitter_H3R": {
+          "count": 88,
+          "mean": 483.57579881809073,
+          "median": 457.1015828766227,
+          "p90": 706.701798537295,
+          "p95": 766.4195723104722,
+          "std": 212.28021053878996
+        },
+        "Foot_sliding_cm": {
+          "count": 88,
+          "mean": 6.379651092034249,
+          "median": 5.785491030813581,
+          "p90": 10.111824948582864,
+          "p95": 10.674699938969098,
+          "std": 2.304744138983879
+        },
+        "ATE_Sim3_m": {
+          "count": 88,
+          "mean": 0.0203916664003567,
+          "median": 0.01699854804059151,
+          "p90": 0.03083129759943456,
+          "p95": 0.03552944344927141,
+          "std": 0.009969549255924614
+        },
+        "ATE_SE3_m": {
+          "count": 88,
+          "mean": 0.3199660543872495,
+          "median": 0.2753656898718608,
+          "p90": 0.7048330958809206,
+          "p95": 0.8289378333846735,
+          "std": 0.25352702963405777
+        },
+        "Boundary_camera_t_m": {
+          "count": 88,
+          "mean": 1.1238120246971264,
+          "median": 0.973722309785233,
+          "p90": 1.9201525956253331,
+          "p95": 2.229835435060355,
+          "std": 0.7929702137841373
+        },
+        "Boundary_camera_R_deg": {
+          "count": 88,
+          "mean": 10.603677695615533,
+          "median": 6.660758696723601,
+          "p90": 19.727873543547403,
+          "p95": 26.232820093626067,
+          "std": 16.368621535103426
+        },
+        "Boundary_root_m": {
+          "count": 84,
+          "mean": 1.0315020785914553,
+          "median": 1.036552468839294,
+          "p90": 1.9581992401764854,
+          "p95": 2.2218515847694236,
+          "std": 0.6777951492697024
+        },
+        "Post_root_m": {
+          "count": 84,
+          "mean": 0.8843044280554918,
+          "median": 0.8952399179939847,
+          "p90": 1.5061990019092835,
+          "p95": 1.6403988699771426,
+          "std": 0.4794207912390621
+        },
+        "Seam_root_m": {
+          "count": 83,
+          "mean": 0.876316706319757,
+          "median": 0.7721894008181212,
+          "p90": 1.682561013675924,
+          "p95": 2.0308178385060565,
+          "std": 0.6144492662713608
+        },
+        "Seam_CHRGE_m": {
+          "count": 83,
+          "mean": 0.694185358466519,
+          "median": 0.5589640494113322,
+          "p90": 1.3861185772479856,
+          "p95": 1.5472994682978463,
+          "std": 0.5208858225876442
+        },
+        "Pair_vector_m": {
+          "count": 88,
+          "mean": 0.36221100806439616,
+          "median": 0.27962664066077836,
+          "p90": 0.49619886849989353,
+          "p95": 0.6554871679489016,
+          "std": 0.4358139989987087
+        },
+        "IDs": {
+          "count": 88,
+          "mean": 3.0681818181818183,
+          "median": 2.0,
+          "p90": 11.0,
+          "p95": 12.0,
+          "std": 4.147275816028502
+        },
+        "IDF1": {
+          "count": 88,
+          "mean": 0.636104889431971,
+          "median": 0.6626707508593102,
+          "p90": 0.8866314707862382,
+          "p95": 0.9159843852150454,
+          "std": 0.20768864077364438
+        },
+        "Coverage": {
+          "count": 88,
+          "mean": 0.9125378787878787,
+          "median": 0.96,
+          "p90": 1.0,
+          "p95": 1.0,
+          "std": 0.12695938497757578
+        },
+        "Detection_precision": {
+          "count": 88,
+          "mean": 0.5842626299180957,
+          "median": 0.6186628521353643,
+          "p90": 0.8366307463212335,
+          "p95": 0.9035027191923223,
+          "std": 0.2032069931883275
+        }
+      },
+      "hierarchical_bootstrap_ci95": {
+        "W-MPJPE_mm": {
+          "low": 437.47056235184465,
+          "high": 760.217305267847,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "WA-MPJPE_mm": {
+          "low": 221.3053927573964,
+          "high": 318.0142391194581,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPJPE_mm": {
+          "low": 88.5342504402153,
+          "high": 102.08317835721812,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "PA-MPJPE_mm": {
+          "low": 60.81190097413315,
+          "high": 68.31633103454669,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPVPE_mm": {
+          "low": 104.26413996227429,
+          "high": 121.98615975828602,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Accel_mm_frame2": {
+          "low": 69.86694521694861,
+          "high": 122.2307652817886,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "RTE_H3R_percent": {
+          "low": 5.973827544426959,
+          "high": 10.400453245256417,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ROE_joint_proxy_deg": {
+          "low": 12.87545263400558,
+          "high": 21.139132485863694,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Jitter_H3R": {
+          "low": 300.06446240934554,
+          "high": 634.673296870773,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Foot_sliding_cm": {
+          "low": 4.627324885005453,
+          "high": 7.910502834420998,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_Sim3_m": {
+          "low": 0.01721235904691926,
+          "high": 0.025845250309469086,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_SE3_m": {
+          "low": 0.22279746240194437,
+          "high": 0.6273477409504902,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_t_m": {
+          "low": 0.7336098095536507,
+          "high": 1.939077718835019,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_R_deg": {
+          "low": 7.374991621834321,
+          "high": 14.547753196186344,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_root_m": {
+          "low": 0.5713663722407579,
+          "high": 1.3210198402136948,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Post_root_m": {
+          "low": 0.5553674914584369,
+          "high": 1.0176447123403873,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_root_m": {
+          "low": 0.4769372477210444,
+          "high": 1.3106397806818348,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_CHRGE_m": {
+          "low": 0.3545626694653899,
+          "high": 1.0201802059956426,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Pair_vector_m": {
+          "low": 0.2468813787206728,
+          "high": 0.4599231443007711,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDs": {
+          "low": 1.4221301020408164,
+          "high": 4.839338860544217,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDF1": {
+          "low": 0.46121989872530084,
+          "high": 0.7337115698089027,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Coverage": {
+          "low": 0.7087035501700681,
+          "high": 0.9565279195011338,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Detection_precision": {
+          "low": 0.40998213179282195,
+          "high": 0.6794582833456049,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        }
+      }
+    },
+    "v16_0_m15_geometry": {
+      "display_name": "Bridge3R geometry parent",
+      "case_count": 88,
+      "sequence_count": 7,
+      "clip_macro": {
+        "W-MPJPE_mm": 618.4529590760624,
+        "WA-MPJPE_mm": 287.0591723453906,
+        "MPJPE_mm": 97.93186440056856,
+        "PA-MPJPE_mm": 65.53989530632484,
+        "MPVPE_mm": 116.08162743375853,
+        "Accel_mm_frame2": 97.95904212071231,
+        "RTE_H3R_percent": 7.179531599187894,
+        "ROE_joint_proxy_deg": 16.152683836234782,
+        "Jitter_H3R": 483.5924505712729,
+        "Foot_sliding_cm": 6.379855246724563,
+        "ATE_Sim3_m": 0.019638066843295908,
+        "ATE_SE3_m": 0.31401149193136296,
+        "Boundary_camera_t_m": 1.1276792800474145,
+        "Boundary_camera_R_deg": 10.648482820362243,
+        "Boundary_root_m": 1.0314136016264188,
+        "Post_root_m": 0.884240233032576,
+        "Seam_root_m": 0.8761243127847317,
+        "Seam_CHRGE_m": 0.6939367747430312,
+        "Pair_vector_m": 0.3621805309013787,
+        "IDs": 3.0681818181818183,
+        "IDF1": 0.636104889431971,
+        "Coverage": 0.9125378787878787,
+        "Detection_precision": 0.5842626299180957
+      },
+      "sequence_macro": {
+        "W-MPJPE_mm": 606.8893028144428,
+        "WA-MPJPE_mm": 273.0087221412449,
+        "MPJPE_mm": 95.17655033411384,
+        "PA-MPJPE_mm": 64.2906197499319,
+        "MPVPE_mm": 113.00673731602453,
+        "Accel_mm_frame2": 96.20598909861913,
+        "RTE_H3R_percent": 7.902498935089809,
+        "ROE_joint_proxy_deg": 16.741687423999785,
+        "Jitter_H3R": 472.43743779443173,
+        "Foot_sliding_cm": 6.347654456265337,
+        "ATE_Sim3_m": 0.02116591892944179,
+        "ATE_SE3_m": 0.4089950742196659,
+        "Boundary_camera_t_m": 1.2913273369341849,
+        "Boundary_camera_R_deg": 10.529563354273813,
+        "Boundary_root_m": 0.9463076897202823,
+        "Post_root_m": 0.8042326415785777,
+        "Seam_root_m": 0.8623921819036623,
+        "Seam_CHRGE_m": 0.6776616756925312,
+        "Pair_vector_m": 0.33889032721120965,
+        "IDs": 2.9944727891156466,
+        "IDF1": 0.5964110371303893,
+        "Coverage": 0.8616354875283446,
+        "Detection_precision": 0.5452107199680822
+      },
+      "clip_distributions": {
+        "W-MPJPE_mm": {
+          "count": 88,
+          "mean": 618.4529590760624,
+          "median": 575.0150218094334,
+          "p90": 927.6522296660753,
+          "p95": 1028.4186390271382,
+          "std": 359.48254607678905
+        },
+        "WA-MPJPE_mm": {
+          "count": 88,
+          "mean": 287.0591723453906,
+          "median": 298.9835734603857,
+          "p90": 386.01070795071485,
+          "p95": 428.1729349438168,
+          "std": 92.12475620948352
+        },
+        "MPJPE_mm": {
+          "count": 88,
+          "mean": 97.93186440056856,
+          "median": 93.47868066987809,
+          "p90": 124.30937799768877,
+          "p95": 132.28400934686712,
+          "std": 17.67767693528207
+        },
+        "PA-MPJPE_mm": {
+          "count": 88,
+          "mean": 65.53989530632484,
+          "median": 62.84634958227744,
+          "p90": 80.62679492029689,
+          "p95": 85.09531790851774,
+          "std": 10.407298961329651
+        },
+        "MPVPE_mm": {
+          "count": 88,
+          "mean": 116.08162743375853,
+          "median": 111.26019487441414,
+          "p90": 148.31843218086226,
+          "p95": 152.6042754203906,
+          "std": 21.659700751975244
+        },
+        "Accel_mm_frame2": {
+          "count": 88,
+          "mean": 97.95904212071231,
+          "median": 89.9804872515436,
+          "p90": 136.9396463143121,
+          "p95": 153.87717483903506,
+          "std": 35.33035789607673
+        },
+        "RTE_H3R_percent": {
+          "count": 88,
+          "mean": 7.179531599187894,
+          "median": 6.46416613781445,
+          "p90": 13.282386093188551,
+          "p95": 14.600939826039083,
+          "std": 3.737538535729614
+        },
+        "ROE_joint_proxy_deg": {
+          "count": 88,
+          "mean": 16.152683836234782,
+          "median": 11.816348386652903,
+          "p90": 26.61380897135675,
+          "p95": 32.952266249706824,
+          "std": 16.17424167101958
+        },
+        "Jitter_H3R": {
+          "count": 88,
+          "mean": 483.5924505712729,
+          "median": 457.1015908341608,
+          "p90": 706.7017324131076,
+          "p95": 766.4195857020414,
+          "std": 212.26962605328364
+        },
+        "Foot_sliding_cm": {
+          "count": 88,
+          "mean": 6.379855246724563,
+          "median": 5.785490799838531,
+          "p90": 10.111826151970472,
+          "p95": 10.674700826329119,
+          "std": 2.3041488749691434
+        },
+        "ATE_Sim3_m": {
+          "count": 88,
+          "mean": 0.019638066843295908,
+          "median": 0.016738400021396177,
+          "p90": 0.030478294812918576,
+          "p95": 0.03499885414671212,
+          "std": 0.007967021369962291
+        },
+        "ATE_SE3_m": {
+          "count": 88,
+          "mean": 0.31401149193136296,
+          "median": 0.2708241560386515,
+          "p90": 0.7048330958809206,
+          "p95": 0.8289378333846735,
+          "std": 0.2535012452358303
+        },
+        "Boundary_camera_t_m": {
+          "count": 88,
+          "mean": 1.1276792800474145,
+          "median": 0.9737223090946965,
+          "p90": 1.920152529307747,
+          "p95": 2.229835407404938,
+          "std": 0.7943764347676348
+        },
+        "Boundary_camera_R_deg": {
+          "count": 88,
+          "mean": 10.648482820362243,
+          "median": 6.660758317683122,
+          "p90": 19.727873580861214,
+          "p95": 27.975805235999687,
+          "std": 16.411818097047657
+        },
+        "Boundary_root_m": {
+          "count": 84,
+          "mean": 1.0314136016264188,
+          "median": 1.0365524969049815,
+          "p90": 1.9581992578235334,
+          "p95": 2.2218515590016206,
+          "std": 0.6778826627272736
+        },
+        "Post_root_m": {
+          "count": 84,
+          "mean": 0.884240233032576,
+          "median": 0.8952399835693505,
+          "p90": 1.5061990322739862,
+          "p95": 1.6403989004161526,
+          "std": 0.4794864372476902
+        },
+        "Seam_root_m": {
+          "count": 83,
+          "mean": 0.8761243127847317,
+          "median": 0.7721893181269912,
+          "p90": 1.6825610046312711,
+          "p95": 2.030817835832711,
+          "std": 0.6146742897279944
+        },
+        "Seam_CHRGE_m": {
+          "count": 83,
+          "mean": 0.6939367747430312,
+          "median": 0.5589640476893643,
+          "p90": 1.3861184994612652,
+          "p95": 1.5472994519779621,
+          "std": 0.521133307181387
+        },
+        "Pair_vector_m": {
+          "count": 88,
+          "mean": 0.3621805309013787,
+          "median": 0.2796266387920006,
+          "p90": 0.49619887015353986,
+          "p95": 0.6554871274843359,
+          "std": 0.43580483012892435
+        },
+        "IDs": {
+          "count": 88,
+          "mean": 3.0681818181818183,
+          "median": 2.0,
+          "p90": 11.0,
+          "p95": 12.0,
+          "std": 4.147275816028502
+        },
+        "IDF1": {
+          "count": 88,
+          "mean": 0.636104889431971,
+          "median": 0.6626707508593102,
+          "p90": 0.8866314707862382,
+          "p95": 0.9159843852150454,
+          "std": 0.20768864077364438
+        },
+        "Coverage": {
+          "count": 88,
+          "mean": 0.9125378787878787,
+          "median": 0.96,
+          "p90": 1.0,
+          "p95": 1.0,
+          "std": 0.12695938497757578
+        },
+        "Detection_precision": {
+          "count": 88,
+          "mean": 0.5842626299180957,
+          "median": 0.6186628521353643,
+          "p90": 0.8366307463212335,
+          "p95": 0.9035027191923223,
+          "std": 0.2032069931883275
+        }
+      },
+      "hierarchical_bootstrap_ci95": {
+        "W-MPJPE_mm": {
+          "low": 442.259848629938,
+          "high": 759.2810265200636,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "WA-MPJPE_mm": {
+          "low": 219.5101862774126,
+          "high": 318.336881557997,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPJPE_mm": {
+          "low": 88.52667122453873,
+          "high": 101.99890912529422,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "PA-MPJPE_mm": {
+          "low": 60.93621929578474,
+          "high": 68.28926022723954,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPVPE_mm": {
+          "low": 104.44721240677,
+          "high": 121.8232293755164,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Accel_mm_frame2": {
+          "low": 70.15328752756267,
+          "high": 122.22252590057367,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "RTE_H3R_percent": {
+          "low": 5.97679605980908,
+          "high": 10.42543436329926,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ROE_joint_proxy_deg": {
+          "low": 12.913030198261723,
+          "high": 21.25109002932166,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Jitter_H3R": {
+          "low": 302.20369170197256,
+          "high": 631.4490275375662,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Foot_sliding_cm": {
+          "low": 4.65328250645235,
+          "high": 7.925098227360061,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_Sim3_m": {
+          "low": 0.01688057678892327,
+          "high": 0.025703789714560683,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_SE3_m": {
+          "low": 0.2185867326585341,
+          "high": 0.623136417504756,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_t_m": {
+          "low": 0.7376099715605662,
+          "high": 1.9488853542140057,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_R_deg": {
+          "low": 7.386946559618645,
+          "high": 14.507590444632607,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_root_m": {
+          "low": 0.570159927490731,
+          "high": 1.3311652228354973,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Post_root_m": {
+          "low": 0.5565342383505425,
+          "high": 1.015629861504747,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_root_m": {
+          "low": 0.47758408467522945,
+          "high": 1.3038951863749013,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_CHRGE_m": {
+          "low": 0.36604433785198337,
+          "high": 1.0191868008250824,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Pair_vector_m": {
+          "low": 0.24362659403426049,
+          "high": 0.4590811365813676,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDs": {
+          "low": 1.3928571428571428,
+          "high": 4.802327806122449,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDF1": {
+          "low": 0.4632422932537468,
+          "high": 0.7298858457792528,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Coverage": {
+          "low": 0.711547300170068,
+          "high": 0.9561818310657595,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Detection_precision": {
+          "low": 0.4058000802168369,
+          "high": 0.6797600131399217,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        }
+      }
+    },
+    "bridge3r_unified_half_translation": {
+      "display_name": "Bridge3R (fixed half translation)",
+      "case_count": 88,
+      "sequence_count": 7,
+      "clip_macro": {
+        "W-MPJPE_mm": 519.5542532704277,
+        "WA-MPJPE_mm": 246.98658255333933,
+        "MPJPE_mm": 97.93186421157834,
+        "PA-MPJPE_mm": 65.53989515191452,
+        "MPVPE_mm": 116.08162721959101,
+        "Accel_mm_frame2": 93.22705308830996,
+        "RTE_H3R_percent": 5.8051236604730345,
+        "ROE_joint_proxy_deg": 16.152683834394473,
+        "Jitter_H3R": 457.71851590138107,
+        "Foot_sliding_cm": 6.138747001812155,
+        "ATE_Sim3_m": 0.01680019804327222,
+        "ATE_SE3_m": 0.22329750391466235,
+        "Boundary_camera_t_m": 1.0417846972944356,
+        "Boundary_camera_R_deg": 10.648482820362243,
+        "Boundary_root_m": 0.6111795535973594,
+        "Post_root_m": 0.6458079934330386,
+        "Seam_root_m": 0.45949867968014324,
+        "Seam_CHRGE_m": 0.6939367532910963,
+        "Pair_vector_m": 0.3621805330134441,
+        "IDs": 3.0681818181818183,
+        "IDF1": 0.636104889431971,
+        "Coverage": 0.9125378787878787,
+        "Detection_precision": 0.5842626299180957
+      },
+      "sequence_macro": {
+        "W-MPJPE_mm": 540.704305182513,
+        "WA-MPJPE_mm": 247.23857264148006,
+        "MPJPE_mm": 95.17655044669974,
+        "PA-MPJPE_mm": 64.29061947283806,
+        "MPVPE_mm": 113.0067374361037,
+        "Accel_mm_frame2": 91.73971937072467,
+        "RTE_H3R_percent": 6.849788571196401,
+        "ROE_joint_proxy_deg": 16.741687438417166,
+        "Jitter_H3R": 447.4706219410206,
+        "Foot_sliding_cm": 6.027138465743451,
+        "ATE_Sim3_m": 0.01794360800390187,
+        "ATE_SE3_m": 0.21736060973208973,
+        "Boundary_camera_t_m": 1.0598728414196719,
+        "Boundary_camera_R_deg": 10.529563354273813,
+        "Boundary_root_m": 0.5498624212438347,
+        "Post_root_m": 0.5841842777341798,
+        "Seam_root_m": 0.4507387306311843,
+        "Seam_CHRGE_m": 0.6776616510789047,
+        "Pair_vector_m": 0.338890327723878,
+        "IDs": 2.9944727891156466,
+        "IDF1": 0.5964110371303893,
+        "Coverage": 0.8616354875283446,
+        "Detection_precision": 0.5452107199680822
+      },
+      "clip_distributions": {
+        "W-MPJPE_mm": {
+          "count": 88,
+          "mean": 519.5542532704277,
+          "median": 471.06829319240217,
+          "p90": 820.4949854760018,
+          "p95": 1015.8227784018198,
+          "std": 317.41358676836626
+        },
+        "WA-MPJPE_mm": {
+          "count": 88,
+          "mean": 246.98658255333933,
+          "median": 216.28985077944716,
+          "p90": 349.8539022499413,
+          "p95": 444.34382058122725,
+          "std": 103.65583481317455
+        },
+        "MPJPE_mm": {
+          "count": 88,
+          "mean": 97.93186421157834,
+          "median": 93.47868055549328,
+          "p90": 124.30937968262911,
+          "p95": 132.28400786595745,
+          "std": 17.677676793898378
+        },
+        "PA-MPJPE_mm": {
+          "count": 88,
+          "mean": 65.53989515191452,
+          "median": 62.84634961284083,
+          "p90": 80.62679438837078,
+          "p95": 85.09531869541775,
+          "std": 10.407299059269288
+        },
+        "MPVPE_mm": {
+          "count": 88,
+          "mean": 116.08162721959101,
+          "median": 111.26019181325931,
+          "p90": 148.31842810860218,
+          "p95": 152.60427579087175,
+          "std": 21.659700595935092
+        },
+        "Accel_mm_frame2": {
+          "count": 88,
+          "mean": 93.22705308830996,
+          "median": 87.24965491931896,
+          "p90": 135.61965043308513,
+          "p95": 144.2946802808809,
+          "std": 33.45091214428134
+        },
+        "RTE_H3R_percent": {
+          "count": 88,
+          "mean": 5.8051236604730345,
+          "median": 4.831939102042438,
+          "p90": 10.278292564511284,
+          "p95": 14.08559454769669,
+          "std": 3.423164995541754
+        },
+        "ROE_joint_proxy_deg": {
+          "count": 88,
+          "mean": 16.152683834394473,
+          "median": 11.816348466026202,
+          "p90": 26.613808668244662,
+          "p95": 32.952266306047235,
+          "std": 16.17424164021323
+        },
+        "Jitter_H3R": {
+          "count": 88,
+          "mean": 457.71851590138107,
+          "median": 432.9459450590544,
+          "p90": 688.2306460454834,
+          "p95": 742.6967602042427,
+          "std": 200.69802282781262
+        },
+        "Foot_sliding_cm": {
+          "count": 88,
+          "mean": 6.138747001812155,
+          "median": 5.498912379206086,
+          "p90": 9.605744124211165,
+          "p95": 10.26349273728086,
+          "std": 2.158796263389028
+        },
+        "ATE_Sim3_m": {
+          "count": 88,
+          "mean": 0.01680019804327222,
+          "median": 0.014479317409352084,
+          "p90": 0.0262667076901412,
+          "p95": 0.02837815550930242,
+          "std": 0.006385658814912216
+        },
+        "ATE_SE3_m": {
+          "count": 88,
+          "mean": 0.22329750391466235,
+          "median": 0.15610065428343145,
+          "p90": 0.5043555260581197,
+          "p95": 0.6051086816682696,
+          "std": 0.21175217517218675
+        },
+        "Boundary_camera_t_m": {
+          "count": 88,
+          "mean": 1.0417846972944356,
+          "median": 0.8736381044099558,
+          "p90": 1.7319133675999168,
+          "p95": 1.96398357898743,
+          "std": 0.8196432800527103
+        },
+        "Boundary_camera_R_deg": {
+          "count": 88,
+          "mean": 10.648482820362243,
+          "median": 6.660758317683122,
+          "p90": 19.727873580861214,
+          "p95": 27.975805235999687,
+          "std": 16.411818097047657
+        },
+        "Boundary_root_m": {
+          "count": 84,
+          "mean": 0.6111795535973594,
+          "median": 0.5408409733772287,
+          "p90": 1.054508767566898,
+          "p95": 1.2874424104076851,
+          "std": 0.38240282782197993
+        },
+        "Post_root_m": {
+          "count": 84,
+          "mean": 0.6458079934330386,
+          "median": 0.5774933157483375,
+          "p90": 1.047843976981596,
+          "p95": 1.3417479989135543,
+          "std": 0.3919651923962979
+        },
+        "Seam_root_m": {
+          "count": 83,
+          "mean": 0.45949867968014324,
+          "median": 0.41235360254055536,
+          "p90": 0.861873315268281,
+          "p95": 1.1417731861272766,
+          "std": 0.3585959756561557
+        },
+        "Seam_CHRGE_m": {
+          "count": 83,
+          "mean": 0.6939367532910963,
+          "median": 0.5589639256098912,
+          "p90": 1.386118449740146,
+          "p95": 1.5472993128020902,
+          "std": 0.5211332837661747
+        },
+        "Pair_vector_m": {
+          "count": 88,
+          "mean": 0.3621805330134441,
+          "median": 0.2796266323321045,
+          "p90": 0.49619887521667055,
+          "p95": 0.6554871088260552,
+          "std": 0.4358048291036686
+        },
+        "IDs": {
+          "count": 88,
+          "mean": 3.0681818181818183,
+          "median": 2.0,
+          "p90": 11.0,
+          "p95": 12.0,
+          "std": 4.147275816028502
+        },
+        "IDF1": {
+          "count": 88,
+          "mean": 0.636104889431971,
+          "median": 0.6626707508593102,
+          "p90": 0.8866314707862382,
+          "p95": 0.9159843852150454,
+          "std": 0.20768864077364438
+        },
+        "Coverage": {
+          "count": 88,
+          "mean": 0.9125378787878787,
+          "median": 0.96,
+          "p90": 1.0,
+          "p95": 1.0,
+          "std": 0.12695938497757578
+        },
+        "Detection_precision": {
+          "count": 88,
+          "mean": 0.5842626299180957,
+          "median": 0.6186628521353643,
+          "p90": 0.8366307463212335,
+          "p95": 0.9035027191923223,
+          "std": 0.2032069931883275
+        }
+      },
+      "hierarchical_bootstrap_ci95": {
+        "W-MPJPE_mm": {
+          "low": 381.4963204266954,
+          "high": 708.1534213170283,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "WA-MPJPE_mm": {
+          "low": 195.16492490775113,
+          "high": 301.7113156578238,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPJPE_mm": {
+          "low": 88.61046714489251,
+          "high": 102.05609684528845,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "PA-MPJPE_mm": {
+          "low": 60.88572236725484,
+          "high": 68.27686788717405,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "MPVPE_mm": {
+          "low": 104.36613153577045,
+          "high": 122.06528036688407,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Accel_mm_frame2": {
+          "low": 66.89933660609941,
+          "high": 116.22510965253628,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "RTE_H3R_percent": {
+          "low": 4.845191337121563,
+          "high": 9.698186507465017,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ROE_joint_proxy_deg": {
+          "low": 12.915687606005678,
+          "high": 21.145335503862842,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Jitter_H3R": {
+          "low": 286.8606339606672,
+          "high": 591.3965095698101,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Foot_sliding_cm": {
+          "low": 4.503267680241041,
+          "high": 7.314005314852596,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_Sim3_m": {
+          "low": 0.014892190163162625,
+          "high": 0.02111154367990573,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "ATE_SE3_m": {
+          "low": 0.14366223016172486,
+          "high": 0.2983997932861812,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_t_m": {
+          "low": 0.6429995324007599,
+          "high": 1.5514568904011898,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_camera_R_deg": {
+          "low": 7.38653571392813,
+          "high": 14.569631006624927,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Boundary_root_m": {
+          "low": 0.384949690135722,
+          "high": 0.6983076902718011,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Post_root_m": {
+          "low": 0.41158810527371653,
+          "high": 0.7739573262524635,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_root_m": {
+          "low": 0.2714108485260452,
+          "high": 0.7040290979120176,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Seam_CHRGE_m": {
+          "low": 0.3675488291567089,
+          "high": 1.0142349453835513,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Pair_vector_m": {
+          "low": 0.24536514886108335,
+          "high": 0.4585990066124503,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDs": {
+          "low": 1.4098426870748302,
+          "high": 4.812531887755101,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "IDF1": {
+          "low": 0.4623340491901719,
+          "high": 0.7337393806340763,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Coverage": {
+          "low": 0.7100580357142856,
+          "high": 0.9560931476757369,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        },
+        "Detection_precision": {
+          "low": 0.4031205605130783,
+          "high": 0.68220847063595,
+          "unit": "sequence_then_clip",
+          "samples": 10000
+        }
+      }
+    }
+  },
+  "paired_significance_vs_primary": {
+    "m0_strict_human3r": {
+      "W-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 3.3842082394350177,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.9375,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "WA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -16.353700156952005,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.21875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.6663994930132405,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.671875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "PA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.023526541705585657,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.9375,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPVPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.9589430757186099,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.640625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Accel_mm_frame2": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -4.286278795615841,
+        "primary_better_fraction": 0.42857142857142855,
+        "p_two_sided": 0.25,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "RTE_H3R_percent": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.6429885880254638,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.5625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ROE_joint_proxy_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.616911692748885,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.421875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Jitter_H3R": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -18.35191802103299,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.390625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Foot_sliding_cm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.3930178118093331,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.28125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_Sim3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.16067338670844014,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.015625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_SE3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.5393695906873593,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.015625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_t_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0959515032213792,
+        "primary_better_fraction": 0.2857142857142857,
+        "p_two_sided": 0.234375,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_R_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.38472320115220643,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.234375,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.15266495993522308,
+        "primary_better_fraction": 0.16666666666666666,
+        "p_two_sided": 0.15625,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Post_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.021180012775712947,
+        "primary_better_fraction": 0.5,
+        "p_two_sided": 0.875,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.08821843052163979,
+        "primary_better_fraction": 0.16666666666666666,
+        "p_two_sided": 0.3125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_CHRGE_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.24134575659850907,
+        "primary_better_fraction": 0.16666666666666666,
+        "p_two_sided": 0.09375,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Pair_vector_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.0021032922211184713,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.828125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "IDs": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.8069727891156463,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "IDF1": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.08082673798285309,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Coverage": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.006330782312925197,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 0.25,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Detection_precision": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.005114168305890843,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 0.25,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      }
+    },
+    "m15_safe_boundary_permutation_causal_gru": {
+      "W-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -66.21451191174785,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "WA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -25.882178225409653,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.046875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 1.0280624341671033e-06,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.3125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "PA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -1.2707277566700474e-07,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.6875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPVPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 9.423820707914794e-07,
+        "primary_better_fraction": 0.42857142857142855,
+        "p_two_sided": 0.265625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Accel_mm_frame2": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -4.455014849779668,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "RTE_H3R_percent": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -1.0530106567560842,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.046875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ROE_joint_proxy_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.012625937840055406,
+        "primary_better_fraction": 0.2857142857142857,
+        "p_two_sided": 0.140625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Jitter_H3R": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -24.942300071574298,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Foot_sliding_cm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.31966719436789026,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_Sim3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.0035606617470774157,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.015625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_SE3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.19430794150858643,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.046875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_t_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.2297181817475836,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.078125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_R_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.020116589922488565,
+        "primary_better_fraction": 0.5714285714285714,
+        "p_two_sided": 0.625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.39648950392816973,
+        "primary_better_fraction": 0.8333333333333334,
+        "p_two_sided": 0.0625,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Post_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.22014011179511864,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.4117520208460744,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_CHRGE_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.00012740212298006925,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Pair_vector_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -2.2472079327171386e-05,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.015625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "IDs": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "IDF1": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "Coverage": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "Detection_precision": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      }
+    },
+    "v16_0_m15_geometry": {
+      "W-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -66.18499763192983,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "WA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -25.770149499764845,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.0625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 1.1258588423450939e-07,
+        "primary_better_fraction": 0.42857142857142855,
+        "p_two_sided": 0.84375,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "PA-MPJPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -2.770938384141378e-07,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "MPVPE_mm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 1.200791907811955e-07,
+        "primary_better_fraction": 0.42857142857142855,
+        "p_two_sided": 0.8125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Accel_mm_frame2": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -4.466269727894445,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "RTE_H3R_percent": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -1.0527103638934074,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.0625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ROE_joint_proxy_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 1.4417379290421195e-08,
+        "primary_better_fraction": 0.42857142857142855,
+        "p_two_sided": 0.5,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Jitter_H3R": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -24.966815853411088,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Foot_sliding_cm": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.3205159905218853,
+        "primary_better_fraction": 0.7142857142857143,
+        "p_two_sided": 0.0625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_Sim3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.0032223109255399185,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.015625,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "ATE_SE3_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.19163446448757618,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.046875,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_t_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.23145449551451303,
+        "primary_better_fraction": 0.8571428571428571,
+        "p_two_sided": 0.078125,
+        "mode": "exact_sign_randomization",
+        "count": 7
+      },
+      "Boundary_camera_R_deg": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "Boundary_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.39644526847644773,
+        "primary_better_fraction": 0.8333333333333334,
+        "p_two_sided": 0.0625,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Post_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.22004836384439777,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_root_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -0.41165345127247815,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Seam_CHRGE_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": -2.4613626585974952e-08,
+        "primary_better_fraction": 1.0,
+        "p_two_sided": 0.03125,
+        "mode": "exact_sign_randomization",
+        "count": 6
+      },
+      "Pair_vector_m": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 5.126682887736576e-10,
+        "primary_better_fraction": 0.2857142857142857,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "IDs": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "IDF1": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "Coverage": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      },
+      "Detection_precision": {
+        "unit": "sequence",
+        "sequences": [
+          "01_hugging",
+          "03_grappling2",
+          "05_sword2",
+          "06_sword3",
+          "08_ballroom2",
+          "15_mma4",
+          "16_mma5"
+        ],
+        "exact_fallback_zeroed_sequences": [],
+        "primary_minus_baseline_mean": 0.0,
+        "primary_better_fraction": 0.0,
+        "p_two_sided": 1.0,
+        "mode": "degenerate",
+        "count": 7
+      }
+    }
+  },
+  "multi_thumbs_literature_reference": {
+    "values": {
+      "W-MPJPE_mm": 221.0,
+      "WA-MPJPE_mm": 116.9,
+      "MPJPE_mm": 215.9,
+      "MPVPE_mm": 278.3,
+      "Accel_mm_frame2": 17.4,
+      "ATE_Sim3_m": 0.7,
+      "IDs": 0.46
+    },
+    "contract": "context only; exact Multi-THuMBS manifest/evaluator unavailable"
+  },
+  "metric_caveats": {
+    "RTE_H3R_percent": "exact NumPy port of repository Human3R/WHAM rigid path-normalized RTE",
+    "Jitter_H3R": "exact third-difference fps^3/10 convention from repository Human3R evaluator",
+    "Foot_sliding_cm": "SMPL-6890 four-foot-vertex contact metric, converted to cm",
+    "ROE_joint_proxy_deg": "joint-derived torso Kabsch proxy; not official HumanMM SMPL-root ROE"
+  }
+}

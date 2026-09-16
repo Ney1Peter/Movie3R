@@ -1,0 +1,43 @@
+{
+  "schema_version": "Shot3R-H4D-CS150-runtime-selection-v1",
+  "selection_rule": "five fixed actions; selected before aggregating runtime",
+  "manifest": "external_baselines/josh_runs/harmony4d88_20260906/manifests/harmony4d.runtime.jsonl",
+  "cases": [
+    {
+      "line": 2,
+      "action": "hugging",
+      "viewpoint": "large",
+      "case_id": "h4d_test_01_hugging_002_hugging_large_cam11_cam16_b00151",
+      "input_dir": "external_baselines/josh_runs/harmony4d88_20260906/cases/harmony4d/line002/rgb"
+    },
+    {
+      "line": 5,
+      "action": "grappling2",
+      "viewpoint": "extreme",
+      "case_id": "h4d_test_03_grappling2_028_grappling2_extreme_cam14_cam16_b00076",
+      "input_dir": "external_baselines/josh_runs/harmony4d88_20260906/cases/harmony4d/line005/rgb"
+    },
+    {
+      "line": 33,
+      "action": "sword2",
+      "viewpoint": "extreme",
+      "case_id": "h4d_test_05_sword2_009_sword2_extreme_cam06_cam18_b00521",
+      "input_dir": "external_baselines/josh_runs/harmony4d88_20260906/cases/harmony4d/line033/rgb"
+    },
+    {
+      "line": 69,
+      "action": "mma4",
+      "viewpoint": "extreme",
+      "case_id": "h4d_test_15_mma4_016_mma4_extreme_cam03_cam08_b00371",
+      "input_dir": "external_baselines/josh_runs/harmony4d88_20260906/cases/harmony4d/line069/rgb"
+    },
+    {
+      "line": 73,
+      "action": "mma5",
+      "viewpoint": "extreme",
+      "case_id": "h4d_test_16_mma5_001_mma5_extreme_cam03_cam08_b00085",
+      "input_dir": "external_baselines/josh_runs/harmony4d88_20260906/cases/harmony4d/line073/rgb"
+    }
+  ]
+}
+

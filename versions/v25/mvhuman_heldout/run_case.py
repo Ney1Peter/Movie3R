@@ -66,6 +66,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--current-checkpoint", type=Path)
     parser.add_argument("--original-checkpoint", type=Path)
     parser.add_argument("--keep-decoded-frames", action="store_true")
+    parser.add_argument(
+        "--ablation-token-mode",
+        choices=(
+            "full", "native", "semantic_only", "alignment_only", "semantic_alignment",
+            "no_semantic", "no_alignment", "no_momentum",
+        ),
+        default="full",
+        help="Inference-time token sensitivity mode; the checkpoint is unchanged.",
+    )
+    parser.add_argument("--ablation-disable-camera-residual-head", action="store_true")
+    parser.add_argument("--ablation-disable-human-latent-head", action="store_true")
+    parser.add_argument("--ablation-disable-head-lora", action="store_true")
+    parser.add_argument(
+        "--controlled-transition-index",
+        type=int,
+        help="Diagnostic-only fixed transition index used to isolate reconstruction from detector error.",
+    )
     return parser.parse_args()
 
 
@@ -136,12 +153,20 @@ def main() -> None:
     detector_started = time.perf_counter()
     detector = CausalGRUShotDetector(Path(frozen.DETECTOR_PATH))
     detector_labels, detector_rows = detector.predict_sequence(paths)
-    proposal = frozen.first_positive(detector_labels)
+    detector_proposal = frozen.first_positive(detector_labels)
+    if args.controlled_transition_index is not None:
+        if not 0 <= int(args.controlled_transition_index) < len(paths):
+            raise ValueError("--controlled-transition-index is outside the decoded sequence")
+        proposal = int(args.controlled_transition_index)
+        transition_source = "controlled diagnostic boundary"
+    else:
+        proposal = detector_proposal
+        transition_source = "causal RGB detector first positive"
     runtime["causal_gru_detector"] = {
         "seconds": time.perf_counter() - detector_started,
         "labels": detector_labels,
         "rows": detector_rows,
-        "first_positive_index": proposal,
+        "first_positive_index": detector_proposal,
         "deployment_policy": "first positive only; no evaluator boundary access",
     }
 
@@ -155,7 +180,9 @@ def main() -> None:
     gc.collect(); torch.cuda.empty_cache()
 
     current_model = ARCroco3DStereo.from_pretrained(str(current)).to(device)
-    flags = configure_model(current_model); current_model.eval()
+    flags = configure_model(current_model)
+    ablation = frozen.configure_inference_ablation(current_model, args)
+    current_model.eval()
     current_layer = SMPL_Layer(type="smplx", gender="neutral", num_betas=10, kid=False, person_center="head").to(device).eval()
     if proposal is None:
         parent, parent_runtime = frozen.run_no_event(
@@ -225,6 +252,11 @@ def main() -> None:
             "detector": str(Path(frozen.DETECTOR_PATH)), "detector_sha256": frozen.verified_artifact_sha256(Path(frozen.DETECTOR_PATH)),
             "current_flags": flags,
         },
+        "diagnostic_configuration": {
+            "token_ablation": ablation,
+            "transition_source": transition_source,
+            "controlled_transition_index": args.controlled_transition_index,
+        },
         "environment": {
             "python": sys.version, "platform": platform.platform(), "torch": torch.__version__, "cuda": torch.version.cuda,
             "device": str(device), "gpu": torch.cuda.get_device_name(device),
@@ -232,8 +264,10 @@ def main() -> None:
         },
         "total_process_seconds": time.perf_counter() - started,
         "runtime_contract": {
-            "gt_in_runtime": False, "camera_or_cut_in_runtime": False, "future_frames_at_boundary": 0,
-            "transaction_boundary_source": "causal RGB detector first positive",
+            "gt_in_runtime": args.controlled_transition_index is not None,
+            "camera_or_cut_in_runtime": args.controlled_transition_index is not None,
+            "future_frames_at_boundary": 0,
+            "transaction_boundary_source": transition_source,
             "detector_miss_policy": "exact current parent; no oracle boundary substitution",
         },
         "cache": str(output), "cache_sha256": shared.sha256(output),

@@ -1,0 +1,133 @@
+{
+  "allowed_devices": [
+    "cuda:5",
+    "cuda:6",
+    "cuda:7"
+  ],
+  "checkpoint": {
+    "path": "/data/wangzheng/iJCV-CODE/Movie3R/src/human3r_896L.pth",
+    "sha256": "1c5d89077d7734476ce74183df178c51ad172cad5e256081e61480cf231a9377",
+    "size_bytes": 4670554642
+  },
+  "datasets": {
+    "egobody": {
+      "development": {
+        "cases": 195,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_development.evaluator.jsonl",
+        "evaluator_sha256": "11e9fd2c019ffb9b717575c064007b47c4c0c5dafc34e477a083a49dc6d4954e",
+        "recordings": 65,
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_development.runtime.jsonl",
+        "runtime_sha256": "7d868600dd4053b692d8e811e0d0bfc12cc6fa440e996a1ed780ca5b1c80786a"
+      },
+      "holdout": {
+        "cases": 48,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_holdout.evaluator.jsonl",
+        "evaluator_sha256": "d605603f45500d06039cbaa7bf4b9019ff5b82bf5b20c24d8bb884b7d57f50be",
+        "recordings": 16,
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_holdout.runtime.jsonl",
+        "runtime_sha256": "61b31a49cf582cfc3eafd2bbeb65c9a38a2a0d9f611e8a3db0752c548cd65e51"
+      },
+      "test": {
+        "cases": 129,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_test.evaluator.jsonl",
+        "evaluator_sha256": "87144f01a8dc7b0630b1e7e9613a8b11904847a97c438e9ac9693b3453ac534f",
+        "recordings": 43,
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egobody/egobody_cs150_test.runtime.jsonl",
+        "runtime_sha256": "8a5861bd3e4ee55dd1639c86526d21c96a73bb44fe07ff9848ef7b6b7645b02b"
+      }
+    },
+    "egohumans": {
+      "development": {
+        "captures": 7,
+        "cases": 28,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_development.evaluator.jsonl",
+        "evaluator_sha256": "841416d7257a3d931145ce088a2deaa49d0c37412e8746a190ec19399449d440",
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_development.runtime.jsonl",
+        "runtime_sha256": "dee608217cf8f811cf721837cc39729a63aa14437aec0e4807cde10afbc3be73"
+      },
+      "holdout": {
+        "captures": 6,
+        "cases": 24,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_holdout.evaluator.jsonl",
+        "evaluator_sha256": "2bf0f6aff62a833b623c370e53b369d5af7d568255a3a4b293eeb1cc73858dd1",
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_holdout.runtime.jsonl",
+        "runtime_sha256": "693af7da7e3d06115ba6f473461d65c24320e25f1ad4f8e100e06d573737a776"
+      },
+      "test": {
+        "captures": 27,
+        "cases": 90,
+        "evaluator": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_test.evaluator.jsonl",
+        "evaluator_sha256": "a65a8e5b9955483fd60e1308080fcb68488239cbf4d54a328514ca1c37156fdf",
+        "runtime": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/work/frozen_manifests/egohumans/egohumans_test.runtime.jsonl",
+        "runtime_sha256": "dccbad5a4b4c771bc5637fca0f2b44bc7ce2ac07fc84e2d827d33f3a1f67823b"
+      }
+    }
+  },
+  "fixed_failure_fallback": "R0 identity transform",
+  "git_commit_at_lock": "1b4ea73279165e6f68963823cc51bdb1cd2e5adc",
+  "gpu_limit": 3,
+  "protocol_document": "/data/wangzheng/iJCV-CODE/Shot3R_传统配准基线实验执行协议_20260915.md",
+  "qualitative_preselection": {
+    "datasets": {
+      "egobody": [
+        {
+          "angle_stratum": "extreme",
+          "case_id": "egobody_recording_20210907_S03_S04_01_extreme_kinect_13_kinect_11_b01801"
+        },
+        {
+          "angle_stratum": "extreme",
+          "case_id": "egobody_recording_20210911_S03_S08_01_extreme_kinect_13_kinect_11_b02141"
+        },
+        {
+          "angle_stratum": "medium",
+          "case_id": "egobody_recording_20210907_S03_S04_01_medium_kinect_12_kinect_13_b01801"
+        },
+        {
+          "angle_stratum": "medium",
+          "case_id": "egobody_recording_20210911_S03_S08_01_medium_kinect_11_kinect_12_b02141"
+        },
+        {
+          "angle_stratum": "small",
+          "case_id": "egobody_recording_20210907_S03_S04_01_small_kinect_11_kinect_12_b01801"
+        },
+        {
+          "angle_stratum": "small",
+          "case_id": "egobody_recording_20210911_S03_S08_01_small_kinect_13_kinect_12_b02141"
+        }
+      ],
+      "egohumans": [
+        {
+          "angle_stratum": "unknown",
+          "case_id": "ego_test_badminton_001_badminton_large_cam11_cam15_b00301"
+        },
+        {
+          "angle_stratum": "unknown",
+          "case_id": "ego_test_badminton_001_badminton_medium_cam02_cam15_b00301"
+        }
+      ]
+    },
+    "locked_before_registration_test_metrics": true,
+    "schema_version": "Shot3R-registration-qualitative-preselection-v1",
+    "selection_rule": "lexicographically first two fixed Test cases in each pre-existing angle stratum; independent of method result"
+  },
+  "random_seed": 20260915,
+  "raw_archives": {
+    "egobody": {
+      "integrity_policy": "size/ZIP CRC during selected extraction; no repeated whole-archive hash",
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody.zip",
+      "size_bytes": 359069231957
+    },
+    "egohumans": {
+      "integrity_policy": "size/ZIP CRC during selected extraction; no repeated whole-archive hash",
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoHuman.zip",
+      "size_bytes": 237157095656
+    }
+  },
+  "schema_version": "Shot3R-traditional-registration-protocol-lock-v1",
+  "split_policy": {
+    "egobody": "official train->Development, historical 48-case val Holdout gate, official Test-129",
+    "egohumans": "historical Development-28/Holdout-24, frozen formal Test-90"
+  },
+  "test_gt_isolation": true,
+  "test_parameter_tuning": false
+}

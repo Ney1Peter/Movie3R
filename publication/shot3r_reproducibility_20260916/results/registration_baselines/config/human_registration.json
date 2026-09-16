@@ -1,0 +1,38 @@
+{
+  "schema_version": "Shot3R-traditional-human-registration-config-v1",
+  "random_seed": 20260915,
+  "selection_contract": "One dataset-level setting per method selected on the complete Development split; no per-case oracle and no Holdout/Test tuning.",
+  "failure_fallback": "Exact R0 identity transform with the case retained in the fixed denominator.",
+  "r1_definition": "Prediction-only boundary-person matching followed by coordinate-wise median pelvis translation; one shared translation is applied to all post-cut cameras, people, meshes, and scene points.",
+  "r2_definition": "The same prediction-only person matching followed by RANSAC and weighted Kabsch over stable predicted body joints; one shared SE(3) is applied to all post-cut outputs.",
+  "datasets": {
+    "egobody": {
+      "configuration_id": "development-frozen-egobody-d310eee57843",
+      "r1": {
+        "candidate_id": "r1_pair020",
+        "max_pair_cost": 0.2
+      },
+      "r2": {
+        "candidate_id": "r2_p020_i020_q040",
+        "max_pair_cost": 0.2,
+        "inlier_threshold_m": 0.2,
+        "min_inlier_ratio": 0.4,
+        "ransac_trials": 256
+      }
+    },
+    "egohumans": {
+      "configuration_id": "development-frozen-egohumans-d310eee57843",
+      "r1": {
+        "candidate_id": "r1_pair035",
+        "max_pair_cost": 0.35
+      },
+      "r2": {
+        "candidate_id": "r2_p020_i020_q040",
+        "max_pair_cost": 0.2,
+        "inlier_threshold_m": 0.2,
+        "min_inlier_ratio": 0.4,
+        "ransac_trials": 256
+      }
+    }
+  }
+}

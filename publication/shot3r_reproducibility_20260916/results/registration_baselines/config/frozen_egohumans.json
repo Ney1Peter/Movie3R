@@ -1,0 +1,35 @@
+{
+  "candidate_grid": "/data/wangzheng/iJCV-CODE/Movie3R/output/shot3r_registration_baselines_v1_20260915/config/development_candidate_grid.json",
+  "candidate_grid_sha256": "d310eee578430718909c678db79cabc3ca26bb8723ea23248f2f84447635b836",
+  "configuration_id": "development-frozen-egohumans-d310eee57843",
+  "dataset": "egohumans",
+  "per_case_oracle": false,
+  "r1": {
+    "max_pair_cost": 0.35
+  },
+  "r2": {
+    "inlier_threshold_m": 0.2,
+    "max_pair_cost": 0.2,
+    "min_inlier_ratio": 0.4,
+    "ransac_trials": 256
+  },
+  "r3": {
+    "icp_distance_factor": 1.0,
+    "max_inlier_rmse_m": 0.2,
+    "min_correspondences": 20,
+    "min_fitness": 0.08,
+    "min_scene_points": 300,
+    "ransac_distance_factor": 1.5,
+    "voxel_size_m": 0.08
+  },
+  "random_seed": 20260915,
+  "schema_version": "Shot3R-registration-config-v1",
+  "selected_candidate_ids": {
+    "r1": "r1_pair035",
+    "r2": "r2_p020_i020_q040",
+    "r3": "r3_v008_strict"
+  },
+  "selection_is_dataset_level": true,
+  "selection_split": "development",
+  "status": "frozen for one Holdout gate and subsequent Test runtime"
+}

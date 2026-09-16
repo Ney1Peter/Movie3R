@@ -1,0 +1,27 @@
+From 07f66cfa0cba2b0660d402cd0f85c833711c5ee0 Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Wed, 26 Aug 2026 16:47:53 +0800
+Subject: [PATCH 1/2] chore(trace): ignore local assets and run outputs
+
+Keep licensed checkpoints, local assets and regenerated TRACE outputs out of source control.
+---
+ .gitignore | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/.gitignore b/.gitignore
+index 126be93..0e4a83e 100755
+--- a/.gitignore
++++ b/.gitignore
+@@ -15,4 +15,10 @@ __pycache__/
+ demo/images/
+ log/*
+ simple_romp/.DS_Store
+-.DS_Store
+\ No newline at end of file
++.DS_Store
++
++# Machine-local TRACE assets, licensed checkpoints and regenerated inference
++# outputs.  These are experiment dependencies/results, not source revisions.
++assets/
++checkpoints/
++outputs/

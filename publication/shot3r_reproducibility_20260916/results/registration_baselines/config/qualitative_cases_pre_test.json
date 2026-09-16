@@ -1,0 +1,68 @@
+{
+  "datasets": {
+    "egobody": [
+      {
+        "angle_stratum": "extreme",
+        "case_id": "egobody_recording_20210907_S03_S04_01_extreme_kinect_13_kinect_11_b01801"
+      },
+      {
+        "angle_stratum": "extreme",
+        "case_id": "egobody_recording_20210911_S03_S08_01_extreme_kinect_13_kinect_11_b02141"
+      },
+      {
+        "angle_stratum": "medium",
+        "case_id": "egobody_recording_20210907_S03_S04_01_medium_kinect_12_kinect_13_b01801"
+      },
+      {
+        "angle_stratum": "medium",
+        "case_id": "egobody_recording_20210911_S03_S08_01_medium_kinect_11_kinect_12_b02141"
+      },
+      {
+        "angle_stratum": "small",
+        "case_id": "egobody_recording_20210907_S03_S04_01_small_kinect_11_kinect_12_b01801"
+      },
+      {
+        "angle_stratum": "small",
+        "case_id": "egobody_recording_20210911_S03_S08_01_small_kinect_13_kinect_12_b02141"
+      }
+    ],
+    "egohumans": [
+      {
+        "angle_stratum": "extreme",
+        "case_id": "ego_test_badminton_005_badminton_extreme_cam13_cam01_b00326"
+      },
+      {
+        "angle_stratum": "extreme",
+        "case_id": "ego_test_basketball_001_basketball_extreme_cam05_cam04_b00301"
+      },
+      {
+        "angle_stratum": "large",
+        "case_id": "ego_test_badminton_001_badminton_large_cam11_cam15_b00301"
+      },
+      {
+        "angle_stratum": "large",
+        "case_id": "ego_test_badminton_005_badminton_large_cam11_cam15_b00326"
+      },
+      {
+        "angle_stratum": "medium",
+        "case_id": "ego_test_badminton_001_badminton_medium_cam02_cam15_b00301"
+      },
+      {
+        "angle_stratum": "medium",
+        "case_id": "ego_test_badminton_005_badminton_medium_cam02_cam15_b00326"
+      },
+      {
+        "angle_stratum": "small",
+        "case_id": "ego_test_badminton_001_badminton_small_cam06_cam02_b00301"
+      },
+      {
+        "angle_stratum": "small",
+        "case_id": "ego_test_badminton_005_badminton_small_cam02_cam06_b00326"
+      }
+    ]
+  },
+  "field_compatibility_note": "The original lock treated EgoHumans angle_stratum as unknown because its frozen evaluator manifest omits the EgoBody-style _evaluator_only suffix. The list was deterministically regenerated as the lexicographically first two case IDs in every pre-existing stratum, without consulting registration predictions or metrics.",
+  "locked_before_registration_test_metrics": true,
+  "schema_version": "Shot3R-registration-qualitative-preselection-v1",
+  "selection_rule": "lexicographically first two fixed Test cases in each pre-existing angle stratum; independent of method result"
+}

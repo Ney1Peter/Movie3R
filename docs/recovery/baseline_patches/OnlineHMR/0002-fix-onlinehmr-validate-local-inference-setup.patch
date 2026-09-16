@@ -1,0 +1,284 @@
+From 335f0c740e8f203a6c70b80a67e1fb8b8531074e Mon Sep 17 00:00:00 2001
+From: Ney1Peter <1743108356@qq.com>
+Date: Thu, 3 Sep 2026 20:23:11 +0800
+Subject: [PATCH 2/3] fix(onlinehmr): validate local inference setup
+
+---
+ ...GE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md |  11 +-
+ BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md     | 135 ++++++++++++++++++
+ lib/pipeline/tools.py                         |   8 +-
+ scripts/run_custom.py                         |  15 +-
+ scripts/run_custom_mt.py                      |  15 +-
+ 5 files changed, 172 insertions(+), 12 deletions(-)
+ create mode 100644 BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md
+
+diff --git a/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md b/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
+index 8350c55..afe7ff5 100644
+--- a/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
++++ b/BRIDGE3R_ONLINEHMR_SETUP_CHECKLIST_20260902.md
+@@ -8,9 +8,13 @@
+ 
+ ## 1. 当前结论
+ 
+-代码及 MASt3R-SLAM、DEVA 子模块已经克隆完整，但 OnlineHMR 专用推理
+-环境尚未建立，主要推理权重和辅助文件尚未放入仓库。因此目前还不能
+-启动正式 pilot。
++> 2026-09-03 更新：本清单所列权重和辅助文件已经完整部署，独立环境已建立，
++> 逐模型加载与 12 帧真实 RGB 视频端到端测试均通过。当前可以进入固定样本的
++> pilot，但在 pilot 通过之前不直接启动全量实验。部署路径、版本和验证证据见
++> `BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md`。
++
++代码及 MASt3R-SLAM、DEVA 子模块已经克隆完整。OnlineHMR 专用推理环境和
++全部必需权重现已部署完成。
+ 
+ 用户已确认：OnlineHMR 仅用于本地、非商业、学术论文比较，不重新分发
+ OnlineHMR、SMPL、SPEC、MASt3R 或其他第三方代码与权重。
+@@ -199,4 +203,3 @@ python scripts/run_custom_mt.py \
+ - [OnlineHMR README](https://github.com/Tsukasane/Video-OnlineHMR/blob/beta_test_w_tracking/README.md)
+ - 本地官方模型脚本：[`scripts/download_models.sh`](scripts/download_models.sh)
+ - 本地辅助文件脚本：[`scripts/download_extra.sh`](scripts/download_extra.sh)
+-
+diff --git a/BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md b/BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md
+new file mode 100644
+index 0000000..98d76a1
+--- /dev/null
++++ b/BRIDGE3R_ONLINEHMR_SMOKE_TEST_20260903.md
+@@ -0,0 +1,135 @@
++# OnlineHMR 部署与冒烟测试记录
++
++日期：2026-09-03  
++用途：BRIDGE3R 非商业学术 baseline 比较  
++代码分支：`beta_test_w_tracking`  
++正式多人入口：`scripts/run_custom_mt.py`
++
++## 1. 结论
++
++OnlineHMR 权重、辅助模型、代码依赖和 CUDA 扩展均已配置完成。逐模型 GPU
++加载通过，官方多人入口在一段含人物的 12 帧真实 RGB 视频上完整运行并正常
++退出；人体姿态、相机轨迹和场景点云均成功落盘且数值有限。因此环境已具备
++进入固定 12 样本 pilot 的条件。
++
++本次结果仅证明推理链路可运行，不作为论文定量结果，也不代表完整数据集上的
++精度、覆盖率或运行时间结论。
++
++## 2. 权重部署与完整性
++
++原始归档保留在：
++
++```text
++/data/wangzheng/iJCV-CODE/checkpoint-onlinehmr/OnlineHMR_weights.zip
++```
++
++- ZIP 大小：`13,125,362,298` bytes；
++- ZIP CRC 检查通过；
++- 归档内 15 个 payload 的 SHA-256 全部匹配；
++- 部署后的清单与哈希保存在
++  `data/asset_manifests/onlinehmr_20260903/`；
++- SPEC 和 SMPL 模型通过本地软链接复用，没有复制或重新分发。
++
++主要目标路径：
++
++```text
++results/onlinehmr/checkpoint.pth.tar
++data/pretrain/DEVA-propagation.pth
++data/pretrain/sam_vit_h_4b8939.pth
++data/pretrain/mogev2_model.pt
++data/pretrain/model_final_f05665.pkl
++data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py
++checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric.pth
++checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth
++checkpoints/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_codebook.pkl
++```
++
++## 3. 环境
++
++独立环境：
++
++```text
++/data/wangzheng/iJCV-CODE/external_baselines/.venvs/onlinehmr-py311-pt25-cu118
++```
++
++核心版本：
++
++- Python 3.11.14；
++- PyTorch 2.5.1+cu118；
++- torchvision 0.20.1+cu118；
++- torchaudio 2.5.1+cu118；
++- CUDA 编译工具链 11.8；
++- MoGe 2.0.0，固定在 commit `07444410f1e33f402353b99d6ccd26bd31e469e8`；
++- PyTorch3D 0.7.8；
++- `pip check`：`No broken requirements found`。
++
++MASt3R-SLAM、cuRoPE、in3d、lietorch、DEVA、Detectron2、PyTorch3D 和 MoGe
++均已在该隔离环境中验证。不得将 MoGe 升级到当前 3.x 主分支，否则会改变
++PyTorch/CUDA 依赖并偏离 OnlineHMR 所需的 v2 接口。
++
++## 4. 代码兼容处理
++
++只做了两项运行兼容处理，不改变方法逻辑、模型参数或推理配置：
++
++1. `masked_droid_slam` 在导入时已经将 multiprocessing 设置为 `spawn`；入口
++   脚本现在复用该上下文，避免第二次设置时报 `context has already been set`。
++2. ViTDet 优先加载已校验的本地
++   `data/pretrain/model_final_f05665.pkl`，文件不存在时才回退到官方 URL。
++
++## 5. 验证结果
++
++### 5.1 逐模型加载
++
++以下资产均能被实际模型类读取并放入 NVIDIA L20 GPU：
++
++- ViTDet/Detectron2；
++- SAM ViT-H；
++- OnlineHMR 主模型（`684,396,957` parameters）；
++- MoGe-v2；
++- MASt3R；
++- MASt3R retrieval model；
++- neutral、male、female 三套 SMPL 模型。
++
++SMPL 前向测试输出形状均为 `(1, 6890, 3)`，且所有顶点为有限数值。
++
++### 5.2 官方入口端到端测试
++
++输入为已有真人实验视频截取并缩放得到的 12 帧、`960 x 632` RGB 短片。执行：
++
++```bash
++CUDA_VISIBLE_DEVICES=0 \
++CUDA_HOME=/usr/local/cuda-11.8 \
++python scripts/run_custom_mt.py \
++  --video /path/to/onlinehmr_smoke_12f.mp4 \
++  --save_dir /path/to/outputs \
++  --no-viz
++```
++
++官方流程成功完成检测、SAM 分割、DEVA 跟踪、OnlineHMR 人体恢复、MoGe
++尺度估计、MASt3R-SLAM 相机/场景恢复和结果保存。输出检查如下：
++
++- 两个人体轨迹文件，分别包含 3 帧和 9 帧预测；
++- 每条轨迹均包含 `frame_ids`、`pred_cam`、`pred_pose`、`pred_shape`、
++  `pred_rotmat` 和 `pred_trans`；
++- 所有数组首维与对应帧数一致，且无 NaN/Inf；
++- 全局相机轨迹存在且全部为有限数值；
++- 场景 PLY 存在、文件头有效，大小为 `1,283,084` bytes；
++- 后端进程正常 join，主进程退出码为 0。
++
++测试产物保存在：
++
++```text
++/data/wangzheng/iJCV-CODE/external_baselines/onlinehmr-smoke.2qTLRP/
++```
++
++## 6. 批量实验前的下一步
++
++先在预先固定、按角度分层的 12 个样本上运行 pilot，确认：
++
++1. 同一 RGB、帧区间和相机组合与其他方法严格一致；
++2. 不向 OnlineHMR 提供 GT 相机、GT 身份、GT 框或切镜标签；
++3. 统一 evaluator 能读取人物与相机输出；
++4. 失败判定和 coverage 统计不会静默丢弃样本；
++5. 显存、运行时间与磁盘占用适合安全并行。
++
++pilot 通过后再启动固定 manifest 的全量实验。
+diff --git a/lib/pipeline/tools.py b/lib/pipeline/tools.py
+index c0f52d2..73d4bd4 100755
+--- a/lib/pipeline/tools.py
++++ b/lib/pipeline/tools.py
+@@ -1,3 +1,4 @@
++import os
+ import cv2
+ from tqdm import tqdm
+ import numpy as np
+@@ -49,7 +50,11 @@ def detect_segment_track(imgfiles, out_path, thresh=0.5, min_size=None,
+     # ViTDet
+     cfg_path = 'data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py'
+     detectron2_cfg = LazyConfig.load(str(cfg_path))
+-    detectron2_cfg.train.init_checkpoint = "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    local_checkpoint = 'data/pretrain/model_final_f05665.pkl'
++    detectron2_cfg.train.init_checkpoint = (
++        local_checkpoint if os.path.isfile(local_checkpoint)
++        else "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    )
+     for i in range(3):
+         detectron2_cfg.model.roi_heads.box_predictors[i].test_score_thresh = 0.25
+     detector = DefaultPredictor_Lazy(detectron2_cfg)
+@@ -261,4 +266,3 @@ def box_iou(box1, box2):
+     inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
+     return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
+ 
+-
+diff --git a/scripts/run_custom.py b/scripts/run_custom.py
+index 881874c..84a72dd 100644
+--- a/scripts/run_custom.py
++++ b/scripts/run_custom.py
+@@ -248,7 +248,11 @@ def run_backend(cfg, model_path_or_model, states, keyframes, K):
+ def init_detector():
+     cfg_path = './data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py'
+     detectron2_cfg = LazyConfig.load(str(cfg_path))
+-    detectron2_cfg.train.init_checkpoint = "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    local_checkpoint = './data/pretrain/model_final_f05665.pkl'
++    detectron2_cfg.train.init_checkpoint = (
++        local_checkpoint if os.path.isfile(local_checkpoint)
++        else "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    )
+     for i in range(3):
+         detectron2_cfg.model.roi_heads.box_predictors[i].test_score_thresh = 0.25
+     detector = DefaultPredictor_Lazy(detectron2_cfg) # to cuda here
+@@ -380,7 +384,12 @@ def process_mask_soft_margin(mask, method='gaussian', kernel_size=15, sigma=5.0,
+ 
+ 
+ if __name__=='__main__':
+-    mp.set_start_method("spawn")
++    # masked_droid_slam already requests ``spawn`` while it is imported.  Avoid
++    # setting the same global multiprocessing context a second time here.
++    if mp.get_start_method(allow_none=True) is None:
++        mp.set_start_method("spawn")
++    elif mp.get_start_method() != "spawn":
++        raise RuntimeError("OnlineHMR requires the multiprocessing start method 'spawn'")
+     torch.backends.cuda.matmul.allow_tf32 = True
+     torch.set_grad_enabled(False)
+     device = "cuda:0"
+@@ -1281,4 +1290,4 @@ if __name__=='__main__':
+     if visualize_hcgif:
+         del render
+     
+-    print(f"Sequence {root} completed and cleaned up")
+\ No newline at end of file
++    print(f"Sequence {root} completed and cleaned up")
+diff --git a/scripts/run_custom_mt.py b/scripts/run_custom_mt.py
+index 3dd4432..22d5a82 100644
+--- a/scripts/run_custom_mt.py
++++ b/scripts/run_custom_mt.py
+@@ -253,7 +253,11 @@ def run_backend(cfg, model_path_or_model, states, keyframes, K):
+ def init_detector():
+     cfg_path = './data/pretrain/cascade_mask_rcnn_vitdet_h_75ep.py'
+     detectron2_cfg = LazyConfig.load(str(cfg_path))
+-    detectron2_cfg.train.init_checkpoint = "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    local_checkpoint = './data/pretrain/model_final_f05665.pkl'
++    detectron2_cfg.train.init_checkpoint = (
++        local_checkpoint if os.path.isfile(local_checkpoint)
++        else "https://dl.fbaipublicfiles.com/detectron2/ViTDet/COCO/cascade_mask_rcnn_vitdet_h/f328730692/model_final_f05665.pkl"
++    )
+     for i in range(3):
+         detectron2_cfg.model.roi_heads.box_predictors[i].test_score_thresh = 0.25
+     detector = DefaultPredictor_Lazy(detectron2_cfg) # to cuda here
+@@ -385,7 +389,12 @@ def process_mask_soft_margin(mask, method='gaussian', kernel_size=15, sigma=5.0,
+ 
+ 
+ if __name__=='__main__':
+-    mp.set_start_method("spawn")
++    # masked_droid_slam already requests ``spawn`` while it is imported.  Avoid
++    # setting the same global multiprocessing context a second time here.
++    if mp.get_start_method(allow_none=True) is None:
++        mp.set_start_method("spawn")
++    elif mp.get_start_method() != "spawn":
++        raise RuntimeError("OnlineHMR requires the multiprocessing start method 'spawn'")
+     torch.backends.cuda.matmul.allow_tf32 = True
+     torch.set_grad_enabled(False)
+     device = "cuda:0"
+@@ -1424,4 +1433,4 @@ if __name__=='__main__':
+     if visualize_hcgif:
+         del render
+     
+-    print(f"Sequence {root} completed and cleaned up")
+\ No newline at end of file
++    print(f"Sequence {root} completed and cleaned up")

@@ -1,0 +1,450 @@
+{
+  "egobody": {
+    "r1": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          0.9463205041657357,
+          1.2016340197049076
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 1.0722935308124903,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          0.03835674648807499,
+          0.0668156730211849
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 0.05196463608911237,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          202.93664351706508,
+          304.34743167144376
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 252.42978537642205,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          184.82329398812783,
+          298.01613734720735
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 241.34448936876885,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          127.49528479998155,
+          189.60099557194167
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 157.68887448842185,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          171.34215549260225,
+          288.9539080089219
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 230.06572513499643,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      }
+    },
+    "r2": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          0.9921022766089599,
+          1.2537052806179532
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 1.1215816014549156,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          0.00046512315158638457,
+          0.00538729172918435
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 0.002676565446687311,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          431.9011293435188,
+          549.9476823981236
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 491.12876336699475,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          -40.38502734162684,
+          53.83522106339213
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 2.6455113781961077,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          323.8370966784467,
+          423.95553205536345
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 374.4247150465381,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          -30.442839829455895,
+          67.25137738792114
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 13.329884576880161,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      }
+    },
+    "r3": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          0.9932195228056941,
+          1.252154952889335
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 1.1210491881868252,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          0.000826111777330148,
+          0.005917887404127479
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 0.0032089787147774555,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          -95.54644102997592,
+          124.75076060750253
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 19.407350137887914,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          373.3639380100861,
+          585.6713769410981
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 474.36692460730285,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          35.45376495155998,
+          142.84937399794677
+        ],
+        "common_case_count": 129,
+        "delta_definition": "R0 - method",
+        "mean": 92.55898607786945,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          239.03496767229305,
+          358.01532174114567
+        ],
+        "common_case_count": 129,
+        "delta_definition": "method - Shot3R",
+        "mean": 295.1956135455489,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 43
+      }
+    }
+  },
+  "egohumans": {
+    "r1": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          0.9012650347518874,
+          1.4186829040487734
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 1.1411648032560318,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          1.5518706683917636,
+          2.470795457353354
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 1.9886486443180469,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          -48.83321624263446,
+          82.15216725095456
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 14.049056383804544,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          191.14710932282318,
+          452.6716447338195
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 320.3167666511767,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          4.217839060604885,
+          37.89756648524121
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 20.604811255467595,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          64.81292770534012,
+          173.78260185397286
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 116.44785394820758,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      }
+    },
+    "r2": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          2.0015146833844772,
+          3.6959352961639818
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 2.8060363107706396,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          -0.19748421947212838,
+          0.8463264874569159
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 0.32377713680343917,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          174.1309384788588,
+          442.35660327700714
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 309.4925965401999,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          -102.04701344644538,
+          134.00480316749628
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 24.873226494781377,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          85.20212248897664,
+          192.33497726605128
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 134.96309634599476,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          -23.216181004834734,
+          30.103016285273053
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 2.0895688576803964,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      }
+    },
+    "r3": {
+      "ate_m_vs_r0": {
+        "ci95": [
+          0.27162399578677965,
+          0.7340008993298489
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 0.49147167539220216,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "ate_m_vs_shot3r": {
+        "ci95": [
+          1.9856355425452663,
+          3.346905012256932
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 2.6383417721818763,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_r0": {
+        "ci95": [
+          -206.96097155394844,
+          -24.342496638957595
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": -107.03213426903515,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "w_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          270.92095934126024,
+          620.5439655522423
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 441.3979573040165,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_r0": {
+        "ci95": [
+          -7.330304357770718,
+          14.774622572987171
+        ],
+        "common_case_count": 90,
+        "delta_definition": "R0 - method",
+        "mean": 3.3299585038005035,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      },
+      "wa_mpjpe_mm_vs_shot3r": {
+        "ci95": [
+          82.99836927574762,
+          190.0379879421383
+        ],
+        "common_case_count": 90,
+        "delta_definition": "method - Shot3R",
+        "mean": 133.72270669987464,
+        "positive_means_comparator_lower_error": true,
+        "samples": 100000,
+        "unit_count": 27
+      }
+    }
+  }
+}
