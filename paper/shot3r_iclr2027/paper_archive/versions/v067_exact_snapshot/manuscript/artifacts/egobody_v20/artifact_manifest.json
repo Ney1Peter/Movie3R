@@ -1,0 +1,2612 @@
+{
+  "contracts": {
+    "deployed_single_method_fps_available": false,
+    "frozen_final_geometry": {
+      "boundary_blend": 0.5,
+      "boundary_kind": "translation",
+      "camera_alpha": 1.0,
+      "fallback_to_parent": false,
+      "identity": null,
+      "parent_reuse_trigger": "detector_miss_only",
+      "reliability_gate_enabled": false
+    },
+    "gpu_peak_memory_available": false,
+    "main_table_aggregation": "mean over three cases within recording, then equal-weight mean/bootstrap over recordings",
+    "multi_thumbs_directly_comparable": false,
+    "recorded_memory_scope": "process peak host RSS only",
+    "test_candidate_frozen_before_metrics": true,
+    "test_consumption_ledger_sha256": "a3c7dc7af354b43b98551fbdd71cf59f9257dffa78e9c265c8785eb4c2a8fbd0",
+    "timing_hardware_normalized": false
+  },
+  "expected_output_names": [
+    "recording_macro_main.csv",
+    "recording_macro_main.json",
+    "recording_macro_main.tex",
+    "recording_macro_primary.tex",
+    "recording_macro_local.tex",
+    "recording_macro_boundary.tex",
+    "angle_strata.csv",
+    "angle_strata.tex",
+    "detector_cases.csv",
+    "detector_summary.csv",
+    "detector_summary.json",
+    "detector_table.tex",
+    "safety_summary.csv",
+    "safety_summary.json",
+    "safety_table.tex",
+    "accepted_harm_cases.csv",
+    "worst_accepted_harm.csv",
+    "worst_accepted_harm.json",
+    "runtime_cases.csv",
+    "runtime_summary.csv",
+    "runtime_summary.json",
+    "runtime_components.tex",
+    "multithumbs_context.csv",
+    "multithumbs_context.json",
+    "multithumbs_context.tex",
+    "ARTIFACT_SUMMARY.md"
+  ],
+  "final_method": "v19_ungated_translation_b050",
+  "outputs": [
+    {
+      "bytes": 4315,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_main.csv",
+      "role": "generated_artifact",
+      "sha256": "6f369fd2fa0cc30df07a6ab3f86724dcbbb904b8fdb605481be314f84021c0fd"
+    },
+    {
+      "bytes": 36619,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_main.json",
+      "role": "generated_artifact",
+      "sha256": "05df5a82fe51de66660d6c99774516d8a5587cdc300711e6360fe2038e8d7710"
+    },
+    {
+      "bytes": 845,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_main.tex",
+      "role": "generated_artifact",
+      "sha256": "9e8564d2aaad063c05dd82bed1cc06cc6a4a8c001ee198ff70e2969d1ad82c7a"
+    },
+    {
+      "bytes": 845,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_primary.tex",
+      "role": "generated_artifact",
+      "sha256": "9e8564d2aaad063c05dd82bed1cc06cc6a4a8c001ee198ff70e2969d1ad82c7a"
+    },
+    {
+      "bytes": 1581,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_local.tex",
+      "role": "generated_artifact",
+      "sha256": "0d6a1094b6bb600a14ddbe3c1e21fd2e19de25cc83902f729ea2f58f8fb87035"
+    },
+    {
+      "bytes": 1618,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/recording_macro_boundary.tex",
+      "role": "generated_artifact",
+      "sha256": "2d9d4b28c0a67eb47bd1b736cdc0d26a03e489650fa92e90f6837f1d6e040439"
+    },
+    {
+      "bytes": 12253,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/angle_strata.csv",
+      "role": "generated_artifact",
+      "sha256": "4a15ab1c9a9e263d43f31de32f52e864d0dbe67c108ecc0c82fd6c40e62189de"
+    },
+    {
+      "bytes": 2171,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/angle_strata.tex",
+      "role": "generated_artifact",
+      "sha256": "90dd9dcd6cd7a19ef7dd46d35e956c2bec483105fa0196fee40d5cef33978700"
+    },
+    {
+      "bytes": 62423,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/detector_cases.csv",
+      "role": "generated_artifact",
+      "sha256": "00f885c34aee991aa437406a7554e99be51cc7ba5e92997749d26e6493666d38"
+    },
+    {
+      "bytes": 591,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/detector_summary.csv",
+      "role": "generated_artifact",
+      "sha256": "88c9f008d7a413711c91ca14de2442c9e1cbc8a450aee339b82d27328be84e27"
+    },
+    {
+      "bytes": 1760,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/detector_summary.json",
+      "role": "generated_artifact",
+      "sha256": "5d12ef2fd64bd09fff048d3cc14b43c3bde839727f4765fa6788e0cf50550430"
+    },
+    {
+      "bytes": 556,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/detector_table.tex",
+      "role": "generated_artifact",
+      "sha256": "7d0b4324e587b9347eb92782dde69a322fe0458f614a622a039d1442e096e414"
+    },
+    {
+      "bytes": 3371,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/safety_summary.csv",
+      "role": "generated_artifact",
+      "sha256": "a01677e35e905408b0be75026610414ef3a5a411ba1c76246fe44a36a8c75687"
+    },
+    {
+      "bytes": 14215,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/safety_summary.json",
+      "role": "generated_artifact",
+      "sha256": "c8f0f12d909a84c0f66edd1d1366fcf55baf6a604e15619a3fda7577101f81b2"
+    },
+    {
+      "bytes": 571,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/safety_table.tex",
+      "role": "generated_artifact",
+      "sha256": "6a05737f1404df1b0d4598b86e0e999566abab8df44822d6924dbcd0dea6e9c1"
+    },
+    {
+      "bytes": 290021,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/accepted_harm_cases.csv",
+      "role": "generated_artifact",
+      "sha256": "c4509a2996388f40eccd26c66cf0f47d09f7c38748087f9b6014e3f5139ec791"
+    },
+    {
+      "bytes": 2528,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/worst_accepted_harm.csv",
+      "role": "generated_artifact",
+      "sha256": "5782c3ecbdc01eca35c893f868bf738f291062117d409214d9bbad0f742c09f0"
+    },
+    {
+      "bytes": 4987,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/worst_accepted_harm.json",
+      "role": "generated_artifact",
+      "sha256": "db9657094fe6f1f5f5aa161d2cf100116e25eac16d2da3d4a7e68e7b77eaa226"
+    },
+    {
+      "bytes": 93350,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/runtime_cases.csv",
+      "role": "generated_artifact",
+      "sha256": "281595a2fb4ec49c08ba9e65bdd375ab19a552fb0d5d0a6bbf97101bfab3b00f"
+    },
+    {
+      "bytes": 1892,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/runtime_summary.csv",
+      "role": "generated_artifact",
+      "sha256": "cb7077ecdc0ec3d74fd54d311e3e6b90d538f29a214ede313c64dbb22d422b78"
+    },
+    {
+      "bytes": 3071,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/runtime_summary.json",
+      "role": "generated_artifact",
+      "sha256": "0754d8fb268dfde1b72c4bec1a33df018c659a55b869bcecce22625097c50c0e"
+    },
+    {
+      "bytes": 415,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/runtime_components.tex",
+      "role": "generated_artifact",
+      "sha256": "d258699d4ece23182cb418eb0a854642eea7833524b31b78e448ace645431e84"
+    },
+    {
+      "bytes": 999,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/multithumbs_context.csv",
+      "role": "generated_artifact",
+      "sha256": "c8b8f65a5cdcfdbf6569e4b6487328b9286f2def6eb0b256c670a24e118062f4"
+    },
+    {
+      "bytes": 1826,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/multithumbs_context.json",
+      "role": "generated_artifact",
+      "sha256": "9a793db7046ef8e8ee68360626a5f2e3f13f84b4d8431fc42f4f5c5018a87da6"
+    },
+    {
+      "bytes": 506,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/multithumbs_context.tex",
+      "role": "generated_artifact",
+      "sha256": "d64631a3e428891f85c4708ecd512251a81895531893101baf1ee460db13c429"
+    },
+    {
+      "bytes": 885,
+      "path": "/data/wangzheng/iJCV-CODE/ICLR-paper/movie3r_iclr2027_draft/artifacts/egobody_v20/ARTIFACT_SUMMARY.md",
+      "role": "generated_artifact",
+      "sha256": "d07112ec818bd10eadb681214bbbf889183cfec3441687095113fed8536e6e78"
+    }
+  ],
+  "protocol": "Bridge3R-EgoBody-CS150-v1",
+  "schema_version": "Bridge3R-EgoBody-CS150-paper-artifacts-v2",
+  "source_candidate_name": "v19_ungated_translation_b050",
+  "sources": [
+    {
+      "bytes": 1334352,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/aggregate/case_metrics.csv",
+      "role": "development:case_metrics",
+      "sha256": "24b2a8624078869db88c143ef110075d0b927d4b88b44eab652651a367eba313"
+    },
+    {
+      "bytes": 392032,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/aggregate/recording_metrics.csv",
+      "role": "development:recording_metrics",
+      "sha256": "df8bc3281ab1c8e2838790dff285d44ff40405cf578df2cfc62264bdfcf49f14"
+    },
+    {
+      "bytes": 237058,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/aggregate/summary.json",
+      "role": "development:summary_path",
+      "sha256": "4afb174b9cd68836b23ba8964599a78b7fb3192794b06f85629d584a360b22f7"
+    },
+    {
+      "bytes": 29115257,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/candidate_reports/development_candidates_b878b9f42327.json",
+      "role": "development:candidate_report",
+      "sha256": "0c9edae4c1845cad68cdf5f4ae269a2279799df7dd6d7240fb1fb59882242502"
+    },
+    {
+      "bytes": 93092,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S02_S01_01_extreme_kinect_11_kinect_13_b02196.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fb8c4878fc21a6a7eee54107d837fad5fe39eb49fb068d2e49555cfcca8865a3"
+    },
+    {
+      "bytes": 97278,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S02_S01_01_medium_kinect_12_kinect_13_b02196.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5a4c777a4a2d69076fbf574f38048d5e30e8f7acaff990f262995602010ec4b9"
+    },
+    {
+      "bytes": 81209,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S02_S01_01_small_kinect_12_kinect_11_b02196.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cdf8e6d924a28c53a0b7cce6b1048b983f1bb2f587237bf32b1f0c4dd032fce2"
+    },
+    {
+      "bytes": 97477,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_01_extreme_kinect_11_kinect_13_b02471.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "37794656027285c0bedba99672813d3330236877d59375af7038880e336f2c07"
+    },
+    {
+      "bytes": 97611,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_01_medium_kinect_12_kinect_13_b02471.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b4c53f6a8e542a7292c7601855054505c4c299167b0b7015182c7612ee9db3bc"
+    },
+    {
+      "bytes": 116903,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_01_small_kinect_12_kinect_11_b02471.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "05eca0168f32b1173109d89cb746cc99ef681623684b66295d3fd26ffd4b27b3"
+    },
+    {
+      "bytes": 94584,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_02_extreme_kinect_13_kinect_11_b02176.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "558ed50ad191721a3cc78717733a24169557a0fc94348ac50663480fb6f3e732"
+    },
+    {
+      "bytes": 116833,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_02_medium_kinect_12_kinect_13_b02176.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7865a99714ee307db775b3b6011aa8caac8259b09423e7cdaa19e4001910dc1a"
+    },
+    {
+      "bytes": 112807,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210907_S04_S03_02_small_kinect_11_kinect_12_b02176.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e4997a88ec499bc1380949f7ac6f57c5f6326b02e18d7b377f144e15d0f35880"
+    },
+    {
+      "bytes": 97259,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S05_S06_01_extreme_kinect_11_kinect_13_b02971.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c3dadea96064d3256be83e7ba5d66faa7a53bef61e7742b4794d22cf07889f55"
+    },
+    {
+      "bytes": 97274,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S05_S06_01_medium_kinect_12_kinect_11_b02971.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cb1cbf4476014c2e64344c87243fbcbd2ec6f2bba8634047103e7a7e4f91de9f"
+    },
+    {
+      "bytes": 97357,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S05_S06_01_small_kinect_12_kinect_13_b02971.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "74386e6925272a1f7a00a14413052ae74fe51d77a4e486828a7da8383c4014d2"
+    },
+    {
+      "bytes": 116723,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_01_extreme_kinect_13_kinect_11_b01411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "6eb53a323fdd84b3afeee45ee081fccd8dffa4c455f456c8243e4c0e4cc4a96b"
+    },
+    {
+      "bytes": 116795,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_01_medium_kinect_12_kinect_11_b01411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "08a85a470ec06446b8b0a89c65752f3b9a0f854920a042d9270c0b9b4391ab9e"
+    },
+    {
+      "bytes": 97184,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_01_small_kinect_13_kinect_12_b01411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cf6d308d1364c82607e33f87a9ff019e28555fcf40bf05a14a3687dd4578bcc4"
+    },
+    {
+      "bytes": 97125,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_02_extreme_kinect_11_kinect_13_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "130b6e741a00f38616d9b95c5f3b42ee9914fa5ed96ebd57d7f67f3f94480dbf"
+    },
+    {
+      "bytes": 56929,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_02_medium_kinect_12_kinect_11_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a0e7d237858fe607ccca04f97dba713bfe85798a3ac7913ccf516c368cef812f"
+    },
+    {
+      "bytes": 97203,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_02_small_kinect_13_kinect_12_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cf75a70bc0baa1663e603e66ed7d860b32a62b1294b8fac542edfd8019fc765e"
+    },
+    {
+      "bytes": 97191,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_03_extreme_kinect_13_kinect_11_b02716.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "325c96a5274eff6de9d84ea4901ca87f465435ec8a84cc4b52b648f3de1d1e87"
+    },
+    {
+      "bytes": 97290,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_03_medium_kinect_12_kinect_11_b02716.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f5c9257570612e82d19fa30fa9f3207cdb918c46a8170e786940ecbdbc79accc"
+    },
+    {
+      "bytes": 97562,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210910_S06_S05_03_small_kinect_12_kinect_13_b02716.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e5c1e6e60f7c086b1f9b2c1bed894f4ef7c2b9eee4b677e7f0fed97344e8f979"
+    },
+    {
+      "bytes": 116675,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_01_extreme_kinect_13_kinect_11_b03451.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "45238e9f83492467b9d896b9ad09653a6849087ad96d2b988c26294658b6a323"
+    },
+    {
+      "bytes": 116761,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_01_medium_kinect_12_kinect_11_b03451.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b3dc168098cc24f224f431490dcc739820ae1eb9a3467fd28fffc7f84ed0201a"
+    },
+    {
+      "bytes": 116758,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_01_small_kinect_13_kinect_12_b03451.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c7157b73c64ab6488100697d90f528e7b212c53fd082a79fed7846c65213b66e"
+    },
+    {
+      "bytes": 116831,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_02_extreme_kinect_11_kinect_13_b02246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "2cfe0b9e88654b666c71a83ee76e035d92e50b272d294916c4c1e3e7627da593"
+    },
+    {
+      "bytes": 97232,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_02_medium_kinect_12_kinect_11_b02246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ea147d23cdefcca37a040741d256620605708d97dceb22a81510bcb458e7e13c"
+    },
+    {
+      "bytes": 116818,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S06_S07_02_small_kinect_13_kinect_12_b02246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f794656fcf502d0ddb18a1db042108f9aee66f7a676fe289e2582541e766cc54"
+    },
+    {
+      "bytes": 97102,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_01_extreme_kinect_11_kinect_13_b02166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "6da3ea39b93f27e14f1607b2bb0bf8edb32935c6ae9b19dc317a7202d380a5d2"
+    },
+    {
+      "bytes": 97165,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_01_medium_kinect_11_kinect_12_b02166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9f563b40a512c2d7357f7895923985930c857a36019df70f5d26abe1060a6684"
+    },
+    {
+      "bytes": 97130,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_01_small_kinect_13_kinect_12_b02166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "8a9880184f0a3d252b0836770d1b7dcbbe76c211ed857be9203ac8274d04f19a"
+    },
+    {
+      "bytes": 116777,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_02_extreme_kinect_11_kinect_13_b01351.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "2fd19e977463eed7ae4a8415ce91a282b085af20905ff62e30f04790994020c2"
+    },
+    {
+      "bytes": 116844,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_02_medium_kinect_11_kinect_12_b01351.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "aefec17b0c7738d56c0632deb4f594ec52a5b254026eaa16a6d4a8e99416f37a"
+    },
+    {
+      "bytes": 116887,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_02_small_kinect_12_kinect_13_b01351.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "90c304ac4a066fabc351608cf297ded463e66646daf35dc0807ee7c66afbc491"
+    },
+    {
+      "bytes": 97223,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_03_extreme_kinect_11_kinect_13_b02231.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "1312652c36c83534bccb7461ba680d723384f32033e6669629539b0875b27e9b"
+    },
+    {
+      "bytes": 97216,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_03_medium_kinect_11_kinect_12_b02231.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "8c38e58f9cb9444dbf9769fd60dad266b09c8997d25ac22c2b336377b59f9708"
+    },
+    {
+      "bytes": 97190,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S07_S06_03_small_kinect_13_kinect_12_b02231.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "554382f37a1bc7d10a02c4bfaeba86b6f9749037f021c7da3358bfa8724a828d"
+    },
+    {
+      "bytes": 116693,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_01_extreme_kinect_11_kinect_13_b02986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4eebcb606b85c72377a5f746fd4cc11c8477d2fcc21cb2f366d8009ddf33a6c8"
+    },
+    {
+      "bytes": 116726,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_01_medium_kinect_12_kinect_11_b02986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7823c173826ad5e809ac129fb0c24d0c83e844a0728fa9cff362a66303af9b06"
+    },
+    {
+      "bytes": 116758,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_01_small_kinect_12_kinect_13_b02986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ac55f1cad1bf92bb7aa14395e33f5db3ddc4e7ed01482ffa3b01ef2a199098a4"
+    },
+    {
+      "bytes": 116763,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_02_extreme_kinect_13_kinect_11_b02326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cb41719757f05eeb2c9c86cb31714c8ba01cb2ce2bed3f3a25dd9baeecbca525"
+    },
+    {
+      "bytes": 116844,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_02_medium_kinect_12_kinect_11_b02326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5fcb7fa4010f78e2feb8e7c2b03b56a0aa95f520d5d4cbdd98f10b47d435258a"
+    },
+    {
+      "bytes": 116839,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_02_small_kinect_13_kinect_12_b02326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "320eb0c55a962aecd4c6f0f2099310157dcb629bb4f8ebc1310825f16d7d36e0"
+    },
+    {
+      "bytes": 116791,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_03_extreme_kinect_11_kinect_13_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "07a6993124be2563e3499edf4c9fc896c369a6e485d0da5df1dff1898b23bce4"
+    },
+    {
+      "bytes": 116786,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_03_medium_kinect_12_kinect_11_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "6d3b14ce07570664947b8453174cca8abed98ed1ff9ddb1bf76423f93e8dc155"
+    },
+    {
+      "bytes": 116863,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210911_S08_S03_03_small_kinect_12_kinect_13_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "dc8a6cfe04b2276f8fc0368e4417cd50be6c69976a8bed98d4ce5d045519f204"
+    },
+    {
+      "bytes": 97119,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_01_extreme_kinect_13_kinect_11_b02931.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "8d1faa0824c469ff87386124a5724f836823160f67cf1ee9869d3f5f0c90ee27"
+    },
+    {
+      "bytes": 116729,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_01_medium_kinect_12_kinect_13_b02931.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "8efd69a12620ef5d7a84f2fefaaeda050a4d0be1da8ed3ebbdc9ae2a68fe3b35"
+    },
+    {
+      "bytes": 97139,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_01_small_kinect_12_kinect_11_b02931.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cf191cc11ae3788c852ee4944f879cd4bc7d23f249ce363948af566b09ca18ae"
+    },
+    {
+      "bytes": 97193,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_02_extreme_kinect_11_kinect_13_b02371.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f5303f8b2cab784f3274aeb8ecf6ef479581badbf7047b51e009debc33fba9e4"
+    },
+    {
+      "bytes": 97198,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_02_medium_kinect_13_kinect_12_b02371.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "80af599635a3dd6c58829a917b8d0d7bac4c6ae5f624ebac086612e8d9523a5b"
+    },
+    {
+      "bytes": 97254,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_02_small_kinect_11_kinect_12_b02371.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "1eb2ef08458a7184489f6294f3236061d66ec067bd71f4213c385a2edd94f2ff"
+    },
+    {
+      "bytes": 116891,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_03_extreme_kinect_13_kinect_11_b01956.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "2749941f13979b7ece7651b4affea2e98e09ba8a050e6e2704ca3a48852ae9a5"
+    },
+    {
+      "bytes": 116880,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_03_medium_kinect_12_kinect_13_b01956.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "be6c4b66a5bbf2c638c3ca58521aca3ce3ee4e37b54e908a3859549a012ebb2f"
+    },
+    {
+      "bytes": 116963,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_03_small_kinect_12_kinect_11_b01956.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7ebdcdde026d7b3bcd9aad171caf03fa6cedf488f0f372a61f75611412fafd4a"
+    },
+    {
+      "bytes": 116866,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_04_extreme_kinect_13_kinect_11_b03651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b0edb136c51a961ef1149b214a600e79728ac44536d48bd443ccd54c73d3c8db"
+    },
+    {
+      "bytes": 116916,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_04_medium_kinect_13_kinect_12_b03651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7549cbf76ea4d9bf8890ddeeae2aa146911906aacf8e1603215935f4cc9d34b8"
+    },
+    {
+      "bytes": 116948,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_04_small_kinect_11_kinect_12_b03651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9d698a5c9356402f3bac6c9cf5a96d20d6eb134763d12a09c9b5a52c3f5b3f7c"
+    },
+    {
+      "bytes": 97525,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_05_extreme_kinect_13_kinect_11_b02446.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "81f09e0e7224914cc0c418adc96e3f7920b8d5ba5d3381561757146adf2ccfff"
+    },
+    {
+      "bytes": 116937,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_05_medium_kinect_13_kinect_12_b02446.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "6ae58f16d5286047dc4ef08ede9f3f74236694533ded107b220d0aca5c6091ca"
+    },
+    {
+      "bytes": 97610,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S06_05_small_kinect_12_kinect_11_b02446.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c27a46ec5fff776a08c919ac7dfe363099caac5ac4aad15295a12d15ed23109b"
+    },
+    {
+      "bytes": 116880,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S09_01_extreme_kinect_13_kinect_11_b02171.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c98633a0b46102cd40c300b0076614fab55ed9fb48e6233dc3b47e70cafbe338"
+    },
+    {
+      "bytes": 116925,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S09_01_medium_kinect_13_kinect_12_b02171.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "87d8e3e661f5e2cfdb85ea4f7dc65082a040d70b937c6fb3689bc8b2f39db0c6"
+    },
+    {
+      "bytes": 116971,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S05_S09_01_small_kinect_11_kinect_12_b02171.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e3b89e4df8bc81b5e71ba68ec1628be768a095ff8c32fc48d6f037e507b64fab"
+    },
+    {
+      "bytes": 116806,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_01_extreme_kinect_13_kinect_11_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c8e42aca04030df3b98cf8b833710b02824d704b40ab3891099e4b861a3d47b4"
+    },
+    {
+      "bytes": 57866,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_01_medium_kinect_13_kinect_12_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4927084b65db562733a25440c3d34e66e1f050516b04eb9ce533dd7174c35cbf"
+    },
+    {
+      "bytes": 57949,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_01_small_kinect_11_kinect_12_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "865f2912d284082b455e61be55fcbe3b1f9302f214c1a21e398f78fbb8a2c7e0"
+    },
+    {
+      "bytes": 116962,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_02_extreme_kinect_11_kinect_13_b03571.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "dcbf5549b6be9269834d9df55bbc5266ee7c1c819d6e8d383412302685bd74ae"
+    },
+    {
+      "bytes": 117010,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_02_medium_kinect_12_kinect_13_b03571.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4d3b15f3f05e23ebad65cf0ba7b9bdbf6bc402cdcb151ac385f53bb3587f2341"
+    },
+    {
+      "bytes": 116926,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_02_small_kinect_12_kinect_11_b03571.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4fb0f3be46b79afbf0f2256974401e0aaa352e24bd764cabed94d87ac16dfc4e"
+    },
+    {
+      "bytes": 116872,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_03_extreme_kinect_13_kinect_11_b01166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "074c66eac811874be4bff579bca0ec00aa22a4ab8a0d0a553c8efebdd57acce0"
+    },
+    {
+      "bytes": 116855,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_03_medium_kinect_12_kinect_13_b01166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "24549428a7d418ff1faeff2c2192df5852b031dc64d37bddc1e51b0d7c395d8c"
+    },
+    {
+      "bytes": 116968,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S06_S05_03_small_kinect_12_kinect_11_b01166.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "543554f57f6d163c6560c7a1e7b150555696357954bdeb8c20809910109928f9"
+    },
+    {
+      "bytes": 97458,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_01_extreme_kinect_13_kinect_11_b02021.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "3c24aec083469e2263986939b0219aeab0b6da0d1a0e47ed234a416e6eddfb81"
+    },
+    {
+      "bytes": 97205,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_01_medium_kinect_12_kinect_13_b02021.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a1e191cdeb5d4f60857ce4fe75847e513db6638ce52d8005bf7954bee1da9fd8"
+    },
+    {
+      "bytes": 97588,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_01_small_kinect_12_kinect_11_b02021.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f6ed4df7dcdb8d4783ec68d79d3cc244fa064ec18e502147956eec3a66ec0324"
+    },
+    {
+      "bytes": 116909,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_02_extreme_kinect_13_kinect_11_b03726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a634a770ec02794a05e95b7d357d579b29b317fe2b496a078ec85dd2a96a1217"
+    },
+    {
+      "bytes": 116845,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_02_medium_kinect_13_kinect_12_b03726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "de9d7302b3f3b3fa1ceb16251848d87cfe232ea97c3d4d38f7adb872ec3ed5cb"
+    },
+    {
+      "bytes": 116878,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_02_small_kinect_11_kinect_12_b03726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fd49c99a5ae5789995763efc6e363ae9da1ec8c5b1c27a44ce8e3cb5299b7e61"
+    },
+    {
+      "bytes": 116910,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_03_extreme_kinect_13_kinect_11_b02121.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a74dfcf693f76c59919f4b820b43684d209b13f641070d46cb770b5c80ec8e48"
+    },
+    {
+      "bytes": 117011,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_03_medium_kinect_13_kinect_12_b02121.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "3632dcbcce1e0abfb305c6ee8cd08518357d607afb97bec70154dc67f718b897"
+    },
+    {
+      "bytes": 117109,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210918_S09_S05_03_small_kinect_11_kinect_12_b02121.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "30f52771daae72a6b8ab6d9b158249d3869f6a784fcb4b04ef81e642e5880ea4"
+    },
+    {
+      "bytes": 116962,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_01_extreme_kinect_13_kinect_11_b02266.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "66f8c648f3e55a99e5179e5da3c06f9df65b32ac2fc430824d42280fe8df2b62"
+    },
+    {
+      "bytes": 117004,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_01_medium_kinect_12_kinect_11_b02266.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "caf38e1c3974dabc9c62dd431cb00badb44bffa0aa570fe5fd8e308e3763cd69"
+    },
+    {
+      "bytes": 116922,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_01_small_kinect_13_kinect_12_b02266.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ad26efca3921903ccbc320f592fac8d3091717a8cd62bd883101bfa36f9ae2d0"
+    },
+    {
+      "bytes": 116840,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_02_extreme_kinect_13_kinect_11_b02411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5b67819f4166ba8d6cf2f03d7a1e9ad7e9f851f04ce92b5d7a19403cc1d1d605"
+    },
+    {
+      "bytes": 116912,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_02_medium_kinect_12_kinect_11_b02411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fb7cfb65bc7cbcb63d22eb90e741f0bb65e28df939e82f553f448ebeba0e82e6"
+    },
+    {
+      "bytes": 116916,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210921_S10_S11_02_small_kinect_13_kinect_12_b02411.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4117673ac802f7dd97cd16ddbd99fd21ecc4c27b6a393adba9d93fcce2a4a54e"
+    },
+    {
+      "bytes": 116763,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_01_extreme_kinect_13_kinect_11_b02761.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "8a0c3e58e907c54e36fcf96cbf23b59dcb52a6623b0d401c3c73f7d079f5d050"
+    },
+    {
+      "bytes": 115385,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_01_medium_kinect_12_kinect_11_b02761.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "aa1985b20c256a38975fcfd67ea3399cb5ab4fe0176acb0ff5e376b31af909d8"
+    },
+    {
+      "bytes": 115391,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_01_small_kinect_12_kinect_13_b02761.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ec67eeafeecf5ed85e767124ff777cedf4d2dc79eaf3561b8a245c31fba22952"
+    },
+    {
+      "bytes": 115312,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_02_extreme_kinect_13_kinect_11_b04071.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9ea1d16b4465f4a6c9e2d9be8b0d48942d7d8c23a85d1106ee5becd2e690a201"
+    },
+    {
+      "bytes": 116751,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_02_medium_kinect_12_kinect_11_b04071.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "02822fa95c0b0f932b62ba5f3788c1568d3941a449f980f98ff39099b335bcb6"
+    },
+    {
+      "bytes": 115404,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S05_S13_02_small_kinect_13_kinect_12_b04071.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "2daed6417ed0b172967a8411e0879f2892cab454c0b26f3a5829ea9ef0b0fa64"
+    },
+    {
+      "bytes": 97236,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S13_S05_01_extreme_kinect_11_kinect_13_b02401.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b9872c69f490a3ae53b2f5fd0667f8bc2a05ea45b3b28d24fcfe36ca22342675"
+    },
+    {
+      "bytes": 97253,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S13_S05_01_medium_kinect_11_kinect_12_b02401.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "02e3c0eae9a76935031794aee8f1a0252b50de00fde89b595ad2c3b6a9c90ab0"
+    },
+    {
+      "bytes": 97283,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S13_S05_01_small_kinect_13_kinect_12_b02401.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "03c7a5a04e4f2d02c0fe8c0fc0a9e6aa72135e9ac40144bf7fa3e65db20322d7"
+    },
+    {
+      "bytes": 116894,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_01_extreme_kinect_13_kinect_11_b02046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a7506474dc0d216d66d88d4632d3902ca8f2f35221057f66c9be48dd9a4f3547"
+    },
+    {
+      "bytes": 116895,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_01_medium_kinect_12_kinect_11_b02046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7c1d6c901e9ca728fc0952a56cfac950b42d51b449a0f890acb56c083b2cdb24"
+    },
+    {
+      "bytes": 117107,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_01_small_kinect_12_kinect_13_b02046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c04617d51dd3caf1bfd47b46e478136cb505b6dbb881ac9986edbb21482290c7"
+    },
+    {
+      "bytes": 116666,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_02_extreme_kinect_11_kinect_13_b01601.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "0d5ce5a213e50a1a0d1a0ad92a34a7744976f899bb30ff80e8526ec787b3a9ed"
+    },
+    {
+      "bytes": 116815,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_02_medium_kinect_12_kinect_11_b01601.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4fe38f7b26a0bd49c92973eaa563112f3d5d18b46cbf7701c08692eaa7c55738"
+    },
+    {
+      "bytes": 97145,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_02_small_kinect_13_kinect_12_b01601.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "07f7188bfa76f540af8520b157445d2c46c48acb474774ccad09ad6ec490115a"
+    },
+    {
+      "bytes": 116726,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_03_extreme_kinect_13_kinect_11_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "219af1dfb6b82c94f55b3fcd9402650dc6f7c66c3330bcc9012df1a66c92b33e"
+    },
+    {
+      "bytes": 116779,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_03_medium_kinect_12_kinect_11_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "d01a7f8ad9f6a12bb4484a5e4d82d4dc95fc47498bb0de64ad0258f995a3ca30"
+    },
+    {
+      "bytes": 116741,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210923_S14_S03_03_small_kinect_13_kinect_12_b02456.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "208bbf512e440446eb5227a709173db30bb713e81e38ce0286768d67a273c54d"
+    },
+    {
+      "bytes": 116523,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_01_extreme_kinect_11_kinect_13_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ea0146e758e67ccaf77207020ee45be767510a519c39d7888dc80ae6c8739e4d"
+    },
+    {
+      "bytes": 116847,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_01_medium_kinect_12_kinect_11_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "250bf64d86dfcb37ad919395e8c89776fb5286863b272a08af70f18fb2cae803"
+    },
+    {
+      "bytes": 116875,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_01_small_kinect_13_kinect_12_b02726.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "0e1ea9a001fdd2b6a0fdbb02fc708665ac5b2176667ff238a3a1fc27a3dce96a"
+    },
+    {
+      "bytes": 116734,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_02_extreme_kinect_11_kinect_13_b04466.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "100f09f7f5aa13d0a140359a99822df2bc465fcb934e57cd251b2820f0ed845d"
+    },
+    {
+      "bytes": 116940,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_02_medium_kinect_11_kinect_12_b04466.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "6cf23a6787e879fa334ccfae561f74bc20392e60e8763e9fdc7b462c8eb2817b"
+    },
+    {
+      "bytes": 116806,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_02_small_kinect_12_kinect_13_b04466.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "89a0d30eb69bf7638c900f30de1e7192bb12e7390cd916a927434e2015554afd"
+    },
+    {
+      "bytes": 116972,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_03_extreme_kinect_13_kinect_11_b01946.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ae84f5fb458e9e53e8d156a4047ba995cc73643d24256230a09d4e782e7f53f9"
+    },
+    {
+      "bytes": 117013,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_03_medium_kinect_12_kinect_11_b01946.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "aa393dc491a4e931ae897aae816a624c700573db441cf12364b1a9b8164dfb89"
+    },
+    {
+      "bytes": 116921,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S15_S11_03_small_kinect_12_kinect_13_b01946.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a259cbfe0da5fd764487566452d8bb8d13a3a13fa2e064c0cd0b8ed554cf1452"
+    },
+    {
+      "bytes": 116854,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S16_S05_01_extreme_kinect_13_kinect_11_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9e233c0e3d94444c0de27dca6c12aa9131cc0d3fe4b4ef95b89415b4094cbfc4"
+    },
+    {
+      "bytes": 116949,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S16_S05_01_medium_kinect_11_kinect_12_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5126eca177c4098d86524474dcfaaaa90ef205b4c985a592417efe178409ef68"
+    },
+    {
+      "bytes": 116933,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20210929_S16_S05_01_small_kinect_13_kinect_12_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e23197bc974aacea49e35528076b8bf49dd5dad9b06a0a3a07c5f6af98a6d769"
+    },
+    {
+      "bytes": 116941,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_01_extreme_kinect_11_kinect_13_b03246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "23fb24a7b3bdd177e886220f8f4172a2b3e054d6fa26969832ea50248ea4cf03"
+    },
+    {
+      "bytes": 116981,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_01_medium_kinect_12_kinect_13_b03246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "80a2ed75fa3ba9846a5f0794efe353291d6aea6a6ff96615bd197278170a94d5"
+    },
+    {
+      "bytes": 117016,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_01_small_kinect_11_kinect_12_b03246.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b38246fbfc8e4f4428fbab035416e5375ec29caf0992f65a8731ab1ddf21be94"
+    },
+    {
+      "bytes": 116820,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_02_extreme_kinect_13_kinect_11_b02431.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f4386a812f1859b801964ae2d3f93c861f0a420e5cfdcb07134c57983d9e7325"
+    },
+    {
+      "bytes": 116730,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_02_medium_kinect_12_kinect_13_b02431.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7b74d11e210c2eab118d1820c8a5e30cf728d6eab6ef4bbcd990e3f28effcba6"
+    },
+    {
+      "bytes": 116891,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S15_S17_02_small_kinect_12_kinect_11_b02431.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "11a4919fb98dc125cf99361d9012442005734f906b212f0b6a392573e53cdac0"
+    },
+    {
+      "bytes": 116817,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_01_extreme_kinect_13_kinect_11_b01651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9341299ad20e72526526f13b3924fcf680a9269151ef83e96753cc9aa21ac858"
+    },
+    {
+      "bytes": 116933,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_01_medium_kinect_12_kinect_13_b01651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "115835639d241ce9356a497032f39149d83e7da8b1510485ea57eca26d631836"
+    },
+    {
+      "bytes": 116900,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_01_small_kinect_12_kinect_11_b01651.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fbcc98f7df4210eb6aedb541f5524e2189d1d7527ab67d75a78d7ad745164395"
+    },
+    {
+      "bytes": 116886,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_02_extreme_kinect_13_kinect_11_b02781.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c7a471dd131ba47496a374647c3705438bbf5773b518344b78483620781f68ea"
+    },
+    {
+      "bytes": 116882,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_02_medium_kinect_12_kinect_13_b02781.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fdcca5a27dfe44db6190163ce332da79e31235da4a545202488665fe7bdd1638"
+    },
+    {
+      "bytes": 116977,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211002_S18_S03_02_small_kinect_12_kinect_11_b02781.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "eee9b9dea863f0ac66d7c588616ee096a4f660fd5d4e71e55ab511525d6e5042"
+    },
+    {
+      "bytes": 117002,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_01_extreme_kinect_11_kinect_13_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "53370fc23fe3caaa9810d494186ce0e114b110f867c618512338d5d8b8bb8772"
+    },
+    {
+      "bytes": 116908,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_01_medium_kinect_13_kinect_12_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e283e3a2cb809331225bd3ce32d8da4c57cb7f04c804a277c14a732048b2e8cf"
+    },
+    {
+      "bytes": 116847,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_01_small_kinect_11_kinect_12_b03136.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a82f1df96af7d8959b969cdbf8d9ee571da4092ec872a7c9dff893650996b1f3"
+    },
+    {
+      "bytes": 117473,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_02_extreme_kinect_13_kinect_11_b02621.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5a396e2dfede18e2116bd7db3413337e20acbe8111f858f0b417e8e03abcad01"
+    },
+    {
+      "bytes": 116823,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_02_medium_kinect_12_kinect_13_b02621.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cd2f145e2e48093eec86af593fabb65e8da86736e121ec462de2f49fd8441bcd"
+    },
+    {
+      "bytes": 116847,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_02_small_kinect_12_kinect_11_b02621.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "639a2fee13d916293229a28ababdb78e46b4a3e378662c677ce313c30d112377"
+    },
+    {
+      "bytes": 57850,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_03_extreme_kinect_11_kinect_13_b03986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5e2d8fcaa81781fc77ad12fb6bb8aedc6fd68dfcbb3f023f8d11222c55ec655a"
+    },
+    {
+      "bytes": 97212,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_03_medium_kinect_13_kinect_12_b03986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "87714b8b85750b3d870f5892c7503e943028ccf01527012480f9eabf61169a12"
+    },
+    {
+      "bytes": 97164,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_03_small_kinect_11_kinect_12_b03986.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "77e49487207c1ffdfbea26c045eb95361f42421213de24e7024539404963ffe2"
+    },
+    {
+      "bytes": 57911,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_04_extreme_kinect_11_kinect_13_b02011.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c9f45e38d7be74178530d98a02b51adeb592de49e03fb4200a93d513629a4d30"
+    },
+    {
+      "bytes": 57940,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_04_medium_kinect_12_kinect_13_b02011.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ad22f03dc8259af3421c7e980ccb128ec8dfd49190b0d6eda366b766cfc600d1"
+    },
+    {
+      "bytes": 116809,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_04_small_kinect_12_kinect_11_b02011.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "df4dc3b131fc4ed9c96864fe646e02643e8dffa21cecb5ed9ab1118f67d21ded"
+    },
+    {
+      "bytes": 116731,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_05_extreme_kinect_13_kinect_11_b03406.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "2718d3f327306e058ecd5c41508938eaffa0484d9cc9079485ae456fade7cceb"
+    },
+    {
+      "bytes": 116994,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_05_medium_kinect_12_kinect_13_b03406.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5f8991bbe35b415326da3687a25eaf4c585d4ac5420312db94772cb4dec89fbc"
+    },
+    {
+      "bytes": 97226,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20211004_S19_S06_05_small_kinect_11_kinect_12_b03406.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a6a982fdb8626d750f987611547fd0ee95468150e319f0b40aae4fe763d3f76f"
+    },
+    {
+      "bytes": 115289,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_01_extreme_kinect_15_kinect_14_b02706.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b6daafee02c468abfa0659689d1dfcd9be8ff284b58269981dbf8d55d3e40407"
+    },
+    {
+      "bytes": 116796,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_01_medium_kinect_14_kinect_12_b02706.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "1cfd714c7a5591008f24b7b1de1fe94ef346a8efe59176eaa6b9913d38528b39"
+    },
+    {
+      "bytes": 116850,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_01_small_kinect_11_kinect_12_b02706.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "91fafd2d39ab2a8e8910e318432dff03c927f005d56166abc35d3ef92d7070ae"
+    },
+    {
+      "bytes": 115359,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_02_extreme_kinect_15_kinect_14_b02681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "25482119df433cd91841bc6660630d4f797a78620940a2d97a92851b6ece77f3"
+    },
+    {
+      "bytes": 116829,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_02_medium_kinect_14_kinect_12_b02681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "80da8a55cc4d207baccc0fd65adf1a0cf4338dad00a24ca753d4cd121e1c2a6e"
+    },
+    {
+      "bytes": 97552,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_02_small_kinect_12_kinect_11_b02681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "4fcd2d8b4a4331640e0feb84746a1c29a4ef0818742287633f78820dd538a805"
+    },
+    {
+      "bytes": 115230,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_03_extreme_kinect_15_kinect_14_b01686.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "267d109e54a6dd4270bb4f5442eefcbd8f51912b89a837b316096c64de01b43f"
+    },
+    {
+      "bytes": 116697,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_03_medium_kinect_14_kinect_12_b01686.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a2a86886bd2cc063cb2356d5ad99a093e1ffe98f8d3f28a20fce670de1818308"
+    },
+    {
+      "bytes": 116799,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_03_small_kinect_11_kinect_12_b01686.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7d66f14209add2804214ed17a4ac8d27682c1395b5cbda3f4b31edc4dfb4d717"
+    },
+    {
+      "bytes": 133458,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_04_extreme_kinect_14_kinect_15_b03046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "58d0618da64b56036a99b8efd9750100572e6d609e6a5fa6e865a694a4c9b7d6"
+    },
+    {
+      "bytes": 116818,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_04_medium_kinect_14_kinect_12_b03046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ecc671871b7bb4403af80c633d37dce2d5bf9af9f419bf05dacb3f369c60f177"
+    },
+    {
+      "bytes": 115492,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220215_S22_S21_04_small_kinect_11_kinect_12_b03046.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "0069a2320492879fae1040e706384c8d91226ae8c30db1581db3c2229a7a0a00"
+    },
+    {
+      "bytes": 116911,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_01_extreme_kinect_15_kinect_13_b03091.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ceaf696986fc8919baa00aab60d86b7ca6ccfa1da6e9ed9ebdf086d1f1d5bea5"
+    },
+    {
+      "bytes": 116791,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_01_medium_kinect_13_kinect_11_b03091.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "01f2862bcef381411adefb30bb90b4bf37bbe3be3e15c7afcba1fa9a00b1fcb2"
+    },
+    {
+      "bytes": 116917,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_01_small_kinect_12_kinect_11_b03091.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "31b6dd6b8f000e4a7b05992d9307f47981b1476ae42a56b707d794af1beeb7c4"
+    },
+    {
+      "bytes": 116941,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_02_extreme_kinect_15_kinect_13_b03751.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9a34f474d14d4290bdb8dab8a239c68fd4f2293ed4591c85c1dadbf8bd400900"
+    },
+    {
+      "bytes": 116840,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_02_medium_kinect_13_kinect_11_b03751.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "7e431f298c4b5aa2f114740ad4b97205ccbbd36b642152118d35114ae5c84269"
+    },
+    {
+      "bytes": 116844,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220218_S02_S23_02_small_kinect_12_kinect_11_b03751.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "fd8e8ca42587f7d43535dc420e6020c0bde4f28a7ea51e016a7c09650cf6052c"
+    },
+    {
+      "bytes": 116788,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220225_S26_S27_01_extreme_kinect_14_kinect_15_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "183d79b387e3d5e63a8dbb6103b99ad39f60530586a54f766d3e0f4abda87f25"
+    },
+    {
+      "bytes": 117536,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220225_S26_S27_01_medium_kinect_12_kinect_15_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "0b95e640ac671a714b74ce10caebc6567122caa56c5c7e51e94d9f1c21e4c59a"
+    },
+    {
+      "bytes": 116922,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220225_S26_S27_01_small_kinect_14_kinect_13_b03066.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "dc3ed3fd0250fde810527917aa09e92f63a810f611b86a4d6eccaf4b1b746cf2"
+    },
+    {
+      "bytes": 93028,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_01_extreme_kinect_14_kinect_15_b03226.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "b439cbd6f543e5b68b0623cd2836050308c4f51c0e484f0e88cb0b8699a4bc8f"
+    },
+    {
+      "bytes": 97220,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_01_medium_kinect_12_kinect_15_b03226.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e51b1a2f14e7a4b89a9f1d5f9627cc83dca04c7eb12e0602ad467c5dc993c7f8"
+    },
+    {
+      "bytes": 97226,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_01_small_kinect_15_kinect_11_b03226.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5f39de255a3d7c6ccc7458b956f3fc25ee6d8d54b3f396cbb359462b4dc6d9e3"
+    },
+    {
+      "bytes": 116864,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_02_extreme_kinect_14_kinect_15_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f10750a3c0f86a3f8577e0ba06c73bdbe14a54b18bbb06b70d06d1ad9d5e17af"
+    },
+    {
+      "bytes": 116972,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_02_medium_kinect_12_kinect_15_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "856f6419e61ec241ce08800dc80c83bc5c8b26579275dd022a5cb400bbf3714c"
+    },
+    {
+      "bytes": 116873,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_02_small_kinect_11_kinect_15_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "cde24aedb253e775cb73f4a671fb9b8c4436e147c56a40ae2dd28fc0445c0021"
+    },
+    {
+      "bytes": 94585,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_03_extreme_kinect_15_kinect_14_b01581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "133ad67440ac837501b7feab17b7ef5a988d1c77c85ffb391657461ff8966194"
+    },
+    {
+      "bytes": 116902,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_03_medium_kinect_15_kinect_12_b01581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "19da97df2e792e3b59506cf025bc06eccbe28724fb4e319862aaf4e759b1bc6f"
+    },
+    {
+      "bytes": 97226,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_03_small_kinect_15_kinect_11_b01581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "287fe13c0fa89afc6bbcf615c2828ecda8f456380905ce5505919948b2987b34"
+    },
+    {
+      "bytes": 81126,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_04_extreme_kinect_15_kinect_14_b02691.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "55d44c010c7c44279cac7dfdc858f61ece1982ba08c0a8b808ee0e3559f9be49"
+    },
+    {
+      "bytes": 116854,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_04_medium_kinect_15_kinect_12_b02691.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "9121c644a53af65cf216480c9d6b31080b9c76982a2317e04ea0ddf6affb77e0"
+    },
+    {
+      "bytes": 116857,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_04_small_kinect_15_kinect_11_b02691.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "11edd86d435dfc9c61234e2831fe117b1e87aeea28af6c25e2237adcd2ffd396"
+    },
+    {
+      "bytes": 97119,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_05_extreme_kinect_14_kinect_15_b03681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "602b785b1871b61ecec10dd18a383c2cbe22d35666e3f2bef3daf3706cb9c183"
+    },
+    {
+      "bytes": 116831,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_05_medium_kinect_15_kinect_12_b03681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "0e540f2eaf7dfb8c1ba32b3d1be80ae6d8d6798a5f3cd6dac8bff5a2f6e1241e"
+    },
+    {
+      "bytes": 97180,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_05_small_kinect_15_kinect_11_b03681.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "07edebfab9b1858b2db8adbd35ec93ae94e559d7cf4f9bd796d94d5c0b1814e7"
+    },
+    {
+      "bytes": 116450,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_06_extreme_kinect_15_kinect_14_b03326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "68fe30fac9a19777724734b3b967d8967d4120444f4dc12c86eaf94b6c96ae0d"
+    },
+    {
+      "bytes": 117113,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_06_medium_kinect_12_kinect_15_b03326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e641cfc0011edbe598270c3fd35fa84eb3b1f1a19ee218c3aa711344a8afcb11"
+    },
+    {
+      "bytes": 117095,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220312_S28_S29_06_small_kinect_11_kinect_15_b03326.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ec14d52d8a9a718a8eaf4afd4e0a3094663e9505d6a8beb9b3361b2142aad577"
+    },
+    {
+      "bytes": 116798,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_01_extreme_kinect_11_kinect_14_b02671.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "97787f25f24a9ece3ec68ed12718c6fc5ce1bd9b9912e78949f36b627daca0f3"
+    },
+    {
+      "bytes": 97162,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_01_medium_kinect_13_kinect_11_b02671.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "352eb49f6be3a827281e5a511503dbf7879e8f2233e5b44ef3fe47d625cc011a"
+    },
+    {
+      "bytes": 97529,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_01_small_kinect_11_kinect_12_b02671.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "a993d3408003ebc0a3ae8a6dadbdf3168bb59723f1bf96f2206520419d3959d0"
+    },
+    {
+      "bytes": 56868,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_02_extreme_kinect_11_kinect_14_b02581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "d207223cfd0d6418d8a65f8865c81e974e5b76a08c530d91bc3f1264773636c4"
+    },
+    {
+      "bytes": 117148,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_02_medium_kinect_13_kinect_11_b02581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "c7be578c5896782c7d8b0e4b35bfa0ff27ee024f8890d176713dd7a52bef6fc0"
+    },
+    {
+      "bytes": 116891,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220315_S30_S21_02_small_kinect_11_kinect_12_b02581.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "f9ddb82005249b230f6f0991fee70b46615d81f7369c08934ce0e89d4920fba6"
+    },
+    {
+      "bytes": 116802,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_01_extreme_kinect_14_kinect_13_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e7b0b72f8b1a62fd286c5c843b2abc02c8c166cf9ca1005efdc08c71004be076"
+    },
+    {
+      "bytes": 116794,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_01_medium_kinect_15_kinect_13_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "5789bd364a8c6cac2e9cf0c134b643cf2c0ca8e6fc788ce404f2d7979265c42e"
+    },
+    {
+      "bytes": 116860,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_01_small_kinect_11_kinect_12_b02676.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e9b3f81c06181234c56c8826385956b41e5df32af25868415d05406a6647fb5c"
+    },
+    {
+      "bytes": 116622,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_02_extreme_kinect_14_kinect_13_b02901.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "e23bec54706b20e2538683349a13a099a3f942cb7c4c1a970ce51eba3d3e8807"
+    },
+    {
+      "bytes": 116808,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_02_medium_kinect_13_kinect_15_b02901.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "ea385ca1adb843c6847334e26d5e6fc083aa046b0c40d349a96119e57da8c73c"
+    },
+    {
+      "bytes": 116910,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/predictions/egobody_recording_20220415_S36_S35_02_small_kinect_12_kinect_11_b02901.runtime.json",
+      "role": "development:runtime_report",
+      "sha256": "403630d675617461aebd1e0049c23ce191f40e8b1cd5d348c1c4bda9ab2e22bd"
+    },
+    {
+      "bytes": 811796,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/development/protocol_state.json",
+      "role": "development:state_path",
+      "sha256": "e770476d55b10982e02d7e6d47c535450ca576ea6bab99e36639cc2a589184fd"
+    },
+    {
+      "bytes": 273481,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/aggregate/case_metrics.csv",
+      "role": "holdout:case_metrics",
+      "sha256": "fcc51e5693d4aa996174b145232bdc3f4f5277100c63585a9ec1db03992fc823"
+    },
+    {
+      "bytes": 80797,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/aggregate/recording_metrics.csv",
+      "role": "holdout:recording_metrics",
+      "sha256": "f15b72f7f1ac8e71090f5ec49ff17ea9885ef6f10c888e9ebbf0059ede9c1177"
+    },
+    {
+      "bytes": 175435,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/aggregate/summary.json",
+      "role": "holdout:summary_path",
+      "sha256": "d46e8c18a34f04f0b60789848a6abdb64b8b7b72de2f3ab9ba499dc240fc1979"
+    },
+    {
+      "bytes": 5236772,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/candidate_reports/frozen_holdout_candidates_d23496fbdc51.json",
+      "role": "holdout:candidate_report",
+      "sha256": "3106e1e75a2ace4562c6912102ff9721e6b09ae354745db90dd2dc556bec888f"
+    },
+    {
+      "bytes": 117048,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_01_extreme_kinect_11_kinect_13_b01526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "ad746c0f278c65fdb11b546f331f350bf9656a5868861271827146d3cbf264ae"
+    },
+    {
+      "bytes": 116957,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_01_medium_kinect_12_kinect_11_b01526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "5b2327d038dac23705222084f87b4a7e49ef0ea898b5b9a360a982b150701681"
+    },
+    {
+      "bytes": 116907,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_01_small_kinect_13_kinect_12_b01526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "0182aeca72d45dcbc67dd22fdccfea06bf37a99e5e1f6699fd4e3213794488a8"
+    },
+    {
+      "bytes": 116836,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_02_extreme_kinect_11_kinect_13_b02981.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "bb6e211365cd809627c179b98530f5c984c9fb2f8cfd2b354623a462a323fbda"
+    },
+    {
+      "bytes": 117029,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_02_medium_kinect_12_kinect_11_b02981.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "150e9e22f9baa8f2c97058557bbaaca9076e642d924de7f21544f04ff88c5ea6"
+    },
+    {
+      "bytes": 116926,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210921_S11_S10_02_small_kinect_12_kinect_13_b02981.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "fc58bdccea3bd521f511261bd5de13a5a26650ba1897ae7ec9220eda632355b4"
+    },
+    {
+      "bytes": 116733,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210923_S03_S14_01_extreme_kinect_13_kinect_11_b02231.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "8fc6cd850e95175ee2988e773f73fb14d5136c3276cf17408892c562457cdd75"
+    },
+    {
+      "bytes": 97124,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210923_S03_S14_01_medium_kinect_11_kinect_12_b02231.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "3f059d86b8a5318c697d0ce8886adc1b036cde6df8656e5364b84b4aab15b55d"
+    },
+    {
+      "bytes": 96142,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20210923_S03_S14_01_small_kinect_12_kinect_13_b02231.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "980eb69b59cf20498fda9b38cc0320eb4350e8364747ad05bdfcd841105a8997"
+    },
+    {
+      "bytes": 57805,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_01_extreme_kinect_13_kinect_11_b02871.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "01b803e80b26dcb3b7923a5e0c160c062c9113500518c576ff36f7860b1f3d5c"
+    },
+    {
+      "bytes": 117009,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_01_medium_kinect_12_kinect_13_b02871.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "5b250ec3158571f71c2c49d61656ef0b6804f7728e3b7a9806a44f2d6786204b"
+    },
+    {
+      "bytes": 57866,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_01_small_kinect_12_kinect_11_b02871.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "61599224103c5fa091916f4af0c1c6f3f52326bf87f749e1814be03bea8bdae5"
+    },
+    {
+      "bytes": 116898,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_02_extreme_kinect_11_kinect_13_b04461.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "b2bc1933851e644643914575c24722e0eacf887699d1debeb431d4701daa7dcb"
+    },
+    {
+      "bytes": 116886,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_02_medium_kinect_13_kinect_12_b04461.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "4633f04f792dfe0e9dcb363cbda8c980966fff6c7ae2d9f906f0555e71012e76"
+    },
+    {
+      "bytes": 116848,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_02_small_kinect_12_kinect_11_b04461.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "70999bd35a554b47d4a188c30089165073f1f8942b6ec3f42a5490be3b2fec8f"
+    },
+    {
+      "bytes": 116819,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_03_extreme_kinect_11_kinect_13_b02681.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "369fa1e8fa04b7e1fac998316bec62f779f89ce52e9f25bf8d94a7bc27a408d9"
+    },
+    {
+      "bytes": 116865,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_03_medium_kinect_12_kinect_13_b02681.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "af1c31b055c51e717ff55d75bbf9655a783ed9a2730461f76321b15b584d9ab2"
+    },
+    {
+      "bytes": 116941,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_03_small_kinect_11_kinect_12_b02681.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "f44207f3b2d584e81278cefc9eb76638511d9b39d7c0ae92833334b99f40eb7d"
+    },
+    {
+      "bytes": 97231,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_04_extreme_kinect_11_kinect_13_b04526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "47d71cb5c67325a4d6245f56853e864b4e653ae0c1370a20cb07751652705a0e"
+    },
+    {
+      "bytes": 97253,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_04_medium_kinect_12_kinect_13_b04526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "756fa6c9142795e7e216611d6d5fc620be4ac7a0eff3ab2dce57217fc28f27b4"
+    },
+    {
+      "bytes": 97248,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20211002_S03_S18_04_small_kinect_11_kinect_12_b04526.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "d5ba5c905392fddf1c3c9f459f7ee20f109bcbd32e96eaa3b8a1e49bfcd6e915"
+    },
+    {
+      "bytes": 115370,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220215_S21_S22_02_extreme_kinect_15_kinect_14_b03131.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "05087f5a457a179989c9bb880e3091d8461ef51ebcb942643c30f5c3d2b0a97b"
+    },
+    {
+      "bytes": 116941,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220215_S21_S22_02_medium_kinect_14_kinect_12_b03131.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "7b3ac55624b59b1b09287f4cb9e313ce637dbcbdb395ff5e4fc58d700fff2fc1"
+    },
+    {
+      "bytes": 116902,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220215_S21_S22_02_small_kinect_12_kinect_11_b03131.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "6cdca7dff8fde27e26bbc38486cb68dfdb05500aaa20f09ab0c620b6f7a00ce7"
+    },
+    {
+      "bytes": 116889,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_01_extreme_kinect_13_kinect_15_b02751.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "17fcb671a6cdf68da36ea03a91f1857c72540c182b05fbd2fb0a893748e94f06"
+    },
+    {
+      "bytes": 57838,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_01_medium_kinect_13_kinect_11_b02751.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "141d8db3be6ef26bbe688f956c115285931bd96a556ad637590f5f77571465d4"
+    },
+    {
+      "bytes": 57945,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_01_small_kinect_12_kinect_11_b02751.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "c44045d148cb96be903ac387958bf7fd31733d834ec3ac8e5d312e65042afbaf"
+    },
+    {
+      "bytes": 97187,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_02_extreme_kinect_13_kinect_15_b02501.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "7ac60e5c5f11c947731ec8858174c1f373e9aaa4afdf050b561a4d16d45a76b7"
+    },
+    {
+      "bytes": 97260,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_02_medium_kinect_11_kinect_13_b02501.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "1c0f3839554f43cb2c1a7c562ca5c111db5e77a11e957093273022db80e13772"
+    },
+    {
+      "bytes": 117012,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220218_S23_S02_02_small_kinect_11_kinect_12_b02501.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "92bc22edf3149f41ba54601a484a7775295da5411435fa4591ab04f02b20e85f"
+    },
+    {
+      "bytes": 116739,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_01_extreme_kinect_14_kinect_11_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "fd30fc8d50a1c3de776ac022da85faf21c1137926f4e01cd91386192b7273e94"
+    },
+    {
+      "bytes": 116732,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_01_medium_kinect_13_kinect_11_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "ee98371d3d46bf08fb40ca861d89a891d1e155e5b098bd27d1d72565488469a2"
+    },
+    {
+      "bytes": 116761,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_01_small_kinect_12_kinect_11_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "5b58f659fcc001288cb89248e32c92686929b2da0df5a0394de883c8b7796db4"
+    },
+    {
+      "bytes": 97430,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_02_extreme_kinect_11_kinect_14_b02196.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "6f02ab7f84fd457fac95efdf2e8084957864532541ce120708afc6b514f6b02c"
+    },
+    {
+      "bytes": 116638,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_02_medium_kinect_13_kinect_11_b02196.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "f7477ccc54c328d53e4d5f6c31842c21191d58d3ae19b3597a0ae369c4d784a0"
+    },
+    {
+      "bytes": 116744,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_02_small_kinect_12_kinect_11_b02196.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "58c4dd64b53bb2b8e3d6fd492de731d090c3168c9e51f17134e60818e812a983"
+    },
+    {
+      "bytes": 116834,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_03_extreme_kinect_11_kinect_14_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "720eb60323fbd542e4b16f37a009e3eec54d225aa214f0174fa9b6ebf888c3fa"
+    },
+    {
+      "bytes": 97179,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_03_medium_kinect_13_kinect_11_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "b64ba7c4d8c9373d7bdc79ce0f3d34a77c059d077e318f349c551907fb198c18"
+    },
+    {
+      "bytes": 97226,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_03_small_kinect_12_kinect_11_b03631.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "1674627dfdab5db1757a458184457121da53bd719df3b6b1182d53c6b581399d"
+    },
+    {
+      "bytes": 116896,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_04_extreme_kinect_14_kinect_11_b04401.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "fa471ac6737db5590e018151cd7c3e2c3162a0becd15cbbe8a70336f20e7afe4"
+    },
+    {
+      "bytes": 116873,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_04_medium_kinect_11_kinect_13_b04401.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "908ed039c485993ba326573095b33fcbd0a11b472e2af7dad797cc9a3924defb"
+    },
+    {
+      "bytes": 116926,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_04_small_kinect_12_kinect_11_b04401.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "35703b46e48a8883f89423ca2cfa906c03c16961b984bd648e18c6f9672aa5c9"
+    },
+    {
+      "bytes": 116893,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_05_extreme_kinect_11_kinect_14_b02151.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "4818bce049a9982185732db33a236cd5b71f09e960a4650978fca2e3dc0c915d"
+    },
+    {
+      "bytes": 97422,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_05_medium_kinect_13_kinect_11_b02151.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "3f3cd732ef63c5a8a5f7c1d662dd1ac25708e7b34802f0bd7f56817254315427"
+    },
+    {
+      "bytes": 117016,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_05_small_kinect_11_kinect_12_b02151.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "cdd2b5d974858a8def251b9c661ad003ea8a916dd59e744771340d64aabf13e0"
+    },
+    {
+      "bytes": 116845,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_06_extreme_kinect_11_kinect_14_b03586.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "5dc538ee0cb1fb08b79a069c2ec36a2a5c73321de0ee631124cb89e8fd8e67ec"
+    },
+    {
+      "bytes": 57827,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_06_medium_kinect_11_kinect_13_b03586.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "4a62af3361f0ec20de7c6b923ac62a669c67ee9bf65ac9fb8422b1caaeff418d"
+    },
+    {
+      "bytes": 117079,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/predictions/egobody_recording_20220315_S21_S30_06_small_kinect_11_kinect_12_b03586.runtime.json",
+      "role": "holdout:runtime_report",
+      "sha256": "b2bc3808acd92e5c6075c34e9de782e80f981585784a03f36583e1250f103650"
+    },
+    {
+      "bytes": 202468,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/holdout/protocol_state.json",
+      "role": "holdout:state_path",
+      "sha256": "5e6567f41e5404c29bea72e511fa6fec7b7f97cce7f87bc497efb35f16951b69"
+    },
+    {
+      "bytes": 511326,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/aggregate/case_metrics.csv",
+      "role": "test:case_metrics",
+      "sha256": "86b8aeb9e5b8294a59d2eeef87f5247b92bf76e60c10344067305109c0670fb4"
+    },
+    {
+      "bytes": 151698,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/aggregate/recording_metrics.csv",
+      "role": "test:recording_metrics",
+      "sha256": "915db00cf9f980372ea132519929de985c8d7afe8011dd4c407d519c7a40ce09"
+    },
+    {
+      "bytes": 122471,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/aggregate/summary.json",
+      "role": "test:summary_path",
+      "sha256": "91f0830b7859d678ae4d1afd3d21b053fa6db073b60416f5c7fdcdf1eea26a18"
+    },
+    {
+      "bytes": 6169454,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/candidate_reports/frozen_final_candidate_9d9f4c21b37f.json",
+      "role": "test:candidate_report",
+      "sha256": "e8f82a409342119633b18810c7b0b1f7347a7198b21ec16ab32abd4d28002bc0"
+    },
+    {
+      "bytes": 116668,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210907_S03_S04_01_extreme_kinect_13_kinect_11_b01801.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "394934b75e49b3b61d4c5dbf89b6d7ae0570abd81c8bcec46d297af071c168c8"
+    },
+    {
+      "bytes": 116889,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210907_S03_S04_01_medium_kinect_12_kinect_13_b01801.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "b1b0065823b9da5cf67abbf72d0f60bc3f5400683c5fb0a0ee216ad1c2dbfabc"
+    },
+    {
+      "bytes": 116730,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210907_S03_S04_01_small_kinect_11_kinect_12_b01801.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0c929020eb848d012920cf180ca31532e4febb0d64349c72c08ce9f99fb25563"
+    },
+    {
+      "bytes": 116755,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_01_extreme_kinect_13_kinect_11_b02141.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "729456bbb2906bb327cd47f946dbed53c7c278c7afbfbceb8738e839cab59aa5"
+    },
+    {
+      "bytes": 116928,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_01_medium_kinect_11_kinect_12_b02141.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4cad00068970ce4a49463882036c45b36b76edd8c780ec34d268d8f01202a22c"
+    },
+    {
+      "bytes": 116885,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_01_small_kinect_13_kinect_12_b02141.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c9cc5195c4bb7a61bc9b7e9e0a4eaf6fe3ad57de0291f4c405f8be76dc842cf5"
+    },
+    {
+      "bytes": 116754,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_02_extreme_kinect_11_kinect_13_b03471.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0827388915390fcdc380b687be15c08631f6389268fbc70b4952e0fccc13ca33"
+    },
+    {
+      "bytes": 112582,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_02_medium_kinect_12_kinect_11_b03471.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "dc59aefc1aac0af7930e824485c07509cb37552915e337a4b23dda8ec0577690"
+    },
+    {
+      "bytes": 81182,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210911_S03_S08_02_small_kinect_13_kinect_12_b03471.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "2cd97d49325c39b312aa7424a74f9e2fc90fd552bb0588449c630810b58b581f"
+    },
+    {
+      "bytes": 117020,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_01_extreme_kinect_11_kinect_13_b02281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a7f26ba7dae4978e07164e5cd25c840f0eff4a7c99f8395aeca2483f6d1e3301"
+    },
+    {
+      "bytes": 97208,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_01_medium_kinect_12_kinect_11_b02281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "2adf5db0352aa173d707fd0ede6b0057aad111c7d57068b825c93f1ed203ba68"
+    },
+    {
+      "bytes": 97582,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_01_small_kinect_13_kinect_12_b02281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a6a8da826fdf40b3829b572b0660ab890de4ab1556691a9d2906d682e7ffa005"
+    },
+    {
+      "bytes": 97106,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_02_extreme_kinect_13_kinect_11_b01916.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "21dc801a591274a4c1386d44e7cbe003d51a842bd7574cfe3893227a864fe2eb"
+    },
+    {
+      "bytes": 97167,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_02_medium_kinect_12_kinect_11_b01916.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "70984d1db96e0e48523ef7667536a12edda330131aeab38ca73419c4a562cda2"
+    },
+    {
+      "bytes": 97552,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_02_small_kinect_13_kinect_12_b01916.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0acca525dc4d09253a755609bb5e690b4747e27431d7f1d4ae473e760b99a860"
+    },
+    {
+      "bytes": 57842,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_03_extreme_kinect_11_kinect_13_b03356.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c2a410db744d0480a4dea42e67cab1bfec3ef089688b7076eafc5d0edfbeef68"
+    },
+    {
+      "bytes": 116839,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_03_medium_kinect_11_kinect_12_b03356.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4b7505e8fc861410bc47d8f72af94310fefb4f4704fa0adc4c0672f423c5a4b4"
+    },
+    {
+      "bytes": 57889,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210921_S05_S12_03_small_kinect_12_kinect_13_b03356.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a059a442ca2f998b4e2bb94af62386ced90e25ec73f6208212b785ad97683c82"
+    },
+    {
+      "bytes": 117482,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_01_extreme_kinect_11_kinect_13_b02576.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "080a35239236759ec473ec2d7ac04debf7f88a14f91bd835cd1cf207a189d8c8"
+    },
+    {
+      "bytes": 116830,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_01_medium_kinect_11_kinect_12_b02576.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "93659000a054e68765c3d777fc420d46dfca083e1e9aab15be6c379c1a617617"
+    },
+    {
+      "bytes": 117538,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_01_small_kinect_12_kinect_13_b02576.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "9652c0aeb83bf3db40d2db6e6e497696f8058bfeedab3c85877112b01d72fcb7"
+    },
+    {
+      "bytes": 116630,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_02_extreme_kinect_13_kinect_11_b02316.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8f7d708df5e71f5dda4f50aa549bfbf54c2c101cbff78871b1d7087a4d0d0951"
+    },
+    {
+      "bytes": 116821,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_02_medium_kinect_11_kinect_12_b02316.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "98b2ac364698a5abee8f3ba509d4f4875b4ec2c7817a7ac0c73c69514994f0dc"
+    },
+    {
+      "bytes": 116802,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_02_small_kinect_12_kinect_13_b02316.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "28c2e271d1a2bba4f2b90504b83a4cac5ab38bb808c21f0f78674765c6a48941"
+    },
+    {
+      "bytes": 116852,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_03_extreme_kinect_11_kinect_13_b01076.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4e928a402451a9ea796d636d1d3dce61ab7ede139bc8d04a41d54e571d7eae05"
+    },
+    {
+      "bytes": 117575,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_03_medium_kinect_11_kinect_12_b01076.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "e4339b6dc37ea0104404ae8e732534091a2edc7bc97b4c452f40a2bfa7af8adf"
+    },
+    {
+      "bytes": 116927,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_03_small_kinect_13_kinect_12_b01076.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "26ee5cb717defaff9620038fea1fd5df9367f23b3471bd920ec63cb31aeea786"
+    },
+    {
+      "bytes": 117418,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_04_extreme_kinect_13_kinect_11_b02616.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "443077746bed66eb40372be225d56bb1230ec878d6320802718414685c7d1a46"
+    },
+    {
+      "bytes": 116816,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_04_medium_kinect_12_kinect_11_b02616.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "6049f8dd8484b7694a06df107c8e0e34c7aa327d304bcf3d5d2314204ba63c2c"
+    },
+    {
+      "bytes": 116914,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20210929_S05_S16_04_small_kinect_12_kinect_13_b02616.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c498e4b9cea5c7b8cd53754064353a43f30a3a6e403be18a660a8c3c7a5f218b"
+    },
+    {
+      "bytes": 97167,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_01_extreme_kinect_11_kinect_13_b02701.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "087bc79d4341296db20ea8bd86c633af318369d55d12075b43bff1c780647b11"
+    },
+    {
+      "bytes": 97188,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_01_medium_kinect_12_kinect_13_b02701.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "52510528a5b5924663600c23ade0fe3392af9e5c0b85f52aadaa37af3b716558"
+    },
+    {
+      "bytes": 97226,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_01_small_kinect_12_kinect_11_b02701.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c4ff078eca70890c68fa32ea2f96683ee62ec90b2c37abee40570799a46939a3"
+    },
+    {
+      "bytes": 116829,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_02_extreme_kinect_13_kinect_11_b01321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "b87cafd4979eccb15f96a6420c5de5f99f8b5cd2747f4f30f86c61da60261b5b"
+    },
+    {
+      "bytes": 116823,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_02_medium_kinect_13_kinect_12_b01321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "fe9ea3173ac747e1a4224f48a1b236b9451dceca789ea097d931a751d66956cd"
+    },
+    {
+      "bytes": 116918,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_02_small_kinect_12_kinect_11_b01321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "bef529ee3c499ebc3373147ccd2ef976dcfdf6975093a7a08dd1b7cfa3948d64"
+    },
+    {
+      "bytes": 57797,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_03_extreme_kinect_13_kinect_11_b02531.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f2545f76a9f4a8a357c0123f2cad121528a589b2e78679faecf60fee9268a75c"
+    },
+    {
+      "bytes": 97178,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_03_medium_kinect_13_kinect_12_b02531.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f5659b0353ca4c4b3fef961730a6b8298972ddff0e429c46c9fdf2f5bff870fc"
+    },
+    {
+      "bytes": 97163,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211002_S17_S15_03_small_kinect_11_kinect_12_b02531.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a053ffa7cbb3f0d02460f7b854e92f90594a09a855cbafed51b7793d8639e510"
+    },
+    {
+      "bytes": 116966,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_01_extreme_kinect_11_kinect_13_b02556.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "545c44b60095e0b4cf5fc008d58f90adfe0d326deaa72ccd32a3da7e9c754cfa"
+    },
+    {
+      "bytes": 117001,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_01_medium_kinect_13_kinect_12_b02556.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7ad2cc9babbab74ebb8b0739014103110ed31b655f750b866930f59aca1ff795"
+    },
+    {
+      "bytes": 116896,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_01_small_kinect_11_kinect_12_b02556.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a744364f753bab8d005c117f93c6a7384c528062e2da8272e30575578d6cccff"
+    },
+    {
+      "bytes": 116639,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_02_extreme_kinect_13_kinect_11_b01776.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f83568edec3885560b78b58a7b2b254394b9f15163969ba8644a3b64b25ae36e"
+    },
+    {
+      "bytes": 97283,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_02_medium_kinect_13_kinect_12_b01776.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "df2e458b3d9a990bc704ed6185dff170ea9b20de153cdf18e4a1e0a321951c78"
+    },
+    {
+      "bytes": 116693,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_02_small_kinect_12_kinect_11_b01776.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "fc9014f048955bc964045d25ac4f2d49e196f62a37efcf786fb0985a7e55a91e"
+    },
+    {
+      "bytes": 116919,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_03_extreme_kinect_11_kinect_13_b01986.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "692f8dfa7fcc49fa00d90435263755d3841edf598511143f8d2ef3d94bf738a0"
+    },
+    {
+      "bytes": 117079,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_03_medium_kinect_13_kinect_12_b01986.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8243ab959a30c6756c84311c1948fb70b0465c52110ee90eae21087573ee85b5"
+    },
+    {
+      "bytes": 117003,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_03_small_kinect_11_kinect_12_b01986.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "310f4e126adf87e23620c4b10d7a4562ac6b09050346c9fd0a0e4f0dabd60280"
+    },
+    {
+      "bytes": 116724,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_04_extreme_kinect_13_kinect_11_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c239d25a02a80627d3a2705ea4534d54b14cffdb4f0bd2809e1e78205e11d4bb"
+    },
+    {
+      "bytes": 116913,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_04_medium_kinect_13_kinect_12_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c14901cc61075a62929ee5da5475b83d406cdfe763e1cc23a4cc6339bb8a4dc5"
+    },
+    {
+      "bytes": 116873,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S12_S20_04_small_kinect_11_kinect_12_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "fbae2325eba5b752d0ef13a2d9d802e5180566bce25173066464af39c74e5b3a"
+    },
+    {
+      "bytes": 117464,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_01_extreme_kinect_13_kinect_11_b02766.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "ba2e29b1f0f8cc0aa324551c969b92628022111931ce41058cb50c8cc3d10f28"
+    },
+    {
+      "bytes": 58526,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_01_medium_kinect_12_kinect_13_b02766.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0934a0ed2790879fa0361d828323608fc651a0791a04080053eeba97c2405253"
+    },
+    {
+      "bytes": 117507,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_01_small_kinect_12_kinect_11_b02766.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c7c4b809f77041e8b563e7013e6c71bf58c8262931db2f1842c1955af3f454fd"
+    },
+    {
+      "bytes": 117436,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_02_extreme_kinect_13_kinect_11_b01446.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0a8ee33c8eca67ece621e6a774c48f3fe79758ffe746ed98d77903560e8278d0"
+    },
+    {
+      "bytes": 116814,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_02_medium_kinect_12_kinect_13_b01446.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "2fdd19ea7660388daa436a5c3a343c7f88dbc68fef3237692407dbcf438d1dcd"
+    },
+    {
+      "bytes": 116859,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_02_small_kinect_12_kinect_11_b01446.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "5882723ccab5162faec7932afc3bc73497363f6b1589970a2b9e4f285646dc89"
+    },
+    {
+      "bytes": 116947,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_03_extreme_kinect_11_kinect_13_b01396.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "5122975800957be873baed6df076181ac3cee047ecab42bb4589c32a30cb779b"
+    },
+    {
+      "bytes": 116971,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_03_medium_kinect_13_kinect_12_b01396.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8f73e37416e2dedfeafe30de8bdda07748910f2d417d16a2c0e877d3658953ed"
+    },
+    {
+      "bytes": 116834,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_03_small_kinect_12_kinect_11_b01396.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c5e560955174fdee90ef66390b5f5c93208f03c9c3e08a681add32f939053ad5"
+    },
+    {
+      "bytes": 116779,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_04_extreme_kinect_13_kinect_11_b03056.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "acb55dd57762d8c91d8871fa1b3f9330f450e31d16592c39ea610665b1110265"
+    },
+    {
+      "bytes": 116901,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_04_medium_kinect_12_kinect_13_b03056.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4291fc8f0ca00c5568cf62f9232a6d3e9920d59efdaeeaa31bc2ffdbd6899abc"
+    },
+    {
+      "bytes": 116845,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20211004_S20_S12_04_small_kinect_12_kinect_11_b03056.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "65fd9979effbe0248873d41eb6881bd2b29a54ccaee4fd226ea3b81c345ed43a"
+    },
+    {
+      "bytes": 116716,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_01_extreme_kinect_14_kinect_15_b02966.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7ff542f0afd16652b9aece04248cbd128d9b3e4c2e3d958cd71a199ed468b4ca"
+    },
+    {
+      "bytes": 116896,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_01_medium_kinect_15_kinect_12_b02966.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "9ce774527b2eae14284f46ac30d5456178ad4cb19760af15b99f2e2e79e1bbce"
+    },
+    {
+      "bytes": 116684,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_01_small_kinect_13_kinect_14_b02966.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "1e13642f3ae45484c97bfd49c515461b680835a845473ec2ff45b89c33fc694c"
+    },
+    {
+      "bytes": 57718,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_02_extreme_kinect_14_kinect_15_b03501.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "bae143227a9b41587f30510e031874bd92ec07302643f0cbde97f65cf9ba3818"
+    },
+    {
+      "bytes": 57912,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_02_medium_kinect_12_kinect_15_b03501.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8c2e76d259ed9d7d485343859e81f5b44c8d78e889ddef9f4ac7654c61765b84"
+    },
+    {
+      "bytes": 116820,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S24_S25_02_small_kinect_13_kinect_14_b03501.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "b1c1966f7da074359974da8b494e91f46b93511d451b91983c93c876bb45ddeb"
+    },
+    {
+      "bytes": 116812,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S25_S24_01_extreme_kinect_15_kinect_14_b03341.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "33edac4f34fc53ce64bec81ebd65dcf203f3a756d19a012bb699ef266b740300"
+    },
+    {
+      "bytes": 97224,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S25_S24_01_medium_kinect_15_kinect_12_b03341.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "510c69af12f94d75cb177faa37a3581c52f980e302b807c1307072cec94ec3f9"
+    },
+    {
+      "bytes": 116828,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S25_S24_01_small_kinect_13_kinect_14_b03341.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7860fce4af20ba544ed63bf6ad7649e09a5e16a8df229fa2249623970d6fcb91"
+    },
+    {
+      "bytes": 57768,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_01_extreme_kinect_15_kinect_14_b02876.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "5efe477287e823c085b33f865d5bddb19afec8533079c2d861d8f1ec7e35249c"
+    },
+    {
+      "bytes": 117015,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_01_medium_kinect_15_kinect_12_b02876.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "465a9d431b7ef26cc92cc03a824e3ac46c0cc4fc3ed54cdb5bd5c51a32de9cdf"
+    },
+    {
+      "bytes": 116790,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_01_small_kinect_14_kinect_13_b02876.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "42c9f1e71d8e7624f4beede6420730e9828444e06562b4b4ffd3d1b9a65b0b38"
+    },
+    {
+      "bytes": 116717,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_02_extreme_kinect_15_kinect_14_b03911.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "721c1931e845db8b6fd64c81b40b0df66d043e6b350be440dba26cf55ac4f772"
+    },
+    {
+      "bytes": 58186,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_02_medium_kinect_12_kinect_15_b03911.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f6d5bc40f612876cfde9ff841487db5eee8de2f7461dc8f59468f386cff5e009"
+    },
+    {
+      "bytes": 116776,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_02_small_kinect_14_kinect_13_b03911.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7a96386b88902c5b67ad9b391fe84bc6e61035a12b70ab8e0478f24a7fe7eeb8"
+    },
+    {
+      "bytes": 94580,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_03_extreme_kinect_14_kinect_15_b02455.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a484b57291b638cb156474c37ed5de9168edc3f3d4a4c5d8a97df0dd28da8895"
+    },
+    {
+      "bytes": 112717,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_03_medium_kinect_15_kinect_12_b02455.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a0f865103d2dd398e128ca5dc894ae088f4da9d557e4537ee4cbc7698ba567ce"
+    },
+    {
+      "bytes": 116684,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_03_small_kinect_14_kinect_13_b02455.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "60f94ab39f70bc12056d78267af25baaa7d37e804546858dd4634de242cd7bef"
+    },
+    {
+      "bytes": 112608,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_04_extreme_kinect_15_kinect_14_b03731.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f4e5c204ba88b170ac6f5e04780400f23d7e3c3fd1d12d0a2ececbbbe1a11dac"
+    },
+    {
+      "bytes": 112698,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_04_medium_kinect_15_kinect_12_b03731.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "41dd7e6cbe32e5cf2001366c8e05f47eaf415fd71f23a074fdf390a8d400b6cd"
+    },
+    {
+      "bytes": 116772,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220225_S27_S26_04_small_kinect_14_kinect_13_b03731.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f5cb440100843ec045bd1002886720f7bf2312a2f7457c0e10618aacafc20c3c"
+    },
+    {
+      "bytes": 58068,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_01_extreme_kinect_15_kinect_14_b03231.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "045678352bfe933ade6e39ca825070189751762f6ab766ba84b6b5f9e73c2aea"
+    },
+    {
+      "bytes": 116891,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_01_medium_kinect_12_kinect_15_b03231.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4235a5ffae445693f1a1b99d82d95ac67055431ca48825183b959d322aae2cde"
+    },
+    {
+      "bytes": 116852,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_01_small_kinect_11_kinect_15_b03231.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8ff46b35f5b67a3d123bd48f7eb427d799fff3f8f538db336560b77d022ed377"
+    },
+    {
+      "bytes": 116712,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_02_extreme_kinect_14_kinect_15_b01761.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "3598f1cf14d63b5bec8ee1355508a9b1601a7a6aef80afad3c160e261f910a60"
+    },
+    {
+      "bytes": 97174,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_02_medium_kinect_15_kinect_12_b01761.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "1fa38bbff68f51ae2e4710b619129ca485ecc22da806d0d61bf11595cb353254"
+    },
+    {
+      "bytes": 116721,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_02_small_kinect_11_kinect_15_b01761.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "24d931c7835963c5507f1358388486df647e9195ac6c32cfdd0a37665c5efd8c"
+    },
+    {
+      "bytes": 116617,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_03_extreme_kinect_15_kinect_14_b03281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "d5b505d49a8fd876fa059f026974b49cb77d4e3d826f54828fd00cb5902ca772"
+    },
+    {
+      "bytes": 116782,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_03_medium_kinect_15_kinect_12_b03281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "fe16508b08cde12e904870085f5173d171625c5e787387c761d8488cf2b12d45"
+    },
+    {
+      "bytes": 116739,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_03_small_kinect_11_kinect_15_b03281.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f67980a60b004297f82a63472ccf7dbc6ca68ea4e8697bcdb1ac593c4ddaa726"
+    },
+    {
+      "bytes": 92967,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_04_extreme_kinect_14_kinect_15_b04816.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "f3098fb8fb0e38a2506b67a27e330cfc5903dbd74db0048f14583a9e1430c3bb"
+    },
+    {
+      "bytes": 97146,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_04_medium_kinect_12_kinect_15_b04816.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "5cb21ef6cf0c57a7d6675a7956aed26391271dd0fc81cbcc5a9cd128f6742e07"
+    },
+    {
+      "bytes": 97121,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_04_small_kinect_15_kinect_11_b04816.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a52e93917f0850bc4f4006dc34a02bb3572b351905f51c617f91566bf729135a"
+    },
+    {
+      "bytes": 112702,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_05_extreme_kinect_15_kinect_14_b02786.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8901147b9ef9a553fc9b3f6e6ec0740973a018b0d5d6bcd450989419bd89b29b"
+    },
+    {
+      "bytes": 112752,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_05_medium_kinect_15_kinect_12_b02786.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "e338a64ecbaf52007029873fd9697cfe72cc3173604ce73b607c6b47524c1b53"
+    },
+    {
+      "bytes": 94602,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220312_S29_S28_05_small_kinect_11_kinect_15_b02786.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "d5d2b86803db81765632352b99cf946edb7b3c4620072273151b56a97ac74025"
+    },
+    {
+      "bytes": 116636,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S31_S32_01_extreme_kinect_14_kinect_11_b03185.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "d40561e94fdbe9b3aec92f2737dc6de7458f691499481d8251c98c1401ad97da"
+    },
+    {
+      "bytes": 116749,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S31_S32_01_medium_kinect_14_kinect_13_b03185.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c29c5b14cfde6d3aaeb5dbe11086c2c1aa17bde00fbaf52b3fee6366a3fa1e03"
+    },
+    {
+      "bytes": 116804,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S31_S32_01_small_kinect_11_kinect_12_b03185.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "b4aa034839e4b81d8761a64d34b6da1fce187625bf97c5b54214b7d83a44e65e"
+    },
+    {
+      "bytes": 117368,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_01_extreme_kinect_11_kinect_14_b03251.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "d7e441d5fc88f72306de73e9312a0d4ab01e446cafcb45f7df396c197d409f19"
+    },
+    {
+      "bytes": 116698,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_01_medium_kinect_13_kinect_14_b03251.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "df24ec6f5ff1d4fe8b8ebd219b592cf62694acec2e9e34522a2cfcbba4d3c67d"
+    },
+    {
+      "bytes": 97172,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_01_small_kinect_11_kinect_12_b03251.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "425c8f4eed456d807a220357ceea8f77fb8d20c7095446c2eea97aad0a0b6283"
+    },
+    {
+      "bytes": 116643,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_02_extreme_kinect_14_kinect_11_b03001.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "ac9ef8a95f26d197d290cddd8d3766a8da9801fb9210dca800bb5d55758fb4dc"
+    },
+    {
+      "bytes": 116773,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_02_medium_kinect_13_kinect_14_b03001.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7668bdc9652b635bb7a789b5ec40f831d067a0304d98a135ec6fa79a529c7a35"
+    },
+    {
+      "bytes": 116772,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S32_S31_02_small_kinect_11_kinect_12_b03001.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "a8dadeccdc4c69b18444ff92470423f2edeffa6adf6645e7bf9c491c21e63280"
+    },
+    {
+      "bytes": 116670,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_01_extreme_kinect_14_kinect_11_b03921.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "74b234c7d8e2b7988e4030712048eca44b86d407a09e931c5fdc4b72e39e4511"
+    },
+    {
+      "bytes": 116791,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_01_medium_kinect_13_kinect_14_b03921.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "6321ff0eb5e2d159ba1f5ea8fa552cdc3dc6fd925d76b121a403ba4bbe0eb4d5"
+    },
+    {
+      "bytes": 116810,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_01_small_kinect_12_kinect_11_b03921.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "9feeb05968440cf1ac1d1cc2d66db832524e2ce6bcb4e2c86b1ab5bd9667bc82"
+    },
+    {
+      "bytes": 117197,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_02_extreme_kinect_11_kinect_14_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "66ce06c2b148c32988b7713d84b6973a7ecafd55245e84096c553bc3b40119a7"
+    },
+    {
+      "bytes": 116884,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_02_medium_kinect_14_kinect_13_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "255f69fa0a6ba0651272632e5fbcd52308c044912f34c5b58fc1b424c7fdb1bd"
+    },
+    {
+      "bytes": 116976,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S33_S34_02_small_kinect_12_kinect_11_b03381.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "81d4ec72fa64ae1042ffb5a5faeb69827303c63d45d1e82af6d8a6fd9d86fc67"
+    },
+    {
+      "bytes": 116848,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_01_extreme_kinect_11_kinect_14_b02656.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "faaad22b80b0904013762b879f248f138df56efa9a2b95bdcec3818f36de1e38"
+    },
+    {
+      "bytes": 116803,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_01_medium_kinect_14_kinect_13_b02656.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "b01d7a2c023c6b5da9541ef570f76ae4d0f32d9aed6be8aab5570b06b72ace74"
+    },
+    {
+      "bytes": 116866,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_01_small_kinect_12_kinect_11_b02656.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "0e8cbd4969036f1ff0a04b652ff5ec14325a652408b186a33ac821b201469157"
+    },
+    {
+      "bytes": 97090,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_02_extreme_kinect_11_kinect_14_b04321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "c1e92ab304956c12e2cb72920e9f2dc69ef68dfb29a8d1fe2bfa0c4cc71391fa"
+    },
+    {
+      "bytes": 97104,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_02_medium_kinect_13_kinect_14_b04321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "58dd9b36a0f9a89fa578361077b681d156be2ef6f969929ac18b1c8692e1d666"
+    },
+    {
+      "bytes": 97177,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_02_small_kinect_12_kinect_11_b04321.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "520d601cc6a718de95722cf5f937784c7e4726aacc7c5594f2c75bcb3139f128"
+    },
+    {
+      "bytes": 116869,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_03_extreme_kinect_11_kinect_14_b03186.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "7aff45a2da0c14e3eb56740062a6b10a55d31d7f2b12fb8cd72a8c634575befb"
+    },
+    {
+      "bytes": 116680,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_03_medium_kinect_14_kinect_13_b03186.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "90733b1b746cfd7964d055cee31a9616edc9d02c168d60eea25cefe0ff372c67"
+    },
+    {
+      "bytes": 116722,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220318_S34_S33_03_small_kinect_11_kinect_12_b03186.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "39b9c5d41710db4f39677e452150f25a89a519891e1610fd5a487b431aedcf1b"
+    },
+    {
+      "bytes": 116608,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_01_extreme_kinect_14_kinect_13_b02261.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "4ab561d8e370f7c6004059d533b04f007444d3b8c4f91d448e28785d5f8d658d"
+    },
+    {
+      "bytes": 116674,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_01_medium_kinect_15_kinect_13_b02261.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "6829271959018157523ddf426ab81aab3e6f6ff64300b3d184b80ed28237bf87"
+    },
+    {
+      "bytes": 116664,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_01_small_kinect_11_kinect_12_b02261.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "912179212d3812b03e2abfd9818e2334784fe6386b1ab206fe3d4e53c3cbb785"
+    },
+    {
+      "bytes": 97227,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_02_extreme_kinect_13_kinect_14_b02241.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "2bd67729274828a4ac8b4da18448bbb2d6d1b0c912a76cc63f5f1c39d22ad61f"
+    },
+    {
+      "bytes": 116712,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_02_medium_kinect_13_kinect_15_b02241.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "db354d07170370bb1e74736c77b9beffb575f1a8f8761c0d12f43611736cb50b"
+    },
+    {
+      "bytes": 116908,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/predictions/egobody_recording_20220415_S35_S36_02_small_kinect_11_kinect_12_b02241.runtime.json",
+      "role": "test:runtime_report",
+      "sha256": "8130ffac5e38cbfacc6f6e4cf4a0ae968b37544b8652f24d1bfd8cc29dfad112"
+    },
+    {
+      "bytes": 532201,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/output/v20_egobody/formal/test/protocol_state.json",
+      "role": "test:state_path",
+      "sha256": "3355704f2957514c93e8abe23aabb6339d6112d00421d0f557f7da52f1ae8c00"
+    },
+    {
+      "bytes": 78112,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v20/egobody/build_paper_artifacts.py",
+      "role": "artifact_builder",
+      "sha256": "9a66702a4f1db23179b54995b3cd480e15d6b7c0fe5bc41e0442765d9f0d8c22"
+    },
+    {
+      "bytes": 2823,
+      "path": "/data/wangzheng/iJCV-CODE/Movie3R/versions/v20/egobody/development_candidates.json",
+      "role": "development:candidate_source",
+      "sha256": "b878b9f42327b001e20e1ee6d300b38c7900d8c47e979c122cc39b44e567ba01"
+    },
+    {
+      "bytes": 54969,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/frozen/frozen_final_candidate.json",
+      "role": "frozen_final_candidate,test:candidate_source",
+      "sha256": "9d9f4c21b37fb3b53f889bd445a540a037c5f03e3f54f4beffa10580d9ddf58e"
+    },
+    {
+      "bytes": 442,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/frozen/frozen_final_candidate.json.test-consumption.json",
+      "role": "test_consumption_ledger",
+      "sha256": "a3c7dc7af354b43b98551fbdd71cf59f9257dffa78e9c265c8785eb4c2a8fbd0"
+    },
+    {
+      "bytes": 61406,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/frozen/frozen_holdout_candidates.json",
+      "role": "holdout:candidate_source",
+      "sha256": "d23496fbdc5176a9c842be535a2421e72cd328121edce45c603df6e72cb99b2d"
+    },
+    {
+      "bytes": 1111979,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_development.evaluator.jsonl",
+      "role": "development:evaluator_manifest",
+      "sha256": "374287b1cafa9f2537dced6fcc83c3ed55143f21db3bb25095bfc26e8c0005cf"
+    },
+    {
+      "bytes": 2264145,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_development.runtime.jsonl",
+      "role": "development:runtime_manifest",
+      "sha256": "7d868600dd4053b692d8e811e0d0bfc12cc6fa440e996a1ed780ca5b1c80786a"
+    },
+    {
+      "bytes": 274574,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_holdout.filtered.evaluator.jsonl",
+      "role": "holdout:evaluator_manifest",
+      "sha256": "357ed73a2fdf340771849f8aefe0f7b69b08d45c9bcd23d440972d3fea03739d"
+    },
+    {
+      "bytes": 556776,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_holdout.filtered.runtime.jsonl",
+      "role": "holdout:runtime_manifest",
+      "sha256": "61b31a49cf582cfc3eafd2bbeb65c9a38a2a0d9f611e8a3db0752c548cd65e51"
+    },
+    {
+      "bytes": 736916,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_test.evaluator.jsonl",
+      "role": "test:evaluator_manifest",
+      "sha256": "87144f01a8dc7b0630b1e7e9613a8b11904847a97c438e9ac9693b3453ac534f"
+    },
+    {
+      "bytes": 1495911,
+      "path": "/data/wangzheng/iJCV-CODE/data/EgoBody_work_v20/manifests/egobody_cs150_test.runtime.jsonl",
+      "role": "test:runtime_manifest",
+      "sha256": "8a5861bd3e4ee55dd1639c86526d21c96a73bb44fe07ff9848ef7b6b7645b02b"
+    },
+    {
+      "bytes": 5739918,
+      "path": "/data/wangzheng/iJCV-CODE/paper/Multi-THuMBS.pdf",
+      "role": "literature_context",
+      "sha256": "8e4a9f8061dc46181134980ddae3f432b39766f93bf255e6ae4553f5721189d2"
+    }
+  ],
+  "test_evaluable_case_count": 129,
+  "test_evaluable_recording_count": 43,
+  "test_evaluator_unavailable_case_count": 0,
+  "test_selected_case_count": 129,
+  "test_structural_recording_count": 43
+}

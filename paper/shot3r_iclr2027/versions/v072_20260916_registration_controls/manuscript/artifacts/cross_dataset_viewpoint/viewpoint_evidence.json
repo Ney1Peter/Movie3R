@@ -1,0 +1,781 @@
+{
+  "bootstrap": {
+    "draws": 20000,
+    "seed": 20260830
+  },
+  "dataset_equal_macro": {
+    "all": {
+      "Coverage_absolute_change": -0.008621565943704002,
+      "IDF1_absolute_gain": 0.09909956145804684,
+      "WA_relative_reduction_percent": 8.777301746382767,
+      "W_relative_reduction_percent": 9.512752831119032
+    },
+    "extreme": {
+      "Coverage_absolute_change": -0.014263740095353694,
+      "IDF1_absolute_gain": 0.19465802708042,
+      "WA_relative_reduction_percent": 18.69169156004014,
+      "W_relative_reduction_percent": 19.10182783308088
+    }
+  },
+  "dataset_equal_viewpoint_interaction": {
+    "Coverage": {
+      "aggregation": "equal mean of dataset-specific interactions",
+      "ci95": [
+        -0.029429828693659513,
+        0.015335830710314973
+      ],
+      "dataset_count": 3,
+      "finite_draws": 20000,
+      "interaction": -0.007579193231440321,
+      "positive_is_larger_extreme_gain": true
+    },
+    "IDF1": {
+      "aggregation": "equal mean of dataset-specific interactions",
+      "ci95": [
+        0.09223212470008657,
+        0.17977953389794465
+      ],
+      "dataset_count": 3,
+      "finite_draws": 20000,
+      "interaction": 0.13594956295150273,
+      "positive_is_larger_extreme_gain": true
+    },
+    "W-MPJPE_mm": {
+      "aggregation": "equal mean of dataset-specific interactions",
+      "ci95": [
+        36.11616401504661,
+        269.4742941434392
+      ],
+      "dataset_count": 3,
+      "finite_draws": 20000,
+      "interaction": 143.90160571662707,
+      "positive_is_larger_extreme_gain": true
+    },
+    "WA-MPJPE_mm": {
+      "aggregation": "equal mean of dataset-specific interactions",
+      "ci95": [
+        28.616301234786278,
+        87.49510603143591
+      ],
+      "dataset_count": 3,
+      "finite_draws": 20000,
+      "interaction": 57.200018475226734,
+      "positive_is_larger_extreme_gain": true
+    }
+  },
+  "datasets": {
+    "egobody": {
+      "all": {
+        "bridge3r": {
+          "ATE_Sim3_m": {
+            "mean": 0.016451692923067602,
+            "support": 43
+          },
+          "Coverage": {
+            "mean": 0.980594315245478,
+            "support": 43
+          },
+          "IDF1": {
+            "mean": 0.9847541218196655,
+            "support": 43
+          },
+          "W-MPJPE_mm": {
+            "mean": 258.83269644768603,
+            "support": 43
+          },
+          "WA-MPJPE_mm": {
+            "mean": 201.6903095894276,
+            "support": 43
+          },
+          "row_count": 43
+        },
+        "strict": {
+          "ATE_Sim3_m": {
+            "mean": 0.12437407452436845,
+            "support": 43
+          },
+          "Coverage": {
+            "mean": 0.980594315245478,
+            "support": 43
+          },
+          "IDF1": {
+            "mean": 0.8703780309755466,
+            "support": 43
+          },
+          "W-MPJPE_mm": {
+            "mean": 321.1479860998175,
+            "support": 43
+          },
+          "WA-MPJPE_mm": {
+            "mean": 233.38694958961477,
+            "support": 43
+          },
+          "row_count": 43
+        }
+      },
+      "all_unit": "43 recordings",
+      "camera_column": "ATE_Sim3_m",
+      "camera_metric": "ATE-Sim3",
+      "display": "EgoBody",
+      "extreme": {
+        "bridge3r": {
+          "ATE_Sim3_m": {
+            "mean": 0.015606130058785217,
+            "support": 43
+          },
+          "Coverage": {
+            "mean": 0.973953488372093,
+            "support": 43
+          },
+          "IDF1": {
+            "mean": 0.9831227178166689,
+            "support": 43
+          },
+          "W-MPJPE_mm": {
+            "mean": 354.2771480751406,
+            "support": 43
+          },
+          "WA-MPJPE_mm": {
+            "mean": 273.3173969497919,
+            "support": 43
+          },
+          "row_count": 43
+        },
+        "paired": {
+          "ATE_Sim3_m": {
+            "ci95": [
+              0.08612954792836969,
+              0.4309750740036034
+            ],
+            "cluster_count": 43,
+            "mean_gain": 0.23732979509156837,
+            "positive_is_better": true,
+            "support": 43,
+            "win_tie_loss": [
+              43,
+              0,
+              0
+            ]
+          },
+          "Coverage": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "cluster_count": 43,
+            "mean_gain": 0.0,
+            "positive_is_better": true,
+            "support": 43,
+            "win_tie_loss": [
+              0,
+              43,
+              0
+            ]
+          },
+          "IDF1": {
+            "ci95": [
+              0.15359751490219126,
+              0.2979813906132155
+            ],
+            "cluster_count": 43,
+            "mean_gain": 0.22513167692851296,
+            "positive_is_better": true,
+            "support": 43,
+            "win_tie_loss": [
+              21,
+              22,
+              0
+            ]
+          },
+          "W-MPJPE_mm": {
+            "ci95": [
+              30.280043445659366,
+              297.98062732292505
+            ],
+            "cluster_count": 43,
+            "mean_gain": 150.8715986469884,
+            "positive_is_better": true,
+            "support": 43,
+            "win_tie_loss": [
+              21,
+              0,
+              22
+            ]
+          },
+          "WA-MPJPE_mm": {
+            "ci95": [
+              10.491586596411155,
+              89.87653664775074
+            ],
+            "cluster_count": 43,
+            "mean_gain": 48.496236503041196,
+            "positive_is_better": true,
+            "support": 43,
+            "win_tie_loss": [
+              25,
+              0,
+              18
+            ]
+          }
+        },
+        "strict": {
+          "ATE_Sim3_m": {
+            "mean": 0.2529359251503536,
+            "support": 43
+          },
+          "Coverage": {
+            "mean": 0.973953488372093,
+            "support": 43
+          },
+          "IDF1": {
+            "mean": 0.7579910408881559,
+            "support": 43
+          },
+          "W-MPJPE_mm": {
+            "mean": 505.14874672212903,
+            "support": 43
+          },
+          "WA-MPJPE_mm": {
+            "mean": 321.813633452833,
+            "support": 43
+          },
+          "row_count": 43
+        }
+      },
+      "extreme_unit": "43 farthest-view recordings",
+      "viewpoint_interaction": {
+        "Coverage": {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "cluster_count": 43,
+          "extreme_support": 43,
+          "finite_draws": 20000,
+          "interaction": 0.0,
+          "non_extreme_support": 86,
+          "positive_is_larger_extreme_gain": true
+        },
+        "IDF1": {
+          "ci95": [
+            0.10933932528970927,
+            0.22404802876686702
+          ],
+          "cluster_count": 43,
+          "extreme_support": 43,
+          "finite_draws": 20000,
+          "interaction": 0.16613337912659112,
+          "non_extreme_support": 86,
+          "positive_is_larger_extreme_gain": true
+        },
+        "W-MPJPE_mm": {
+          "ci95": [
+            10.301961623875838,
+            286.1036546966267
+          ],
+          "cluster_count": 43,
+          "extreme_support": 43,
+          "finite_draws": 20000,
+          "interaction": 132.83446349228535,
+          "non_extreme_support": 86,
+          "positive_is_larger_extreme_gain": true
+        },
+        "WA-MPJPE_mm": {
+          "ci95": [
+            -12.89676068323681,
+            68.56736735524578
+          ],
+          "cluster_count": 43,
+          "extreme_support": 43,
+          "finite_draws": 20000,
+          "interaction": 25.19939475428115,
+          "non_extreme_support": 86,
+          "positive_is_larger_extreme_gain": true
+        }
+      }
+    },
+    "egohumans": {
+      "all": {
+        "bridge3r": {
+          "ATE_SE3_m": {
+            "mean": 1.423208453696695,
+            "support": 90
+          },
+          "Coverage": {
+            "mean": 0.615684227172344,
+            "support": 90
+          },
+          "IDF1": {
+            "mean": 0.5709551216112589,
+            "support": 90
+          },
+          "W-MPJPE_mm": {
+            "mean": 866.8277871450724,
+            "support": 90
+          },
+          "WA-MPJPE_mm": {
+            "mean": 336.85761221821673,
+            "support": 90
+          },
+          "row_count": 90
+        },
+        "strict": {
+          "ATE_SE3_m": {
+            "mean": 1.6733605051164542,
+            "support": 90
+          },
+          "Coverage": {
+            "mean": 0.6387837734883044,
+            "support": 90
+          },
+          "IDF1": {
+            "mean": 0.47143080724978315,
+            "support": 90
+          },
+          "W-MPJPE_mm": {
+            "mean": 1005.0913333525158,
+            "support": 90
+          },
+          "WA-MPJPE_mm": {
+            "mean": 365.70898212095653,
+            "support": 90
+          },
+          "row_count": 90
+        }
+      },
+      "all_unit": "90 clips / 27 captures",
+      "camera_column": "ATE_SE3_m",
+      "camera_metric": "ATE-SE3",
+      "display": "EgoHumans",
+      "extreme": {
+        "bridge3r": {
+          "ATE_SE3_m": {
+            "mean": 2.326377952289437,
+            "support": 22
+          },
+          "Coverage": {
+            "mean": 0.5758736612456603,
+            "support": 22
+          },
+          "IDF1": {
+            "mean": 0.5585322233053392,
+            "support": 22
+          },
+          "W-MPJPE_mm": {
+            "mean": 886.050799664146,
+            "support": 22
+          },
+          "WA-MPJPE_mm": {
+            "mean": 315.8669067458502,
+            "support": 22
+          },
+          "row_count": 22
+        },
+        "paired": {
+          "ATE_SE3_m": {
+            "ci95": [
+              0.36242947789644736,
+              1.8567123924281992
+            ],
+            "cluster_count": 22,
+            "mean_gain": 1.0638629573597427,
+            "positive_is_better": true,
+            "support": 22,
+            "win_tie_loss": [
+              15,
+              0,
+              7
+            ]
+          },
+          "Coverage": {
+            "ci95": [
+              -0.11131599571887561,
+              0.03780285942409544
+            ],
+            "cluster_count": 22,
+            "mean_gain": -0.035457886952727634,
+            "positive_is_better": true,
+            "support": 22,
+            "win_tie_loss": [
+              2,
+              7,
+              13
+            ]
+          },
+          "IDF1": {
+            "ci95": [
+              0.061543715520065274,
+              0.248156074686151
+            ],
+            "cluster_count": 22,
+            "mean_gain": 0.15428788394565182,
+            "positive_is_better": true,
+            "support": 22,
+            "win_tie_loss": [
+              11,
+              2,
+              9
+            ]
+          },
+          "W-MPJPE_mm": {
+            "ci95": [
+              40.81188462930836,
+              735.6757718875241
+            ],
+            "cluster_count": 22,
+            "mean_gain": 342.35691724170056,
+            "positive_is_better": true,
+            "support": 22,
+            "win_tie_loss": [
+              13,
+              0,
+              9
+            ]
+          },
+          "WA-MPJPE_mm": {
+            "ci95": [
+              23.97099903707569,
+              155.99784815924818
+            ],
+            "cluster_count": 22,
+            "mean_gain": 84.13342430511794,
+            "positive_is_better": true,
+            "support": 22,
+            "win_tie_loss": [
+              16,
+              0,
+              6
+            ]
+          }
+        },
+        "strict": {
+          "ATE_SE3_m": {
+            "mean": 3.39024090964918,
+            "support": 22
+          },
+          "Coverage": {
+            "mean": 0.6113315481983879,
+            "support": 22
+          },
+          "IDF1": {
+            "mean": 0.40424433935968745,
+            "support": 22
+          },
+          "W-MPJPE_mm": {
+            "mean": 1228.407716905847,
+            "support": 22
+          },
+          "WA-MPJPE_mm": {
+            "mean": 400.0003310509681,
+            "support": 22
+          },
+          "row_count": 22
+        }
+      },
+      "extreme_unit": "22 captures at >=150 deg",
+      "viewpoint_interaction": {
+        "Coverage": {
+          "ci95": [
+            -0.08218598816158741,
+            0.05180457669727937
+          ],
+          "cluster_count": 27,
+          "extreme_support": 22,
+          "finite_draws": 20000,
+          "interaction": -0.016356627313368573,
+          "non_extreme_support": 68,
+          "positive_is_larger_extreme_gain": true
+        },
+        "IDF1": {
+          "ci95": [
+            -0.009577149488307589,
+            0.1602237495302014
+          ],
+          "cluster_count": 27,
+          "extreme_support": 22,
+          "finite_draws": 20000,
+          "interaction": 0.07248119503787993,
+          "non_extreme_support": 68,
+          "positive_is_larger_extreme_gain": true
+        },
+        "W-MPJPE_mm": {
+          "ci95": [
+            -13.662002116180796,
+            611.7957748015709
+          ],
+          "cluster_count": 27,
+          "extreme_support": 22,
+          "finite_draws": 20000,
+          "interaction": 270.1235793100461,
+          "non_extreme_support": 68,
+          "positive_is_larger_extreme_gain": true
+        },
+        "WA-MPJPE_mm": {
+          "ci95": [
+            7.044996365059066,
+            144.91646835985551
+          ],
+          "cluster_count": 27,
+          "extreme_support": 22,
+          "finite_draws": 20000,
+          "interaction": 73.16742494432401,
+          "non_extreme_support": 68,
+          "positive_is_larger_extreme_gain": true
+        }
+      }
+    },
+    "harmony4d": {
+      "all": {
+        "bridge3r": {
+          "ATE_Sim3_m": {
+            "mean": 0.01680019804327222,
+            "support": 88
+          },
+          "Coverage": {
+            "mean": 0.9125378787878787,
+            "support": 88
+          },
+          "IDF1": {
+            "mean": 0.636104889431971,
+            "support": 88
+          },
+          "W-MPJPE_mm": {
+            "mean": 519.5542532704277,
+            "support": 88
+          },
+          "WA-MPJPE_mm": {
+            "mean": 246.98658255333933,
+            "support": 88
+          },
+          "row_count": 88
+        },
+        "strict": {
+          "ATE_Sim3_m": {
+            "mean": 0.1419821519386462,
+            "support": 88
+          },
+          "Coverage": {
+            "mean": 0.9153030303030303,
+            "support": 88
+          },
+          "IDF1": {
+            "mean": 0.5527066102634252,
+            "support": 88
+          },
+          "W-MPJPE_mm": {
+            "mean": 496.6014559441846,
+            "support": 88
+          },
+          "WA-MPJPE_mm": {
+            "mean": 259.607643933763,
+            "support": 88
+          },
+          "row_count": 88
+        }
+      },
+      "all_unit": "88 cases / 25 captures",
+      "camera_column": "ATE_Sim3_m",
+      "camera_metric": "ATE-Sim3",
+      "display": "Harmony4D",
+      "extreme": {
+        "bridge3r": {
+          "ATE_Sim3_m": {
+            "mean": 0.01711332501922719,
+            "support": 25
+          },
+          "Coverage": {
+            "mean": 0.8585333333333333,
+            "support": 25
+          },
+          "IDF1": {
+            "mean": 0.6222418775424421,
+            "support": 25
+          },
+          "W-MPJPE_mm": {
+            "mean": 552.5586685923463,
+            "support": 25
+          },
+          "WA-MPJPE_mm": {
+            "mean": 260.65242859472664,
+            "support": 25
+          },
+          "row_count": 25
+        },
+        "paired": {
+          "ATE_Sim3_m": {
+            "ci95": [
+              0.17571831245463349,
+              0.2986396101585896
+            ],
+            "cluster_count": 25,
+            "mean_gain": 0.23272222517071797,
+            "positive_is_better": true,
+            "support": 25,
+            "win_tie_loss": [
+              25,
+              0,
+              0
+            ]
+          },
+          "Coverage": {
+            "ci95": [
+              -0.013733333333333342,
+              -0.002000000000000004
+            ],
+            "cluster_count": 25,
+            "mean_gain": -0.007333333333333341,
+            "positive_is_better": true,
+            "support": 25,
+            "win_tie_loss": [
+              0,
+              19,
+              6
+            ]
+          },
+          "IDF1": {
+            "ci95": [
+              0.13029311014254316,
+              0.27826196439754997
+            ],
+            "cluster_count": 25,
+            "mean_gain": 0.2045545203670951,
+            "positive_is_better": true,
+            "support": 25,
+            "win_tie_loss": [
+              19,
+              4,
+              2
+            ]
+          },
+          "W-MPJPE_mm": {
+            "ci95": [
+              -62.86595919452206,
+              60.80320724977614
+            ],
+            "cluster_count": 25,
+            "mean_gain": -2.372720236520054,
+            "positive_is_better": true,
+            "support": 25,
+            "win_tie_loss": [
+              13,
+              0,
+              12
+            ]
+          },
+          "WA-MPJPE_mm": {
+            "ci95": [
+              30.372961216415828,
+              100.32937085275395
+            ],
+            "cluster_count": 25,
+            "mean_gain": 65.04940059412503,
+            "positive_is_better": true,
+            "support": 25,
+            "win_tie_loss": [
+              20,
+              0,
+              5
+            ]
+          }
+        },
+        "strict": {
+          "ATE_Sim3_m": {
+            "mean": 0.24983555018994516,
+            "support": 25
+          },
+          "Coverage": {
+            "mean": 0.8658666666666668,
+            "support": 25
+          },
+          "IDF1": {
+            "mean": 0.41768735717534694,
+            "support": 25
+          },
+          "W-MPJPE_mm": {
+            "mean": 550.1859483558262,
+            "support": 25
+          },
+          "WA-MPJPE_mm": {
+            "mean": 325.70182918885166,
+            "support": 25
+          },
+          "row_count": 25
+        }
+      },
+      "extreme_unit": "25 extreme-view captures",
+      "viewpoint_interaction": {
+        "Coverage": {
+          "ci95": [
+            -0.012687581699346417,
+            -0.0011851851851851915
+          ],
+          "cluster_count": 25,
+          "extreme_support": 25,
+          "finite_draws": 20000,
+          "interaction": -0.006380952380952388,
+          "non_extreme_support": 63,
+          "positive_is_larger_extreme_gain": true
+        },
+        "IDF1": {
+          "ci95": [
+            0.08315521565257085,
+            0.2533247892615957
+          ],
+          "cluster_count": 25,
+          "extreme_support": 25,
+          "finite_draws": 20000,
+          "interaction": 0.16923411469003713,
+          "non_extreme_support": 63,
+          "positive_is_larger_extreme_gain": true
+        },
+        "W-MPJPE_mm": {
+          "ci95": [
+            -39.27517655999925,
+            102.3769435240801
+          ],
+          "cluster_count": 25,
+          "extreme_support": 25,
+          "finite_draws": 20000,
+          "interaction": 28.746774347549785,
+          "non_extreme_support": 63,
+          "positive_is_larger_extreme_gain": true
+        },
+        "WA-MPJPE_mm": {
+          "ci95": [
+            35.132579311368104,
+            114.52026215448457
+          ],
+          "cluster_count": 25,
+          "extreme_support": 25,
+          "finite_draws": 20000,
+          "interaction": 73.23323572707505,
+          "non_extreme_support": 63,
+          "positive_is_larger_extreme_gain": true
+        }
+      }
+    }
+  },
+  "schema_version": "Bridge3R-cross-dataset-viewpoint-evidence-v1",
+  "sources": [
+    {
+      "bytes": 185740,
+      "path": "Movie3R/output/v17_harmony4d/unified_half_translation_audit/paper/case_metrics.csv",
+      "sha256": "afb6f38d9a9b9fdeecdbf7031b0f08569168c8a8d67eef4a3bdbf355bd163374"
+    },
+    {
+      "bytes": 200268,
+      "path": "Movie3R/output/v19_egohumans/test/summary/case_metrics.csv",
+      "sha256": "92cfcad70dfd9e650babd38eb25fbe4809c819c93b5748a31fb37fbe460d8488"
+    },
+    {
+      "bytes": 511326,
+      "path": "Movie3R/output/v20_egobody/formal/test/aggregate/case_metrics.csv",
+      "sha256": "86b8aeb9e5b8294a59d2eeef87f5247b92bf76e60c10344067305109c0670fb4"
+    },
+    {
+      "bytes": 151698,
+      "path": "Movie3R/output/v20_egobody/formal/test/aggregate/recording_metrics.csv",
+      "sha256": "915db00cf9f980372ea132519929de985c8d7afe8011dd4c407d519c7a40ce09"
+    }
+  ]
+}

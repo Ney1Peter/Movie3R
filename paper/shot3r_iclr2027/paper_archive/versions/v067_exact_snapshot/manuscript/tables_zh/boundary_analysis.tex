@@ -1,0 +1,57 @@
+\begin{table*}[t]
+  \centering
+  \caption{人物关联准确率、镜头切换检测与受控重建开销。}
+  \label{tab:boundary-analysis-zh}
+  \scriptsize
+
+  \begin{minipage}[t]{0.31\textwidth}
+    \centering
+    \textbf{(a) 人物关联}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrr}
+      \toprule
+      数据集 & 匹配准确率 $\uparrow$ & 身份延续率 $\uparrow$ \\
+      \midrule
+      EgoHumans & 88.62\% & 38.65\% \\
+      Harmony4D & 96.60\% & 80.68\% \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.31\textwidth}
+    \centering
+    \textbf{(b) 首次切换触发}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrrr}
+      \toprule
+      & \multicolumn{2}{c}{首次触发} & \\
+      \cmidrule(lr){2-3}
+      数据集 & 正确边界 & 提前 & FP / 1k \\
+      \midrule
+      EgoBody & 129/129 & 0/129 & 0.0 \\
+      MVHuman & 10/50 & 40/50 & 53.6 \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.36\textwidth}
+    \centering
+    \textbf{(c) 重建开销（100 帧）}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrr}
+      \toprule
+      设置 & 时间 (s) $\downarrow$ & FPS $\uparrow$ \\
+      \midrule
+      \humanthree{} & 31.020 & \textbf{3.224} \\
+      \method{}（0 次切换） & 31.125 & 3.213 \\
+      \method{}（1 次切换） & 32.191 & 3.106 \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}
+
+  \vspace{3pt}
+  \parbox{0.97\textwidth}{\footnotesize
+  检测数值表示首次触发位置的样例数；FP/1k 是每 1000 个评分位置中的非边界正响应数。重建开销在 NVIDIA L20、512 分辨率、batch size 1 和 FP32 下测量，不包含输入读取、缩放与切换检测器，因此不同于表~\ref{tab:multi-person-zh} 的完整系统 FPS。}
+\end{table*}
+

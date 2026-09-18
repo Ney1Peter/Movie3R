@@ -1,0 +1,69 @@
+\FloatBarrier
+\section{实验}
+\label{sec:experiments-zh}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[height=0.415\textwidth,trim=0pt 0pt 1315pt 0pt,clip]{figures/Shot3R_qualitative_comparison.pdf}\hspace{-1.2mm}%
+  \includegraphics[height=0.415\textwidth,trim=845pt 0pt 560pt 0pt,clip]{figures/Shot3R_qualitative_comparison.pdf}\hspace{-1.2mm}%
+  \includegraphics[height=0.415\textwidth,trim=1034pt 0pt 374pt 0pt,clip]{figures/Shot3R_qualitative_comparison.pdf}\hspace{-1.2mm}%
+  \includegraphics[height=0.415\textwidth,trim=1220pt 0pt 188pt 0pt,clip]{figures/Shot3R_qualitative_comparison.pdf}\hspace{-1.2mm}%
+  \includegraphics[height=0.415\textwidth,trim=1407pt 0pt 0pt 0pt,clip]{figures/Shot3R_qualitative_comparison.pdf}
+  \caption{\textbf{跨镜头切换的关键定性比较。}每一行首先展示切换前后的输入，随后依次给出 OnlineHMR、JOSH、\humanthree{} 和 \method{} 的结果。视角变化从上到下为 $134.36^\circ$、$149.85^\circ$ 和 $176.75^\circ$。\method{} 保持更连贯的相机—人体布局；方法能够输出场景几何时一并显示。完整七方法版本见英文补充材料。}
+  \label{fig:qualitative-comparison-zh}
+\end{figure*}
+
+\subsection{实验设置}
+
+\paragraph{对比方法。}
+我们采用公开发布的 \humanthree{} 检查点作为主要受控基线。\humanthree{} 和 \method{} 接收完全相同、按时间排序的 RGB 帧，并使用相同的预处理与评测流程；二者的主要区别在于，\humanthree{} 连续传播递归状态，而 \method{} 在检测到镜头切换后，通过历史条件对齐与重新初始化的递归过程处理镜头边界。我们还评测 OnlineHMR、TRACE、PromptHMR 和 JOSH 的官方实现，并将 TRAM 纳入统一计时
+~\citep{zhao2026onlinehmr,sun2023trace,wang2025prompthmr,liu2026josh,wang2024tram}。
+主表按照时间信息访问方式对这些方法进行分组，并标明其是否显式处理镜头切换；预处理与输出范围见英文补充材料。HumanMM 和 Multi-THuMBS 作为相关工作背景予以讨论，但由于其完整代码、模型权重和评测配置尚未公开，不纳入定量比较。
+
+\paragraph{数据集与评价指标。}
+我们基于 EgoBody、EgoHumans 和 Harmony4D 构建顺序多镜头输入
+~\citep{zhang2022egobody,khirodkar2023egohumans,khirodkar2024harmony4d}。
+具体而言，我们将这些数据集中的同步采集转换为依次输入、而非同时输入的单目镜头，共得到 129、90 和 88 个固定评测样例。EgoBody 用于对镜头边界机制进行受控分析，EgoHumans 包含显著的视角变化，Harmony4D 则提供密集多人交互和重复镜头切换评测。W-MPJPE（W）使用最早的有效观测确定并固定 Sim(3) 对齐，因此对镜头间位置偏移较为敏感；WA-MPJPE（WA）则利用全部有效观测进行对齐。我们还报告相机轨迹误差、衡量跨镜头身份连续性的 IDF1
+~\citep{ristani2016performance}，以及用于反映缺失预测的 Coverage。完整的指标定义与聚合方式见英文补充材料。
+
+\paragraph{实现细节。}
+\method{} 仅在 AvatarReX 和 THuman 上训练，两者均不属于本文的评测基准。我们选择性地优化 19.62M 个参数，占完整 1.208B 参数模型的 1.63\%。这些可训练参数包括镜头边界对齐组件和低秩适配参数，其余原始预训练主干参数保持冻结。该设计将模型适配集中于镜头边界处当前观测与递归历史之间的交互，同时保留预训练模型已有的镜头内重建先验。所有评测基准均使用同一检查点和推理配置，不进行针对数据集或单个视频的优化。训练数据组成、优化配置、参数构成、硬件环境和收敛曲线见英文补充材料。
+
+\subsection{多镜头多人体重建}
+\label{sec:main-results-zh}
+
+\input{tables_zh/main_results}
+
+表~\ref{tab:multi-person-zh} 给出 EgoBody 和 EgoHumans 的结果，Harmony4D 的完整比较见英文补充材料。在与 \humanthree{} 的主要受控比较中，\method{} 在三个数据集上均改善了 WA、相机误差和 IDF1；W 在 EgoBody 和 EgoHumans 上得到改善，在 Harmony4D 上略有增加。在 EgoBody 上，W/WA 从 321.1/233.4\,mm 降至 258.8/201.7\,mm，ATE 从 0.124\,m 降至 0.016\,m，IDF1 从 0.870 提升至 0.985，Coverage 同为 0.981。局部姿态与人体网格精度基本保持不变，说明主要收益来自统一坐标系中的空间定位、相机估计和身份连续性，而非重新学习镜头内部的人体重建。公开系统比较提供了互补证据：在双方均可评测的相同输入上，\method{} 相对 OnlineHMR 具有更低的人体与相机误差，并在全部视频上获得更高的 IDF1 和 Coverage；在与离线 JOSH 均可评测的样例上，\method{} 在三个数据集上的 W、WA 和 ATE 均更低，且不访问未来帧。TRACE 与 PromptHMR 仅能在部分 EgoBody 输入上返回可评测的几何结果，因此其条件误差需要结合有效样本数理解；完整的配对比较与失败记录见英文补充材料。
+
+随着镜头间视角差增大，\method{} 的优势更加明显。按数据集等权汇总时，\method{} 在全部视角下将 W-MPJPE 降低 9.5\%，在预定义大视角子集上降低 19.1\%。EgoBody 极端视角子集中，W-MPJPE 降低 29.9\%，IDF1 从 0.758 提升至 0.983。图~\ref{fig:qualitative-comparison-zh} 展示了 $134.36^\circ$、$149.85^\circ$ 和 $176.75^\circ$ 的镜头切换：尽管视角和人体外观显著变化，\method{} 仍能维持更连贯的相机—人体布局。图~\ref{fig:angle-strata-zh} 与英文补充材料给出了完整的视角区间结果与连续角度分析。
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.82\textwidth]{figures/egohumans_angle_strata.pdf}
+  \caption{\textbf{EgoHumans 中的视角响应。}曲线给出四个固定视角区间内的 W-MPJPE 和 IDF1 绝对值，阴影为以 capture 为单位 bootstrap 得到的 95\% 置信区间。\method{} 在全部区间均提高 IDF1，并在 $130^\circ$ 和 $177^\circ$ 时明显降低 W-MPJPE。}
+  \label{fig:angle-strata-zh}
+\end{figure*}
+
+\subsection{分析与消融实验}
+\label{sec:ablation-zh}
+
+我们首先使用同一原始 \humanthree{} 检查点，在 90 个由静态物理相机采集的 EgoHumans 样例中处理完全相同的切换后 RGB 帧，以单独检验旧状态延续的影响；两个控制均不使用任何 \method{} 组件。两条相机轨迹均锚定到新镜头的首个预测，以消除固定坐标变换。后续 16 帧中，延续旧状态产生 1.124\,m/$14.58^\circ$ 的平移/旋转漂移，而重新初始化后仅为 0.026\,m/$0.20^\circ$，且后者在全部 27 个 capture 上均更低。因此，旧状态延续引起的是新镜头内随时间变化的漂移，而不只是一个固定坐标偏移。置信区间、不同测量窗口及配对检验见英文补充材料。
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.80\textwidth]{figures/state_carryover_drift.pdf}
+  \caption{\textbf{跨镜头延续旧状态会导致新镜头内部的相机漂移。}在静态相机采集中，相同的未修改 \humanthree{} 检查点处理完全相同的新镜头 RGB，且不使用 \method{} 组件。首个预测锚定消除固定坐标变换后，旧状态延续仍产生漂移，而重新初始化保持稳定。}
+  \label{fig:state-drift-zh}
+\end{figure*}
+
+\input{tables_zh/mechanism_evidence}
+
+表~\ref{tab:mechanism-evidence-zh} 进一步区分了不同的失效模式。仅重新初始化状态会失去镜头间空间关系，W/WA 达到 752.6/589.4\,mm，ATE 为 1.141\,m。加入对齐后，延续状态的 W/WA 低于重新初始化状态（293.3/227.3\,mm 对 352.8/267.7\,mm），但重新初始化将 ATE 从 0.082\,m 降至 0.017\,m。这说明对齐用于恢复镜头之间的空间关系，重新初始化则用于稳定新镜头内部的递归过程；任何一项都无法单独解决两种失效。完整 \method{} 进一步通过人物关联支持身份连续性，并使用相机—人体共享变换，最终达到 258.8/201.7\,mm W/WA、0.016\,m ATE 和 0.985 IDF1。上述结果来自完整设计的共同作用，不能归因于任一单独组件，并支持将镜头间对齐与递归状态传播视为两个独立决策。
+
+\paragraph{几何配准对照实验。}
+我们进一步检验，对每个镜头独立重建后再进行显式几何拟合，是否能够恢复相同的跨镜头结果。所有对照均从完全相同的逐镜头状态重置预测出发，分别估计共享骨盆平移、基于人体关节的鲁棒 SE(3)，或者利用两个完整镜头场景点云估计离线 FPFH/RANSAC+ICP 变换。三种几何对照均获得标注镜头边界且只使用模型预测，\method{} 则仍使用在线边界检测。如表~\ref{tab:registration-controls-zh} 所示，\method{} 在两个完整测试集上均取得最低的 W 和 ATE，以及最高的 IDF1。人体关节 SE(3) 是最强的几何对照，其 W 已接近 \method{}，但身份一致性更低，并在 17.8\% 的 EgoHumans 样例上拟合失败。这表明，人体引导的几何拟合能够恢复较多空间关系，而 \method{} 无需单独拟合阶段即可获得更均衡的人体定位、相机估计与身份一致性。完整 WA/Coverage、配对置信区间、固定视角分层和失败分析见英文补充材料。
+
+\input{tables_zh/registration_controls_main}
+
+补充分析进一步考察人物关联、重复镜头切换和运行效率。在 Harmony4D 上，在骨盆位置基础上加入躯干朝向与去根节点后的关节结构，使身份延续率从 78.41\% 提升至 80.68\%，IDF1 从 0.620 提升至 0.635，说明这些预测几何线索具有互补作用。小规模三镜头受控实验表明，同一边界操作可以重复执行，但这一结果并不意味着长序列中不存在累积误差。在线检测器在全部主要协议流中均识别出标注边界。在单张 NVIDIA L20 上的标准化重建计时中，\method{} 与 \humanthree{} 分别达到 3.106 和 3.224 FPS，具有相近的吞吐量。完整人物关联消融、镜头切换次数分析以及七种方法的完整系统计时见英文补充材料。

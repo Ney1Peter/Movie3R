@@ -1,0 +1,28 @@
+% Values from the retained EgoBody-CS150 evaluation; labels are paper-facing.
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & MPJPE (mm) $\downarrow$ & PA-MPJPE (mm) $\downarrow$ & MPVPE (mm) $\downarrow$ & ATE-SE3 (m) $\downarrow$ \\
+\midrule
+Human3R & 71.2 & 43.8 & 79.3 & 0.215 \\
+State reinitialization (oracle boundary) & 70.9 & 43.9 & 79.0 & 1.665 \\
+Camera alignment (oracle boundary) & 70.9 & 43.9 & 79.0 & 0.283 \\
+Alignment + association (oracle boundary) & 70.9 & 43.8 & 79.0 & 0.318 \\
+Alignment + association (causal detection) & 70.9 & 43.8 & 79.0 & 0.318 \\
+Shot3R (causal detection) & 70.9 & 43.9 & 79.0 & 0.207 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Accel (mm/frame$^2$) $\downarrow$ & ROE proxy ($^\circ$) $\downarrow$ & Jitter-H3R $\downarrow$ & Foot sliding (cm) $\downarrow$ & Coverage $\uparrow$ & Person precision $\uparrow$ \\
+\midrule
+Human3R & 34.3 & 12.9 & 171.4 & 2.6 & 0.981 & 0.999 \\
+State reinitialization (oracle boundary) & 40.1 & 35.1 & 206.2 & 2.8 & 0.981 & 0.999 \\
+Camera alignment (oracle boundary) & 30.3 & 11.8 & 151.0 & 2.3 & 0.981 & 0.999 \\
+Alignment + association (oracle boundary) & 29.7 & 12.0 & 147.8 & 2.3 & 0.979 & 0.997 \\
+Alignment + association (causal detection) & 29.7 & 12.0 & 147.8 & 2.3 & 0.979 & 0.997 \\
+Shot3R (causal detection) & 28.0 & 11.8 & 137.9 & 2.2 & 0.981 & 0.999 \\
+\bottomrule
+\end{tabular}}

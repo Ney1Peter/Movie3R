@@ -1,0 +1,160 @@
+{
+  "schema_version": "bridge3r-real-qualitative-provenance-v1",
+  "created_on": "2026-08-30",
+  "scientific_status": {
+    "selection": "metric-selected qualitative example",
+    "random": false,
+    "representative_claimed": false,
+    "generative_editing_used": false,
+    "geometry_borrowed_between_methods": false
+  },
+  "case": {
+    "dataset": "EgoHumans",
+    "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+    "camera_rotation_span_deg": 176.74916252624004,
+    "people": 3,
+    "cut_original_clip_frame": 50,
+    "pre_cut": {
+      "export_local_frame": 4,
+      "original_clip_frame": 49
+    },
+    "post_cut": {
+      "export_local_frame": 5,
+      "original_clip_frame": 50
+    }
+  },
+  "selection_rule": [
+    "camera-rotation span is at least 150 degrees",
+    "same-case and same-frame output exists for Strict Human3R, Bridge3R, official TRACE, and PromptHMR with official SPEC",
+    "Bridge3R improves over Strict Human3R in W-MPJPE, WA-MPJPE, and IDF1",
+    "prefer Bridge3R best on all three metrics among the four methods",
+    "use camera-rotation span only as a final tie-break"
+  ],
+  "metrics_are_case_level": true,
+  "metrics": {
+    "strict_human3r": {
+      "w_mpjpe_mm": 393.1,
+      "wa_mpjpe_mm": 208.1,
+      "idf1": 0.514
+    },
+    "trace_official": {
+      "w_mpjpe_mm": 2359.0,
+      "wa_mpjpe_mm": 895.5,
+      "idf1": 0.143
+    },
+    "prompthmr_official_spec": {
+      "w_mpjpe_mm": 1056.1,
+      "wa_mpjpe_mm": 971.8,
+      "idf1": 0.422
+    },
+    "bridge3r": {
+      "w_mpjpe_mm": 337.0,
+      "wa_mpjpe_mm": 182.1,
+      "idf1": 0.951
+    }
+  },
+  "scientific_boundaries": {
+    "strict_scene": "own frozen-checkpoint replay",
+    "bridge3r_scene": "own frozen-checkpoint replay",
+    "trace_scene_available": false,
+    "prompthmr_scene_available": false,
+    "trace_camera": "diagnostic body-root proxy; not an official physical camera trajectory",
+    "strict_bridge_human_camera_source": "immutable formal test cache",
+    "gt_used_to_construct_visualized_predictions": false
+  },
+  "panels": [
+    {
+      "id": "a",
+      "label": "pre-cut RGB",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_shared/color/000004.png",
+      "source_sha256": "42376ff28775eeac6d17beab39bfffa3518f1be45f2878fa108d0fd58be095cc",
+      "source_size_px": [640, 450],
+      "crop_xywh_px": null,
+      "packaged": "qualitative_real_large_view_panels/rgb_pre_local000004_original0049.png",
+      "packaged_sha256": "42376ff28775eeac6d17beab39bfffa3518f1be45f2878fa108d0fd58be095cc",
+      "packaged_size_px": [640, 450],
+      "display_size_svg": [542, 381.1]
+    },
+    {
+      "id": "b",
+      "label": "post-cut RGB",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/_shared/color/000005.png",
+      "source_sha256": "b1b412fd00eab404fa577eb9c8b4911893a536da084208a9c5b4a55b4db96d75",
+      "source_size_px": [640, 450],
+      "crop_xywh_px": null,
+      "packaged": "qualitative_real_large_view_panels/rgb_post_local000005_original0050.png",
+      "packaged_sha256": "b1b412fd00eab404fa577eb9c8b4911893a536da084208a9c5b4a55b4db96d75",
+      "packaged_size_px": [640, 450],
+      "display_size_svg": [542, 381.1]
+    },
+    {
+      "id": "c",
+      "label": "Strict Human3R post-cut rendering",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/strict/frames/000005.png",
+      "source_sha256": "a27b6078e02053105fe613937cf5284cda7c610bbb6013fd6e80f05ecea59aa2",
+      "source_size_px": [1280, 522],
+      "crop_xywh_px": [640, 85, 640, 437],
+      "packaged": "qualitative_real_large_view_panels/strict_post_render_local000005_original0050.png",
+      "packaged_sha256": "0f00b209628ba76effe65f2e88a97298529bf51e74e6179ed10b4d3490d45ca6",
+      "packaged_size_px": [640, 437],
+      "display_size_svg": [276, 188.4]
+    },
+    {
+      "id": "d",
+      "label": "TRACE official post-cut rendering",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/trace/frames/000005.png",
+      "source_sha256": "cecf5fc5e7df83483dbaca4dfd0948222246739f3b08e1f53e486bdd61300042",
+      "source_size_px": [1280, 522],
+      "crop_xywh_px": [640, 85, 640, 437],
+      "packaged": "qualitative_real_large_view_panels/trace_post_render_local000005_original0050.png",
+      "packaged_sha256": "32658465f9bfc53371ba7a0a6fbe27b36ad491d2c0dc84f4e4c85e2feda87935",
+      "packaged_size_px": [640, 437],
+      "display_size_svg": [276, 188.4]
+    },
+    {
+      "id": "e",
+      "label": "PromptHMR official SPEC post-cut rendering",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/prompthmr_spec/frames/000005.png",
+      "source_sha256": "a1a0324a41436d9609b13241c5480291a25806174d22e2f137049bf9ddc5c115",
+      "source_size_px": [1280, 522],
+      "crop_xywh_px": [640, 85, 640, 437],
+      "packaged": "qualitative_real_large_view_panels/prompthmr_spec_post_render_local000005_original0050.png",
+      "packaged_sha256": "263d86e31dcb1428112d58376c1540c768ea20374b77270de28624d5f023125e",
+      "packaged_size_px": [640, 437],
+      "display_size_svg": [276, 188.4]
+    },
+    {
+      "id": "f",
+      "label": "Bridge3R post-cut rendering",
+      "source": "Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/bridge3r/frames/000005.png",
+      "source_sha256": "c9a7f30921813ec3f8702db85708d3e8fdb5a0641459a38d0774ef3bf2175a50",
+      "source_size_px": [1280, 522],
+      "crop_xywh_px": [640, 85, 640, 437],
+      "packaged": "qualitative_real_large_view_panels/bridge3r_post_render_local000005_original0050.png",
+      "packaged_sha256": "ecce8c110588a50ae1588190066064b9be1120675fb4171a772a3f8186958180",
+      "packaged_size_px": [640, 437],
+      "display_size_svg": [276, 188.4]
+    }
+  ],
+  "controlling_records": {
+    "manifest": {
+      "path": "Movie3R/output/bridge3r_two_dataset_demo_v2/manifest.json",
+      "sha256": "b71c9b0227f5fe0cbfaff9d7996bd5fec620c04a8a36548d11289d65644f14ee"
+    },
+    "viewer_readme": {
+      "path": "Movie3R/output/bridge3r_two_dataset_demo_v2/VIEWER_README.md",
+      "sha256": "538cac7f3aeca1fb539d9a0a54fcb46e0bc9d41977f2555193651b35eb3dd96a"
+    }
+  },
+  "artifacts": {
+    "svg": {
+      "path": "qualitative_real_large_view.svg",
+      "sha256": "69f36c5a23f62a9fe05d4d170119b71a4b915c060377afd96c15fafa5ce4d9b5"
+    },
+    "pdf": {
+      "path": "qualitative_real_large_view.pdf",
+      "sha256": "5e7b427df5454e49aab6e366f9549a3f8be0e655da8dea1f5dfd9ce3b7f142ff",
+      "exporter": "CairoSVG 2.7.1"
+    }
+  }
+}

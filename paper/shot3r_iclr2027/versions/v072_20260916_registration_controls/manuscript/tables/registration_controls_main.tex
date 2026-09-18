@@ -1,0 +1,36 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：在完整 EgoBody 和 EgoHumans 测试集上与几何配准对照比较。
+  % W 单位为毫米，ATE 单位为米；Fit 表示 EgoHumans 上独立几何拟合的成功率。
+  \caption{Geometric registration controls on the complete EgoBody and
+  EgoHumans test sets. W is in mm and ATE in m. Fit denotes the success rate
+  of the separate geometric fit on EgoHumans; \method{} has no such stage.}
+  \label{tab:registration-controls}
+  \scriptsize
+  \setlength{\tabcolsep}{3.2pt}
+  \renewcommand{\arraystretch}{1.03}
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tabular}{llrrr rrrr}
+    \toprule
+    \multirow{2}{*}{Method} & \multirow{2}{*}{Access} &
+    \multicolumn{3}{c}{EgoBody ($N=129$)} &
+    \multicolumn{4}{c}{EgoHumans ($N=90$)} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-9}
+    & & W $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ &
+    W $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & Fit $\uparrow$ \\
+    \midrule
+    \humanthree{} per-shot reset & Independent shots & 752.6 & 1.141 & 0.834 & 1248.1 & 4.411 & 0.455 & -- \\
+    $+$ pelvis translation & Boundary-time & 500.2 & 0.068 & 0.896 & 1242.1 & 3.326 & 0.506 & 100.0\% \\
+    $+$ human-joint SE(3) & Boundary-time & 261.5 & 0.019 & 0.896 & 897.0 & 1.731 & 0.510 & 82.2\% \\
+    $+$ scene FPFH+ICP & Offline full shots & 733.2 & 0.020 & 0.834 & 1372.8 & 3.847 & 0.455 & 41.1\% \\
+    \textbf{\method{}} & Streaming & \textbf{258.8} & \textbf{0.016} & \textbf{0.985} &
+    \textbf{866.8} & \textbf{1.423} & \textbf{0.571} & -- \\
+    \bottomrule
+  \end{tabular}}
+  \vspace{0.5mm}
+
+  \parbox{0.96\textwidth}{\scriptsize Traditional controls receive annotated
+  shot boundaries and never use ground truth to estimate a transform. Failed
+  fits fall back to the per-shot-reset result and remain in the fixed
+  denominator. EgoBody fitting succeeds for every case.}
+\end{table*}

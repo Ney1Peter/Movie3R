@@ -1,0 +1,17 @@
+{
+  "dataset": "harmony4d",
+  "status": "passed",
+  "checked_at_local": "2026-09-06T23:43:00+08:00",
+  "verified_archives": 88,
+  "verified_files": 28645,
+  "archive_bytes": 3204734143,
+  "checks": [
+    "Each completed case has a verified_lossless_archive receipt",
+    "Archive SHA-256 matches its native_archive.json receipt",
+    "All archived files match the recorded path, size and SHA-256 inventory",
+    "Archive contains no unexpected files, duplicate members or unsafe links"
+  ],
+  "verification_function": "external_baselines/bridge3r_eval/archive_josh_native.py:verify_archive",
+  "predictions_or_results_modified": false,
+  "inference_or_evaluation_rerun": false
+}

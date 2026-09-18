@@ -1,0 +1,13 @@
+\begin{tabular}{lrrrrl}
+  % 中文表头：数据集；完整样本数；原生输出；W/WA 支持；ATE 支持；原生失败。
+  \toprule
+  Dataset & Total & Completed & W/WA evaluable & ATE evaluable & Failed \\
+  \midrule
+  EgoBody & 129 & 127 & 127 & 127 & 2 contact initialization \\
+  EgoHumans & 90 & 87 & 77 & 87 & 3 mask-size mismatch$^\dagger$ \\
+  Harmony4D & 88 & 88 & 88 & 88 & None \\
+  \midrule
+  Total & 307 & 302 & 292 & 302 & 5 \\
+  \bottomrule
+  \multicolumn{6}{l}{\footnotesize $^\dagger$Ten additional completed streams lack the initial match required by W/WA.} \\
+\end{tabular}

@@ -1,0 +1,33 @@
+\begin{table*}[t]
+  \centering
+  \caption{EgoBody 与 EgoHumans 多镜头多人体重建协议上的比较。}
+  \label{tab:multi-person-zh}
+  \footnotesize
+  \setlength{\tabcolsep}{2.7pt}
+  \renewcommand{\arraystretch}{1.04}
+  \newcommand{\evalnzh}[2]{#1\textsuperscript{\tiny #2}}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llc rrrrr rrrrr}
+    \toprule
+    & & & \multicolumn{5}{c}{EgoBody ($N=129$)} & \multicolumn{5}{c}{EgoHumans ($N=90$)} \\
+    \cmidrule(lr){4-8}\cmidrule(lr){9-13}
+    类别 & 方法 & 切换处理 & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & 覆盖率 $\uparrow$ & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & 覆盖率 $\uparrow$ \\
+    \midrule
+    \multirow{2}{*}{离线}
+      & PromptHMR (SPEC) & \xmark & \evalnzh{741.4}{64} & \evalnzh{336.1}{87} & -- & 0.195 & 0.202 & \evalnzh{1193.3}{17} & \evalnzh{487.7}{25} & -- & 0.061 & 0.062 \\
+      & JOSH & \xmark & \evalnzh{399.6}{127} & \evalnzh{322.9}{127} & \evalnzh{0.087}{127} & 0.973 & 0.980 & \evalnzh{1410.7}{77} & \evalnzh{481.3}{77} & \evalnzh{1.755}{87} & \textbf{0.616} & \textbf{0.686} \\
+    \midrule
+    半在线
+      & OnlineHMR & \xmark & \evalnzh{961.2}{97} & \evalnzh{418.1}{97} & \evalnzh{0.259}{129} & 0.375 & 0.424 & \evalnzh{1311.7}{50} & \evalnzh{405.5}{50} & \evalnzh{3.869}{87} & 0.142 & 0.211 \\
+    \midrule
+    \multirow{3}{*}{在线}
+      & TRACE & \xmark & \evalnzh{576.4}{22} & \evalnzh{276.4}{35} & -- & 0.036 & 0.035 & \evalnzh{2464.6}{43} & \evalnzh{749.5}{59} & -- & 0.070 & 0.072 \\
+      & \humanthree{} & \xmark & 321.1 & 233.4 & 0.124 & 0.870 & \textbf{0.981} & 1005.1 & 365.7 & 1.673 & 0.471 & \underline{0.639} \\
+      & \textbf{\method{}} & \cmark & \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} & \textbf{0.981} & \textbf{866.8} & \textbf{336.9} & \textbf{1.423} & \underline{0.571} & 0.616 \\
+    \bottomrule
+  \end{tabular}%
+  }
+  \vspace{0.5mm}
+
+  \parbox{0.98\textwidth}{\scriptsize “切换处理”表示方法是否显式处理镜头切换。W/WA 单位为 mm，ATE 单位为 m（EgoBody 使用 Sim(3)，EgoHumans 使用 SE(3)）。上标表示条件几何指标的可评测视频数；IDF1 与 Coverage 使用完整预定义协议。不同有效样本集合上的条件几何均值不能构成统一排名。}
+\end{table*}

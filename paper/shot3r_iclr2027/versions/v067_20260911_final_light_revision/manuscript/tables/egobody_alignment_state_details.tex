@@ -1,0 +1,13 @@
+% 中文列名：后续传播状态；MPJPE；PA-MPJPE；切换后首帧相机平移/旋转误差；
+% 切换后首帧根节点误差；切换后根节点误差。
+\begin{tabular}{lrrrrrr}
+  \toprule
+  \multirow{2}{*}{State propagated} & \multicolumn{2}{c}{Local human} &
+  \multicolumn{3}{c}{First post-transition} & \multirow{2}{*}{Post root} \\
+  \cmidrule(lr){2-3}\cmidrule(lr){4-6}
+  & MPJPE & PA-MPJPE & Cam. $t$ & Cam. $R$ & Root & \\
+  \midrule
+  Continued & 71.18 & \textbf{43.80} & 0.807 & 8.02 & 0.798 & \textbf{0.430} \\
+  Reinitialized & \textbf{70.94} & 43.87 & 0.807 & 8.02 & \textbf{0.538} & 0.554 \\
+  \bottomrule
+\end{tabular}

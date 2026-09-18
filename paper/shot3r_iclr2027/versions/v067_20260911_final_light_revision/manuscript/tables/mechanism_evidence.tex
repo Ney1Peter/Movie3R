@@ -1,0 +1,43 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody 上的对齐—状态传播 2×2 受控实验及完整 Shot3R。
+  % 执行边界操作的三个受控设置使用标注镜头边界，Human3R 不读取边界，完整 Shot3R 使用在线检测边界。
+  \caption{Alignment--state-propagation $2\!\times\!2$ control and the complete
+  \method{} on EgoBody.}
+  \label{tab:mechanism-evidence}
+  \scriptsize
+  \setlength{\tabcolsep}{2.0pt}
+  % 中文列名：设置；边界信号；历史条件对齐；后续传播状态；跨镜头人物关联；
+  % W-MPJPE（毫米）；WA-MPJPE（毫米）；ATE（米）；IDF1。
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lccccrrrr}
+    \toprule
+    \multirow{2}{*}{Configuration} & \multirow{2}{*}{Boundary cue} &
+    \multicolumn{3}{c}{Shot-transition operation} &
+    \multicolumn{4}{c}{EgoBody metrics} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-9}
+    & & Alignment & \shortstack{Propagated\\state} & Association &
+    W (mm) $\downarrow$ & WA (mm) $\downarrow$ & ATE (m) $\downarrow$ & IDF1 $\uparrow$ \\
+    \midrule
+    \humanthree{} & --- & \xmark & Continued & \xmark &
+      321.1 & 233.4 & 0.124 & 0.870 \\
+    State reinitialization & Annotated & \xmark & Reinitialized & \xmark &
+      752.6 & 589.4 & 1.141 & 0.834 \\
+    Alignment + continued state & Annotated & \cmark & Continued & \xmark &
+      293.3 & 227.3 & 0.082 & 0.868 \\
+    \shortstack[l]{Alignment +\\reinitialized state} & Annotated & \cmark & Reinitialized & \xmark &
+      352.8 & 267.7 & 0.017 & 0.834 \\
+    \textbf{\method{}} & Detected & \cmark & Reinitialized & \cmark &
+      \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} \\
+    \bottomrule
+  \end{tabular}%
+  }
+  \vspace{1pt}
+
+  % 中文表下注释：标注边界用于三个执行边界操作的受控设置；Human3R 不使用边界信号。
+  % 两个已对齐设置关闭显式人物关联与人物引导的共享平移，只改变对齐后传播的状态。
+  \parbox{0.96\textwidth}{\scriptsize Annotated boundaries are used only by
+  the controlled configurations; \humanthree{} receives no boundary cue. The
+  two aligned controls disable association and person-guided translation, so
+  only the state propagated after alignment changes.}
+\end{table*}

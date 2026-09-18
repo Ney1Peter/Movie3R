@@ -1,0 +1,37 @@
+\begin{abstract}
+% 中文摘要：
+% 从一段由多个镜头组成的单目视频中，在统一世界坐标系下重建人体运动是一项具有挑战性的任务，
+% 因为突然发生的镜头切换会带来大幅度的视角变化，并显著改变画面中可见的场景内容和人体外观。
+% 现有在线方法通常假设输入在时间上连续；已有多镜头方法则联合处理镜头或优化已观测序列，而不是在帧到达时递归地产生预测。
+% 为弥补这一空缺，我们提出 Shot3R，一个面向多镜头视频流式多人体四维重建的在线框架。
+% 在镜头切换处，递归历史为恢复镜头间世界坐标关系提供参照，但将同一状态继续传播到新镜头可能引起随时间变化的相机漂移，
+% 而单独重新初始化又会丢失这一参照。Shot3R 通过将镜头间对齐与递归状态传播解耦来处理这一冲突。
+% 在每个镜头边界，历史条件路径估计镜头间变换，独立重新初始化的路径则提供在新镜头中继续传播的状态。
+% 随后，基于几何的关联建立跨镜头身份对应，共享变换将相机与人体配准到已有世界坐标系中。
+% 在三个多人体基准上，相比直接继承递归状态，Shot3R 将按数据集等权计算的平均 W-MPJPE 降低了 9.5%，
+% 并将平均 IDF1 绝对提高了 0.099。
+% 在 EgoBody 预先定义的极端视角子集上，Shot3R 将 W-MPJPE 降低 29.9%，同时保持无需未来帧或逐视频优化的逐帧流式推理。
+Reconstructing human motion in a common world coordinate system from a
+monocular video composed of multiple shots is challenging, as abrupt shot
+transitions can cause drastic changes in viewpoint, visible scene content,
+and human appearance. Existing online methods generally assume temporally
+continuous input, while prior multi-shot approaches jointly process shots or
+refine the observed sequence rather than producing recurrent estimates as
+frames arrive. At a shot transition, recurrent history provides a reference
+for recovering the inter-shot world relation, yet propagating the same state
+through the new shot can induce time-varying camera drift, while
+reinitialization alone loses that reference. To address this conflict, we present \method{}, an online framework
+for streaming multi-person 4D reconstruction from multi-shot videos that
+decouples inter-shot alignment from recurrent state propagation.
+At each boundary, a history-conditioned path estimates the inter-shot
+transform, while an independently reinitialized path supplies the state
+propagated through the new shot. Geometry-based association establishes
+cross-shot identities, and a shared transform registers cameras and humans to
+the existing world frame.
+Across three multi-person benchmarks, \method{} reduces the
+equally weighted mean W-MPJPE by 9.5\% and improves mean IDF1 by 0.099 in
+absolute terms over direct recurrent-state carry-over. On the predefined
+extreme-viewpoint subset of EgoBody, \method{} reduces W-MPJPE by 29.9\%
+while retaining frame-wise streaming inference without future frames or
+per-video optimization.
+\end{abstract}

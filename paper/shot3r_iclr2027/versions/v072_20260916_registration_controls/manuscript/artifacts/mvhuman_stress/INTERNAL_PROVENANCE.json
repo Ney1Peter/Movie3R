@@ -1,0 +1,14 @@
+{
+  "schema_version": "BRIDGE3R-MVHuman-internal-paper-provenance-v1",
+  "protocol": {
+    "case_count": 50,
+    "capture_count": 10,
+    "metric_report_count": 50
+  },
+  "source_aggregate": {
+    "content_sha256": "709aef84c798a58f7c0af2d3ecf116950413915cbfef993d80dd871e78051257",
+    "file_sha256": "42098d8db328ba4d217a762ca8d12913031eed09707e2d86364296bdb4a14e9b"
+  },
+  "machine_generated_tex_sha256": "17555fdca2b08c1e6308f523d2e962c1c6a507c4200fd5a4481ddd1ecac47b60",
+  "aggregation_script_sha256": "941fba54b775544cc6ea2fe87bd616476153799923180225f400f08c047a85c7"
+}

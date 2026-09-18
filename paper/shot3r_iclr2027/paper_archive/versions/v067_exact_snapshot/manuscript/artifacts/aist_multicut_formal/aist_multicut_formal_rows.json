@@ -1,0 +1,136 @@
+{
+  "MC150-3": [
+    {
+      "protocol": "MC150-3",
+      "method": "m0_strict_human3r",
+      "display": "Strict Human3R",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.443923378715844,
+        "first_shot_anchor_mpjpe_body12_mm": 574.1087708345933,
+        "mean_boundary_seam_root_excess_mm": 805.7120092929415,
+        "mean_boundary_seam_orientation_excess_deg": 58.44236542461723,
+        "post_first_cut_camera_relative_rotation_deg": 61.722478130976015
+      },
+      "coverage": 0.9999333333333333
+    },
+    {
+      "protocol": "MC150-3",
+      "method": "m1_clean_reset",
+      "display": "Clean reset",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.259542770540136,
+        "first_shot_anchor_mpjpe_body12_mm": 576.260187509416,
+        "mean_boundary_seam_root_excess_mm": 801.8384816974643,
+        "mean_boundary_seam_orientation_excess_deg": 88.77595318495844,
+        "post_first_cut_camera_relative_rotation_deg": 94.76053138765838
+      },
+      "coverage": 0.9999333333333333
+    },
+    {
+      "protocol": "MC150-3",
+      "method": "m3_b0_only",
+      "display": "Coarse alignment only",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.25954251090581,
+        "first_shot_anchor_mpjpe_body12_mm": 1325.4364170723272,
+        "mean_boundary_seam_root_excess_mm": 1967.4428287157864,
+        "mean_boundary_seam_orientation_excess_deg": 53.77583595388654,
+        "post_first_cut_camera_relative_rotation_deg": 56.51116999273098
+      },
+      "coverage": 0.9999333333333333
+    },
+    {
+      "protocol": "MC150-3",
+      "method": "m4_b0_identity",
+      "display": "Coarse alignment + identity",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.25954251090581,
+        "first_shot_anchor_mpjpe_body12_mm": 1325.4364170723272,
+        "mean_boundary_seam_root_excess_mm": 1967.4428287157864,
+        "mean_boundary_seam_orientation_excess_deg": 53.77583595388654,
+        "post_first_cut_camera_relative_rotation_deg": 56.51116999273098
+      },
+      "coverage": 0.9999333333333333
+    },
+    {
+      "protocol": "MC150-3",
+      "method": "m15_bridge3r_fixed_v19",
+      "display": "Bridge3R (fixed, causal)",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.2595425015449,
+        "first_shot_anchor_mpjpe_body12_mm": 751.0462423843859,
+        "mean_boundary_seam_root_excess_mm": 983.298050615055,
+        "mean_boundary_seam_orientation_excess_deg": 53.77583897562452,
+        "post_first_cut_camera_relative_rotation_deg": 56.5111657426362
+      },
+      "coverage": 0.9999333333333333
+    }
+  ],
+  "MC150-4": [
+    {
+      "protocol": "MC150-4",
+      "method": "m0_strict_human3r",
+      "display": "Strict Human3R",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 59.02279449490052,
+        "first_shot_anchor_mpjpe_body12_mm": 687.0968398394692,
+        "mean_boundary_seam_root_excess_mm": 819.9029481978927,
+        "mean_boundary_seam_orientation_excess_deg": 58.716686198828675,
+        "post_first_cut_camera_relative_rotation_deg": 57.30580935253357
+      },
+      "coverage": 1.0
+    },
+    {
+      "protocol": "MC150-4",
+      "method": "m1_clean_reset",
+      "display": "Clean reset",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.82666156644555,
+        "first_shot_anchor_mpjpe_body12_mm": 623.6690279307551,
+        "mean_boundary_seam_root_excess_mm": 746.4118084053966,
+        "mean_boundary_seam_orientation_excess_deg": 88.958670129544,
+        "post_first_cut_camera_relative_rotation_deg": 99.21317781859041
+      },
+      "coverage": 1.0
+    },
+    {
+      "protocol": "MC150-4",
+      "method": "m3_b0_only",
+      "display": "Coarse alignment only",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.82666153776262,
+        "first_shot_anchor_mpjpe_body12_mm": 1482.357391880722,
+        "mean_boundary_seam_root_excess_mm": 2031.843579802966,
+        "mean_boundary_seam_orientation_excess_deg": 57.46064465225414,
+        "post_first_cut_camera_relative_rotation_deg": 58.662562471997035
+      },
+      "coverage": 1.0
+    },
+    {
+      "protocol": "MC150-4",
+      "method": "m4_b0_identity",
+      "display": "Coarse alignment + identity",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.82666153776262,
+        "first_shot_anchor_mpjpe_body12_mm": 1482.357391880722,
+        "mean_boundary_seam_root_excess_mm": 2031.843579802966,
+        "mean_boundary_seam_orientation_excess_deg": 57.46064465225414,
+        "post_first_cut_camera_relative_rotation_deg": 58.662562471997035
+      },
+      "coverage": 1.0
+    },
+    {
+      "protocol": "MC150-4",
+      "method": "m15_bridge3r_fixed_v19",
+      "display": "Bridge3R (fixed, causal)",
+      "metrics": {
+        "pa_mpjpe_body12_mm": 58.82666197942125,
+        "first_shot_anchor_mpjpe_body12_mm": 819.4269475652138,
+        "mean_boundary_seam_root_excess_mm": 1015.5985782061216,
+        "mean_boundary_seam_orientation_excess_deg": 57.46064705701077,
+        "post_first_cut_camera_relative_rotation_deg": 58.662558951951894
+      },
+      "coverage": 1.0
+    }
+  ]
+}

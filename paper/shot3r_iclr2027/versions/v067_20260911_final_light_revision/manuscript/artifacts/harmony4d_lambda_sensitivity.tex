@@ -1,0 +1,39 @@
+% Auto-generated from the fixed train-only sensitivity summary; do not hand-edit values.
+\begin{table*}[t]
+  \centering
+  \caption{Case-macro mean blend sensitivity on the fixed Harmony4D training-only development manifest (12 cases). Values are case-macro means over the 9 evaluator-complete cases; 3 cases are evaluator-unavailable uniformly for every row before candidate-specific scoring. W, WA, MPJPE, MPVPE, and acceleration are in mm (acceleration per frame$^2$); ATE and seam-root are in m. Seam-root has 8 finite cases. All rows reuse identical base predictions and differ only in the shared-translation blend. The reported configuration remains $\lambda=0.50$ irrespective of this descriptive table; the table does not select a configuration or change any primary result.}
+  \label{tab:harmony-lambda-sensitivity-mean}
+  \scriptsize
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lrrrrrrrrr}
+    \toprule
+    Shared-translation blend $\lambda$ & W & WA & MPJPE & MPVPE & Accel. & ATE & Seam & IDF1 & Cov. \\
+    \midrule
+    No shared translation & 630.4 & 322.7 & 93.0 & 111.0 & 102.3 & 0.020 & 1.175 & 0.528 & 0.866 \\
+    0.25 & 536.2 & 299.1 & 93.0 & 111.0 & 99.2 & 0.019 & 0.857 & 0.528 & 0.866 \\
+    0.50 (fixed) & 499.4 & 281.5 & 93.0 & 111.0 & 96.4 & 0.017 & 0.585 & 0.528 & 0.866 \\
+    0.75 & 517.9 & 288.2 & 93.0 & 111.0 & 95.6 & 0.016 & 0.507 & 0.528 & 0.866 \\
+    1.00 & 606.5 & 321.5 & 93.0 & 111.0 & 96.0 & 0.015 & 0.560 & 0.528 & 0.866 \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}
+
+% Auto-generated from the fixed train-only sensitivity summary; do not hand-edit values.
+\begin{table*}[t]
+  \centering
+  \caption{Case-macro median blend sensitivity on the fixed Harmony4D training-only development manifest (12 cases). Values are case-macro medians over the 9 evaluator-complete cases; 3 cases are evaluator-unavailable uniformly for every row before candidate-specific scoring. W, WA, MPJPE, MPVPE, and acceleration are in mm (acceleration per frame$^2$); ATE and seam-root are in m. Seam-root has 8 finite cases. All rows reuse identical base predictions and differ only in the shared-translation blend. The reported configuration remains $\lambda=0.50$ irrespective of this descriptive table; the table does not select a configuration or change any primary result.}
+  \label{tab:harmony-lambda-sensitivity-median}
+  \scriptsize
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lrrrrrrrrr}
+    \toprule
+    Shared-translation blend $\lambda$ & W & WA & MPJPE & MPVPE & Accel. & ATE & Seam & IDF1 & Cov. \\
+    \midrule
+    No shared translation & 561.4 & 299.3 & 87.4 & 101.6 & 99.6 & 0.019 & 1.211 & 0.481 & 0.913 \\
+    0.25 & 481.4 & 279.4 & 87.4 & 101.6 & 97.5 & 0.017 & 0.922 & 0.481 & 0.913 \\
+    0.50 (fixed) & 486.0 & 264.4 & 87.4 & 101.6 & 91.5 & 0.015 & 0.631 & 0.481 & 0.913 \\
+    0.75 & 476.6 & 258.8 & 87.4 & 101.6 & 94.6 & 0.013 & 0.494 & 0.481 & 0.913 \\
+    1.00 & 555.4 & 282.1 & 87.4 & 101.6 & 94.4 & 0.012 & 0.490 & 0.481 & 0.913 \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

@@ -1,0 +1,317 @@
+{
+  "definitions": {
+    "false_positives_per_1000_transitions": "off-boundary raw positives divided by scored adjacent-frame transitions times 1000",
+    "first_trigger": "earliest positive detector index in the RGB-only trace",
+    "interpretation": "first-trigger timing measures deployment behavior; true-boundary response recall measures whether the raw trace also responds at the annotated event",
+    "true_first_post": "evaluator-only annotated cut index plus one"
+  },
+  "schema_version": "Bridge3R-detector-generalization-audit-v1",
+  "sources": [
+    {
+      "bytes": 1760,
+      "path": "ICLR-paper/bridge3r_iclr2027/versions/v029_20260830_mvhuman_audit_and_submission_package/manuscript/artifacts/egobody_v20/detector_summary.json",
+      "sha256": "5d12ef2fd64bd09fff048d3cc14b43c3bde839727f4765fa6788e0cf50550430"
+    },
+    {
+      "bytes": 179945,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/protocol_freeze/manifests/test_evaluator.jsonl",
+      "sha256": "eddf88bba63c2e6ab45538bbb451fd6ab689b0d9d3465ca21974105da5354025"
+    },
+    {
+      "bytes": 58078,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0001.runtime.json",
+      "sha256": "8225bef8d0ef51ef7b2550aa14dc89a8eac2f768722d1b1de538760b1b3a8f1f"
+    },
+    {
+      "bytes": 64066,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0002.runtime.json",
+      "sha256": "d30da01275e0c97b0730daf0336d9c16e449d9bcc69219205cb21dfcedf525a7"
+    },
+    {
+      "bytes": 58023,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0003.runtime.json",
+      "sha256": "a112fe56228a08f50516162c74309f281ec61c42bf0ad70db2db16df65bd0205"
+    },
+    {
+      "bytes": 64016,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0004.runtime.json",
+      "sha256": "d93bca3953683104edc8b4c2151ea5da83f02001314369f7a323a947c3b09c54"
+    },
+    {
+      "bytes": 63567,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0005.runtime.json",
+      "sha256": "560731a969996bbe0db2dc5b04e6fc891d8c5f313b364346d3591e3344b50370"
+    },
+    {
+      "bytes": 62101,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0006.runtime.json",
+      "sha256": "d8f589f1ea3a63a8018adc909568bddd3c7bbf25bfaff0ec9ef0c4793f3c0fc9"
+    },
+    {
+      "bytes": 58281,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0007.runtime.json",
+      "sha256": "e3fd27512f6ac1b7e286234d18ef07c5db90e47d01af7b2966df0a8e21c9b323"
+    },
+    {
+      "bytes": 58044,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0008.runtime.json",
+      "sha256": "6993fc9286226fa8469ef94768ccc09edee2645c12fc479774cba7b3a68fc831"
+    },
+    {
+      "bytes": 58305,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0009.runtime.json",
+      "sha256": "12bd19cc50c88748a7161e6a8f9cc4722c44a78180fe4ae9810a4f67dde4dac8"
+    },
+    {
+      "bytes": 59520,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0010.runtime.json",
+      "sha256": "9deb2c9ca168818c0bef27532d638a54cce5c59bb4ada47da4b795c078c9f8b4"
+    },
+    {
+      "bytes": 58052,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0011.runtime.json",
+      "sha256": "16e6c228ee2545811266f30cef147ecde698425e3b00d90a5d9944e22787352f"
+    },
+    {
+      "bytes": 58282,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0012.runtime.json",
+      "sha256": "f37a70aebf26d9d9f26dd3a3c72213a4a7d0e2cce34b77c394254d3f93c8da1e"
+    },
+    {
+      "bytes": 74042,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0013.runtime.json",
+      "sha256": "3e60baea0d567c5f4767193ce53fceac4e2ea5965267c90bb2ca7be5a8edc40c"
+    },
+    {
+      "bytes": 58217,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0014.runtime.json",
+      "sha256": "3a8e00557ed776e40938bf06c55225ec82106fd0955c196ae304e6a9146c5ea1"
+    },
+    {
+      "bytes": 58034,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0015.runtime.json",
+      "sha256": "14cfdad88892af40c24c9f6ca5322f10fbe7ed1c3f0ac17d79dec6196fe04705"
+    },
+    {
+      "bytes": 72247,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0016.runtime.json",
+      "sha256": "1f5a7a37a21788355ca4cfe50f3c7badeb95625c8dcee3fe9db5d4ab67c48aea"
+    },
+    {
+      "bytes": 72231,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0017.runtime.json",
+      "sha256": "14cbbaf95e634ecad055ab1004d24355a291e483efefee51cd882ede662bd214"
+    },
+    {
+      "bytes": 72060,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0018.runtime.json",
+      "sha256": "f50fa9f8e06b9ac5a4c6f957e77f9ef75ff05e5a8bac910952409e0eda23baa7"
+    },
+    {
+      "bytes": 71920,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0019.runtime.json",
+      "sha256": "680218ccb6ca316e9d0a79ebd38b1f2db1af7550bdd312d04f92750d6b758eb7"
+    },
+    {
+      "bytes": 36294,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0020.runtime.json",
+      "sha256": "1059426148e4eeb221d584818a2914ea1cf3ad59b8a1b0139aa58acf724eecac"
+    },
+    {
+      "bytes": 71926,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0021.runtime.json",
+      "sha256": "d44906d503a258ebf872b7699aac8fe98eddeaae72a7f6c9db8dbc80d09155b0"
+    },
+    {
+      "bytes": 71919,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0022.runtime.json",
+      "sha256": "f7677770de1cd1c123744fd0a8c8bd62ae87d43879c29117190d70d706e8cc03"
+    },
+    {
+      "bytes": 71699,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0023.runtime.json",
+      "sha256": "bc091326b5f08b5617f269613b44dc955232fc5755cfa7b476dbbde4ad827ccb"
+    },
+    {
+      "bytes": 71713,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0024.runtime.json",
+      "sha256": "2cdac493ea963bc7cc39ef3e765ae5e01634475da61413be7eaa4004fef6b176"
+    },
+    {
+      "bytes": 71890,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0025.runtime.json",
+      "sha256": "b6aede8bf9c10ed984d22db1260e28099d82dda35403d0806e209cd8a1703dff"
+    },
+    {
+      "bytes": 79235,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0026.runtime.json",
+      "sha256": "f3f1d5a2de179c6a2a5c0512ee74aa98e91ae6437c5c0c200dd4ca8eb524a6d1"
+    },
+    {
+      "bytes": 36387,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0027.runtime.json",
+      "sha256": "a3eac044a8424662d5cbda00712e94aba48f55353ff81938130a2c2d95cdffea"
+    },
+    {
+      "bytes": 36462,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0028.runtime.json",
+      "sha256": "179982534f4a094efb6a099669cefa5b2991d4b1d7bf4c66c0c5b6d7dbadc53c"
+    },
+    {
+      "bytes": 79217,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0029.runtime.json",
+      "sha256": "da611151200e112639316349a781b75e7ea3f58980a3144b7fcf3534e7eace71"
+    },
+    {
+      "bytes": 35518,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0030.runtime.json",
+      "sha256": "9531df46816582f8f1e3b460745b9adb6ce6116ad600241efee318e48b2b8599"
+    },
+    {
+      "bytes": 78470,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0031.runtime.json",
+      "sha256": "b558f67ad1ce727702282bebc244823627f0f37d0f28a4db5080b13d634c92e3"
+    },
+    {
+      "bytes": 78470,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0032.runtime.json",
+      "sha256": "5c9b141b61f0e54c465d9a8cbcdad0b311a2dc3c13e609d0072a1e27e970ba4b"
+    },
+    {
+      "bytes": 78774,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0033.runtime.json",
+      "sha256": "1a3a84c5b7fa21977f4cea95421c5aeb0a4368a2d650b38d624e2baa5ea20ba7"
+    },
+    {
+      "bytes": 78466,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0034.runtime.json",
+      "sha256": "e0a6abfb20fdde4be91c093840303087e1e853bf88f7ae4f0ecbb88d127df7b2"
+    },
+    {
+      "bytes": 78861,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0035.runtime.json",
+      "sha256": "68d1f2b51d7d492517594bd1aa0934e69bf047954869919eee7cbb0ffd72f488"
+    },
+    {
+      "bytes": 69498,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0036.runtime.json",
+      "sha256": "474ddba15eab390bdb5fab0cd66db663d4542c0968e443f7cf580e1dba49015e"
+    },
+    {
+      "bytes": 69499,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0037.runtime.json",
+      "sha256": "505b6c7302fa8ab3eef32a782edd1c87b31db7fe2c3b35278b0bf5a6f73b529e"
+    },
+    {
+      "bytes": 77867,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0038.runtime.json",
+      "sha256": "943d2a0985f74e8d589444747ac8fc76075476e27700f82ec360c0d0c3ff370c"
+    },
+    {
+      "bytes": 69453,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0039.runtime.json",
+      "sha256": "98e9d03bd685ac95f16c9c539d52e45c43dfad3cd709651d55152092463c2d91"
+    },
+    {
+      "bytes": 77900,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0040.runtime.json",
+      "sha256": "742c81c435065bf4f918cb8f9f791d7cd1cdbc812b49307179f53d12171b576c"
+    },
+    {
+      "bytes": 78790,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0041.runtime.json",
+      "sha256": "3e8675b61e572e909b309a216fe6025bea6889b0f070812bf4a4d324c4fd4703"
+    },
+    {
+      "bytes": 78770,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0042.runtime.json",
+      "sha256": "e4fcb4ab2e3e35b634a42f45d197a9e59e92498760c51666066c2ea84ce9aa57"
+    },
+    {
+      "bytes": 72970,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0043.runtime.json",
+      "sha256": "00203df42ae73ecc405c23e200a487943f4d4ca8374b71ebe2b6c8c65e65c215"
+    },
+    {
+      "bytes": 78756,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0044.runtime.json",
+      "sha256": "bd88b26990c9b342bb165aff3cd388b85ac40f3d548ad62476c7d78d5e0d959c"
+    },
+    {
+      "bytes": 57824,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0045.runtime.json",
+      "sha256": "debc764bb252267323c22281e827f5554e5df23643e3c707a749334ef1da50ec"
+    },
+    {
+      "bytes": 76670,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0046.runtime.json",
+      "sha256": "58f624a2cfaacbabe481bab7ebff37531ff13d9b544d38db1326ffabc9d37a30"
+    },
+    {
+      "bytes": 76648,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0047.runtime.json",
+      "sha256": "98b061e7f934b51c1bb1bebd7bb08b21dc1410fddadc58c03df24939f4096a71"
+    },
+    {
+      "bytes": 77101,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0048.runtime.json",
+      "sha256": "bd37c60d89ce253f39473d776ee39b5422a2f26e50729d5e38d7e8d9feb82282"
+    },
+    {
+      "bytes": 76645,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0049.runtime.json",
+      "sha256": "4c1f9f3713eae726ab1d1adb05c4411439329f6c7cba6878cb1d279c33ce7731"
+    },
+    {
+      "bytes": 78786,
+      "path": "Movie3R/output/bridge3r_mvhuman_v1/internal/predictions/mvh150_0050.runtime.json",
+      "sha256": "86909abf07abe215e9dadfcf3fe51387c04f62cd6ac250909a2f261a21293183"
+    }
+  ],
+  "summary": [
+    {
+      "case_count": 129,
+      "dataset": "EgoBody",
+      "deployment_policy": "first positive only; no evaluator boundary access",
+      "early": 0,
+      "exact": 129,
+      "false_positives_per_1000_transitions": 0.0,
+      "first_trigger_exact_rate": 1.0,
+      "late": 0,
+      "max_first_trigger_offset_frames": 0,
+      "mean_first_trigger_offset_frames": 0.0,
+      "median_first_trigger_offset_frames": 0.0,
+      "min_first_trigger_offset_frames": 0,
+      "miss": 0,
+      "off_boundary_positive_count": 0,
+      "raw_fn": 0,
+      "raw_fp": 0,
+      "raw_tp": 129,
+      "role": "formal multi-person test",
+      "scored_transitions": null,
+      "true_boundary_response_recall": 1.0
+    },
+    {
+      "case_count": 50,
+      "dataset": "MVHuman",
+      "deployment_policy": "first positive only; no evaluator boundary access",
+      "early": 40,
+      "exact": 10,
+      "false_positives_per_1000_transitions": 53.557046979865774,
+      "first_trigger_exact_rate": 0.2,
+      "late": 0,
+      "max_first_trigger_offset_frames": 0,
+      "mean_first_trigger_offset_frames": -43.66,
+      "median_first_trigger_offset_frames": -48.0,
+      "min_first_trigger_offset_frames": -73,
+      "miss": 0,
+      "off_boundary_positive_count": 399,
+      "raw_fn": 0,
+      "raw_fp": 399,
+      "raw_tp": 50,
+      "role": "held-out weak-texture stress test",
+      "scored_transitions": 7450,
+      "true_boundary_response_recall": 1.0
+    }
+  ]
+}

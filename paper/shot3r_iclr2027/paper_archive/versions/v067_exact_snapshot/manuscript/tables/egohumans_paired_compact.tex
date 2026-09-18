@@ -1,0 +1,12 @@
+\begin{tabular}{lrrr}
+\toprule
+Metric & Mean gain $\uparrow$ & 95\% CI & $p$-value \\
+\midrule
+W-MPJPE (mm) & 138.3 & [0.5, 322.9] & 0.035713 \\
+WA-MPJPE (mm) & 28.9 & [-6.8, 68.7] & 0.057267 \\
+% 中文：EgoHumans 的相机误差采用 SE(3) 对齐，因此这里使用 ATE-SE3。
+ATE-SE3 (m) & 0.515 & [0.258, 0.925] & $<10^{-6}$ \\
+IDF1 & 0.100 & [0.046, 0.152] & 0.000799 \\
+Coverage & -0.023 & [-0.058, 0.008] & 0.122279 \\
+\bottomrule
+\end{tabular}

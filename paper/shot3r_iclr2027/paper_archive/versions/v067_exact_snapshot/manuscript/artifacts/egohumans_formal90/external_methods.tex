@@ -1,0 +1,12 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & Completed clips & W-MPJPE $\downarrow$ & WA-MPJPE $\downarrow$ & IDF1 $\uparrow$ & Coverage $\uparrow$ & Geometry support (W/WA) \\
+\midrule
+Human3R & 90/90 & 1005.1 & 365.7 & 0.471 & 0.639 & 90/90; 90/90 \\
+\textbf{Shot3R (causal)} & 90/90 & 866.8 & 336.9 & 0.571 & 0.616 & 90/90; 90/90 \\
+TRACE (official) & 80/90 & 2464.6 & 749.5 & 0.070 & 0.072 & 43/90; 59/90 \\
+PromptHMR (official SPEC) & 39/90 & 1193.3 & 487.7 & 0.061 & 0.062 & 17/90; 25/90 \\
+\bottomrule
+\end{tabular}}
+\parbox{0.99\textwidth}{\footnotesize All methods are aggregated on the same 90 selected RGB clips. Completed clips denotes a method output with no inference failure. Coverage and IDF1 use all 90 clips. W/WA are conditional means and must be interpreted with their displayed, method-specific finite support; the public rows are therefore availability-aware references rather than a paired geometric leaderboard. TRACE does not expose an independently evaluable physical camera trajectory.}

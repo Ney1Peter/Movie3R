@@ -1,0 +1,49 @@
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+ALVSVR+NimbusSanL-Bold               Type 1            Custom           yes yes yes    127  0
+OXIGFM+NimbusRomNo9L-Regu            Type 1            Custom           yes yes yes    129  0
+ZIEEZM+NimbusRomNo9L-Medi            Type 1            Custom           yes yes yes    131  0
+BAAAAA+LiberationSans-Bold           TrueType          WinAnsi          yes yes yes    136  0
+CAAAAA+LiberationSans                TrueType          WinAnsi          yes yes yes    137  0
+DAAAAA+DejaVuSerif                   TrueType          WinAnsi          yes yes yes    138  0
+EAAAAA+DejaVuSerif-Italic            TrueType          WinAnsi          yes yes yes    139  0
+FVAMHK+NimbusRomNo9L-ReguItal        Type 1            Custom           yes yes yes    193  0
+ZUIYKZ+CMSY10                        Type 1            Builtin          yes yes yes    370  0
+QUAYXT+CMMI10                        Type 1            Builtin          yes yes yes    371  0
+DLIOWB+CMMI7                         Type 1            Builtin          yes yes yes    372  0
+EJPVRZ+CMR7                          Type 1            Builtin          yes yes yes    373  0
+AYUULT+CMR10                         Type 1            Builtin          yes yes yes    375  0
+PLCBKE+CMSY7                         Type 1            Builtin          yes yes yes    376  0
+IQWOFN+CMEX10                        Type 1            Builtin          yes yes yes    377  0
+UVLVGQ+CMMI5                         Type 1            Builtin          yes yes yes    378  0
+IXSDIA+MSBM7                         Type 1            Builtin          yes yes yes    396  0
+BAAAAA+LiberationSans-Bold           TrueType          WinAnsi          yes yes yes    399  0
+CAAAAA+LiberationSans                TrueType          WinAnsi          yes yes yes    400  0
+DAAAAA+LiberationSans-Italic         TrueType          WinAnsi          yes yes yes    401  0
+EAAAAA+LiberationSerif-Italic        TrueType          WinAnsi          yes yes yes    402  0
+FAAAAA+LiberationSerif               TrueType          WinAnsi          yes yes yes    403  0
+GAAAAA+NimbusRomanRegular            Type 1            Builtin          yes yes yes    404  0
+HAAAAA+FreeSerifItalic               TrueType          WinAnsi          yes yes yes    405  0
+BAAAAA+LiberationSans                TrueType          WinAnsi          yes yes yes    484  0
+CAAAAA+LiberationSans-Bold           TrueType          WinAnsi          yes yes yes    485  0
+NBXHWB+CMBX10                        Type 1            Builtin          yes yes yes    531  0
+JNKYYO+CMMI9                         Type 1            Builtin          yes yes yes    552  0
+JFIULL+CMR9                          Type 1            Builtin          yes yes yes    553  0
+VFTVBS+CMSY9                         Type 1            Builtin          yes yes yes    554  0
+RXNEKG+MSAM10                        Type 1            Builtin          yes yes yes    555  0
+BAAAAA+LiberationSans-Bold           TrueType          WinAnsi          yes yes yes    560  0
+CAAAAA+LiberationSans-Italic         TrueType          WinAnsi          yes yes yes    561  0
+DAAAAA+LiberationSans                TrueType          WinAnsi          yes yes yes    562  0
+HHOLHE+DejaVuSans-Bold               CID TrueType      Identity-H       yes yes yes    662  0
+FBACJQ+DejaVuSans                    CID TrueType      Identity-H       yes yes yes    663  0
+BAPIVJ+DejaVuSans-Bold               CID TrueType      Identity-H       yes yes yes    681  0
+FUCARR+DejaVuSans                    CID TrueType      Identity-H       yes yes yes    682  0
+LNIRBF+MSAM7                         Type 1            Builtin          yes yes yes    710  0
+ZQUAGW+NimbusMonL-Regu               Type 1            Custom           yes yes yes    742  0
+BEBQZN+DejaVuSans                    CID TrueType      Identity-H       yes yes yes    850  0
+FSGNNI+DejaVuSans-Bold               CID TrueType      Identity-H       yes yes yes    913  0
+ELNBRK+DejaVuSans                    CID TrueType      Identity-H       yes yes yes    914  0
+YPEKTD+CMSY6                         Type 1            Builtin          yes yes yes    990  0
+BMQQDV+DejaVuSans                    CID TrueType      Identity-H       yes yes yes   1037  0
+BMQQDV+DejaVuSans                    CID TrueType      Identity-H       yes yes yes   1060  0
+SJQNVY+CMR6                          Type 1            Builtin          yes yes yes   1077  0

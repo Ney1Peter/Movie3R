@@ -1,0 +1,26 @@
+% 中文：左表报告视角变化与 Shot3R 相对 Human3R 收益之间的 Spearman 相关性；
+% 右表报告四个预定义视角区间中的绝对收益。所有正值均表示 Shot3R 更好。
+\begin{tabular}[t]{lrr}
+    \multicolumn{3}{c}{\textbf{(a) Continuous-angle correlation}} \\[2pt]
+    \toprule
+    Gain quantity & $\rho$ & 95\% CI \\
+    \midrule
+    W-MPJPE & 0.266 & [$-0.011$, 0.510] \\
+    WA-MPJPE & 0.287 & [0.021, 0.519] \\
+    Boundary camera rotation & 0.413 & [0.126, 0.668] \\
+    Boundary camera translation & 0.519 & [0.300, 0.684] \\
+    IDF1 & 0.104 & [$-0.174$, 0.368] \\
+    \bottomrule
+\end{tabular}
+\qquad
+\begin{tabular}[t]{lrrrrr}
+    \multicolumn{6}{c}{\textbf{(b) Mean gain by predefined angle stratum}} \\[2pt]
+    \toprule
+    Stratum & W & WA & Cam. R & Cam. T & IDF1 \\
+    \midrule
+    Small   & $-83.1$ & $-25.7$ & $-0.11$ & $-0.306$ & 0.034 \\
+    Medium  & 23.5 & 4.4 & $-1.02$ & $-0.984$ & 0.159 \\
+    Large   & 290.5 & 57.5 & 10.93 & 0.832 & 0.057 \\
+    Extreme & 342.4 & 84.1 & 37.26 & 2.542 & 0.154 \\
+    \bottomrule
+\end{tabular}

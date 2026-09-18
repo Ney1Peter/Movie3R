@@ -1,0 +1,10 @@
+\begin{tabular}{lrrrrr}
+\toprule
+Alignment tokens & Anchor MPJPE $\downarrow$ & Anchor root $\downarrow$ & Boundary root $\Delta$ $\downarrow$ & Inter-shot cam. rot. $\downarrow$ & Inter-shot cam. trans. $\downarrow$ \\
+\midrule
+All three & 295.6 & 240.2 & \textbf{516.3} & \textbf{142.5} & 2.065 \\
+w/o semantic token & \textbf{238.8} & \textbf{180.1} & 541.8 & 153.6 & 2.131 \\
+w/o camera-alignment token & 263.8 & 205.4 & 531.9 & 144.6 & \textbf{2.049} \\
+w/o temporal-context token & 290.0 & 233.3 & 519.2 & 142.7 & 2.057 \\
+\bottomrule
+\end{tabular}

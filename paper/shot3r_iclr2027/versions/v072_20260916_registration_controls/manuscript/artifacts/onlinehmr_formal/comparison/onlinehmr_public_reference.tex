@@ -1,0 +1,12 @@
+% Generated availability-aware OnlineHMR evidence. Do not edit by hand.
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrlr}
+\toprule
+Dataset & Method & Valid output & W $\downarrow$ & WA $\downarrow$ & ATE$^{*}$ $\downarrow$ & IDF1 $\uparrow$ & Coverage $\uparrow$ & $N_W/N_{WA}$ & $N_{\mathrm{cam}}$ \\
+\midrule
+EgoBody & OnlineHMR & 129/129 & 961.2 & 418.1 & 0.259 & 0.375 & 0.424 & 97/97 & 129 \\
+EgoHumans & OnlineHMR & 87/90 & 1311.7 & 405.5 & 3.869 & 0.142 & 0.211 & 50/50 & 87 \\
+Harmony4D & OnlineHMR & 88/88 & 750.8 & 335.9 & 1.364 & 0.068 & 0.159 & 30/30 & 88 \\
+\bottomrule
+\end{tabular}}
+\parbox{0.99\textwidth}{\footnotesize W, WA, and ATE are conditional errors and must be read with $N_W/N_{WA}$, $N_{\mathrm{cam}}$, and Coverage. W and WA are in mm. ATE$^{*}$ is Sim(3)-aligned for EgoBody/Harmony4D and SE(3)-aligned for EgoHumans. Valid output excludes failed processes and structurally invalid native outputs; both remain in the fixed Coverage and IDF1 denominators as zero.}

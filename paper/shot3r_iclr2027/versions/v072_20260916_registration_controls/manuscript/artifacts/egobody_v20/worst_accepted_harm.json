@@ -1,0 +1,128 @@
+[
+  {
+    "accepted_case_count": 195,
+    "display_name": "Bridge3R geometry parent (causal detector)",
+    "method": "v16_0_m15_geometry",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 0.0,
+    "worst_accepted_W_ratio": 1.0,
+    "worst_case_id": "egobody_recording_20210907_S02_S01_01_extreme_kinect_11_kinect_13_b02196"
+  },
+  {
+    "accepted_case_count": 168,
+    "display_name": "Bridge3R-v17 MultiCue-Safe",
+    "method": "v17_harmony_multicue_safe",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 52.42240735364956,
+    "worst_accepted_W_ratio": 1.5242240735364956,
+    "worst_case_id": "egobody_recording_20210918_S06_S05_02_medium_kinect_12_kinect_13_b03571"
+  },
+  {
+    "accepted_case_count": 195,
+    "display_name": "Bridge3R (causal, frozen)",
+    "method": "v19_ungated_translation_b050",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 24.038725704446385,
+    "worst_accepted_W_ratio": 1.2403872570444638,
+    "worst_case_id": "egobody_recording_20211004_S19_S06_03_medium_kinect_13_kinect_12_b03986"
+  },
+  {
+    "accepted_case_count": 51,
+    "display_name": "v20_gate_r015_t050_b050",
+    "method": "v20_gate_r015_t050_b050",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 14.786852306005716,
+    "worst_accepted_W_ratio": 1.1478685230600572,
+    "worst_case_id": "egobody_recording_20220215_S22_S21_02_small_kinect_12_kinect_11_b02681"
+  },
+  {
+    "accepted_case_count": 132,
+    "display_name": "v20_gate_r025_t075_b050",
+    "method": "v20_gate_r025_t075_b050",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 15.910426682026424,
+    "worst_accepted_W_ratio": 1.1591042668202642,
+    "worst_case_id": "egobody_recording_20211004_S19_S06_03_small_kinect_11_kinect_12_b03986"
+  },
+  {
+    "accepted_case_count": 157,
+    "display_name": "v20_gate_r025_t100_b100",
+    "method": "v20_gate_r025_t100_b100",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 45.66357205983811,
+    "worst_accepted_W_ratio": 1.456635720598381,
+    "worst_case_id": "egobody_recording_20210918_S06_S05_02_medium_kinect_12_kinect_13_b03571"
+  },
+  {
+    "accepted_case_count": 132,
+    "display_name": "v20_gate_vel_r025_t075_b050",
+    "method": "v20_gate_vel_r025_t075_b050",
+    "split": "development",
+    "worst_accepted_W_harm_percent": 17.965938116814062,
+    "worst_accepted_W_ratio": 1.1796593811681406,
+    "worst_case_id": "egobody_recording_20211004_S19_S06_03_small_kinect_11_kinect_12_b03986"
+  },
+  {
+    "accepted_case_count": 48,
+    "display_name": "Bridge3R geometry parent (causal detector)",
+    "method": "v16_0_m15_geometry",
+    "split": "holdout",
+    "worst_accepted_W_harm_percent": 0.0,
+    "worst_accepted_W_ratio": 1.0,
+    "worst_case_id": "egobody_recording_20210921_S11_S10_01_extreme_kinect_11_kinect_13_b01526"
+  },
+  {
+    "accepted_case_count": 45,
+    "display_name": "Bridge3R-v17 MultiCue-Safe",
+    "method": "v17_harmony_multicue_safe",
+    "split": "holdout",
+    "worst_accepted_W_harm_percent": 20.762905026184985,
+    "worst_accepted_W_ratio": 1.2076290502618499,
+    "worst_case_id": "egobody_recording_20220215_S21_S22_02_small_kinect_12_kinect_11_b03131"
+  },
+  {
+    "accepted_case_count": 48,
+    "display_name": "Bridge3R (causal, frozen)",
+    "method": "v19_ungated_translation_b050",
+    "split": "holdout",
+    "worst_accepted_W_harm_percent": 15.174964724287854,
+    "worst_accepted_W_ratio": 1.1517496472428785,
+    "worst_case_id": "egobody_recording_20220315_S21_S30_01_extreme_kinect_14_kinect_11_b03631"
+  },
+  {
+    "accepted_case_count": 32,
+    "display_name": "v20_gate_r025_t075_b050",
+    "method": "v20_gate_r025_t075_b050",
+    "split": "holdout",
+    "worst_accepted_W_harm_percent": 15.174964724287854,
+    "worst_accepted_W_ratio": 1.1517496472428785,
+    "worst_case_id": "egobody_recording_20220315_S21_S30_01_extreme_kinect_14_kinect_11_b03631"
+  },
+  {
+    "accepted_case_count": 33,
+    "display_name": "v20_gate_vel_r025_t075_b050",
+    "method": "v20_gate_vel_r025_t075_b050",
+    "split": "holdout",
+    "worst_accepted_W_harm_percent": 15.471802356542575,
+    "worst_accepted_W_ratio": 1.1547180235654257,
+    "worst_case_id": "egobody_recording_20220315_S21_S30_01_extreme_kinect_14_kinect_11_b03631"
+  },
+  {
+    "accepted_case_count": 129,
+    "display_name": "Bridge3R geometry parent (causal detector)",
+    "method": "v16_0_m15_geometry",
+    "split": "test",
+    "worst_accepted_W_harm_percent": 0.0,
+    "worst_accepted_W_ratio": 1.0,
+    "worst_case_id": "egobody_recording_20210907_S03_S04_01_extreme_kinect_13_kinect_11_b01801"
+  },
+  {
+    "accepted_case_count": 129,
+    "display_name": "Bridge3R (causal, frozen)",
+    "method": "v19_ungated_translation_b050",
+    "split": "test",
+    "worst_accepted_W_harm_percent": 66.73457126627507,
+    "worst_accepted_W_ratio": 1.6673457126627507,
+    "worst_case_id": "egobody_recording_20211004_S20_S12_01_extreme_kinect_13_kinect_11_b02766"
+  }
+]

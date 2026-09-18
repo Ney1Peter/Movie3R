@@ -1,0 +1,660 @@
+\clearpage
+\section{Additional Experiments}
+\label{app:full-results}
+\suppressfloats[t]
+
+% 中文：本节按照论文的核心问题组织补充实验：大视角变化、公开方法比较、重复镜头切换，
+% 以及三个主要数据集上的详细分析。正文中已经完整报告的表格不在此重复。
+This section follows the main questions of the paper: performance under large
+viewpoint changes, comparison with public methods and traditional geometric
+registration, repeated shot transitions, and detailed results on the three
+multi-person benchmarks. Tables already reported in the main paper are not
+repeated unless additional metrics are required for a complete protocol audit.
+
+\subsection{Large Viewpoint Changes}
+\label{app:cross-dataset-viewpoint}
+
+% 中文：正文报告三个数据集等权汇总后的结果。表中进一步给出每个数据集最远视角子集上的原始结果。
+The main paper reports the dataset-balanced summary. Table~\ref{tab:supp-extreme-raw}
+further gives the results on the predefined farthest-view subset of each
+dataset. The subsets contain 43 EgoBody recordings, 22 EgoHumans captures,
+and 25 Harmony4D captures and are defined without reference to method
+performance.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：三个数据集预定义大视角子集上的结果。W/WA 单位为毫米，相机 ATE 单位为米；EgoBody/Harmony4D 使用 Sim(3) 对齐，EgoHumans 使用 SE(3) 对齐。
+  \caption{Results on the predefined large-viewpoint subsets. W/WA are in
+  mm and camera ATE is in m (Sim(3) for EgoBody/Harmony4D and SE(3) for
+  EgoHumans).}
+  \label{tab:supp-extreme-raw}
+  \supptablesize
+  \input{artifacts/cross_dataset_viewpoint/extreme_main_table}
+\end{table*}
+
+% 中文：为了检验大视角下的优势是否更明显，我们比较大视角与其余视角之间的配对增益差。
+% 正值表示 Shot3R 在大视角下获得了更大的相对收益。
+To test whether the advantage is more pronounced at large viewpoint changes, we compare the
+paired gain in the large-viewpoint subset with the gain on the remaining
+views. Positive values in Table~\ref{tab:supp-viewpoint-interaction} indicate
+a larger Shot3R gain under larger viewpoint changes. The dataset-balanced intervals are
+positive for W, WA, and IDF1, while individual datasets need not improve on
+every metric.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：大视角相对于其余视角的额外增益及 95% 聚类 bootstrap 区间。
+  \caption{Additional gain at large viewpoints relative to the remaining
+  views, with 95\% recording/capture-cluster bootstrap intervals.}
+  \label{tab:supp-viewpoint-interaction}
+  \supptablesize
+  \input{tables/viewpoint_interaction_compact}
+\end{table*}
+
+% 中文：为了直接检验相机层面的关系，我们还在 EgoHumans 的 90 个样例上使用准确相机夹角，
+% 计算视角变化与 Shot3R 相对 Human3R 收益之间的 Spearman 相关性。区间通过两阶段 bootstrap 得到：
+% 先以 27 个采集序列为聚类单位重采样，再在被选中的采集序列内部重采样样例。
+To examine the camera-level relation directly, we use the exact camera angle
+for all 90 EgoHumans cases and correlate viewpoint change with the Shot3R gain
+over \humanthree{}. Intervals use a two-stage bootstrap that first resamples
+the 27 capture clusters and then cases within each selected capture
+~\citep{davison1997bootstrap}.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoHumans 上视角变化与重建收益之间的关系。左：逐样例 Spearman 相关性及两阶段
+  % capture-cluster bootstrap 的 95% 区间。右：small/medium/large/extreme 预定义区间内的平均收益。
+  % W/WA 单位为毫米，相机旋转为度，相机平移为米；所有正值表示 Shot3R 更好。
+  \caption{Relation between viewpoint change and reconstruction gain on
+  EgoHumans. Left: case-level Spearman correlation with two-stage
+  capture-cluster bootstrap intervals. Right: mean gains in the predefined
+  angle strata. W/WA are in mm, camera rotation in degrees, and camera
+  translation in m; positive values favour \method{}.}
+  \label{tab:supp-egohumans-viewpoint-camera}
+  \supptablesize
+  \input{tables/egohumans_viewpoint_camera_statistics}
+\end{table*}
+
+% 中文：相机旋转和平移收益都随视角变化增大而提高，且聚类区间为正；这一趋势与 Shot3R
+% 主要修正镜头切换处空间关系的设计一致。WA 的相关性区间也为正，而 W 和 IDF1 的区间跨零，
+% 因此我们不声称所有人体或身份指标都随视角单调改善。分层结果还明确保留了 small 和 medium 区间中的退化。
+Continuous-angle analysis supports a stronger relationship for camera and WA
+errors, consistent with \method{} acting on the spatial relation at a shot
+transition, but does not establish monotonic improvement for every human or
+identity metric. The stratified results retain the degradations observed in
+the small and medium ranges.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.86\textwidth]{artifacts/cross_dataset_viewpoint/all_vs_extreme_macro.pdf}
+  % 中文图注：全部视角与大视角子集上相对于 Human3R 的数据集等权改进。
+  \caption{Dataset-balanced improvements over \humanthree{} on all views and
+  on the predefined large-viewpoint subsets. W/WA show relative reductions;
+  IDF1 shows absolute gain.}
+  \label{fig:supp-cross-dataset-viewpoint}
+\end{figure*}
+
+\FloatBarrier
+\subsection{Comparison with Public Methods}
+\label{app:onlinehmr-reference}
+
+% 中文：正文表 1 给出 EgoBody 和 EgoHumans 上所有已执行方法的同 RGB 序列结果；表 D.x 给出 Harmony4D 上的完整对比。
+% 这里进一步在 OnlineHMR 能够产生有效几何结果的相同样本上进行配对比较，并对完整测试集上的 IDF1 与 Coverage 进行比较。
+Table~\ref{tab:multi-person} reports every executed method on the same EgoBody
+and EgoHumans RGB sequences, while
+Table~\ref{tab:supp-harmony4d-complete} gives the complete Harmony4D comparison.
+We additionally compare Shot3R and OnlineHMR on the clips for which OnlineHMR
+provides valid geometry; IDF1 and Coverage are computed over all sequences.
+Table~\ref{tab:supp-onlinehmr-paired} shows lower human
+and camera errors for Shot3R on all three datasets. All intervals exclude zero
+except WA on EgoHumans. OnlineHMR uses a semi-online tracker and a separate
+global-camera backend, so this comparison does not imply identical temporal
+access.
+
+\input{tables/harmony4d_complete}
+
+% 中文：三个多人主协议之外，四段Harmony4D三镜头序列还用于比较Shot3R、Human3R和OnlineHMR的重复状态转换。
+Beyond the three primary protocols, four Harmony4D three-shot streams compare
+repeated transition handling in Shot3R, Human3R, and OnlineHMR;
+Section~\ref{app:multicut} reports their complete results.
+
+% 中文：JOSH 官方发布实现在三个主要协议的全部 307 条序列上运行。302 条完成推理与坐标检查，
+% 292 条可计算 W/WA，302 条可计算相机 ATE。EgoBody 的两条失败来自接触点初始化中的空集合，
+% EgoHumans 的三条失败来自镜头边界分辨率变化造成的 SAM3 掩码尺寸不匹配；Harmony4D 的 88 条全部成功。
+% 另有十条 EgoHumans 序列虽完成推理，但缺少固定 W/WA 评测协议所需的初始人体匹配。
+The official JOSH release is run on all 307 streams from the three primary
+protocols. Inference and coordinate checks complete for 302 streams; W/WA are
+evaluable on 292 and camera ATE on 302. Two EgoBody streams fail because
+contact-point initialization returns an empty set, and three EgoHumans streams
+fail because a shot-boundary resolution change is incompatible with the
+released SAM3 mask pipeline; all 88
+Harmony4D streams succeed. Ten otherwise completed EgoHumans streams lack the
+initial human match required by the fixed W/WA evaluation protocol.
+Table~\ref{tab:supp-josh-support} distinguishes failed runs from completed
+runs that cannot be evaluated by a particular metric.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：JOSH 在三个主要协议上的执行情况与可评测样本数。失败运行仍计入全部序列上的 IDF1 与 Coverage；
+  % 不可计算的人体或相机误差保持缺失，不补零。
+  \caption{JOSH execution and evaluable cases on the three primary protocols.
+  Failed runs remain in the IDF1/Coverage calculations over all sequences;
+  unavailable human or camera errors are omitted rather than set to zero.}
+  \label{tab:supp-josh-support}
+  \supptablesize
+  \input{tables/josh_support_compact}
+\end{table*}
+
+% 中文：为避免不同有效支持上的条件均值造成歧义，我们进一步只汇总Shot3R与JOSH均可评测的样本。
+% 在三个数据集的共同支持集上，Shot3R的W、WA和ATE均更低。身份和Coverage仍使用完整协议分母：
+% EgoHumans上JOSH更高，Harmony4D上Shot3R的IDF1更高而JOSH的Coverage更高。
+To remove ambiguity from conditional means computed on different supports,
+Table~\ref{tab:supp-josh-common} restricts each metric to streams evaluable by
+both Shot3R and JOSH. Shot3R obtains lower W, WA, and camera ATE on all three
+common-support sets while processing frames without future access. IDF1 and
+Coverage retain the complete protocol denominator: JOSH is higher on both in
+EgoHumans, whereas Harmony4D combines higher Shot3R IDF1 with higher JOSH
+Coverage.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Shot3R与JOSH共同可评样本上的逐视频宏平均。W/WA单位为毫米；ATE在EgoBody和Harmony4D上使用Sim(3)，在EgoHumans上使用SE(3)，单位为米。
+  \caption{Case-macro Shot3R--JOSH comparison restricted to streams evaluable
+  by both methods. W/WA are in mm; ATE is Sim(3)-aligned for EgoBody and
+  Harmony4D and SE(3)-aligned for EgoHumans, in m.}
+  \label{tab:supp-josh-common}
+  \supptablesize
+  \input{tables/josh_common_support}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Shot3R 相对于 OnlineHMR 的配对增益和 95% 聚类 bootstrap 区间；正值表示 Shot3R 更好。
+  \caption{Paired Shot3R gain over OnlineHMR with 95\% clustered bootstrap
+  intervals. Positive values favour Shot3R.}
+  \label{tab:supp-onlinehmr-paired}
+  \supptablesize
+  \input{artifacts/onlinehmr_formal/comparison/onlinehmr_paired_advantage.tex}
+\end{table*}
+
+% 中文：对于部分最相关的已发表方法，其公开资源不足以按本文协议评测固定的双镜头序列。
+% 表中因此区分任务范围、时间访问方式，以及公开资源是否提供本协议所需的输出。
+For some of the closest published methods, the released resources are
+insufficient to evaluate our fixed two-shot sequences under the same protocol.
+Table~\ref{tab:supp-baseline-scope} therefore distinguishes task scope,
+temporal access, and whether a release provides the outputs required by our
+evaluation.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：未进入本文同序列数值比较的相关方法之任务范围与公开资源兼容性。绿色勾表示支持，红色叉表示不支持，
+  % 黄色三角表示已有公开资源但尚未通过本文协议验证；匕首表示原论文报告了该能力，但本文协议下无法评测。
+  \caption{Task scope and released-resource compatibility for related methods
+  not included in our numerical comparison on identical sequences. \cmark{}
+  denotes an available capability, \xmark{} denotes an unavailable capability, and \pmark{} denotes a released
+  resource not yet validated under our protocol; $\dagger$ denotes a capability
+  reported in the original paper but not evaluable under our protocol.}
+  \label{tab:supp-baseline-scope}
+  \supptablesize
+  \setlength{\tabcolsep}{2pt}
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+    *{5}{>{\centering\arraybackslash}p{0.065\textwidth}}
+    >{\raggedright\arraybackslash}X
+    >{\raggedright\arraybackslash}p{0.15\textwidth}@{}}
+    \toprule
+    Work & \shortstack{Shot\\trans.} & \shortstack{Multi-\\person} & \shortstack{Phys.\\cam.} & \shortstack{Shared\\world} & \shortstack{Eval.\\here} & Input / access & Role here \\
+    \midrule
+    HumanMM\newline\citep{zhang2025humanmm} & \cmark & \xmark & \cmark$^\dagger$ & \cmark$^\dagger$ & \xmark & Full sequence & Related work \\
+    Multi-THuMBS\newline\citep{on2026multithumbs} & \cmark & \cmark & \cmark$^\dagger$ & \cmark$^\dagger$ & \xmark & Offline refinement & Related work \\
+    Multishot\newline\citep{pavlakos2022multishot} & \cmark & \xmark & \xmark & \xmark & \xmark & Track-conditioned offline & Related work \\
+    SLAHMR\newline\citep{ye2023slahmr} & \xmark & \cmark & \cmark & \xmark & \xmark & Single-shot offline & Different setting \\
+    WHAC / GVHMR\newline\citep{yin2024whac,shen2024gvhmr} & \xmark & \xmark & \cmark & \xmark & \xmark & Full-video inference & Single-person setting \\
+    Yang et al.\newline\citep{yang2026feedforward} & \xmark & \cmark & \cmark & \cmark & \xmark & Joint multi-view set & Multi-view setting \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{0.5mm}
+
+  % 中文表注：按本协议评测要求公开方法在不使用真实人物选择、人工身份拼接或镜头后单独对齐的情况下，
+  % 输出覆盖两个镜头的人体轨迹、相机轨迹、身份和共同时间轴。SLAHMR 的公开配置只处理一个指定镜头；
+  % Multishot 的公开演示需要指定一条人物轨迹。JOSH 已进入正文同输入数值表，因此不再列于本表。
+  \parbox{0.98\textwidth}{\footnotesize
+  Evaluation under our protocol requires human tracks, a camera trajectory,
+  identity assignments, and a common timeline spanning both shots, without ground-truth track selection,
+  manual identity stitching, or a separately fitted post-transition transform.
+  SLAHMR's released configuration processes one selected shot; the released Multishot
+  demo requires a specified person track. Physical-camera support for SLAHMR
+  is confined to its selected shot. JOSH is no longer listed here because its
+  released full-video implementation is evaluated in Table~\ref{tab:multi-person}.}
+\end{table*}
+
+\FloatBarrier
+\subsection{Traditional Geometric Registration Controls}
+\label{app:registration-controls}
+
+% 中文：本节检验独立重建每个镜头后进行显式几何拟合，是否可以替代 Shot3R 的在线状态转移。
+% R0 使用公开 Human3R 权重分别重建两个镜头；R1/R2 在边界处只使用预测的人体对应，R3 使用两个完整镜头的场景点云。
+We test whether explicit geometric fitting between independently reconstructed
+shots can substitute for the online state transition in \method{}. The R0
+control reconstructs both shots independently with the public \humanthree{}
+checkpoint. R1 matches predicted boundary people and estimates one
+coordinate-wise median pelvis translation. R2 uses the same prediction-only
+matching, followed by RANSAC and weighted Kabsch fitting over stable predicted
+body joints~\citep{fischler1981ransac,kabsch1976solution}. R3 performs offline
+FPFH mutual matching and global RANSAC on the two complete shot point clouds,
+followed by point-to-plane ICP~\citep{rusu2009fpfh,besl1992registration}. In
+each case, one shared transform is applied to all cameras, people, meshes, and
+scene points after the transition.
+
+% 中文：传统方法获得标注边界。每个数据集只在完整 Development split 上选择一组参数，经过一次 Holdout gate 后冻结；
+% Test 不调参、不使用真实配准、不逐例选方法。拟合失败严格回退 R0 并保留在固定分母中。
+All geometric controls receive annotated shot boundaries, whereas \method{}
+uses its online detector. A single dataset-level setting for each control is
+selected on the complete Development split, passed once through a disjoint
+Holdout gate, and then frozen. Test data are never used for tuning, ground-truth
+registration, or per-case method selection. Every failed fit is an exact R0
+fallback and remains in the fixed denominator. Table~\ref{tab:supp-registration-full}
+reports the complete aggregate results.
+
+\input{tables/registration_controls_full}
+
+% 中文：平移不足以处理视角旋转，场景 ICP 的相机对齐也不保证人体位置正确。人体关节 SE(3) 很强，
+% 但 Shot3R 在两个完整测试集上仍取得最低 W/WA/ATE 和最高 IDF1；这里只声称整体均衡结果，不声称所有差值显著。
+Pelvis translation is insufficient under large viewpoint rotation. Scene
+registration can yield a low camera ATE without placing people correctly: on
+EgoBody it reaches 0.020,m ATE but retains 733.2,mm W, and on EgoHumans it
+succeeds on only 41.1\% of cases. Human-joint SE(3) is substantially stronger.
+Nevertheless, \method{} has the lowest aggregate W, WA, and ATE and the highest
+IDF1 on both complete test sets. We interpret this as a more balanced result,
+not as universal dominance of every metric or viewpoint stratum.
+
+% 中文：配对区间以 recording/capture 为聚类单位进行十万次 bootstrap。人体关节 SE(3) 相对 Shot3R 的 W 差异跨零，
+% 因此正文不声称统计显著的 W 优势。
+Table~\ref{tab:supp-registration-paired} uses 100,000 paired bootstrap draws,
+resampling the 43 EgoBody recordings or 27 EgoHumans captures. Human-joint
+SE(3) significantly improves R0 on both datasets, while its W difference from
+\method{} includes zero. This is why the main paper reports the lowest
+aggregate value without claiming a statistically significant universal W
+advantage over this strongest geometric control.
+
+\input{tables/registration_controls_paired}
+
+% 中文：固定视角分层完整保留人体 SE(3) 在若干 W 区间更好的结果。曲线用于直观展示不同方法随视角变化的表现。
+The predefined viewpoint strata are reported without result-dependent subset
+selection in Tables~\ref{tab:supp-registration-angle-eb} and
+\ref{tab:supp-registration-angle-eh}. Human-joint SE(3) is lower in W for
+EgoBody small/extreme and EgoHumans large/extreme strata; \method{} retains
+lower EgoHumans ATE in every listed stratum and the best aggregate joint
+result. Figure~\ref{fig:supp-registration-viewpoint} visualizes the complete W
+trend.
+
+\input{tables/registration_controls_angles_egobody}
+\input{tables/registration_controls_angles_egohumans}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.96\textwidth]{figures/registration_viewpoint_curve.pdf}
+  % 中文图注：固定视角分层中的 W-MPJPE。所有数值来自完整固定分母；拟合失败严格回退 R0。
+  \caption{W-MPJPE across the predefined viewpoint strata. Every point uses
+  the fixed denominator; failed geometric fits fall back to R0 rather than
+  being removed. Human-joint SE(3) is a strong control and is lower in some
+  strata, while \method{} gives the lowest full-set aggregate W on both
+  datasets.}
+  \label{fig:supp-registration-viewpoint}
+\end{figure*}
+
+% 中文：失败分析显示场景配准在低重叠和多人条件下不稳定；人体 SE(3) 在四人样例上也会失败。
+The fitting diagnostics in Tables~\ref{tab:supp-registration-failures} and
+\ref{tab:supp-registration-person-count} expose robustness that is not visible
+from conditional successful fits. On EgoHumans, human-joint SE(3) fails on
+16/90 cases, while scene registration fails on 53/90; among four-person cases,
+the rates rise to 34.1\% and 70.5\%. The median scene-correspondence inlier
+ratio is 0.055 on EgoHumans, consistent with weak cross-shot overlap. The
+post-seal catastrophic diagnostic in Figure~\ref{fig:supp-registration-failure}
+uses a 1,m translation or $30^\circ$ rotation threshold only for analysis and
+never selects a Test transform.
+
+\input{tables/registration_controls_failures}
+\input{tables/registration_controls_person_count}
+\input{tables/registration_controls_diagnostics}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.84\textwidth]{figures/registration_failure_breakdown.pdf}
+  % 中文图注：传统配准的算法失败与封存后的灾难性几何误差诊断。灾难性阈值只用于分析，不参与参数选择或回退。
+  \caption{Algorithmic fitting failures and post-seal catastrophic geometric
+  errors for the registration controls. Catastrophic thresholds are diagnostic
+  only and are not used for model selection, Test-time fitting, or fallback.}
+  \label{fig:supp-registration-failure}
+\end{figure*}
+
+% 中文：共享刚体变换不改变镜头内人体姿态和形状误差。配准耗时只统计额外拟合，不与 Shot3R 的端到端时间直接比较。
+All shared rigid-transform controls leave within-camera body accuracy
+unchanged: local MPJPE/MPVPE remain 70.9/79.0,mm on EgoBody and
+108.5/127.8,mm on EgoHumans. The fitting times in
+Table~\ref{tab:supp-registration-failures} cover only the additional geometric
+fit and are therefore not treated as an end-to-end runtime comparison with
+\method{}.
+
+\FloatBarrier
+\subsection{EgoBody}
+\label{app:egobody-details}
+
+% 中文：正文已报告 EgoBody 的总体结果和主要机制分析。这里补充对齐—状态传播受控实验的局部与边界指标、
+% Human3R—Shot3R 配对置信区间、跨镜头连续性以及不同视角范围下的结果。
+The main paper reports the overall EgoBody results and principal mechanism
+comparison. Here we provide local and boundary measures for the controlled
+alignment--state-propagation comparison, paired confidence intervals, cross-shot
+continuity, and viewpoint-stratified results.
+
+% 中文：两个已对齐设置使用相同 checkpoint、标注边界和历史条件对齐，关闭显式人物关联与共享平移，
+% 并仅改变对齐后传播的状态。表中相同的首帧相机误差确认了边界对齐关系保持不变。
+% 局部人体误差几乎不变；重新初始化状态降低首帧根节点误差，而继续状态降低后续根节点误差。
+The two aligned controls use the same checkpoint, annotated boundary, and
+history-conditioned alignment, disable explicit association and shared
+translation, and differ only in the state propagated afterward. Their equal
+first-post camera errors verify that the boundary alignment is held fixed.
+Local human accuracy is nearly unchanged; reinitialization lowers the
+first-post root error, whereas continuation lowers the subsequent root error.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody 上保持历史条件对齐不变时，改变对齐后传播状态所得的局部与边界指标。
+  % 人体误差单位为毫米，相机旋转单位为度，其余边界与根节点指标单位为米。
+  \caption{Local and boundary measures when varying the state propagated after
+  alignment on EgoBody. Human errors are in mm, camera rotation in degrees, and the
+  remaining camera/root errors in m.}
+  \label{tab:supp-egobody-alignment-state}
+  \supptablesize
+  \input{tables/egobody_alignment_state_details}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：43 个 EgoBody 采集序列上的 Human3R—Shot3R 配对分析。
+  \caption{Paired Human3R--Shot3R analysis over 43 EgoBody recordings. The
+  interval is a paired bootstrap and positive gain favours Shot3R.}
+  \label{tab:supp-egobody-paired}
+  \supptablesize
+  \input{tables/egobody_paired_compact}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody 上的局部人体、相机与时间稳定性。人体误差和加速度单位为毫米，ATE-Sim3 单位为米，脚滑单位为厘米。
+  \caption{Local reconstruction and temporal stability on EgoBody. Human
+  errors and acceleration are in mm, ATE-Sim3 in m, and foot sliding in cm.}
+  \label{tab:supp-egobody-local}
+  \supptablesize
+  \input{tables/egobody_local_compact}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody 镜头切换处的相机与人体连续性。平移和人体误差单位为米，旋转误差单位为度。
+  \caption{Camera and human continuity at EgoBody shot transitions.
+  Translation and root errors are in m; rotation errors are in degrees.}
+  \label{tab:supp-egobody-boundary}
+  \supptablesize
+  \input{tables/egobody_boundary_compact}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody 不同视角变化范围下的结果。W/WA 单位为毫米，相机误差单位为米。
+  \caption{EgoBody results by viewpoint change. W/WA are in mm and camera
+  error is in m.}
+  \label{tab:supp-egobody-angle}
+  \supptablesize
+  \input{tables/egobody_angle_compact}
+\end{table*}
+
+% 中文：129 段 EgoBody 序列的镜头切换均在真实位置首次触发，因此不再使用一张全部由 1 和 0 组成的独立表格。
+The first detector response occurs at the true shot transition in all 129
+EgoBody clips, with no early, late, or missed transitions. We report this
+result in text rather than repeating it in a one-row table.
+
+\FloatBarrier
+\subsection{EgoHumans}
+\label{app:egohumans-details}
+
+% 中文：EgoHumans 的不同视角区间揭示了主要收益来自大幅视角变化，而小视角区间并非所有指标都改善。
+The viewpoint breakdown in Table~\ref{tab:supp-egohumans-angle} shows that the
+main gains arise at large viewpoint changes; not every metric improves in the
+small-view subset.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoHumans 不同视角区间下的结果。W/WA 单位为毫米。
+  \caption{EgoHumans results by viewpoint change. W/WA are in mm.}
+  \label{tab:supp-egohumans-angle}
+  \supptablesize
+  \input{artifacts/egohumans_formal90/angle_strata.tex}
+\end{table*}
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：90 段 EgoHumans 序列上的 Human3R—Shot3R 配对分析。
+  \caption{Paired Human3R--Shot3R analysis on 90 EgoHumans clips from 27
+  captures. Intervals resample captures and then clips within each capture.}
+  \label{tab:egohumans-paired}
+  \supptablesize
+  \input{tables/egohumans_paired_compact}
+\end{table*}
+
+\subsubsection{Recurrent-state carry-over}
+\label{app:egohumans-state-isolation}
+
+% 中文：仅比较完整序列与状态重置后的世界坐标误差，无法区分“失去镜头间固定坐标联系”和
+% “上一镜头状态改变新镜头内部轨迹”这两种影响。为单独检验后者，我们使用固定的 EgoHumans 90 样例协议，
+% 对同一个原版 Human3R 权重进行状态隔离实验。Continuous 设置依次处理两个镜头并在边界延续状态；
+% Reinitialized 设置从初始状态处理完全相同的后半段 50 帧。两者使用相同 RGB 和预处理，不启用 Shot3R 模块。
+World-frame reconstruction error alone cannot distinguish losing a fixed
+inter-shot coordinate relation from changing the trajectory within the new
+shot. We isolate the latter on a fixed 90-case EgoHumans protocol using the
+same original \humanthree{} checkpoint. The continuous setting processes both
+shots in order and carries state across the transition; the reinitialized
+setting processes the identical 50 frames after the transition from the initial state.
+Both use the same preprocessing, and no \method{} module is enabled.
+
+% 中文：EgoHumans 的每个镜头均由静态相机拍摄，因此第二镜头内的真实相对相机运动为单位变换。
+% 对第一个切换后预测进行锚定后，我们计算后续帧相对于它的平移和旋转漂移。任意固定的镜头间世界坐标变换
+% 会在该相对变换中抵消，因此该指标不会把状态重置后缺少跨镜头坐标联系误判为镜头内误差。
+Each EgoHumans shot is recorded by a static camera, so the ground-truth
+relative camera motion within the second shot is the identity. We anchor the
+first prediction after the transition and measure
+\begin{equation}
+ \begin{aligned}
+  \Delta\hat C_k&=\hat C_{B0}^{-1}\hat C_{Bk},\\
+  d_T(k)&=\left\|\operatorname{trans}(\Delta\hat C_k)\right\|_2,\\
+  d_R(k)&=\cos^{-1}\!\left(
+  \frac{\operatorname{tr}(\operatorname{Rot}(\Delta\hat C_k))-1}{2}\right).
+ \end{aligned}
+ \label{eq:state-isolation-drift}
+\end{equation}
+Any fixed world-frame transform between shots cancels in this relative pose,
+so the measure does not penalize reinitialization for lacking the inter-shot
+coordinate relation. We average offsets $k=1,\ldots,16$ within each case,
+then average cases within a capture and give all 27 captures equal weight.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：固定 EgoHumans 90 样例协议上的递归状态延续隔离实验。相同原版 Human3R 权重对完全相同的
+  % 切换后 RGB 帧延续上一镜头状态或重新初始化状态。数值为锚定切换后首帧后，后续 16 帧的
+  % 平均镜头内相机漂移，并对 27 个采集序列等权汇总。
+  \caption{Isolating recurrent-state carry-over on the fixed 90-case
+  EgoHumans protocol. The same original Human3R checkpoint processes identical
+  frames after the transition with the preceding-shot state or a reinitialized
+  state. We report mean within-shot
+  camera drift over the next 16 frames after anchoring the first pose,
+  with equal weight for each of 27 captures.}
+  \label{tab:egohumans-state-isolation}
+  \supptablesize
+  \input{artifacts/egohumans_state_isolation/state_isolation_compact}
+\end{table*}
+
+% 中文：延续旧状态时，平均平移/旋转漂移为 1.124 米/14.58 度；重新初始化后为 0.026 米/0.20 度。
+% 重新初始化在全部 27 个采集序列的两项指标上都更低。配对均值差及 95% bootstrap 区间分别为
+% 1.098 [0.832, 1.372] 米和 14.38 [8.92, 20.49] 度；单侧配对 Wilcoxon 检验均为 p=7.45×10^-9。
+As Table~\ref{tab:egohumans-state-isolation} shows, continued state produces
+1.124\,m/$14.58^\circ$ mean translation/rotation drift, compared with
+0.026\,m/$0.20^\circ$ after reinitialization. Reinitialization is lower on all
+27 captures for both measures. The capture-paired mean reductions and 95\%
+bootstrap intervals are 1.098 [0.832, 1.372]\,m and
+$14.38^\circ$ [$8.92^\circ$, $20.49^\circ$]; both one-sided paired Wilcoxon
+tests give $p=7.45\!\times\!10^{-9}$.
+
+% 中文：结论对窗口长度稳定。对后续 10/32/49 帧，延续与重置的平移漂移分别为
+% 1.045/0.019、1.256/0.039 和 1.387/0.047 米；旋转漂移分别为
+% 14.34/0.16、15.12/0.27 和 15.65/0.34 度。四个预定义视角区间也具有相同排序。
+The conclusion is stable to the measurement window. For windows of 10/32/49 frames,
+continued versus reinitialized translation drift is
+1.045/0.019, 1.256/0.039, and 1.387/0.047\,m; rotation drift is
+$14.34^\circ$/$0.16^\circ$, $15.12^\circ$/$0.27^\circ$, and
+$15.65^\circ$/$0.34^\circ$. The ordering is also unchanged in all four fixed
+viewpoint strata. This control does not claim that reinitialization alone
+solves multi-shot reconstruction---it loses the inter-shot coordinate relation.
+Instead, it shows that the preceding-shot state causes time-varying error
+within the subsequent shot, supporting separate treatment of alignment and
+recurrent-state propagation.
+
+% 中文：消融结果再次表明，只重置状态会破坏世界坐标联系；相机对齐恢复相机关系，
+% 而完整方法进一步利用人物关联和共享变换改善人体轨迹与身份连续性。
+The ablation in Table~\ref{tab:egohumans-system} confirms the same pattern as
+EgoBody. Reinitialization alone breaks world-frame continuity; camera
+alignment restores the inter-shot camera relation, while the full method also
+uses person association and the shared transform to improve human trajectories
+and identity continuity.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoHumans 上对齐、状态重置和人物关联的影响。W/WA/MPJPE 单位为毫米，跨镜头根节点误差单位为米。
+  \caption{Effects of alignment, state reinitialization, and association on
+  EgoHumans. W/WA/MPJPE are in mm and cross-shot root error is in m.}
+  \label{tab:egohumans-system}
+  \supptablesize
+  \input{tables/egohumans_system_compact}
+\end{table*}
+
+\FloatBarrier
+\subsection{Harmony4D}
+\label{app:harmony-details}
+
+% 中文：Harmony4D 使用与其他数据集相同的模型和推理设置。完整方法比较已在D.2给出；本表仅补充局部人体误差和镜头边界平移诊断，避免重复主指标。
+Harmony4D uses the same model and inference settings as the other datasets.
+The complete method comparison appears in
+Table~\ref{tab:supp-harmony4d-complete}; Table~\ref{tab:supp-harmony-main}
+adds only local body errors and translation error at the shot transition.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：88段Harmony4D序列上的附加诊断。局部人体误差单位为毫米，边界平移误差单位为米。
+  \caption{Additional diagnostics on 88 Harmony4D clips. Local body errors
+  are in mm and transition-translation error is in m.}
+  \label{tab:supp-harmony-main}
+  \supptablesize
+  \input{artifacts/harmony4d_unified_table}
+\end{table*}
+
+\subsubsection{Shared-translation weight}
+\label{app:harmony-lambda-sensitivity}
+
+% 中文：我们在所有数据集上统一采用lambda=0.5。在Harmony4D开发集上，该设置取得最低的平均W和WA，同时保持具有竞争力的相机ATE和跨镜头人体连续性，在相机与人物几何对齐之间取得良好平衡。
+We study the shared-translation weight on 12 Harmony4D training sequences
+reserved for development, nine of which provide all required metrics. Local
+MPJPE, MPVPE, IDF1, and Coverage do not change with this output-space weight
+and are omitted rather than repeated. We use $\lambda=0.5$ across all
+datasets. On this development split, it achieves the lowest mean W and WA
+while retaining competitive camera ATE and cross-shot root continuity,
+providing a balanced combination of camera- and person-derived alignment.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Harmony4D开发集上的共享平移权重敏感性。W/WA单位为毫米，ATE和跨镜头根节点误差单位为米。
+  \caption{Sensitivity to the shared-translation weight on the Harmony4D
+  development split. W/WA are in mm; ATE and cross-shot root error are in m.}
+  \label{tab:harmony-lambda-sensitivity}
+  \supptablesize
+  \input{tables/harmony4d_lambda_compact}
+\end{table*}
+
+\subsubsection{Cross-shot person association}
+\label{app:harmony-association}
+
+% 中文：在 88 段序列中，84 段至少包含一个有效人物匹配；147 个有效匹配中有 142 个正确，
+% 对应 96.60% 的匹配准确率和 80.68% 的人物延续率。
+Among 88 clips, 84 contain at least one valid person match. Of 147 valid
+matches, 142 are correct, giving 96.60\% pair accuracy and 80.68\% identity
+continuation. The ground-truth-identity row in
+Table~\ref{tab:supp-harmony-association} changes only the identity labels and
+is included as an upper bound.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Harmony4D 镜头切换处的人物关联结果。匹配准确率使用 147 个评测器认可的端点匹配，身份延续率使用所有 176 个跨镜头可见身份；真实身份上界行只替换身份标签。
+  \caption{Cross-shot person association on Harmony4D. Pair accuracy uses
+  147 evaluator-valid endpoint pairs, whereas identity continuation uses all
+  176 ground-truth continuations. The ground-truth-identity row changes only
+  identity labels and serves as an evaluation upper bound.}
+  \label{tab:supp-harmony-association}
+  \supptablesize
+  \input{tables/harmony4d_association_compact}
+\end{table*}
+
+% 中文：我们进一步只改变匹配代价中的几何线索，并保持相同的冻结预测、逐样例中位数归一化与
+% 匈牙利分配。每一种人物对应都在读取真实身份前固定；真实身份只用于随后评分。
+We further vary only the geometric cues in the matching cost, while retaining
+the same frozen predictions, per-case median normalization, and Hungarian
+assignment. Each correspondence is fixed before ground-truth identities are
+opened and used only for scoring.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Harmony4D 88 个样例上的人物关联线索消融。匹配准确率使用每种配置中评测器认可的端点匹配，
+  % 身份延续率使用全部 176 个跨镜头可见身份；IDF1 是 88 个样例的均值。
+  \caption{Association-cue ablation on 88 Harmony4D cases. Pair accuracy uses
+  evaluator-valid endpoint matches for each configuration, identity
+  continuation uses all 176 cross-shot ground-truth continuations, and IDF1
+  is averaged over the 88 cases.}
+  \label{tab:supp-harmony-association-cues}
+  \supptablesize
+  \input{tables/harmony4d_association_cue_ablation}
+\end{table*}
+
+% 中文：骨盆位置已能得到较高的匹配准确率；加入躯干朝向和去根节点平移的关节结构后，
+% 正确匹配数、身份延续率和 IDF1 进一步提高。该结果支持三类预测几何线索的互补性，
+% 但人物关联仍被定位为镜头对齐之后的轻量支持机制，而不是本文的核心表示学习贡献。
+Pelvis position already gives high pair accuracy. Adding torso orientation and
+root-centered joint structure further increases the number of correct pairs,
+identity continuation, and IDF1. This supports the complementarity of the
+three predicted geometric cues, while association remains a lightweight
+supporting mechanism after inter-shot alignment rather than the central
+representation-learning contribution.
+
+\subsubsection{Three-Shot Control}
+\label{app:multicut}
+
+% 中文：四段额外的 Harmony4D 序列各包含三个镜头和两次切换。
+% 相比 Human3R，Shot3R 改善 W、WA、IDF1 和跨镜头人体连续性，但 ATE-Sim3 略高。
+% OnlineHMR 在四段序列上都完成推理，但整体 Coverage 仅为 0.121，只有三段可计算 W/WA。
+% 因此其较低的 W/WA 必须结合可评测序列数理解；在全部序列上，Shot3R 的相机误差更低，IDF1 和 Coverage 更高。
+Four additional Harmony4D sequences contain three shots and two transitions.
+Shot3R improves W, WA, IDF1, and cross-shot human continuity, while ATE-Sim3
+is slightly higher than Human3R. OnlineHMR completes inference on all four
+streams, but its 0.121 Coverage leaves only three with evaluable W/WA. Its
+lower W/WA must therefore be read together with this count; across all four
+streams, \method{} has lower camera error and higher IDF1 and Coverage.
+These four sequences provide a limited repeated-application check rather than
+a benchmark-scale evaluation.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：Harmony4D 三镜头序列上的结果。W/WA 单位为毫米，相机和人体误差单位为米。
+  % 括号为条件 W/WA 的有效样本数，Coverage 使用全部四段序列。
+  \caption{Harmony4D three-shot results. W/WA are in mm; camera and root
+  errors are in m. Parentheses give the number of evaluable sequences;
+  Coverage is computed over all four streams.}
+  \label{tab:supp-harmony-multicut}
+  \supptablesize
+  \input{tables/harmony4d_multicut_compact}
+\end{table*}

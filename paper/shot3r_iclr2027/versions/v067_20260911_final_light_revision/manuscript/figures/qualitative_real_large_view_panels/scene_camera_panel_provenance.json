@@ -1,0 +1,39 @@
+{
+  "schema_version": "Bridge3R-real-qualitative-scene-camera-panels-v1",
+  "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+  "selection": "metric-selected extreme-view example; not claimed representative",
+  "methods": {
+    "strict": {
+      "method": "strict",
+      "payload": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/payloads/strict",
+      "frames": [
+        4,
+        5
+      ],
+      "point_count_after_deterministic_sampling": 21076,
+      "camera_colours": {
+        "pre_cut": "#2663B9",
+        "first_post_cut": "#DC442D"
+      },
+      "gt_used": false,
+      "cross_method_geometry_used": false,
+      "output": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/versions/v026_20260830_mvhuman_and_real_qualitative/manuscript/figures/qualitative_real_large_view_panels/strict_scene_camera_post_local000005_original0050.png"
+    },
+    "bridge3r": {
+      "method": "bridge3r",
+      "payload": "/data/wangzheng/iJCV-CODE/Movie3R/output/bridge3r_two_dataset_demo_v2/egohumans/payloads/bridge3r",
+      "frames": [
+        4,
+        5
+      ],
+      "point_count_after_deterministic_sampling": 21076,
+      "camera_colours": {
+        "pre_cut": "#2663B9",
+        "first_post_cut": "#DC442D"
+      },
+      "gt_used": false,
+      "cross_method_geometry_used": false,
+      "output": "/data/wangzheng/iJCV-CODE/ICLR-paper/bridge3r_iclr2027/versions/v026_20260830_mvhuman_and_real_qualitative/manuscript/figures/qualitative_real_large_view_panels/bridge3r_scene_camera_post_local000005_original0050.png"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+\begin{table}[t]
+  \centering
+  \caption{Geometry-based cross-shot person association at the boundary. Pair
+  accuracy is computed over uniquely evaluable endpoint assignments; identity
+  continuation uses every ground-truth identity visible across the transition. Runtime abstention counts
+  unused predicted pair slots and is not an evaluator exclusion.}
+  \label{tab:association-main}
+  \scriptsize
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{lrrr}
+    \toprule
+    Dataset & Pair accuracy & Continuation recovery & Runtime abstention \\
+    \midrule
+    EgoHumans & $109/123$ (88.62\%) & $109/282$ (38.65\%) & $0/231$ \\
+    Harmony4D & $142/147$ (96.60\%) & $142/176$ (80.68\%) & $0/256$ \\
+    \bottomrule
+  \end{tabular}}
+\end{table}

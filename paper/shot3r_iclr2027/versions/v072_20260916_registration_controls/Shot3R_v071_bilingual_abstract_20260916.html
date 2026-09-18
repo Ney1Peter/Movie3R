@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shot3R v071 Bilingual Abstract</title>
+  <style>
+    @page { size: A4; margin: 2.54cm; }
+    body {
+      font-family: "Times New Roman", "Noto Serif CJK SC", "SimSun", serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+    }
+    h1 {
+      font-size: 16pt;
+      text-align: center;
+      margin: 0 0 8pt 0;
+    }
+    .title-zh {
+      font-size: 15pt;
+      font-weight: bold;
+      text-align: center;
+      margin: 0 0 24pt 0;
+    }
+    h2 {
+      font-size: 13pt;
+      margin: 18pt 0 8pt 0;
+    }
+    p {
+      margin: 0;
+      text-align: justify;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shot3R: Multi-Shot State Transitions for Streaming 4D Human-Scene Reconstruction</h1>
+  <div class="title-zh">Shot3R：基于多镜头状态转移的流式四维人体—场景重建</div>
+
+  <h2>Abstract</h2>
+  <p>Streaming multi-person 4D reconstruction from monocular videos with shot transitions requires camera trajectories, humans, and scene geometry from successive shots to share a common world frame. Existing online recurrent methods update this reconstruction incrementally by carrying a recurrent state forward, an operation that generally assumes visual and geometric continuity between adjacent observations. At a shot boundary, however, the preceding state has conflicting roles: it provides a spatial reference for relating the new shot to the accumulated reconstruction, but becomes unreliable as a recurrent condition within the new shot. Carrying this state forward can corrupt new-shot estimates, whereas resetting it discards the cross-shot spatial relation. <strong>Shot3R</strong> resolves this conflict by formulating each shot transition as a history-conditioned online state transition. At each boundary, Shot3R jointly models the historical representation and the current observation in latent space to infer the spatial relation between the new shot and the existing reconstruction, while initializing an independent recurrent state for the new shot. This boundary-time inference establishes a consistent world-frame representation of camera trajectories, human motion, and scene geometry; geometry-based person association preserves identities across shots, and only the new-shot state is propagated thereafter. In controlled comparisons across three multi-person benchmarks, Shot3R reduces the dataset-balanced mean W-MPJPE by 9.5% and improves mean IDF1 by 0.099 in absolute terms relative to continuous state propagation. On EgoBody's predefined extreme-viewpoint subset, it reduces W-MPJPE by 29.9%. Comparisons with publicly available online and offline reconstruction systems under the same multi-shot inputs further show competitive reconstruction accuracy.</p>
+
+  <h2>摘要</h2>
+  <p>从包含镜头切换的单目视频中进行流式多人体四维重建，需要将连续镜头中的相机轨迹、人体和场景几何置于统一世界坐标系中。现有在线递归方法通过持续传递递归状态增量更新重建结果，但这一过程通常依赖相邻观测之间的视觉与几何连续性。然而，在镜头边界处，先前状态具有相互冲突的作用：它为建立新镜头与累积重建之间的空间关系提供参照，却不再适合作为新镜头内的递归条件。继续传播这一状态可能干扰新镜头的估计，而将其重置又会丢失跨镜头的空间关系。为解决这一冲突，<strong>Shot3R</strong> 将每次镜头切换表述为一种历史条件的在线状态转移。在每个边界处，Shot3R 在潜在空间中联合建模历史表示与当前观测，以推断新镜头与已有重建之间的空间关系，同时为新镜头初始化独立的递归状态。该边界推断为相机轨迹、人体运动和场景几何建立一致的世界坐标表征；基于几何的人物关联维持跨镜头身份一致性，后续仅传播新镜头状态。在三个多人体基准上的受控比较中，相较于连续状态传播，Shot3R 将按数据集等权计算的平均 W-MPJPE 降低了 9.5%，并将平均 IDF1 绝对提高了 0.099。在 EgoBody 预定义的极端视角子集上，W-MPJPE 降低了 29.9%。在相同多镜头输入上与公开在线及离线重建系统的进一步比较表明，Shot3R 取得了具有竞争力的重建精度。</p>
+</body>
+</html>

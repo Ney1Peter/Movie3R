@@ -1,0 +1,19 @@
+% Availability-aware executable-reference table retained in the supplement.
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrl}
+  \toprule
+  Group & Method & W $\downarrow$ & WA $\downarrow$ & ATE-Sim3 $\downarrow$ & IDF1 $\uparrow$ & Coverage $\uparrow$ & $N_{W}/N_{WA}$ \\
+  \midrule
+  Backbone & \humanthree{} & 321.1 & 233.4 & 0.124 & 0.870 & 0.981 & 129/129 \\
+  Ours & \textbf{\method{} (causal)} & 258.8 & 201.7 & 0.016 & 0.985 & 0.981 & 129/129 \\
+  \midrule
+  \multirow{2}{*}{Public methods}
+    & TRACE & 576.4 & 276.4 & N/A & 0.036 & 0.035 & 22/35 \\
+    & PromptHMR-SPEC & 741.4 & 336.1 & 0.302 & 0.195 & 0.202 & 64/87 \\
+  \bottomrule
+\end{tabular}}
+\vspace{1mm}
+\parbox{0.97\textwidth}{\footnotesize W and WA are in mm. TRACE does not
+export an independent physical camera trajectory. Complete inference-failure,
+accepted-match, and per-dataset external-method ledgers are supplied in this
+supplement.}

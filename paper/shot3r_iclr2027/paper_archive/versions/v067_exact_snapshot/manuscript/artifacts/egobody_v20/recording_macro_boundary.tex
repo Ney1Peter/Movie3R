@@ -1,0 +1,28 @@
+% Values from the retained EgoBody-CS150 evaluation; labels are paper-facing.
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & B-Cam. T (m) $\downarrow$ & B-Cam. R ($^\circ$) $\downarrow$ & Seam-Cam. T (m) $\downarrow$ & Seam-Cam. R ($^\circ$) $\downarrow$ \\
+\midrule
+Human3R & 0.840 & 12.3 & 0.703 & 6.3 \\
+State reinitialization (oracle boundary) & 3.424 & 57.0 & 3.375 & 55.8 \\
+Camera alignment (oracle boundary) & 0.807 & 8.0 & 0.651 & 2.4 \\
+Alignment + association (oracle boundary) & 0.829 & 8.1 & 0.723 & 3.7 \\
+Alignment + association (causal detection) & 0.829 & 8.1 & 0.723 & 3.7 \\
+Shot3R (causal detection) & 0.679 & 8.0 & 0.501 & 2.4 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & B-Root (m) $\downarrow$ & Post-root (m) $\downarrow$ & Seam-root (m) $\downarrow$ & CHRGE (m) $\downarrow$ & Seam-CHRGE (m) $\downarrow$ & Pair vector (m) $\downarrow$ \\
+\midrule
+Human3R & 0.533 & 0.486 & 0.524 & 0.300 & 0.244 & 0.279 \\
+State reinitialization (oracle boundary) & 1.355 & 1.364 & 1.332 & 0.291 & 0.257 & 0.913 \\
+Camera alignment (oracle boundary) & 0.538 & 0.554 & 0.512 & 0.291 & 0.257 & 0.252 \\
+Alignment + association (oracle boundary) & 0.533 & 0.546 & 0.509 & 0.296 & 0.279 & 0.244 \\
+Alignment + association (causal detection) & 0.533 & 0.546 & 0.509 & 0.296 & 0.279 & 0.244 \\
+Shot3R (causal detection) & 0.346 & 0.364 & 0.309 & 0.291 & 0.257 & 0.252 \\
+\bottomrule
+\end{tabular}}

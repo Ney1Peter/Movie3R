@@ -1,0 +1,6 @@
+Supplement dependency files: 40
+Supplement table environments: 34
+Table environments without \\supptablesize: 0
+Forbidden table-size/whole-table-scaling tokens: 0
+Configured table body macro: \newcommand{\supptablesize}{\small} (9 pt under article 10 pt)
+Table notes: \footnotesize (8 pt)

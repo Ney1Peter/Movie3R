@@ -1,0 +1,32 @@
+\begin{table*}[t]
+  \centering
+  \caption{五段固定的 150 帧 Harmony4D 多镜头视频流上的完整系统运行效率（共 750 帧）。}
+  \label{tab:end-to-end-runtime-zh}
+  \small
+  \setlength{\tabcolsep}{8pt}
+  \renewcommand{\arraystretch}{0.96}
+  \begin{tabular}{llccrr}
+    \toprule
+    类别 & 方法 & 相机 & 场景 &
+    秒 / 150 帧 $\downarrow$ & FPS $\uparrow$ \\
+    \midrule
+    \multirow{3}{*}{离线}
+      & PromptHMR (SPEC) & \xmark & \xmark & $708.7 \pm 209.0$ & 0.212 \\
+      & TRAM & \cmark & \xmark & $455.5 \pm 60.6$ & 0.329 \\
+      & JOSH & \cmark & \cmark & $949.6 \pm 286.0$ & 0.158 \\
+    \midrule
+    半在线
+      & OnlineHMR & \cmark & \xmark & $1007.8 \pm 124.7$ & 0.149 \\
+    \midrule
+    \multirow{3}{*}{在线}
+      & TRACE & \xmark & \xmark & $45.0 \pm 21.5$ & 3.334 \\
+      & \humanthree{} & \cmark & \cmark & $120.4 \pm 3.2$ & 1.246 \\
+      & \textbf{\method{}} & \cmark & \cmark & $167.8 \pm 4.0$ & 0.894 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5mm}
+
+  \parbox{0.91\textwidth}{\footnotesize
+  秒数为均值 $\pm$ 总体标准差，FPS 为 750 除以总墙钟时间。相机表示流程输出可独立评测的物理相机轨迹，场景表示输出场景几何。计时覆盖方法所需的预测进程启动和模型加载，直至原生预测写盘；多阶段流程报告必要阶段之和，不包含渲染和评测。因此，解释吞吐率时仍需结合输出范围。}
+\end{table*}
+

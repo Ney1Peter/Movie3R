@@ -1,0 +1,43 @@
+{
+  "schema_version": "Shot3R-EgoHumans-state-isolation-public-v1",
+  "protocol": {
+    "dataset": "EgoHumans formal90",
+    "case_count": 90,
+    "capture_count": 27,
+    "clip_length": 100,
+    "boundary_index": 50,
+    "post_cut_frame_count": 50,
+    "primary_post_cut_offsets": 16,
+    "sensitivity_offsets": [10, 16, 32, 49],
+    "aggregation": "case mean, then equal-weight capture macro",
+    "gauge_invariant_measure": "inverse(C_B0) times C_Bk",
+    "ground_truth_relative_camera_motion": "identity within each static-camera shot",
+    "bootstrap_samples": 20000,
+    "same_original_human3r_checkpoint": true,
+    "same_post_cut_rgb_and_preprocessing": true
+  },
+  "primary_capture_macro": {
+    "translation_mean_m": {
+      "continued": 1.1237376599081934,
+      "reinitialized": 0.025794971046047527,
+      "absolute_reduction": 1.097942688862146,
+      "paired_bootstrap_95ci": [0.8322386352893621, 1.3723795745844747],
+      "reinitialized_better_fraction": 1.0,
+      "one_sided_paired_wilcoxon_p": 7.450580596923828e-09
+    },
+    "rotation_mean_deg": {
+      "continued": 14.578266064734056,
+      "reinitialized": 0.20047542372335203,
+      "absolute_reduction": 14.377790641010709,
+      "paired_bootstrap_95ci": [8.919235293929837, 20.493994325033658],
+      "reinitialized_better_fraction": 1.0,
+      "one_sided_paired_wilcoxon_p": 7.450580596923828e-09
+    }
+  },
+  "window_sensitivity_capture_macro": {
+    "10": {"continued_translation_m": 1.0445258666422024, "reinitialized_translation_m": 0.01867484654818456, "continued_rotation_deg": 14.341273862295937, "reinitialized_rotation_deg": 0.16449314247274782},
+    "16": {"continued_translation_m": 1.1237376599081934, "reinitialized_translation_m": 0.025794971046047527, "continued_rotation_deg": 14.578266064734056, "reinitialized_rotation_deg": 0.20047542372335203},
+    "32": {"continued_translation_m": 1.2562252995490306, "reinitialized_translation_m": 0.038997074812574355, "continued_rotation_deg": 15.124768308384018, "reinitialized_rotation_deg": 0.2723935042954374},
+    "49": {"continued_translation_m": 1.3871209655695693, "reinitialized_translation_m": 0.047272536464082915, "continued_rotation_deg": 15.652223330188136, "reinitialized_rotation_deg": 0.33574886052955255}
+  }
+}

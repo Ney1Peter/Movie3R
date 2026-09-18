@@ -1,0 +1,10 @@
+\begin{tabular}{llrrrrrr}
+\toprule
+Method & Temporal mode & PA-MPJPE & Anchor-MPJPE & Boundary root $\Delta$ & Inter-shot cam. rot. & Inter-shot cam. trans. & Coverage \\
+\midrule
+\humanthree{} & Streaming & \textbf{27.5} & 217.5 & 442.3 & 95.0 & \textbf{1.733} & 99.8 \\
+\method{} & Streaming & 27.6 & 261.0 & 434.5 & \textbf{87.7} & 1.897 & 99.8 \\
+OnlineHMR & Semi-online & 29.3 & 185.8 & 146.9 (47) & 104.5 & 1.823 & 98.3 \\
+PromptHMR & Offline & 28.5 & 137.6 & 20.3 & 103.9 & -- & 100.0 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,19 @@
+# Reproducible LaTeX build by-products. Versioned source, evidence, figures,
+# release PDFs, and Overleaf archives remain tracked.
+**/*.aux
+**/*.blg
+**/*.fdb_latexmk
+**/*.fls
+**/*.log
+**/*.out
+**/*.synctex.gz
+**/*.toc
+
+# Local editor and interpreter state.
+**/__pycache__/
+**/*.py[cod]
+.DS_Store
+
+# Superseded scratch copies are retained on disk but are not publication
+# artifacts and should not enter the paper history.
+versions/.discarded_working_copies/

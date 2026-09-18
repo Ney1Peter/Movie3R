@@ -1,0 +1,28 @@
+\begin{table*}[t]
+  \centering
+  \caption{Boundary and cross-shot diagnostics for geometric registration.
+  Translation, post-transition root, and seam-root errors are in m; rotation
+  error is in degrees.}
+  \label{tab:supp-registration-diagnostics}
+  \supptablesize
+  \setlength{\tabcolsep}{2.8pt}
+  \begin{tabular}{llrrrr}
+    \toprule
+    Dataset & Method & Boundary trans. $\downarrow$ & Boundary rot. $\downarrow$ & Post root $\downarrow$ & Seam root $\downarrow$ \\
+    \midrule
+    \multirow{5}{*}{EgoBody}
+      & \humanthree{} per-shot reset & 3.374 & 55.7 & 1.364 & 1.332 \\
+      & $+$ pelvis translation & 2.986 & 55.7 & 0.852 & 0.761 \\
+      & $+$ human-joint SE(3) & 1.029 & 17.9 & \textbf{0.360} & \textbf{0.241} \\
+      & $+$ scene FPFH+ICP & 2.238 & 44.7 & 1.324 & 1.320 \\
+      & \method{} & \textbf{0.679} & \textbf{8.0} & 0.364 & 0.309 \\
+    \midrule
+    \multirow{5}{*}{EgoHumans}
+      & \humanthree{} per-shot reset & 8.901 & 104.5 & 3.854 & 2.653 \\
+      & $+$ pelvis translation & 9.905 & 104.5 & 3.777 & 2.312 \\
+      & $+$ human-joint SE(3) & 5.676 & 48.8 & 2.615 & \textbf{1.072} \\
+      & $+$ scene FPFH+ICP & 8.970 & 102.4 & 4.253 & 3.150 \\
+      & \method{} & \textbf{4.135} & \textbf{23.1} & \textbf{2.408} & 1.227 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

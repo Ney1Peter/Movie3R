@@ -1,0 +1,74 @@
+\documentclass{article}
+
+\usepackage{iclr2027_conference,times}
+% Tectonic uses XeTeX locally; keep its Latin metrics aligned with the
+% Times-compatible pdfLaTeX build used by Overleaf.
+\usepackage{iftex}
+\ifXeTeX
+  \usepackage{fontspec}
+  \setmainfont{NimbusRoman-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusRoman-Bold.otf,
+    ItalicFont=NimbusRoman-Italic.otf,
+    BoldItalicFont=NimbusRoman-BoldItalic.otf]
+  \setsansfont{NimbusSans-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusSans-Bold.otf,
+    ItalicFont=NimbusSans-Italic.otf,
+    BoldItalicFont=NimbusSans-BoldItalic.otf]
+  \setmonofont{NimbusMonoPS-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusMonoPS-Bold.otf,
+    ItalicFont=NimbusMonoPS-Italic.otf,
+    BoldItalicFont=NimbusMonoPS-BoldItalic.otf]
+\fi
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{capt-of}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{placeins}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+\input{sections/00_metadata}
+
+% Compact coloured indicators used in comparison and ablation tables.
+\definecolor{shotgreen}{RGB}{0,145,140}
+\definecolor{shotred}{RGB}{210,55,70}
+\definecolor{shotamber}{RGB}{190,120,0}
+\newcommand{\cmark}{\ensuremath{\textcolor{shotgreen}{\checkmark}}}
+\newcommand{\xmark}{\ensuremath{\textcolor{shotred}{\times}}}
+% 中文：三角符号表示公开资源存在，但尚未通过本文同输入协议验证。
+\newcommand{\pmark}{\ensuremath{\textcolor{shotamber}{\triangle}}}
+% Supplementary tables use one 9 pt body size. Notes remain at 8 pt.
+\newcommand{\supptablesize}{\small}
+
+\begin{document}
+\maketitle
+
+\input{sections/fig_teaser}
+\input{sections/01_abstract}
+\input{sections/02_introduction}
+\input{sections/03_related_work}
+\input{sections/04_method}
+\input{sections/05_experiments}
+\input{sections/06_conclusion}
+\clearpage
+\input{sections/07_reproducibility}
+
+\clearpage
+\bibliographystyle{iclr2027_conference}
+\bibliography{references}
+
+% This is deliberately a single compilation target. Neither \appendix nor
+% the ICLR style resets figure/table counters, so numbering remains continuous.
+\clearpage
+\appendix
+\input{sections/supplement}
+
+\end{document}

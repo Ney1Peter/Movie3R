@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & W-MPJPE$\downarrow$ & WA-MPJPE$\downarrow$ & MPJPE$\downarrow$ & Human seam$\downarrow$ & IDF1$\uparrow$ & Coverage$\uparrow$\\
+\midrule
+Complete token set, w/o head LoRA & 854.6 & 331.2 & 108.5 & 1.173 & 0.570 & 0.616\\
+Complete token set, w/o camera residual & 853.1 & 332.4 & 108.5 & 1.163 & 0.566 & 0.616\\
+\textbf{Shot3R} & 866.8 & 336.9 & 108.5 & 1.227 & 0.571 & 0.616\\
+\bottomrule
+\end{tabular}}
+\caption{Fixed-configuration parameter masking on EgoHumans. Every row uses all 90 clips for W/WA/MPJPE, IDF1, and coverage and 60 clips for human seam. The LoRA mask disables the joint pose/human-head adaptation as a group; this table does not isolate efficacy of the auxiliary human-latent residual head.}
+\label{tab:egohumans-head}
+\end{table}

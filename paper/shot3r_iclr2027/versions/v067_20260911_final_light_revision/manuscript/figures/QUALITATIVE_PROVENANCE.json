@@ -1,0 +1,14 @@
+{
+  "schema_version": "Bridge3R-real-output-qualitative-v1",
+  "selection_rule": "lexicographically first retained EgoHumans Test runtime report; no prediction-quality selection",
+  "runtime_report": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_extreme_cam01_cam13_b00301.runtime.json",
+  "cache": "output/v19_egohumans/test/predictions/badminton__001_badminton-001/ego_test_badminton_001_badminton_extreme_cam01_cam13_b00301.npz",
+  "case_id": "ego_test_badminton_001_badminton_extreme_cam01_cam13_b00301",
+  "boundary": 50,
+  "rendered_quantities": "retained model-output camera centres and predicted pelvis trajectories",
+  "not_rendered": "RGB, ground truth, evaluator values, or synthesized imagery",
+  "methods": [
+    "m0_strict_human3r",
+    "Bridge3R locked publication transaction"
+  ]
+}

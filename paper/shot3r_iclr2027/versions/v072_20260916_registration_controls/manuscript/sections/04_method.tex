@@ -1,0 +1,284 @@
+% 中文节标题：方法
+\section{Method}
+\label{sec:method}
+
+% 中文：Shot3R 按时间顺序处理多镜头单目视频，并将相机、可见人体和场景几何重建到统一世界坐标系中。
+% 镜头内由递归重建器持续更新历史表示；镜头切换处，历史仍是建立空间关系所需的参照，却不再适合作为新镜头继续传播的递归条件。
+% Shot3R 因而为历史的这两种作用赋予不同的信息生命周期。
+\method{} processes a multi-shot monocular video in temporal order and
+reconstructs its cameras, visible people, and scene geometry in a common world
+frame. Within each shot, a recurrent reconstructor continually updates a
+compact history representation. At a shot transition, this history remains a
+useful reference for establishing the inter-shot spatial relation, but is no
+longer a reliable recurrent condition for the new visual content. \method{}
+therefore assigns different information lifetimes to these two roles of
+history.
+
+% 中文：如图2，检测到边界后，同一幅新镜头首帧进入两条互补路径。历史条件对齐路径临时读取此前状态以估计镜头关系，随后即被丢弃；重新初始化重建路径独立开始新镜头，并拥有唯一向后传播的状态。
+% 带类型的对齐表示从当前观测与历史状态中组织边界证据。估计的镜头关系、人物关联和共享变换随后将重新初始化路径的输出提交到已有世界坐标系。该过程只使用当前和历史观测，不修改已输出帧，也不执行逐视频优化。
+As illustrated in Figure~\ref{fig:method}, a detected boundary triggers two
+complementary evaluations of the same first new-shot frame. A
+history-conditioned alignment path temporarily reads the preceding state to
+infer the inter-shot relation and is then discarded. A reinitialized
+reconstruction path starts the new shot independently and owns the only state
+propagated forward. Typed alignment representations organize boundary evidence
+from the current observation and recurrent history. The resulting relation,
+geometry-based person association, and a shared transform then commit the
+reinitialized outputs to the existing world frame. This boundary operation
+uses only current and past observations, revises no previously emitted frame,
+and requires no per-video optimization.
+
+\input{sections/fig_method}
+
+% 中文小节标题：镜头边界处的递归重建
+\subsection{Recurrent Reconstruction at Shot Boundaries}
+
+% 中文：给定由连续镜头片段组成的单目视频流，Shot3R在时刻t仅利用截至当前的观测，在线恢复相机姿态、场景几何和多个可见人体。
+% 输出统一表示在共同世界坐标系中：它由首个镜头初始化，并由后续镜头及其相机、人体和场景几何共享，而不是预先给定的绝对坐标系。
+Given a monocular stream $\{I_t\}_{t=1}^{T}$ composed of consecutive video
+shots, \method{} uses only observations up to time $t$ to recover camera pose
+$C_t$, scene geometry $P_t^w$, and multiple visible people $\mathcal H_t$
+online. All outputs are expressed in a \emph{common world frame}: the
+reconstruction coordinate system initialized by the first shot and shared by
+the cameras, people, and scene geometry of every subsequent shot, rather than
+an externally specified absolute coordinate system. Encoding past observations
+in a recurrent state $S_t$, a general stateful reconstruction process is
+
+\begin{equation}
+ (y_t,S_t)=f_\theta(I_t,S_{t-1}),\qquad
+ y_t=\left(C_t,P_t^w,\{J_t^i,V_t^i,q_t^i\}_{i=1}^{N_t}\right),
+ \label{eq:online-map}
+\end{equation}
+
+% 中文：其中C为camera-to-world姿态，J、V和q分别表示人物的SMPL-X关节、网格与匿名人物槽位。
+% 实现中使用预训练Human3R作为递归重建器，提供镜头内的相机、人体与场景预测，但本文的叙事重点是递归历史跨越镜头边界时的冲突作用。
+where $C_t$ is a camera-to-world pose, and $J_t^i$, $V_t^i$, and $q_t^i$
+denote the SMPL-X~\citep{pavlakos2019smplx} joints, mesh vertices, and
+anonymous slot of person $i$, respectively. We instantiate $f_\theta$ with a
+pretrained \humanthree{} recurrent reconstructor, which supplies within-shot
+camera, human, and scene predictions~\citep{chen2026human3r}. Under continuous
+observations, the spatial-reference and recurrent-conditioning roles of
+$S_{t-1}$ are compatible. A shot transition separates them: the preceding
+state still relates the new observation to the established reconstruction,
+but its viewpoint- and content-specific representation is no longer a valid
+condition for updating the new-shot state. Directly carrying it forward
+preserves the reference but can propagate this mismatch; reinitializing it
+isolates the mismatch but removes the inter-shot relation.
+
+% 中文：Shot3R在边界b对同一首帧执行历史条件对齐路径与重新初始化重建路径。前者只读取历史以推断镜头关系，其临时状态随后丢弃；后者从空状态出发并成为后续帧唯一的递归状态来源。
+To resolve this conflict, \method{} performs two complementary online
+evaluations at a detected boundary $b$:
+
+\begin{equation}
+\begin{aligned}
+ (\widetilde y_b,\widetilde S_b)&=f_{\theta,\phi}(I_b,S_{b-1}), &
+ (y_b^r,S_b^r)&=f_\theta(I_b,S_{\varnothing}),\\
+ (y_t^r,S_t^r)&=f_\theta(I_t,S_{t-1}^r), && t>b.
+\end{aligned}
+\label{eq:boundary-paths}
+\end{equation}
+
+The history-conditioned alignment path reads $S_{b-1}$ only to infer the
+relation between the new shot and the existing world frame; its predictions
+and $\widetilde S_b$ are discarded after the boundary operation. The
+reinitialized reconstruction path starts from $S_{\varnothing}$, and $S_b^r$
+becomes the sole recurrent state for all subsequent frames in the shot. Thus,
+inter-shot relation estimation and new-shot state propagation have separate
+information paths.
+
+% 中文小节标题：历史条件镜头对齐
+\subsection{History-Conditioned Shot Alignment}
+
+% 中文：历史条件路径必须从新镜头首帧与先前状态的交互中估计跨镜头关系。连续重建表示混合了图像、相机、人体和历史信息，而边界推理需要区分这些证据承担的不同作用。
+% Shot3R因此显式构造语义、相机变化和时间上下文三种带类型表示，而不是过早将全部信息汇聚为单一校正向量。
+The history-conditioned path must estimate an inter-shot relation from the
+interaction between the first new-shot frame $I_b$ and the preceding state
+$S_{b-1}$. Recurrent features designed for continuous reconstruction mix image
+content, camera motion, human information, and historical context, whereas
+boundary reasoning benefits from keeping their different roles identifiable.
+Rather than prematurely collapsing them into a single correction vector,
+\method{} explicitly constructs three typed alignment representations for
+semantic correspondence, camera-latent change, and accumulated temporal
+context.
+
+% 中文：令c_b为从当前图像、相机和人体token汇聚的观测证据，m_{b-1}为从递归状态与相机记忆提取的历史证据。三类表示定义如下。
+Let $c_b$ denote observation evidence pooled from the current image, camera,
+and human tokens, and let $m_{b-1}$ denote historical evidence retrieved from
+the recurrent state and camera memory. The typed representations are
+
+\begin{equation}
+\begin{aligned}
+ z_b^{\mathrm{sem}}&=\alpha_b c_b+(1-\alpha_b)m_{b-1}, &
+ z_b^{\mathrm{cam}}&=\operatorname{MLP}_{\mathrm{cam}}
+ [p_b,p_{b-1},\Delta p_b,m_{b-1}],\\
+ z_b^{\mathrm{temp}}&=\operatorname{MLP}_{\mathrm{temp}}
+ [\bar z_{b-1},\delta_{b-1},g_{b-1}], &
+ Z_b^{\mathrm{align}}&=[z_b^{\mathrm{sem}},z_b^{\mathrm{cam}},z_b^{\mathrm{temp}}].
+\end{aligned}
+\label{eq:alignment-tokens}
+\end{equation}
+
+Here $\alpha_b$ adaptively balances current semantic evidence and remembered
+context; $p_b$ and $p_{b-1}$ are camera tokens on the two sides of the
+boundary, with $\Delta p_b=p_b-p_{b-1}$; and $\bar z_{b-1}$,
+$\delta_{b-1}$, and $g_{b-1}$ denote the preceding alignment summary,
+camera-latent residual, and residual gate. These are not independent
+reconstruction modules. They organize heterogeneous boundary evidence so that
+its source remains identifiable when entering the decoder.
+
+\noindent
+\begin{minipage}[t]{0.57\textwidth}
+\vspace{0pt}
+% 中文：加入类型嵌入后，对齐表示插入原生相机token之后，并与原生图像、相机和人体表示共同通过冻结递归解码器。解码后的表示产生门控相机和人体潜变量残差，给出临时相机预测；所有更新只存在于对齐路径中。
+After adding type embeddings, $Z_b^{\mathrm{align}}$ is inserted after the
+native camera token and decoded jointly with the image, camera, and human
+representations by the frozen recurrent backbone. The decoded boundary
+representations produce gated camera and human latent residuals. The former
+updates the camera representation before the original pose head predicts the
+temporary camera $\widetilde C_b$; the latter incorporates person-translation
+constraints into the same boundary inference. All typed representations and
+latent updates exist only in the alignment path and are never written into the
+state propagated through the new shot. Pooling and residual details are given
+in Appendix~\ref{app:method-details}.
+
+\smallskip
+% 中文：训练同时使用镜头切换与连续四帧序列，使模块学习跨镜头关系，同时维持连续输入下的基础重建行为。
+We train the alignment representations with both transition and continuous
+four-frame sequences. Transition samples follow
+$A(t),A(t+1),B(t+2),B(t+3)$ for two cameras $A$ and $B$, supervising changes
+across viewpoint transitions; continuous samples contain four successive
+frames from one camera and preserve the original behavior under continuous
+input.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.39\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=0.94\linewidth]{figures/alignment_module.pdf}
+  % 中文图注：历史条件镜头对齐。带类型表示组织当前与历史证据；门控潜变量更新只存在于临时对齐路径。
+  \captionof{figure}{\textbf{History-conditioned shot alignment.} Typed
+  representations organize current and historical evidence; gated latent
+  updates remain temporary.}
+  \label{fig:alignment-module}
+\end{minipage}
+
+\medskip
+% 中文：对齐训练目标联合监督相机平移、相机旋转、人体平移、残差门控以及校正有效性。
+The alignment objective is
+
+\begin{equation}
+ \mathcal L_{\mathrm{align}}=\mathcal L_t+5\mathcal L_R+10\mathcal L_h
+ +0.05(\mathcal L_g+\mathcal L_{\mathrm{imp}})
+ +10^{-5}(\mathcal R_{\mathrm{cam}}+\mathcal R_{\mathrm{human}}),
+ \label{eq:alignment-objective}
+\end{equation}
+
+where $\mathcal L_t$ and $\mathcal L_h$ are Smooth-L1 camera and human
+translation losses, and $\mathcal L_R$ is quaternion geodesic distance. With
+$e$ and $e^{\mathrm{raw}}$ denoting normalized corrected and unmodified camera
+errors, respectively, the gate and improvement terms are
+$\mathcal L_g=\operatorname{BCE}(g,\operatorname{clip}(e^{\mathrm{raw}},0,1))$
+and $\mathcal L_{\mathrm{imp}}=[e-e^{\mathrm{raw}}]_+$. The remaining terms
+regularize camera and human latent updates. Because a transition changes the
+relation between history and the current observation rather than the
+within-shot reconstruction target, we optimize only the typed representations,
+camera and human latent-residual branches, and low-rank prediction-head
+adapters~\citep{hu2022lora}. The image encoder, recurrent backbone, base heads,
+and Multi-HMR component~\citep{baradel2024multihmr} remain frozen.
+
+% 中文小节标题：跨镜头空间与身份一致性
+\subsection{Cross-Shot Spatial and Identity Consistency}
+
+% 中文：重新初始化路径隔离旧历史干扰，却位于独立初始化的局部坐标系。跨镜头关系必须在不重新引入历史状态的情况下作用于该路径的输出。
+The reinitialized path isolates new-shot recurrence from incompatible history,
+but its predictions inhabit an independently initialized local frame. An
+inter-shot relation is useful only if it can commit these predictions to the
+common world frame without reintroducing the preceding recurrent state.
+\method{} therefore retains only the camera relation inferred at the boundary
+and applies it to the reinitialized outputs; the temporary alignment state has
+no path into later recurrence. Since the two paths process the same image,
+their relative camera pose captures the relation induced by historical
+conditioning. Let $C_b^r$ be the camera-to-world pose from the reinitialized
+path, and let $\widetilde C_b$ be the temporary alignment-path pose expressed
+in the accumulated common world frame. The initial mapping of the new-shot
+local frame is
+
+\begin{equation}
+ T_b^{\mathrm{align}}=\widetilde C_b(C_b^r)^{-1}.
+ \label{eq:inter-shot-alignment}
+\end{equation}
+
+It satisfies $T_b^{\mathrm{align}}C_b^r=\widetilde C_b$ and therefore maps the
+reinitialized camera and human predictions into the existing frame. For later
+transitions, $\widetilde C_b$ includes the previously accumulated inter-shot
+mapping. Importantly, $T_b^{\mathrm{align}}$ results from feature interaction
+between the current boundary observation and recurrent history, rather than
+post-hoc registration of two fully reconstructed shots.
+
+% 中文：相机关系不能确定人物身份。初始对齐后，Shot3R使用预测的根节点位置、躯干朝向与去根关节结构构造一对一匹配代价，并分别按中位数归一化。
+Camera alignment alone does not determine person correspondence. After the
+initial spatial mapping, \method{} associates people one-to-one using their
+predicted root locations, torso orientations, and root-centered joint
+configurations. For cue $a\in\{\mathrm{root},\mathrm{torso},\mathrm{joint}\}$,
+we normalize its pairwise cost matrix and form the combined cost as
+
+\begin{equation}
+ \widehat d_{ij}^{\,a}=
+ \frac{d_{ij}^{\,a}}
+ {\max\!\left(\operatorname{median}_{u,v}d_{uv}^{\,a},\epsilon\right)},
+ \qquad
+ d_{ij}=\widehat d_{ij}^{\,\mathrm{root}}
+       +\widehat d_{ij}^{\,\mathrm{torso}}
+       +\widehat d_{ij}^{\,\mathrm{joint}}.
+ \label{eq:association-cost}
+\end{equation}
+
+Here the root term is Euclidean distance, the torso term is angular distance,
+and the joint term averages Euclidean distances between root-centered joints.
+Hungarian assignment~\citep{munkres1957assignment} gives the matched set
+$\mathcal M_b$. Matching uses no identity labels, external camera calibration,
+or future frames. Matched people inherit their preceding anonymous identities,
+whereas unmatched new-shot slots receive new identities. This permutation is
+established once at the first new-shot frame; subsequent frames retain the
+native slots maintained by the reinitialized recurrence.
+
+% 中文：匹配人物的骨盆位移提供共享平移残差。该残差对三维坐标逐分量取中位数并乘固定系数0.5，然后与相机关系组合为一个共享变换。
+The initial camera mapping establishes orientation and the primary world
+relation, while matched people provide a direct constraint on the remaining
+shared translation. Let $r_{b-1}^i$ be the predicted pelvis center of person
+$i$ in the final preceding frame and $\bar r_b^j$ the pelvis center of person
+$j$ after the initial mapping. We estimate
+
+\begin{equation}
+ \Delta_b=\lambda\underset{(i,j)\in\mathcal M_b}{\operatorname{median}}
+ (r_{b-1}^i-\bar r_b^j),\qquad \lambda=0.5,
+ \label{eq:shared-translation}
+\end{equation}
+
+where the median is taken component-wise over matched pelvis displacements and
+the fixed $\lambda$ is unchanged across datasets. If no valid match is
+available, the translation is omitted and only the camera-derived mapping is
+retained. With
+$T_b^\Delta=\begin{bmatrix}I_3&\Delta_b\\\mathbf 0^\top&1\end{bmatrix}$ and
+$T_b=T_b^\Delta T_b^{\mathrm{align}}$, the committed outputs for $t\geq b$ are
+
+\begin{equation}
+\begin{aligned}
+ C'_t&=T_bC_t^r, &
+ J_t^{\prime i}&=T_bJ_t^{r,i}, &
+ V_t^{\prime i}&=T_bV_t^{r,i},\\
+ P_t^{\prime,w}&=C'_tP_t^{r,c}=T_bP_t^{r,w}, &
+ q_t^{\prime i}&=\pi_b(q_t^{r,i}), &
+ S'_t&=S_t^r.
+\end{aligned}
+\label{eq:shared-world-transform}
+\end{equation}
+
+Here $\pi_b$ is the boundary identity mapping, and 3D points are understood in
+homogeneous coordinates. The camera-local scene point map $P_t^{r,c}$ is left
+unchanged; its world-space realization follows from the transformed camera
+pose. Applying one shared world transform to cameras and all people preserves
+their relative geometry, while retaining $S_t^r$ ensures that only the
+reinitialized state survives into future reconstruction. The transform is
+cached and applied as subsequent frames are processed. It uses no future
+frame, performs no sequence-level optimization, and leaves all previously
+emitted outputs unchanged.

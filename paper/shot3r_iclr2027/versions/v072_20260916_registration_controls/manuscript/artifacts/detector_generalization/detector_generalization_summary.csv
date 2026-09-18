@@ -1,0 +1,3 @@
+dataset,role,case_count,exact,early,late,miss,first_trigger_exact_rate,true_boundary_response_recall,raw_tp,raw_fp,raw_fn,off_boundary_positive_count,scored_transitions,false_positives_per_1000_transitions,median_first_trigger_offset_frames,mean_first_trigger_offset_frames,min_first_trigger_offset_frames,max_first_trigger_offset_frames,deployment_policy
+EgoBody,formal multi-person test,129,129,0,0,0,1.0,1.0,129,0,0,0,,0.0,0.0,0.0,0,0,first positive only; no evaluator boundary access
+MVHuman,held-out weak-texture stress test,50,10,40,0,0,0.2,1.0,50,399,0,399,7450,53.557046979865774,-48.0,-43.66,-73,0,first positive only; no evaluator boundary access

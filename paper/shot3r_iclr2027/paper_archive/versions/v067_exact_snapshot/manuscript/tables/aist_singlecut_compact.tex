@@ -1,0 +1,12 @@
+\begin{tabular}{llrrrrrr}
+\toprule
+Execution & Method & PA-MPJPE & Anchor-MPJPE & Boundary root $\Delta$ & Boundary orient. $\Delta$ & Inter-shot cam. rot. & Coverage \\
+\midrule
+\multirow{2}{*}{Streaming} & \humanthree{} & 57.7 & \textbf{492.9} & \textbf{776.0} & 59.6 & 59.1 & 100.0 \\
+ & \method{} & \textbf{57.6} & 556.3 & 821.5 & \textbf{50.1} & \textbf{49.5} & 100.0 \\
+\midrule
+Semi-online & OnlineHMR & 57.1 & 691.4 & 519.4 (86) & 35.5 (86) & 74.4 & 98.0 \\
+\midrule
+Offline & PromptHMR & 51.7 & 462.6 & 55.4 & 43.8 & 94.0 & 100.0 \\
+\bottomrule
+\end{tabular}

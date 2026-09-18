@@ -1,0 +1,38 @@
+\begin{table*}[t]
+  \centering
+  \caption{Paired gains with 95\% clustered bootstrap intervals. Positive
+  values versus R0 indicate lower error for the geometric control; positive
+  values versus \method{} indicate lower error for \method{}.}
+  \label{tab:supp-registration-paired}
+  \supptablesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llrrl}
+    \toprule
+    Dataset & Control & $\Delta$W vs. R0 & $\Delta$ATE vs. R0 & Resampling unit \\
+    \midrule
+    EgoBody & Pelvis translation & 252.4 [202.9, 304.3] & 1.072 [0.946, 1.202] & 43 recordings \\
+    EgoBody & Human-joint SE(3) & 491.1 [431.9, 549.9] & 1.122 [0.992, 1.254] & 43 recordings \\
+    EgoBody & Scene FPFH+ICP & 19.4 [$-$95.5, 124.8] & 1.121 [0.993, 1.252] & 43 recordings \\
+    \midrule
+    EgoHumans & Pelvis translation & 14.0 [$-$48.8, 82.2] & 1.141 [0.901, 1.419] & 27 captures \\
+    EgoHumans & Human-joint SE(3) & 309.5 [174.1, 442.4] & 2.806 [2.002, 3.696] & 27 captures \\
+    EgoHumans & Scene FPFH+ICP & $-$107.0 [$-$207.0, $-$24.3] & 0.491 [0.272, 0.734] & 27 captures \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{4pt}
+
+  \begin{tabular}{llrrl}
+    \toprule
+    Dataset & Control & $\Delta$W vs. \method{} & $\Delta$ATE vs. \method{} & Resampling unit \\
+    \midrule
+    EgoBody & Pelvis translation & 241.3 [184.8, 298.0] & 0.052 [0.038, 0.067] & 43 recordings \\
+    EgoBody & Human-joint SE(3) & 2.6 [$-$40.4, 53.8] & 0.003 [0.000, 0.005] & 43 recordings \\
+    EgoBody & Scene FPFH+ICP & 474.4 [373.4, 585.7] & 0.003 [0.001, 0.006] & 43 recordings \\
+    \midrule
+    EgoHumans & Pelvis translation & 320.3 [191.1, 452.7] & 1.989 [1.552, 2.471] & 27 captures \\
+    EgoHumans & Human-joint SE(3) & 24.9 [$-$102.0, 134.0] & 0.324 [$-$0.197, 0.846] & 27 captures \\
+    EgoHumans & Scene FPFH+ICP & 441.4 [270.9, 620.5] & 2.638 [1.986, 3.347] & 27 captures \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

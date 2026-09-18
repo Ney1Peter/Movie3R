@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & W-MPJPE$\downarrow$ & WA-MPJPE$\downarrow$ & MPJPE$\downarrow$ & Human seam$\downarrow$ & IDF1$\uparrow$ & Coverage$\uparrow$\\
+\midrule
+Human3R & 1005.1 & 365.7 & 107.6 & 1.723 & 0.471 & 0.639\\
+State reinitialization & 1248.1 & 491.3 & 108.5 & 2.653 & 0.455 & 0.616\\
+Camera alignment & 1072.4 & 370.1 & 108.5 & 2.113 & 0.455 & 0.616\\
+Coarse + association & 1058.5 & 372.6 & 109.9 & 2.113 & 0.556 & 0.600\\
+Causal boundary operation & 1072.1 & 370.4 & 108.5 & 2.112 & 0.571 & 0.616\\
+\textbf{Shot3R} & 866.8 & 336.9 & 108.5 & 1.227 & 0.571 & 0.616\\
+\bottomrule
+\end{tabular}}
+\caption{Causal bridging controls on EgoHumans. Every row uses the same fixed 90-clip protocol. W/WA/MPJPE, IDF1, and coverage use all 90 clips. Human seam is available for 68 strict-streaming clips and 60 clips for every reset-based setting.}
+\label{tab:egohumans-system}
+\end{table}

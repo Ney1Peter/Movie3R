@@ -1,0 +1,58 @@
+% 中文节标题：相关工作
+\section{Related Work}
+
+% 中文段落标题：单目视频中的世界坐标人体重建。
+% 中文：单目人体网格恢复涵盖基于图像的回归、时序建模以及全画面多人体估计。在此基础上，世界坐标方法通过运动先验与序列优化、
+% 人体—相机联合建模，或透视与尺度校准恢复全局轨迹。近期系统进一步联合重建人体与场景几何，OnlineHMR则研究在线世界坐标恢复。
+% 这些方法主要假设视频时间连续；本文研究镜头切换后的空间与身份一致性。
+\paragraph{World-coordinate human reconstruction.}
+Monocular human mesh recovery spans image-based
+regression~\citep{kanazawa2018hmr}, temporal
+modeling~\citep{kocabas2020vibe,goel2023humans4d}, and full-frame multi-person
+estimation~\citep{sun2021romp,sun2022bev,sun2023trace,baradel2024multihmr,wang2025prompthmr,sun2024aios}.
+Building on these advances, world-coordinate methods recover global trajectories
+through motion priors and sequence
+optimization~\citep{yuan2022glamr,ye2023slahmr,kocabas2024pace,li2024coin},
+joint human--camera modeling~\citep{wang2024tram,shin2024wham,shen2024gvhmr,yin2024whac},
+or perspective and scale calibration~\citep{patel2025camerahmr,yang2025checkerboards}.
+More recent systems jointly reconstruct human and scene
+geometry~\citep{muller2025reconstructing,liu2026josh,zhang2025odhsr,li2026unish},
+while OnlineHMR studies online world-coordinate
+recovery~\citep{zhao2026onlinehmr}. These methods primarily
+assume temporally continuous video; we study spatial and identity consistency
+when a shot transition invalidates that continuity.
+
+% 中文段落标题：有状态在线重建。
+% 中文：在线几何方法包括SLAM、学习式稠密建图和前馈点图模型。流式方法通过空间记忆、渐进配准或持续递归状态保留历史，Human3R进一步统一相机、场景和多人体。
+% 后续工作从接触、高斯表示、长序列记忆、空间状态、动态几何和状态适应等角度扩展。它们主要研究连续观测下如何保留历史，而Shot3R处理镜头切换产生的不兼容历史。
+\paragraph{Stateful online reconstruction.}
+Online geometry spans SLAM, learned dense mapping, and feed-forward point-map
+models~\citep{teed2021droidslam,sun2021neuralrecon,wang2024dust3r,leroy2024mast3r,zhang2025monst3r,wang2025vggt}.
+Streaming methods retain history through spatial memory, progressive
+registration, or a persistent recurrent state
+~\citep{wang2025spann3r,liu2025slam3r,wang2025cut3r}. \humanthree{} unifies
+cameras, scenes, and multiple people in the stateful formulation; later work
+extends contact, representation, memory, dynamic geometry, and state adaptation
+~\citep{chen2026human3r,sur2026unicon3r,abe2026gush3r,chen2025long3r,wu2025point3r,zhuo2025st4r,chen2026ttt3r,zheng2026ttsa3r,li2026recal3r}.
+These methods retain history under continuous observations. \method{} instead
+uses incompatible pre-transition history for alignment without propagating it
+through the new shot.
+
+% 中文段落标题：多镜头人体重建。
+% 中文：多镜头重建从按时间依次出现的单目片段中恢复一致运动，不同于同步多视角重建。直接相关工作研究影视跟踪与重识别、跨镜头人体恢复、演员—环境重建、全局运动和多人体网格跟踪。
+% 身份关联还与三维人体跟踪及外观/关键点重识别有关；Shot3R只使用边界处预测的三维几何。现有多镜头方法处理镜头对或已观测序列，而Shot3R处理随帧到达的递归状态。
+\paragraph{Multi-shot human reconstruction.}
+Multi-shot reconstruction seeks consistency across sequential monocular
+segments, unlike synchronized multi-view reconstruction. Directly related work
+studies TV-series tracking and re-identification, cross-shot human recovery,
+actor--environment reconstruction, global motion, and multi-person mesh
+tracking~\citep{pavlakos2022tvtracking,pavlakos2022multishot,pavlakos2022tvreconstruction,zhang2025humanmm,on2026multithumbs,kim2025showmak3r}.
+Identity association also relates to 3D-aware tracking and appearance- or
+keypoint-based re-identification
+~\citep{rajasegaran2022phalp,he2021transreid,yuan2025pose2id,somers2024kpr}; ours
+uses predicted 3D geometry at the first post-transition frame. Synchronized
+multi-view methods instead fuse simultaneously available views
+~\citep{rojas2025hamst3r,yang2026feedforward,liu2026trophies}. Existing
+multi-shot systems operate over shot pairs or observed sequences; \method{}
+processes one frame at a time and separates inter-shot alignment from recurrent
+state propagation.

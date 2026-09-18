@@ -1,0 +1,36 @@
+\begin{table*}[t]
+  \centering
+  \caption{Complete aggregate results for the traditional geometric
+  registration controls. W/WA are in mm and ATE in m. Fit is the success rate
+  of the separate geometric fit; failed fits revert exactly to R0 and remain
+  in the fixed denominator.}
+  \label{tab:supp-registration-full}
+  \supptablesize
+  \setlength{\tabcolsep}{2.7pt}
+  \renewcommand{\arraystretch}{1.02}
+  \begin{tabular}{lllrrrrrr}
+    \toprule
+    Dataset & Method & Access & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & Cov. $\uparrow$ & Fit $\uparrow$ \\
+    \midrule
+    \multirow{5}{*}{EgoBody}
+      & \humanthree{} per-shot reset & Independent shots & 752.6 & 589.4 & 1.141 & 0.834 & 0.981 & -- \\
+      & $+$ pelvis translation & Boundary-time & 500.2 & 431.8 & 0.068 & 0.896 & 0.981 & 100.0\% \\
+      & $+$ human-joint SE(3) & Boundary-time & 261.5 & 215.0 & 0.019 & 0.896 & 0.981 & 100.0\% \\
+      & $+$ scene FPFH+ICP & Offline full shots & 733.2 & 496.9 & 0.020 & 0.834 & 0.981 & 100.0\% \\
+      & \textbf{\method{}} & Streaming & \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} & 0.981 & -- \\
+    \midrule
+    \multirow{5}{*}{EgoHumans}
+      & \humanthree{} per-shot reset & Independent shots & 1248.1 & 491.3 & 4.411 & 0.455 & 0.616 & -- \\
+      & $+$ pelvis translation & Boundary-time & 1242.1 & 472.0 & 3.326 & 0.506 & 0.616 & 100.0\% \\
+      & $+$ human-joint SE(3) & Boundary-time & 897.0 & 339.9 & 1.731 & 0.510 & 0.616 & 82.2\% \\
+      & $+$ scene FPFH+ICP & Offline full shots & 1372.8 & 489.3 & 3.847 & 0.455 & 0.616 & 41.1\% \\
+      & \textbf{\method{}} & Streaming & \textbf{866.8} & \textbf{336.9} & \textbf{1.423} & \textbf{0.571} & 0.616 & -- \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5mm}
+
+  \parbox{0.98\textwidth}{\footnotesize EgoBody uses recording-macro aggregation
+  over 43 recordings. EgoHumans retains the fixed case-macro headline over 90
+  cases; all paired intervals resample its 27 captures. Traditional controls
+  receive annotated boundaries, while \method{} uses its online detector.}
+\end{table*}

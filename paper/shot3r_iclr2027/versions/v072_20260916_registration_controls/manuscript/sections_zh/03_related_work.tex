@@ -1,0 +1,27 @@
+\section{相关工作}
+
+\paragraph{全局人体运动重建。}
+人体网格恢复已经从参数化人体模型拟合，逐渐发展为从单目图像和视频直接进行前馈式回归
+~\citep{kanazawa2018hmr,kocabas2020vibe,goel2023humans4d}。基于图像的方法主要在相机坐标系中估计人体姿态和形状，而时序模型与全画面多人方法进一步改善了运动一致性以及拥挤场景中的多人推理能力
+~\citep{sun2021romp,sun2022bev,sun2023trace,baradel2024multihmr,wang2025prompthmr,sun2024aios}。然而，当相机本身发生运动时，相机坐标系下的预测无法直接描述人体在三维环境中的全局运动。为此，现有方法通过运动先验与序列优化
+~\citep{yuan2022glamr,ye2023slahmr,kocabas2024pace,li2024coin}、人体—相机联合建模
+~\citep{wang2024tram,shin2024wham,shen2024gvhmr,yin2024whac}，或透视关系与尺度标定
+~\citep{patel2025camerahmr,yang2025checkerboards}，共同恢复人体轨迹和相机运动；近期系统还将人体、相机和周围场景几何纳入统一重建
+~\citep{muller2025reconstructing,liu2026josh,zhang2025odhsr,li2026unish,rojas2025hamst3r,yang2026feedforward,liu2026trophies}。其中，离线方法能够利用完整序列提供的全局约束，但通常需要在整段视频上反复优化人体运动、相机轨迹和场景几何，带来较高的推理延迟与计算开销，也难以扩展到不断增长的长视频。统一前馈方法降低了逐序列优化的成本；对于持续视频流，模型还需要仅根据当前与历史观测在线更新重建结果，并保持有界的历史表示规模和稳定的单步计算开销。因此，问题进一步从如何利用完整视频恢复全局关系，转向如何通过持续维护的历史表示实现在线重建。
+
+\paragraph{在线重建。}
+围绕这一目标，在线重建按照时间顺序处理视频，并持续更新相机、几何与人体估计。传统 SLAM、学习式稠密建图和前馈点图模型分别为增量式相机定位、场景建图和直接三维预测奠定了基础
+~\citep{teed2021droidslam,sun2021neuralrecon,wang2024dust3r,leroy2024mast3r,zhang2025monst3r,wang2025vggt}；近期流式方法进一步通过空间记忆、渐进式配准或递归状态保留历史观测
+~\citep{wang2025spann3r,liu2025slam3r,wang2025cut3r}。在人体重建方面，OnlineHMR 研究世界坐标系下的在线人体恢复
+~\citep{zhao2026onlinehmr}，Human3R 则以 CUT3R 的递归重建为基础，将在线恢复扩展到相机、场景和多个人体
+~\citep{chen2026human3r}。在此基础上，UniCon3R 和 GUSH3R 分别从人体—场景接触与可渲染动态表示等方向扩展统一重建
+~\citep{sur2026unicon3r,abe2026gush3r}，其他流式三维方法则进一步研究长期记忆、动态几何和递归状态的稳定更新
+~\citep{chen2025long3r,wu2025point3r,zhuo2025st4r,chen2026ttt3r,zheng2026ttsa3r,li2026recal3r}。然而，现有在线方法主要面向连续拍摄的单目视频，通常依赖相邻帧之间稳定的时间关系和视觉重叠来延续已有重建。多镜头视频中的镜头切换会突然改变相机视角与可见内容，使相邻镜头不再满足这种连续性假设，但不同镜头的重建结果仍需被组织到统一的空间关系中。因此，如何跨越镜头切换维持重建的一致性，构成了在线重建进一步面向多镜头视频时需要解决的问题。
+
+\paragraph{多镜头人体重建。}
+多镜头人体重建旨在从包含镜头切换的单目视频中恢复空间一致的多人体三维运动，并保持跨镜头的人物身份一致性。早期工作分别研究了影视内容中的人物跟踪与重识别、单人体跨镜头恢复以及演员—环境联合重建
+~\citep{pavlakos2022tvtracking,pavlakos2022multishot,pavlakos2022tvreconstruction}。HumanMM 通过相机运动估计与序列级运动整合，在多个镜头之间对齐人体朝向和全局轨迹，但主要面向单人体视频
+~\citep{zhang2025humanmm}。与本文任务最接近的 Multi-THuMBS 利用三维场景先验将镜头边界两侧的观测重建到共同空间中，并结合外观、姿态和几何线索完成人物关联，随后通过轨迹平滑与跨相机重投影约束优化全局结果
+~\citep{on2026multithumbs}；该方法将多镜头重建扩展到多人场景，但采用依赖已观测序列的多阶段全局优化。ShowMak3R 同样处理多人物和多镜头内容，但通过逐视频优化人物与场景的神经表示，主要面向可渲染的影视内容重建，而非在线人体运动恢复
+~\citep{kim2025showmak3r}。此外，跨镜头身份保持也与三维感知跟踪以及基于外观、姿态或关键点的人物重识别相关
+~\citep{rajasegaran2022phalp,he2021transreid,yuan2025pose2id,somers2024kpr}。这些工作从全局运动恢复、空间对齐和人物关联等角度推进了多镜头人体重建，但多采用镜头边界两侧的联合处理或对完整序列进行逐视频优化，尚未讨论在线递归重建中持续维护的历史信息应当如何跨越镜头边界。Shot3R 面向这一流式设定，将历史信息暂时用于建立镜头间空间关系，但不再将其作为新镜头的递归状态持续传播，从而在顺序处理多镜头视频的同时维持空间与身份一致性。

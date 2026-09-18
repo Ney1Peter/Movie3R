@@ -1,0 +1,36 @@
+\section{相关工作}
+
+\paragraph{世界坐标系人体重建。}
+单目人体网格恢复涵盖基于图像的回归
+~\citep{kanazawa2018hmr}、时序建模
+~\citep{kocabas2020vibe,goel2023humans4d}，以及全画面多人体估计
+~\citep{sun2021romp,sun2022bev,sun2023trace,baradel2024multihmr,wang2025prompthmr,sun2024aios}。
+在此基础上，世界坐标方法通过运动先验与序列优化
+~\citep{yuan2022glamr,ye2023slahmr,kocabas2024pace,li2024coin}、人体—相机联合建模
+~\citep{wang2024tram,shin2024wham,shen2024gvhmr,yin2024whac}，或透视与尺度校准
+~\citep{patel2025camerahmr,yang2025checkerboards}恢复全局轨迹。近期系统进一步联合重建人体与场景几何
+~\citep{muller2025reconstructing,liu2026josh,zhang2025odhsr,li2026unish}，OnlineHMR 则研究在线世界坐标恢复
+~\citep{zhao2026onlinehmr}。这些方法主要假设视频在时间上连续；本文研究镜头切换破坏这种连续性后，如何维持空间与身份一致性。
+
+\paragraph{有状态在线重建。}
+单目 SLAM 和学习式稠密建图可以增量处理视频
+~\citep{teed2021droidslam,sun2021neuralrecon}。DUSt3R 的前馈点图预测
+~\citep{wang2024dust3r}
+进一步推动了学习式三维匹配、动态场景和图像集合几何模型
+~\citep{leroy2024mast3r,zhang2025monst3r,wang2025vggt}。
+Spann3R 引入空间记忆，SLAM3R 渐进配准局部重建，CUT3R 则维护持续递归状态
+~\citep{wang2025spann3r,liu2025slam3r,wang2025cut3r}。
+\humanthree{} 将相机、场景和多个人体纳入这一有状态范式
+~\citep{chen2026human3r}；UniCon3R 和 GUSH3R 分别通过接触推理和高斯表示加以扩展
+~\citep{sur2026unicon3r,abe2026gush3r}。
+近期方法从长序列记忆、空间状态、动态几何或状态适应等角度改进流式重建
+~\citep{chen2025long3r,wu2025point3r,zhuo2025st4r,chen2026ttt3r,zheng2026ttsa3r,li2026recal3r}。
+它们主要研究连续观测下如何保留历史；\method{} 则关注镜头切换产生的不兼容历史，只用旧状态完成对齐，而不把它继续传播到新镜头中。
+
+\paragraph{多镜头人体重建。}
+多镜头重建从按时间依次出现的单目片段中恢复一致运动，不同于联合使用同步视角的多视角重建。已有工作分别研究电视剧中的跨镜头人物跟踪与重识别、跨镜头人体网格恢复、演员—环境重建、多镜头全局人体运动，以及跨镜头多人体网格跟踪
+~\citep{pavlakos2022tvtracking,pavlakos2022multishot,pavlakos2022tvreconstruction,zhang2025humanmm,on2026multithumbs,kim2025showmak3r}。
+身份一致性也与三维感知的人体跟踪以及基于外观或关键点的重识别相关
+~\citep{rajasegaran2022phalp,he2021transreid,yuan2025pose2id,somers2024kpr}；本文的人物关联只使用镜头切换后首帧预测的三维几何。现有多镜头方法通常处理镜头对或已经获得的序列，而不是随帧到达持续更新的递归状态。同期多视角方法联合融合同时可用的多个视角，完成具有人体感知的三维重建
+~\citep{rojas2025hamst3r,yang2026feedforward,liu2026trophies}。
+相比之下，\method{} 每次只处理一帧，并将镜头边界视作一次递归状态转换，从而把镜头间对齐与后续状态传播解耦。

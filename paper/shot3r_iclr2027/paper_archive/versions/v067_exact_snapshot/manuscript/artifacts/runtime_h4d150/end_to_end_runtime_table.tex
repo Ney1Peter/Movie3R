@@ -1,0 +1,42 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：五段固定的 150 帧 Harmony4D 多镜头输入上，七种方法的完整系统运行效率。
+  \caption{Full-system runtime on five fixed 150-frame Harmony4D multi-shot
+  streams (750 frames total).}
+  \label{tab:end-to-end-runtime}
+  \small
+  \setlength{\tabcolsep}{8pt}
+  \renewcommand{\arraystretch}{0.96}
+  \begin{tabular}{llccrr}
+    \toprule
+    Category & Method & Camera & Scene &
+    s / 150 frames $\downarrow$ & FPS $\uparrow$ \\
+    \midrule
+    \multirow{3}{*}{Offline}
+      & PromptHMR (SPEC) & \xmark & \xmark & $708.7 \pm 209.0$ & 0.212 \\
+      & TRAM & \cmark & \xmark & $455.5 \pm 60.6$ & 0.329 \\
+      & JOSH & \cmark & \cmark & $949.6 \pm 286.0$ & 0.158 \\
+    \midrule
+    Semi-online
+      & OnlineHMR & \cmark & \xmark & $1007.8 \pm 124.7$ & 0.149 \\
+    \midrule
+    \multirow{3}{*}{Online}
+      & TRACE & \xmark & \xmark & $45.0 \pm 21.5$ & 3.334 \\
+      & \humanthree{} & \cmark & \cmark & $120.4 \pm 3.2$ & 1.246 \\
+      & \textbf{\method{}} & \cmark & \cmark & $167.8 \pm 4.0$ & 0.894 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5mm}
+
+  % 中文表注：秒数为五段输入的均值和总体标准差；FPS 为 750 帧除以五段总墙钟时间。
+  % Camera 表示发布流程输出可独立评测的物理相机轨迹，Scene 表示输出场景几何。
+  % 计时包含必要预测阶段的进程启动、模型加载直到原生预测写盘；多阶段官方流程报告各阶段之和，不包含渲染和评测。
+  \parbox{0.91\textwidth}{\footnotesize Seconds are mean $\pm$ population
+  standard deviation; FPS is 750 divided by total wall time. Camera denotes an
+  independently evaluable physical-camera trajectory, and Scene denotes scene
+  geometry. Timing includes required prediction-process launches and model
+  loading through native prediction save; multi-stage releases report the sum
+  of their required stages. Rendering and
+  evaluation are excluded. Output scope therefore remains relevant when
+  interpreting throughput.}
+\end{table*}

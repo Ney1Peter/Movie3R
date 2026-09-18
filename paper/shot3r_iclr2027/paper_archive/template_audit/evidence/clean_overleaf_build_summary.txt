@@ -1,0 +1,15 @@
+Audit date: 2026-09-18 Asia/Shanghai
+Source: versions/v072_20260916_registration_controls/Shot3R_ICLR2027_v072_20260916_Overleaf.zip
+Package contents: 77 compilation dependencies
+Engine: pdfLaTeX 1.40.29 + BibTeX
+Result: success
+Pages: 41
+Page size: 612 x 792 pt (US Letter)
+Undefined citations/references: none
+Overfull boxes: none
+Fatal errors: none
+Type 3 fonts: none
+Unembedded fonts: none
+Method font: regular Shot3R uses NimbusRomNo9L-Regu; bold Shot3R uses NimbusRomNo9L-Medi
+Supplement tables: 9 pt body; 8 pt notes; no whole-table scaling in rendered supplement
+Page-count compression: deferred by request

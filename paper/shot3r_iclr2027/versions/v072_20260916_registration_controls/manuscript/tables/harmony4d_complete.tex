@@ -1,0 +1,37 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：Harmony4D 上全部已执行方法的多镜头多人体重建结果。
+  \caption{Complete comparison on the Harmony4D multi-shot multi-person
+  protocol ($N=88$).}
+  \label{tab:supp-harmony4d-complete}
+  \supptablesize
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{0.92}
+  \begin{tabular}{llrrrrr}
+    \toprule
+    Category & Method & W $\downarrow$ & WA $\downarrow$ & ATE-Sim3 $\downarrow$ &
+    IDF1 $\uparrow$ & Coverage $\uparrow$ \\
+    \midrule
+    \multirow{2}{*}{Offline}
+      & PromptHMR (SPEC) & 963.2 (5) & 306.9 (26) & -- & 0.030 & 0.034 \\
+      & JOSH & 770.2 (88) & 369.7 (88) & 0.153 (88) & 0.551 & \textbf{0.959} \\
+    \midrule
+    Semi-online
+      & OnlineHMR & 750.8 (30) & 335.9 (30) & 1.364 (88) & 0.068 & 0.159 \\
+    \midrule
+    \multirow{3}{*}{Online}
+      & TRACE & 677.1 (4) & 270.2 (26) & -- & 0.016 & 0.016 \\
+      & \humanthree{} & \textbf{496.6} & 259.6 & 0.1420 & 0.553 & \underline{0.915} \\
+      & \textbf{\method{}} & 519.6 & \textbf{247.0} & \textbf{0.0168} & \textbf{0.636} & 0.913 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5mm}
+
+  % 中文表注：W/WA 单位为毫米，ATE 单位为米；括号是该条件几何指标的可评测视频数。
+  % IDF1 和 Coverage 使用完整的 88 条固定序列。不同支持数的条件几何均值不构成统一排名。
+  \parbox{0.94\textwidth}{\footnotesize
+  W/WA are in mm and ATE is in m. Parentheses give the number of streams
+  evaluable for each conditional geometry metric; IDF1 and Coverage use all 88
+  fixed streams. Geometry means with different support do not form a common
+  ranking.}
+\end{table*}

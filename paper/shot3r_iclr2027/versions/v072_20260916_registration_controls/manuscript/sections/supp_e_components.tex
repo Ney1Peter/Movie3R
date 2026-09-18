@@ -1,0 +1,26 @@
+\section{Component Scope and Additional Evidence}
+\label{app:components}
+
+Table~\ref{tab:mechanism-evidence} is the matched-input mechanism study used in the
+main paper. It separates the no-event reference, annotated-boundary state
+reinitialization and camera-alignment controls, and the complete online system. The
+counterfactual rows answer whether history-conditioned alignment can restore a supplied
+transition; they are neither deployable baselines nor a one-variable additive
+chain. Association is evaluated separately with explicit conditional and
+continuation denominators.
+
+The learned alignment pathway contains semantic, pose-alignment, and temporal
+continuity tokens, but the retained component masks share one jointly trained
+checkpoint. Such masks change the inference distribution and are not
+equivalent to independently trained architectural variants. We therefore use
+the system-level controls and direct association audits as the public
+cross-dataset mechanism evidence. The same-checkpoint masking results are
+sensitivity diagnostics only; they do not establish the necessity of an
+individual token or residual head.
+
+The remaining component evidence is reported in the dataset-specific sections:
+the EgoHumans and Harmony4D association audits test prediction-only
+correspondence at the first post-cut frame; the train-only blend grid tests the fixed
+shared-translation coefficient without reselection; and the AIST++ repeated
+cut studies test causal-event composition. Each study is kept separate because
+it answers a different question and uses its own pre-specified evaluation set.

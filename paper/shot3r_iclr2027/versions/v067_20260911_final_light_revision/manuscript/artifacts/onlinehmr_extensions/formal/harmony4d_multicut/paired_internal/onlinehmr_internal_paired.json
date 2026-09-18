@@ -1,0 +1,400 @@
+{
+  "dataset": "Harmony4D",
+  "fixed_manifest_denominator": 4,
+  "internal_methods": {
+    "bridge3r": {
+      "angle_strata": {},
+      "label": "BRIDGE3R",
+      "overall": {
+        "ATE-Sim3_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.730037572563501,
+              2.439995894506148
+            ],
+            "cluster_support": 4,
+            "mean": 1.7001293203809626
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.7678568480640919,
+              3.0898178081276164
+            ],
+            "cluster_support": 4,
+            "mean": 1.6926482864713832
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              2.908717234847396,
+              3.8768379788572958
+            ],
+            "cluster_support": 4,
+            "mean": 3.392777606852346
+          }
+        },
+        "Coverage": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.9016666666666666,
+              0.9783333333333333
+            ],
+            "cluster_support": 4,
+            "mean": 0.9358333333333334
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.7633333333333333,
+              0.8666666666666667
+            ],
+            "cluster_support": 4,
+            "mean": 0.815
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.05499999999999999,
+              0.18666666666666665
+            ],
+            "cluster_support": 4,
+            "mean": 0.12083333333333332
+          }
+        },
+        "IDF1": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.2891221845322881,
+              0.5794190749010026
+            ],
+            "cluster_support": 4,
+            "mean": 0.4342706297166453
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.27977655737195295,
+              0.47903593313855053
+            ],
+            "cluster_support": 4,
+            "mean": 0.37940624525525174
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.009345627160335143,
+              0.10038314176245211
+            ],
+            "cluster_support": 4,
+            "mean": 0.05486438446139363
+          }
+        },
+        "Seam-root_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          },
+          "internal_advantage": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          },
+          "online": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          }
+        },
+        "W-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              796.3418008678487,
+              1474.0534654305714
+            ],
+            "cluster_support": 3,
+            "mean": 1224.5217546405268
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              -1107.2134679042397,
+              1410.90912233315
+            ],
+            "cluster_support": 3,
+            "mean": -158.7819287381582
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              295.9565297189202,
+              2207.250923200999
+            ],
+            "cluster_support": 3,
+            "mean": 1065.7398259023685
+          }
+        },
+        "WA-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              468.84176684462864,
+              567.2936596949238
+            ],
+            "cluster_support": 3,
+            "mean": 529.3335640148458
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              -331.4840241474772,
+              -82.34717442856271
+            ],
+            "cluster_support": 3,
+            "mean": -225.0255550151072
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              220.38124135750755,
+              386.4945924160659
+            ],
+            "cluster_support": 3,
+            "mean": 304.3080089997386
+          }
+        }
+      }
+    },
+    "strict_human3r": {
+      "angle_strata": {},
+      "label": "Human3R",
+      "overall": {
+        "ATE-Sim3_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              1.0424769378872447,
+              2.5126877322114853
+            ],
+            "cluster_support": 4,
+            "mean": 1.618051900031133
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.5861431592291723,
+              2.5778469488626268
+            ],
+            "cluster_support": 4,
+            "mean": 1.7747257068212128
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              2.908717234847396,
+              3.8768379788572958
+            ],
+            "cluster_support": 4,
+            "mean": 3.392777606852346
+          }
+        },
+        "Coverage": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.9016666666666666,
+              0.9783333333333333
+            ],
+            "cluster_support": 4,
+            "mean": 0.9358333333333334
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.7633333333333333,
+              0.8666666666666667
+            ],
+            "cluster_support": 4,
+            "mean": 0.815
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.05499999999999999,
+              0.18666666666666665
+            ],
+            "cluster_support": 4,
+            "mean": 0.12083333333333332
+          }
+        },
+        "IDF1": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.2534541606328748,
+              0.5022899553732466
+            ],
+            "cluster_support": 4,
+            "mean": 0.37695351051274717
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.24410853347253963,
+              0.4177878515864304
+            ],
+            "cluster_support": 4,
+            "mean": 0.3220891260513535
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 4,
+            "ci95": [
+              0.009345627160335143,
+              0.10038314176245211
+            ],
+            "cluster_support": 4,
+            "mean": 0.05486438446139363
+          }
+        },
+        "Seam-root_m": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          },
+          "internal_advantage": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          },
+          "online": {
+            "case_support": 0,
+            "ci95": null,
+            "cluster_support": 0,
+            "mean": null
+          }
+        },
+        "W-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              967.8702067971666,
+              2141.7067096538426
+            ],
+            "cluster_support": 3,
+            "mean": 1699.5007101959545
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              -1845.7501799349222,
+              218.32570906414503
+            ],
+            "cluster_support": 3,
+            "mean": -633.760884293586
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              295.9565297189202,
+              2207.250923200999
+            ],
+            "cluster_support": 3,
+            "mean": 1065.7398259023685
+          }
+        },
+        "WA-MPJPE_mm": {
+          "advantage_sign": "online_minus_internal_for_lower_is_better_metrics; internal_minus_online_for_higher_is_better_metrics",
+          "internal": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              554.6160119619798,
+              661.3310769494794
+            ],
+            "cluster_support": 3,
+            "mean": 622.1178632861349
+          },
+          "internal_advantage": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              -440.94983559197186,
+              -168.12141954591385
+            ],
+            "cluster_support": 3,
+            "mean": -317.8098542863964
+          },
+          "online": {
+            "bootstrap_samples": 10000,
+            "case_support": 3,
+            "ci95": [
+              220.38124135750755,
+              386.4945924160659
+            ],
+            "cluster_support": 3,
+            "mean": 304.3080089997386
+          }
+        }
+      }
+    }
+  },
+  "online_method": "onlinehmr_official",
+  "pairing_contract": {
+    "cluster": "subject when present; otherwise case",
+    "conditional_geometry_uses_pairwise_finite_support": true,
+    "coverage_uses_full_fixed_denominator": true,
+    "same_case_ids": true,
+    "same_frozen_evaluator_metric_definitions": true
+  },
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+  "schema_version": "Bridge3R-OnlineHMR-extension-paired-comparison-v1"
+}

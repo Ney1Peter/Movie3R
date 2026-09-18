@@ -1,0 +1,25 @@
+{
+  "figure": "Figure 1",
+  "editable_source": "Shot3R_teaser_article_figure1_editable.pptx",
+  "supplied_source": "/data/wangzheng/iJCV-CODE/Shot3R_teaser_cropped_enlarged_editable_v9.pptx",
+  "dataset_context": "EgoHumans 003_legoassemble source frames",
+  "input_protocol": "temporally concatenated single-view shots; not simultaneous multi-view input",
+  "visible_labels": [
+    "Streaming 4D Reconstruction",
+    "Multi-shot",
+    "Streaming video",
+    "Shot 1",
+    "Shot 2",
+    "Shot 3"
+  ],
+  "angle_labels": "Relative source-camera rotations with respect to the first shot (0, 99, and 177 degrees).",
+  "central_panel": {
+    "status": "schematic illustration",
+    "is_raw_model_prediction": false,
+    "description": "The central point-cloud, camera, and person composition is illustrative and is not quantitative evidence."
+  },
+  "exports": {
+    "pdf": "teaser.pdf",
+    "svg": "teaser.svg"
+  }
+}

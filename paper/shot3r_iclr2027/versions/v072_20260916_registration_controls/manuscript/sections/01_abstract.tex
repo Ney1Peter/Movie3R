@@ -1,0 +1,31 @@
+\begin{abstract}
+% 中文摘要：
+% 从多镜头单目视频中进行流式多人体四维重建，需要相机位姿、人体运动和场景几何在视角突变下仍保持在统一世界坐标系中的一致性。
+% 现有递归方法通常依赖相邻观测之间的连续性，因此可能在镜头切换处产生显著的重建误差。
+% 为解决这一问题，我们提出 Shot3R，一种将跨镜头关系估计与镜头内递归重建解耦的流式框架。
+% 在每次镜头切换处，一个学习得到的历史条件对齐模块在潜在空间中融合当前观测与历史上下文，以推断跨镜头空间关系。
+% 基于几何的身份关联进一步引导该关系的细化，从而实现相机与人体的共享对齐。
+% Shot3R 保留先前镜头建立的空间参照，同时将新镜头的递归动态与不兼容的历史状态隔离，从而兼顾跨镜头几何一致性与镜头内重建稳定性。
+% 该框架无需访问未来帧或执行序列级优化，即可实现在线重建。
+% 在三个多人体视频数据集上的实验表明，Shot3R 改善了世界坐标系下的人体重建、相机轨迹估计和跨镜头身份一致性，并在大视角变化下表现出更强的重建鲁棒性。
+Streaming multi-person 4D reconstruction from multi-shot monocular video
+requires camera poses, human motion, and scene geometry to remain consistent
+in a common world frame despite abrupt viewpoint changes. Existing recurrent
+methods typically rely on continuity between adjacent observations and can
+therefore incur substantial reconstruction errors at shot transitions. To
+address this problem, we present \textbf{\method{}}, a streaming framework that
+decouples cross-shot relation estimation from within-shot recurrent
+reconstruction. At each shot transition, a learned history-conditioned
+alignment module integrates the current observation with historical context in
+latent space to infer the inter-shot spatial relation. Geometry-aware identity
+association guides further refinement of this relation, yielding a shared
+alignment of cameras and humans. \method{} retains the spatial reference
+established by previous shots while isolating the new shot's recurrent dynamics
+from incompatible historical states, supporting both cross-shot geometric
+consistency and within-shot reconstruction stability. The framework enables
+online reconstruction without accessing future frames or performing
+sequence-level optimization. Experiments on three multi-person video datasets
+demonstrate improvements in world-frame human reconstruction, camera trajectory
+estimation, and cross-shot identity consistency, with greater robustness to
+large viewpoint changes.
+\end{abstract}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "BRIDGE3R-MVHuman-PromptHMR-paper-provenance-v1",
+  "protocol": {
+    "case_count": 50,
+    "capture_count": 10,
+    "strata_per_capture": 5
+  },
+  "formal_approved": true,
+  "verified_record_count": 50,
+  "source_ledger": {
+    "content_sha256": "b27a536d75f521e1ee2d156ecd3f396ebdfefbe19a4a842d7c37cd4b1351a02a",
+    "file_sha256": "0ef775fff8c5e1535ab630cedf7285ac8612de951372984babc2cb7031a82a0c"
+  },
+  "machine_generated_tex_sha256": "307d3b024c94daf4aa5c6830b5f10b7236007ba3c3de24dca9021b42d3220bca",
+  "audit_script_sha256": "4f3bd4a7176079f0af464dfc97a0503acec7558de1a6a7b551e834708aaa16a8",
+  "capture_macro": {
+    "pa_mpjpe_body12_mm": 28.455392989450843,
+    "first_shot_anchor_mpjpe_body12_mm": 137.59728513581246,
+    "seam_root_excess_mm": 20.34126590978,
+    "seam_orientation_excess_deg": 53.63920623683399,
+    "post_camera_relative_rotation_deg": 103.8739301549007,
+    "post_camera_relative_translation_m": 1.7892184628124137,
+    "coverage": 1.0
+  }
+}

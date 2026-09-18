@@ -1,0 +1,19 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrr}
+\toprule
+Method & Viewpoint stratum & $N$ & W-MPJPE $\downarrow$ & WA-MPJPE $\downarrow$ & IDF1 $\uparrow$ & Coverage $\uparrow$ \\
+\midrule
+Human3R & small & 24 & 767.7 & 331.5 & 0.559 & 0.658 \\
+Shot3R & small & 24 & 850.9 & 357.1 & 0.593 & 0.657 \\
+\addlinespace
+Human3R & medium & 22 & 824.7 & 345.9 & 0.414 & 0.637 \\
+Shot3R & medium & 22 & 801.2 & 341.5 & 0.572 & 0.605 \\
+\addlinespace
+Human3R & large & 22 & 1221.1 & 388.6 & 0.501 & 0.647 \\
+Shot3R & large & 22 & 930.7 & 331.1 & 0.558 & 0.622 \\
+\addlinespace
+Human3R & $\geq150^\circ$ & 22 & 1228.4 & 400.0 & 0.404 & 0.611 \\
+Shot3R & $\geq150^\circ$ & 22 & 886.1 & 315.9 & 0.559 & 0.576 \\
+\bottomrule
+\end{tabular}}
+\parbox{0.99\textwidth}{\footnotesize The four fixed strata contain 24, 22, 22, and 22 clips. W/WA are available for all clips in this internal comparison; IDF1 and coverage retain the stratum denominator.}

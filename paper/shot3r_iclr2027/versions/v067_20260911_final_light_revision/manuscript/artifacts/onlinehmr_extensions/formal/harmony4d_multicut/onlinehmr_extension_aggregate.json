@@ -1,0 +1,351 @@
+{
+  "aggregation_contract": {
+    "case_macro": true,
+    "failure_and_empty_output_retained_in_coverage_denominator": true,
+    "geometry_means_use_finite_support_and_report_support": true,
+    "no_result_based_case_exclusion": true
+  },
+  "angle_strata": {},
+  "bootstrap_95_ci": {
+    "ATE-Sim3_m": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        2.908717234847396,
+        3.8768379788572958
+      ],
+      "mean": 3.392777606852346,
+      "support": 4
+    },
+    "Completion": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "mean": 1.0,
+      "support": 4
+    },
+    "Coverage": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        0.05499999999999999,
+        0.18666666666666665
+      ],
+      "mean": 0.12083333333333332,
+      "support": 4
+    },
+    "IDF1": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        0.009345627160335143,
+        0.10038314176245211
+      ],
+      "mean": 0.05486438446139363,
+      "support": 4
+    },
+    "W-MPJPE_mm": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        295.9565297189202,
+        2207.250923200999
+      ],
+      "mean": 1065.7398259023685,
+      "support": 3
+    },
+    "WA-MPJPE_mm": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        220.38124135750755,
+        386.4945924160659
+      ],
+      "mean": 304.3080089997386,
+      "support": 3
+    },
+    "native_track_count": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        10.5,
+        31.5
+      ],
+      "mean": 21.0,
+      "support": 4
+    },
+    "wall_time_seconds": {
+      "bootstrap_samples": 10000,
+      "ci95": [
+        1068.3935800790787,
+        1296.0636913776398
+      ],
+      "mean": 1182.2286357283592,
+      "support": 4
+    }
+  },
+  "boundaries": [
+    {
+      "boundary_order": 1,
+      "camera_relative_rotation_deg": 179.4210173107116,
+      "camera_relative_translation_m": 7.163367805942445,
+      "case_id": "h4d_multicut_10_karate2_001_karate2_cam18_cam15_cam19",
+      "cut_index": 50,
+      "seam_root_m": null,
+      "transition_angle_deg": 179.4268098640123
+    },
+    {
+      "boundary_order": 2,
+      "camera_relative_rotation_deg": 177.92894142855366,
+      "camera_relative_translation_m": 6.672007445704371,
+      "case_id": "h4d_multicut_10_karate2_001_karate2_cam18_cam15_cam19",
+      "cut_index": 100,
+      "seam_root_m": null,
+      "transition_angle_deg": 177.92894150884422
+    },
+    {
+      "boundary_order": 1,
+      "camera_relative_rotation_deg": 179.49327121889434,
+      "camera_relative_translation_m": null,
+      "case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19",
+      "cut_index": 50,
+      "seam_root_m": null,
+      "transition_angle_deg": 179.49329959862425
+    },
+    {
+      "boundary_order": 2,
+      "camera_relative_rotation_deg": 177.6963027301721,
+      "camera_relative_translation_m": null,
+      "case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19",
+      "cut_index": 100,
+      "seam_root_m": null,
+      "transition_angle_deg": 177.69630266357794
+    },
+    {
+      "boundary_order": 1,
+      "camera_relative_rotation_deg": 174.93728773587003,
+      "camera_relative_translation_m": 9.985895157000666,
+      "case_id": "h4d_multicut_14_mma3_008_mma3_cam01_cam11_cam20",
+      "cut_index": 50,
+      "seam_root_m": null,
+      "transition_angle_deg": 174.93676169754275
+    },
+    {
+      "boundary_order": 2,
+      "camera_relative_rotation_deg": 177.12732861553917,
+      "camera_relative_translation_m": 9.398238464033842,
+      "case_id": "h4d_multicut_14_mma3_008_mma3_cam01_cam11_cam20",
+      "cut_index": 100,
+      "seam_root_m": null,
+      "transition_angle_deg": 177.12732860758916
+    },
+    {
+      "boundary_order": 1,
+      "camera_relative_rotation_deg": 174.9085742810863,
+      "camera_relative_translation_m": 9.978004077590796,
+      "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20",
+      "cut_index": 50,
+      "seam_root_m": null,
+      "transition_angle_deg": 174.92007958963416
+    },
+    {
+      "boundary_order": 2,
+      "camera_relative_rotation_deg": 177.01583412651254,
+      "camera_relative_translation_m": 9.399378259875533,
+      "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20",
+      "cut_index": 100,
+      "seam_root_m": null,
+      "transition_angle_deg": 177.01583396093963
+    }
+  ],
+  "boundary_order": {
+    "1": {
+      "boundary_count": 4,
+      "metrics": {
+        "camera_relative_rotation_deg": {
+          "mean": 177.19003763664057,
+          "median": 177.1791525232908,
+          "std": 2.2672732741499333,
+          "support": 4
+        },
+        "camera_relative_translation_m": {
+          "mean": 9.042422346844637,
+          "median": 9.978004077590796,
+          "std": 1.3286961135006052,
+          "support": 3
+        },
+        "transition_angle_deg": {
+          "mean": 177.19423768745335,
+          "median": 177.18178578077755,
+          "std": 2.2659466616538806,
+          "support": 4
+        }
+      }
+    },
+    "2": {
+      "boundary_count": 4,
+      "metrics": {
+        "camera_relative_rotation_deg": {
+          "mean": 177.4421017251944,
+          "median": 177.41181567285565,
+          "std": 0.3815813229007102,
+          "support": 4
+        },
+        "camera_relative_translation_m": {
+          "mean": 8.489874723204581,
+          "median": 9.398238464033842,
+          "std": 1.285426363439556,
+          "support": 3
+        },
+        "transition_angle_deg": {
+          "mean": 177.44210168523776,
+          "median": 177.41181563558354,
+          "std": 0.3815813852996982,
+          "support": 4
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "ATE-Sim3_m": 2.9109731035034696,
+      "Completion": 1.0,
+      "Coverage": 0.17666666666666667,
+      "IDF1": 0.0896551724137931,
+      "Seam-root_m": null,
+      "W-MPJPE_mm": 694.0120247871864,
+      "WA-MPJPE_mm": 386.4945924160659,
+      "angle_stratum": null,
+      "case_id": "h4d_multicut_10_karate2_001_karate2_cam18_cam15_cam19",
+      "dataset": "Harmony4D",
+      "evaluation_status": "ok",
+      "failure_reason": null,
+      "line": 1,
+      "native_track_count": 13,
+      "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+      "raw_status": "success",
+      "subject": null,
+      "wall_time_seconds": 1070.8974270820618
+    },
+    {
+      "ATE-Sim3_m": 2.906461366191323,
+      "Completion": 1.0,
+      "Coverage": 0.19666666666666666,
+      "IDF1": 0.1111111111111111,
+      "Seam-root_m": null,
+      "W-MPJPE_mm": null,
+      "WA-MPJPE_mm": null,
+      "angle_stratum": null,
+      "case_id": "h4d_multicut_11_karate3_001_karate3_cam18_cam15_cam19",
+      "dataset": "Harmony4D",
+      "evaluation_status": "evaluator_unavailable_insufficient_initial_match",
+      "failure_reason": "No initial matched people for shared world fit",
+      "line": 2,
+      "native_track_count": 8,
+      "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+      "raw_status": "success",
+      "subject": null,
+      "wall_time_seconds": 1065.8897330760956
+    },
+    {
+      "ATE-Sim3_m": 3.825534636459121,
+      "Completion": 1.0,
+      "Coverage": 0.02666666666666667,
+      "IDF1": 0.004675081813931743,
+      "Seam-root_m": null,
+      "W-MPJPE_mm": 2207.250923200999,
+      "WA-MPJPE_mm": 306.0481932256422,
+      "angle_stratum": null,
+      "case_id": "h4d_multicut_14_mma3_008_mma3_cam01_cam11_cam20",
+      "dataset": "Harmony4D",
+      "evaluation_status": "ok",
+      "failure_reason": null,
+      "line": 3,
+      "native_track_count": 35,
+      "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+      "raw_status": "success",
+      "subject": null,
+      "wall_time_seconds": 1316.0809166431427
+    },
+    {
+      "ATE-Sim3_m": 3.9281413212554708,
+      "Completion": 1.0,
+      "Coverage": 0.08333333333333333,
+      "IDF1": 0.014016172506738544,
+      "Seam-root_m": null,
+      "W-MPJPE_mm": 295.9565297189202,
+      "WA-MPJPE_mm": 220.38124135750758,
+      "angle_stratum": null,
+      "case_id": "h4d_multicut_15_mma4_006_mma4_cam01_cam11_cam20",
+      "dataset": "Harmony4D",
+      "evaluation_status": "ok",
+      "failure_reason": null,
+      "line": 4,
+      "native_track_count": 28,
+      "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+      "raw_status": "success",
+      "subject": null,
+      "wall_time_seconds": 1276.0464661121368
+    }
+  ],
+  "dataset": "Harmony4D",
+  "failed_inference_cases": 0,
+  "failure_reason_counts": {
+    "No initial matched people for shared world fit": 1
+  },
+  "fixed_manifest_denominator": 4,
+  "method": "onlinehmr_official",
+  "missing_case_count": 0,
+  "missing_cases": [],
+  "overall": {
+    "ATE-Sim3_m": {
+      "mean": 3.392777606852346,
+      "median": 3.368253869981295,
+      "std": 0.4854204411516674,
+      "support": 4
+    },
+    "Completion": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "support": 4
+    },
+    "Coverage": {
+      "mean": 0.12083333333333332,
+      "median": 0.13,
+      "std": 0.06917670609870541,
+      "support": 4
+    },
+    "IDF1": {
+      "mean": 0.05486438446139363,
+      "median": 0.051835672460265825,
+      "std": 0.04626455367040682,
+      "support": 4
+    },
+    "W-MPJPE_mm": {
+      "mean": 1065.7398259023685,
+      "median": 694.0120247871864,
+      "std": 823.3661531503681,
+      "support": 3
+    },
+    "WA-MPJPE_mm": {
+      "mean": 304.3080089997386,
+      "median": 306.0481932256422,
+      "std": 67.82665420433192,
+      "support": 3
+    },
+    "native_track_count": {
+      "mean": 21.0,
+      "median": 20.5,
+      "std": 10.931605554537724,
+      "support": 4
+    },
+    "wall_time_seconds": {
+      "mean": 1182.2286357283592,
+      "median": 1173.4719465970993,
+      "std": 114.72532054105109,
+      "support": 4
+    }
+  },
+  "protocol": "Bridge3R-Harmony4D-MultiCut-v1",
+  "reported_case_count": 4,
+  "schema_version": "Bridge3R-OnlineHMR-extension-aggregate-v1",
+  "successful_inference_cases": 4,
+  "valid_geometry_cases": 3
+}

@@ -1,0 +1,35 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：EgoBody和EgoHumans上的多镜头多人体重建。正文保留所有已完成准确率评测的方法，按时间访问方式分组；Transition表示是否显式处理镜头切换。
+  \caption{Comparison on the EgoBody and EgoHumans multi-shot multi-person reconstruction protocols.}
+  \label{tab:multi-person}
+  \footnotesize
+  \setlength{\tabcolsep}{2.7pt}
+  \renewcommand{\arraystretch}{1.04}
+  \newcommand{\evaln}[2]{#1\textsuperscript{\tiny #2}}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llc rrrrr rrrrr}
+    \toprule
+    & & & \multicolumn{5}{c}{EgoBody ($N=129$)} & \multicolumn{5}{c}{EgoHumans ($N=90$)} \\
+    \cmidrule(lr){4-8}\cmidrule(lr){9-13}
+    Category & Method & Transition & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & Cov. $\uparrow$ & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & Cov. $\uparrow$ \\
+    \midrule
+    \multirow{2}{*}{Offline}
+      & PromptHMR (SPEC) & \xmark & \evaln{741.4}{64} & \evaln{336.1}{87} & -- & 0.195 & 0.202 & \evaln{1193.3}{17} & \evaln{487.7}{25} & -- & 0.061 & 0.062 \\
+      & JOSH & \xmark & \evaln{399.6}{127} & \evaln{322.9}{127} & \evaln{0.087}{127} & 0.973 & 0.980 & \evaln{1410.7}{77} & \evaln{481.3}{77} & \evaln{1.755}{87} & \textbf{0.616} & \textbf{0.686} \\
+    \midrule
+    Semi-online
+      & OnlineHMR & \xmark & \evaln{961.2}{97} & \evaln{418.1}{97} & \evaln{0.259}{129} & 0.375 & 0.424 & \evaln{1311.7}{50} & \evaln{405.5}{50} & \evaln{3.869}{87} & 0.142 & 0.211 \\
+    \midrule
+    \multirow{3}{*}{Online}
+      & TRACE & \xmark & \evaln{576.4}{22} & \evaln{276.4}{35} & -- & 0.036 & 0.035 & \evaln{2464.6}{43} & \evaln{749.5}{59} & -- & 0.070 & 0.072 \\
+      & \humanthree{} & \xmark & 321.1 & 233.4 & 0.124 & 0.870 & \textbf{0.981} & 1005.1 & 365.7 & 1.673 & 0.471 & \underline{0.639} \\
+      & \textbf{\method{}} & \cmark & \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} & \textbf{0.981} & \textbf{866.8} & \textbf{336.9} & \textbf{1.423} & \underline{0.571} & 0.616 \\
+    \bottomrule
+  \end{tabular}%
+  }
+  \vspace{0.5mm}
+
+  % 中文表注：Transition表示显式处理镜头切换。W/WA单位为毫米；EgoBody的ATE-Sim3和EgoHumans的ATE-SE3单位为米。上标为条件几何指标的可评测视频数；IDF1和Coverage使用完整固定分母。不同支持数上的条件几何均值不构成统一排名。
+  \parbox{0.98\textwidth}{\scriptsize Transition denotes explicit shot-transition handling. W/WA are in mm and ATE in m (Sim(3) on EgoBody; SE(3) on EgoHumans). Superscripts give the number of evaluable streams for conditional geometry metrics; IDF1 and Coverage use the complete predefined protocol. Geometry means computed on different supports do not constitute a common ranking.}
+\end{table*}

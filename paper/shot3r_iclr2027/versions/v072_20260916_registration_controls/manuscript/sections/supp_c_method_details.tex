@@ -1,0 +1,85 @@
+\section{Additional Method Details}
+\label{app:method-details}
+
+\paragraph{Shot-alignment module.}
+% 中文：在新镜头第一帧，历史条件对齐路径在原有相机 token 后加入语义、相机对齐和时间上下文三个 token。
+% 学习到的查询分别对当前图像—相机—人体 token 和旧镜头记忆进行注意力汇聚，得到当前证据 c_b 与历史记忆 m_{b-1}。
+% 其中旧镜头记忆由递归状态 token、相机记忆和此前经解码器更新的对齐 token 组成。
+At the first frame of a new shot, the history-conditioned alignment path
+inserts three tokens after the backbone camera token. A learned query attends to
+the projected current image tokens, the camera token, and available human
+tokens to obtain $c_b$. A second query attention pools the recurrent state
+tokens, camera memory, and preceding decoder-refined alignment tokens into
+$m_{b-1}$. The semantic mixing weight in Eq.~\ref{eq:alignment-tokens} is
+$\alpha_b=\sigma(\operatorname{MLP}_{\mathrm{sem}}[c_b,m_{b-1}])$.
+
+Here $\Delta p_b=p_b-p_{b-1}$; $\bar z_{b-1}$, $\delta_{b-1}$, and
+$g_{b-1}$ in Eq.~\ref{eq:alignment-tokens} are the preceding alignment summary,
+camera correction, and gate.
+
+% 中文：相机对齐 token 由当前相机 token、先前相机 token、二者的潜变量差以及历史证据共同生成。
+% 时间上下文 token 汇聚此前解码后的对齐 token、相机残差及其门控值。三个 token 分别加入可学习的类型嵌入，
+% 再经 LayerNorm 后与原有图像、相机和人体 token 联合解码。
+The camera-alignment token is produced from the current camera token, the
+preceding one, their latent difference, and $m_{b-1}$. The
+temporal-context token pools the preceding decoder-refined alignment tokens,
+camera residual, and residual gate. A learned type embedding distinguishes the
+three roles; LayerNorm is applied before decoder attention refines them jointly
+with the backbone image, camera, and human tokens.
+
+% 中文：相机残差分支在固定相机头解码前更新临时相机表示。训练期间人体残差分支提供额外监督，
+% 但建立镜头间变换后，仅保留相机变换，历史条件对齐路径的临时输出不会传播到后续帧。
+A learned residual updates the temporary camera representation before it is
+decoded by the frozen camera head. The human residual branch supplies
+additional supervision during training. Once the inter-shot transform has
+been estimated, the temporary predictions and state are discarded; only the
+reinitialized state is propagated through the new shot.
+
+\paragraph{Person association.}
+% 中文：对于切换前人物 i 和切换后人物 j，匹配代价由根节点位置、躯干朝向和根节点中心化的关节结构组成。
+For a pre-transition person $i$ and post-transition person $j$, the matching
+cost combines root position, torso orientation, and root-centered joint
+configuration:
+\begin{equation}
+ d_{ij}=\widehat d_{\mathrm{root}}(i,j)+
+ \widehat d_{\mathrm{torso}}(i,j)+
+ \widehat d_{\mathrm{joint}}(i,j).
+\end{equation}
+Each term is normalized by the median of its valid pairwise values. Hungarian
+assignment returns $\min(N^-,N^+)$ one-to-one pairs, and no confidence
+threshold is applied. Later frames retain the identities initialized at the
+first post-transition frame. The matching uses predictions only, without
+ground-truth identity, calibration, or future frames.
+
+\paragraph{Shared camera--human transform.}
+% 中文：镜头间相机变换首先将新镜头映射到已有世界坐标系，匹配人物的中位位移随后给出共享平移修正。
+% 最终同一个变换作用于相机、关节和网格；新镜头中未匹配的检测结果获得新的匿名身份，空匹配时仅保留相机对齐。
+The inter-shot camera transform first maps the new shot into the existing world
+frame. The median displacement of matched people then provides the shared
+translation in Eq.~\ref{eq:shared-translation}. The resulting transform is
+applied equally to camera poses, joints, and mesh vertices. Unmatched new-shot
+detections receive new anonymous identities. If no pair is available, the
+shared translation is omitted and only camera alignment is retained.
+
+\paragraph{Coordinate convention.}
+% 中文：所有相机姿态均写成齐次 camera-to-world 变换；同一个世界变换左乘到相机、世界坐标场景点和人体点。
+% 对齐模块不改变相机局部坐标系中的场景几何；世界点图由校正后的相机姿态得到，因此与相机和人体一致地进入统一世界坐标系。
+All camera poses are homogeneous camera-to-world transforms
+$C=\begin{bmatrix}R&t\\\mathbf 0^\top&1\end{bmatrix}$. A world transform $T$
+is left-composed with the camera, world-space scene points, and human geometry:
+$C\leftarrow TC$, $P^w\leftarrow TP^w$, and $X\leftarrow TX$, with all points
+expressed in homogeneous coordinates. The alignment module does not deform the
+camera-local scene geometry $P^c$; its world-space realization is obtained from
+the corrected camera pose, $P^w=CP^c$, and is therefore transformed consistently
+with the camera and human predictions.
+
+\paragraph{Multiple transitions.}
+% 中文：每次检测到新的镜头切换时，当前状态只用于估计新的空间关系，随后由重新初始化的状态负责后续递归。
+% 已经输出的历史帧不会改变，因此该过程可以按时间顺序重复应用。
+At every later transition, the current recurrent state is used only to
+estimate the new spatial relation, while a newly initialized state supplies
+subsequent recurrence. Previously emitted frames remain unchanged. For
+$b_1<b_2$, the first transform affects frames from $b_1$ onward, and the
+second affects only frames from $b_2$ onward; later predictions use the
+composed transform $T_2T_1$. Section~\ref{app:multicut} evaluates this
+composition on three-shot sequences.

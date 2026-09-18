@@ -1,0 +1,96 @@
+\FloatBarrier
+\subsection{Weak-Texture Sequences}
+\label{app:mvhuman-stress}
+
+% 中文：我们进一步在十个未参与镜头对齐模块训练的 MVHuman 采集序列上进行测试。
+% 每个采集序列构造五段单人视频，共 50 段；每段由两个连续的 75 帧镜头组成。
+We further evaluate on ten MVHuman captures that are not used to train the
+shot-alignment module. Each capture contributes five single-person streams, giving
+50 sequences in total; every sequence contains two temporally continuous
+75-frame shots from different cameras. The low background gradients make
+this a challenging weak-texture setting rather than a new benchmark claim.
+
+% 中文：检测器最终对所有真实切换都产生响应，但首次触发仅有 10 段位于真实边界，其余 40 段均提前触发。
+% 因此，这组实验同时反映了重建方法和自动镜头检测在弱纹理输入上的局限。
+The detector eventually responds to every annotated transition, but its first
+trigger occurs at the boundary in only 10 of 50 sequences and occurs early in
+the remaining 40. The results therefore reflect both reconstruction and automatic
+transition detection in this difficult setting.
+
+% 中文：局部姿态误差基本不变。相对 Human3R，Shot3R 改善镜头间相机旋转和镜头边界根节点变化误差，
+% 但第一镜头锚定误差与相机平移误差更高。PromptHMR 使用完整视频，只作为离线参考。
+Local pose accuracy remains nearly unchanged. Shot3R improves inter-shot camera
+rotation and boundary root-change error over Human3R, but has higher
+first-shot-anchored and camera-translation errors. PromptHMR uses the complete
+video and is therefore shown only as an offline reference.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：50 段弱纹理 MVHuman 序列上的结果。人体误差单位为毫米，相机旋转单位为度，
+  % 相机平移单位为米，Coverage 为百分比。OnlineHMR 括号内为条件边界指标的有效样本数。
+  \caption{Results on 50 weak-texture MVHuman sequences. Boundary root $\Delta$
+  measures error in the predicted root-position change across the transition.
+  Human errors are in mm, camera rotation in degrees, camera translation in m, and Coverage in
+  percent. Parentheses give the number of OnlineHMR sequences with evaluable
+  boundary metrics.}
+  \label{tab:mvhuman-heldout}
+  \small
+  \resizebox{0.95\textwidth}{!}{\input{tables/mvhuman_compact}}
+\end{table*}
+
+% 中文：OnlineHMR 完成全部 50 段序列，Coverage 为 98.3%。它的 Anchor-MPJPE 和镜头边界根节点变化误差更低，
+% 而 Shot3R 的相机旋转误差低 16.8 度（95% 区间为 4.7 到 29.2 度），Coverage 高 0.015。
+% 分视角结果显示 OnlineHMR 在小视角下更好，但 Shot3R 的相机旋转优势随视角增大，并在极端视角达到 74.9 度。
+% 由于 40/50 段序列发生提前触发，该结果仅作为受控视角压力测试，不能证明该域中的自动切镜检测已经可靠解决。
+OnlineHMR completes all 50 streams with 98.3\% Coverage. It has lower
+Anchor-MPJPE and boundary root-change error, whereas \method{} has
+$16.8^\circ$ lower camera-rotation error (95\% CI $[4.7,29.2]$) and 0.015
+higher Coverage. The viewpoint breakdown reverses from an OnlineHMR advantage
+at small changes to a $74.9^\circ$ \method{} camera advantage at the extreme
+stratum. Since the detector fires early in 40/50 streams, this is a controlled
+viewpoint stress observation, not evidence that automatic transition detection
+is reliable in this domain.
+
+\begin{table*}[t]
+  \centering
+  % 中文图注：MVHuman 上 Shot3R 与 OnlineHMR 的分视角配对比较。Anchor 单位为毫米，相机旋转单位为度。
+  % 相机增益定义为 OnlineHMR 减 Shot3R，正值表示 Shot3R 更好；区间按十个采集序列聚类 bootstrap。
+  \caption{Viewpoint-stratified Shot3R--OnlineHMR comparison on MVHuman.
+  Anchor error is in mm and camera rotation in degrees. Camera gain is
+  OnlineHMR minus Shot3R; intervals bootstrap the ten capture clusters.}
+  \label{tab:mvhuman-onlinehmr-viewpoint}
+  \scriptsize
+  \resizebox{\textwidth}{!}{\input{tables/mvhuman_onlinehmr_viewpoint_compact}}
+\end{table*}
+
+\paragraph{Alignment-token sensitivity.}
+% 中文：为了分析三种带类型表示在大视角镜头切换中的作用，我们从上述固定协议中取出全部 10 个极大视角样本，
+% 并在同一个联合训练的 checkpoint 上于推理时逐一屏蔽一种表示。本分析固定真实镜头边界，因此隔离了检测器提前触发的影响。
+To examine the three typed alignment tokens under large viewpoint changes, we
+use all ten extreme-viewpoint cases from the fixed protocol above and mask
+one token at a time at inference using the same jointly trained
+checkpoint. We fix the annotated boundary in this analysis, isolating the
+token analysis from early detector triggers.
+
+\begin{table}[t]
+  \centering
+  % 中文图注：10 个未参与训练的 MVHuman 极大视角序列上的推理时对齐 token 敏感性。
+  % 所有设置使用同一 checkpoint 和真实边界，并且只屏蔽指定 token。人体误差单位为毫米，相机旋转为度，相机平移为米；所有指标均越低越好。
+  \caption{Inference-time sensitivity of the alignment tokens on ten
+  held-out extreme-viewpoint MVHuman sequences. Boundary root $\Delta$ measures
+  error in the predicted root-position change across the transition. All settings use the same
+  checkpoint and annotated boundary, masking only the indicated
+  token. Human errors are in mm, camera rotation in degrees, and
+  camera translation in m; lower is better.}
+  \label{tab:mvhuman-token-sensitivity}
+  \small
+  \resizebox{\columnwidth}{!}{\input{tables/mvhuman_token_sensitivity}}
+\end{table}
+
+% 中文：与所有逐一移除单个表示的变体相比，完整的带类型表示取得了最低的镜头边界误差和相机旋转误差。
+% 移除语义表示或相机对齐表示会导致更明显的性能下降，而移除时间上下文表示带来的变化相对较小。这些结果表明，带类型的表示主要用于稳定镜头间关系。
+The complete typed-token representation achieves the lowest boundary root-change
+and inter-shot camera-rotation errors among all leave-one-out variants. Removing the semantic
+or camera-alignment token causes the most evident degradation, whereas
+removing temporal context results in a smaller change. These results suggest
+that the typed alignment tokens primarily stabilize inter-shot relations.

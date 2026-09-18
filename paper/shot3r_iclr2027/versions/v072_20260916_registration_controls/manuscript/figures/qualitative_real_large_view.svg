@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1200" height="750" viewBox="0 0 1200 750">
+  <title>Real large-view qualitative comparison on EgoHumans</title>
+  <desc>
+    Metric-selected EgoHumans example with a 176.7 degree SO(3) camera-rotation span.
+    The top row shows the last pre-cut and first post-cut RGB frames. The bottom
+    row shows same-frame world-coordinate outputs from Human3R, TRACE,
+    PromptHMR with official SPEC, and Shot3R. Human3R and Shot3R use
+    their own scene point clouds and camera poses; external outputs remain
+    mesh-only. Raster panels are real experimental outputs; this SVG adds only
+    editable layout, labels, borders, and text.
+  </desc>
+
+  <defs>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#1f2937" flood-opacity="0.18"/>
+    </filter>
+    <marker id="arrowHead" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#d9482b"/>
+    </marker>
+    <style>
+      .title { font: 700 22px Arial, Helvetica, sans-serif; fill: #111827; }
+      .subtitle { font: 400 14px Arial, Helvetica, sans-serif; fill: #4b5563; }
+      .panel-label { font: 700 16px Arial, Helvetica, sans-serif; fill: #111827; }
+      .metric { font: 400 13px Arial, Helvetica, sans-serif; fill: #374151; }
+      .metric-ours { font: 700 13px Arial, Helvetica, sans-serif; fill: #0b5fad; }
+      .overlay-label { font: 700 15px Arial, Helvetica, sans-serif; fill: #ffffff; }
+      .small { font: 400 12px Arial, Helvetica, sans-serif; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="750" fill="#ffffff"/>
+  <text x="30" y="28" class="title">Large-view transition: 176.7° camera-rotation span</text>
+  <text x="30" y="50" class="subtitle">EgoHumans · three people · cut between original clip frames 49 and 50</text>
+  <rect x="1021" y="15" width="149" height="31" rx="15.5" fill="#fff1ed" stroke="#d9482b" stroke-width="1.5"/>
+  <text x="1095.5" y="35.5" text-anchor="middle" style="font:700 14px Arial,Helvetica,sans-serif;fill:#b93820">EXTREME VIEW</text>
+
+  <!-- Unmodified input RGB panels. -->
+  <g filter="url(#softShadow)">
+    <rect x="30" y="68" width="542" height="381.1" rx="3" fill="#f3f4f6"/>
+    <image x="30" y="68" width="542" height="381.1"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/rgb_pre_local000004_original0049.png"/>
+    <rect x="30" y="410" width="214" height="39.1" fill="#111827" fill-opacity="0.82"/>
+    <text x="45" y="435" class="overlay-label">(a) Pre-cut · frame 49</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="628" y="68" width="542" height="381.1" rx="3" fill="#f3f4f6"/>
+    <image x="628" y="68" width="542" height="381.1"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/rgb_post_local000005_original0050.png"/>
+    <rect x="628" y="410" width="278" height="39.1" fill="#111827" fill-opacity="0.82"/>
+    <text x="643" y="435" class="overlay-label">(b) First post-cut · frame 50</text>
+  </g>
+
+  <line x1="580" y1="258" x2="620" y2="258" stroke="#d9482b" stroke-width="4" marker-end="url(#arrowHead)"/>
+  <rect x="574" y="222" width="52" height="25" rx="3" fill="#d9482b"/>
+  <text x="600" y="240" text-anchor="middle" style="font:700 12px Arial,Helvetica,sans-serif;fill:#ffffff">CUT</text>
+
+  <!-- Same post-cut frame, method-specific world-coordinate renderings. -->
+  <g>
+    <text x="30" y="482" class="panel-label">(c) Human3R</text>
+    <rect x="30" y="492" width="276" height="188.4" fill="#f7f8fa" stroke="#d1d5db"/>
+    <image x="30" y="492" width="276" height="188.4"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/strict_scene_camera_post_local000005_original0050.png"/>
+    <rect x="36" y="498" width="111" height="17" rx="3" fill="#ffffff" fill-opacity="0.88"/>
+    <text x="42" y="510" style="font:700 9px Arial,Helvetica,sans-serif;fill:#374151">own scene + cameras</text>
+    <rect x="43" y="651" width="118" height="20" rx="10" fill="#fff1ed" stroke="#d9482b"/>
+    <text x="102" y="665" text-anchor="middle" style="font:700 10px Arial,Helvetica,sans-serif;fill:#b93820">identity discontinuity</text>
+    <text x="30" y="702" class="metric">W 393.1 · WA 208.1 · IDF1 .514</text>
+  </g>
+
+  <g>
+    <text x="318" y="482" class="panel-label">(d) TRACE</text>
+    <rect x="318" y="492" width="276" height="188.4" fill="#f7f8fa" stroke="#d1d5db"/>
+    <image x="318" y="492" width="276" height="188.4"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/trace_post_render_local000005_original0050.png"/>
+    <rect x="324" y="498" width="73" height="17" rx="3" fill="#ffffff" fill-opacity="0.88"/>
+    <text x="330" y="510" style="font:700 9px Arial,Helvetica,sans-serif;fill:#6b7280">mesh-only output</text>
+    <rect x="331" y="651" width="121" height="20" rx="10" fill="#fff1ed" stroke="#d9482b"/>
+    <text x="391.5" y="665" text-anchor="middle" style="font:700 10px Arial,Helvetica,sans-serif;fill:#b93820">world-scale drift</text>
+    <text x="318" y="702" class="metric">W 2359.0 · WA 895.5 · IDF1 .143</text>
+  </g>
+
+  <g>
+    <text x="606" y="482" class="panel-label">(e) PromptHMR (SPEC)</text>
+    <rect x="606" y="492" width="276" height="188.4" fill="#f7f8fa" stroke="#d1d5db"/>
+    <image x="606" y="492" width="276" height="188.4"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/prompthmr_spec_post_render_local000005_original0050.png"/>
+    <rect x="612" y="498" width="73" height="17" rx="3" fill="#ffffff" fill-opacity="0.88"/>
+    <text x="618" y="510" style="font:700 9px Arial,Helvetica,sans-serif;fill:#6b7280">mesh-only output</text>
+    <rect x="619" y="651" width="131" height="20" rx="10" fill="#fff1ed" stroke="#d9482b"/>
+    <text x="684.5" y="665" text-anchor="middle" style="font:700 10px Arial,Helvetica,sans-serif;fill:#b93820">global placement error</text>
+    <text x="606" y="702" class="metric">W 1056.1 · WA 971.8 · IDF1 .422</text>
+  </g>
+
+  <g>
+    <text x="894" y="482" class="panel-label" style="fill:#0b5fad">(f) Shot3R (ours)</text>
+    <rect x="892" y="490" width="280" height="192.4" rx="2" fill="#f7f8fa" stroke="#1675c1" stroke-width="4"/>
+    <image x="894" y="492" width="276" height="188.4"
+           preserveAspectRatio="xMidYMid meet"
+           xlink:href="qualitative_real_large_view_panels/bridge3r_scene_camera_post_local000005_original0050.png"/>
+    <rect x="900" y="498" width="111" height="17" rx="3" fill="#ffffff" fill-opacity="0.88"/>
+    <text x="906" y="510" style="font:700 9px Arial,Helvetica,sans-serif;fill:#0b5fad">own scene + cameras</text>
+    <rect x="907" y="651" width="163" height="20" rx="10" fill="#edf7ff" stroke="#1675c1"/>
+    <text x="988.5" y="665" text-anchor="middle" style="font:700 10px Arial,Helvetica,sans-serif;fill:#0b5fad">consistent alignment and IDs</text>
+    <text x="894" y="702" class="metric-ours">W 337.0 · WA 182.1 · IDF1 .951</text>
+  </g>
+
+  <line x1="30" y1="720" x2="1170" y2="720" stroke="#e5e7eb"/>
+  <text x="30" y="740" class="small">Blue/red frusta: pre/post-cut cameras. Same post-cut frame; metric-selected example, not claimed representative.</text>
+  <text x="1170" y="740" text-anchor="end" style="font:700 12px Arial,Helvetica,sans-serif;fill:#0b5fad">W/WA ↓ (mm) · IDF1 ↑</text>
+</svg>

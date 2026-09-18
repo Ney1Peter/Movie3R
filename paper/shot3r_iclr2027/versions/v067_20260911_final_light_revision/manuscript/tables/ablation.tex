@@ -1,0 +1,22 @@
+\begin{table*}[t]
+  \centering
+  \caption{Boundary-mechanism evidence on the EgoBody 43-recording macro.
+  Rows are separated by event timing: the middle block is a counterfactual
+  oracle-timing diagnosis, whereas only the last block is deployable. W/WA
+  are in mm and ATE-Sim3 in m.}
+  \label{tab:ablation}
+  \small
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lllrrrrr}
+    \toprule
+    Evidence block & Boundary operation & Propagated state & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & IDF1 $\uparrow$ & Cov. $\uparrow$ \\
+    \midrule
+    No event & Continuous \humanthree{} & continued & 321.1 & 233.4 & 0.124 & 0.870 & 0.981 \\
+    \midrule
+    \multirow{2}{*}{Oracle timing} & State reinitialization & reset & 752.6 & 589.4 & 1.141 & 0.834 & 0.981 \\
+      & History-conditioned alignment & reset & 352.8 & 267.7 & 0.017 & 0.834 & 0.981 \\
+    \midrule
+    Causal timing & \textbf{Complete \method{}} & reset & \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} & 0.981 \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

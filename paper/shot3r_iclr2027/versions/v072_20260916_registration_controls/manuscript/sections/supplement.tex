@@ -1,0 +1,124 @@
+% 中文：独立的补充材料首页参考顶会附录的分部目录与阅读指南设计。页码由章节标签自动生成。
+\begin{center}
+  {\Large\bfseries Shot3R: Multi-Shot State Transitions for\\[-1pt]
+  Streaming 4D Human-Scene Reconstruction}\par
+  \vspace{6pt}
+  {\large\bfseries Supplementary Material}\par
+  \vspace{3pt}
+  {\normalsize Anonymous Authors}
+\end{center}
+
+\vspace{8pt}
+\section*{Supplementary Contents}
+
+% 中文：补充材料分为三部分。第一部分定义协议、训练、实现和坐标约定；第二部分汇总扩展实验；第三部分界定范围与局限。
+The supplement is organized into three parts. Part I defines the evaluation
+contract and documents training, inference, detector, runtime, and coordinate
+conventions. Part II provides the complete comparisons and controlled evidence
+under that contract. Part III states the supported scope and limitations.
+Page numbers link to the corresponding sections.
+
+\begingroup
+\small
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1.5pt}
+\newcommand{\apptocpart}[2]{%
+  \vspace{2pt}\textbf{#1}%
+  \nobreak\leaders\hbox{\kern0.25em.\kern0.25em}\hfill
+  \nobreak\makebox[2em][r]{\textbf{\pageref*{#2}}}\par}
+\newcommand{\apptocsection}[3]{%
+  \hspace*{1.2em}\makebox[2.4em][l]{\textbf{#1}}\textbf{#2}%
+  \nobreak\leaders\hbox{\kern0.25em.\kern0.25em}\hfill
+  \nobreak\makebox[2em][r]{\textbf{\pageref*{#3}}}\par}
+\newcommand{\apptocsubsection}[3]{%
+  \hspace*{3.6em}\makebox[3.4em][l]{#1}#2%
+  \nobreak\leaders\hbox{\kern0.25em.\kern0.25em}\hfill
+  \nobreak\makebox[2em][r]{\pageref*{#3}}\par}
+\newcommand{\apptocsubsubsection}[3]{%
+  \hspace*{7.0em}\makebox[4.2em][l]{#1}#2%
+  \nobreak\leaders\hbox{\kern0.25em.\kern0.25em}\hfill
+  \nobreak\makebox[2em][r]{\pageref*{#3}}\par}
+
+\apptocpart{Part I: Protocols, Method Details, and Inference}{app:protocol}
+\apptocsection{A}{Evaluation Protocols}{app:protocol}
+\apptocsection{B}{Training and Implementation Details}{app:implementation}
+\apptocsection{C}{Additional Method Details}{app:method-details}
+
+\apptocpart{Part II: Additional Experimental Evidence}{app:full-results}
+\apptocsection{D}{Additional Experiments}{app:full-results}
+\apptocsubsection{D.1}{Large Viewpoint Changes}{app:cross-dataset-viewpoint}
+\apptocsubsection{D.2}{Comparison with Public Methods}{app:onlinehmr-reference}
+\apptocsubsection{D.3}{Traditional Geometric Registration Controls}{app:registration-controls}
+\apptocsubsection{D.4}{EgoBody}{app:egobody-details}
+\apptocsubsection{D.5}{EgoHumans}{app:egohumans-details}
+\apptocsubsubsection{D.5.1}{Recurrent-State Carry-Over}{app:egohumans-state-isolation}
+\apptocsubsection{D.6}{Harmony4D}{app:harmony-details}
+\apptocsubsubsection{D.6.1}{Shared-Translation Weight}{app:harmony-lambda-sensitivity}
+\apptocsubsubsection{D.6.2}{Cross-Shot Person Association}{app:harmony-association}
+\apptocsubsubsection{D.6.3}{Three-Shot Control}{app:multicut}
+\apptocsubsection{D.7}{Full Qualitative Comparison}{app:qualitative-full}
+
+\apptocpart{Part III: Scope and Limitations}{app:limitations}
+\apptocsection{E}{Limitations}{app:limitations}
+\endgroup
+
+\vspace{9pt}
+\noindent\fcolorbox{black!28}{black!2}{%
+\begin{minipage}{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}
+\small
+\textbf{Highlights and suggested reading.}
+For a compact path through the principal evidence, we recommend:
+
+\vspace{4pt}
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{Method and reproducibility.}
+Section~\ref{app:protocol} fixes datasets, metrics, and comparison scope;
+Sections~\ref{app:implementation}--\ref{app:method-details} document trainable
+parameters, detector, runtime, coordinate transforms, and repeated inference.
+
+\medskip
+\textbf{State-transition evidence.}
+Section~\ref{app:egohumans-state-isolation} gives the same-checkpoint
+carry-over control; Sections~\ref{app:egobody-details}--\ref{app:harmony-details}
+provide the corresponding reconstruction and association analyses.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{Viewpoint and repeated-transition evidence.}
+Section~\ref{app:cross-dataset-viewpoint} analyzes viewpoint change, and
+Section~\ref{app:multicut} verifies that the transition operation can be
+reapplied on three-shot streams.
+
+\medskip
+\textbf{Geometric registration controls.}
+Section~\ref{app:registration-controls} compares independent reconstruction
+followed by translation, human-joint SE(3), and full-shot scene registration.
+
+\medskip
+\textbf{Visual and scope evidence.}
+Section~\ref{app:qualitative-full} retains the full seven-method qualitative
+comparison, while Section~\ref{app:limitations} states the supported scope and
+remaining limitations.
+\end{minipage}
+\end{minipage}}
+
+\newcommand{\supppart}[1]{%
+  \begin{center}
+    \vspace{4pt}{\large\bfseries #1}
+  \end{center}
+  \vspace{2pt}}
+
+\supppart{Part I: Protocols, Method Details, and Inference}
+\input{sections/supp_a_protocol}
+\input{sections/supp_b_implementation}
+\input{sections/supp_c_method_details}
+
+\clearpage
+\supppart{Part II: Additional Experimental Evidence}
+\input{sections/supp_d_results}
+\input{sections/supp_l_qualitative_comparison}
+
+\clearpage
+\supppart{Part III: Scope and Limitations}
+\input{sections/supp_g_limitations}
+
+% 中文：其余 supp_e/f/h/i/j 文件为内部整理草稿，不在投稿附录中引入，避免重复证据和内部审计语言。

@@ -1,0 +1,29 @@
+\begin{table}[t]
+  \centering
+  % 中文图注：公开方法的时间访问方式、预处理依赖和原生输出范围。勾号仅表示具备该属性，不表示结果质量。
+  \caption{Temporal access, preprocessing, and native output scope of the evaluated public methods.}
+  \label{tab:method-scope}
+  \scriptsize
+  \setlength{\tabcolsep}{2.8pt}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{llcccc}
+    \toprule
+    Access & Method & Preproc.-free & Camera & Scene & Transition \\
+    \midrule
+    \multirow{3}{*}{Offline}
+      & PromptHMR (SPEC) & \xmark & \xmark & \xmark & \xmark \\
+      & JOSH & \xmark & \cmark & \cmark & \xmark \\
+      & TRAM & \xmark & \cmark & \xmark & \xmark \\
+    \midrule
+    Semi-online & OnlineHMR & \xmark & \cmark & \xmark & \xmark \\
+    \midrule
+    \multirow{3}{*}{Online}
+      & TRACE & \cmark & \xmark & \xmark & \xmark \\
+      & \humanthree{} & \cmark & \cmark & \cmark & \xmark \\
+      & \textbf{\method{}} & \cmark & \cmark & \cmark & \cmark \\
+    \bottomrule
+  \end{tabular}}
+  \vspace{0.5mm}
+
+  \parbox{0.98\columnwidth}{\scriptsize A check mark reports an available property or native output, not reconstruction quality. Preproc.-free excludes precomputed detection, tracking, camera-frame humans, camera, mask, depth, and contact cues. TRAM is evaluated only in the runtime protocol.}
+\end{table}

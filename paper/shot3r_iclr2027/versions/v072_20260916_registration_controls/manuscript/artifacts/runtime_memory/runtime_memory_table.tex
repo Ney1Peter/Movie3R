@@ -1,0 +1,19 @@
+% Values are mechanically bound to the sealed runtime_memory_v1 report.
+\begin{table}[t]
+  \centering
+  \supptablesize
+  \setlength{\tabcolsep}{4.2pt}
+  % 中文图注：在 NVIDIA L20 上处理一段 100 帧 EgoHumans 视频的重建时间和峰值显存；输入分辨率为 512，batch size 为 1。
+  \caption{Reconstruction time and peak memory for one 100-frame EgoHumans
+  clip on an NVIDIA L20 (resolution 512, batch size 1, FP32).}
+  \label{tab:standardized-runtime-memory}
+  \begin{tabular}{lrrr}
+    \toprule
+    Method & s / 100 frames $\downarrow$ & FPS $\uparrow$ & Peak VRAM (GiB) $\downarrow$ \\
+    \midrule
+    Human3R & 31.020 & 3.224 & 5.292 \\
+    Shot3R, no transition & 31.125 & 3.213 & 5.359 \\
+    Shot3R, one transition & 32.191 & 3.106 & 5.246 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

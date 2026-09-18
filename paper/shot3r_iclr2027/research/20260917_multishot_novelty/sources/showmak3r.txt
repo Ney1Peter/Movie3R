@@ -1,0 +1,1078 @@
+
+Compositional Entertainment Video Reconstruction
+ Report GitHub Issue
+ ×
+ Title:
+ Content selection saved. Describe the issue below:
+ Description:
+ Submit without GitHub
+ Submit in GitHub
+ arXiv is now an independent nonprofit!
+ Learn more
+ ×
+ Back to arXiv
+ Why HTML?
+ Report Issue
+ Back to Abstract
+ Download PDF
+Abstract
+I Introduction
+II Related Work
+III Method
+III-A Overview
+III-B Preprocessing
+III-C 3D Stage Reconstruction
+III-D Locating Actors on the Stage
+III-E Tracking Actors across the Shots
+III-F 3D Actor Reconstruction
+IV Experiments
+IV-A Experiment Setups
+IV-B Qualitative Comparison
+IV-C Quantitative Comparison
+IV-D Ablation Study
+IV-E Applications
+V Conclusion
+References
+VI Biography
+A Overview
+B Implementation Details
+C Reconstruction Visualization
+D Uncontrolled Environments
+ License: CC BY-NC-ND 4.0
+arXiv:2504.19584v3 [cs.CV] 20 May 2026
+Compositional Entertainment Video Reconstruction
+Sangmin Kim
+Seunguk Do
+Daeun Lee
+and Jaesik Park
+††thanks: 
+Sangmin˜Kim, Seunguk˜Do, Daeun˜Lee, and˜Jaesik˜Park are with Seoul National University, Republic of Korea.††thanks: 
+Email:{sm.kim, seunguk.do, del0716, jaesik.park}@snu.ac.kr††thanks: 
+Corresponding author: Jaesik Park.
+Abstract
+Reconstructing dynamic radiance fields from video clips is challenging, especially when entertainment videos like TV shows are given. Many challenges make the reconstruction difficult due to actors occluding with each other and having diverse facial expressions, cluttered stages, and small baseline views or sudden shot changes.
+Reconstruction becomes even more challenging when dealing with general monocular web videos, which present an even greater degree of unpredictability and complexity compared to controlled environments.
+To address these issues, we present ShowMak3r++, a unified reconstruction pipeline that targets both controlled settings like TV shows and uncontrolled scenarios like web videos.
+Our pipeline allows the editing of scenes like how video clips are made in a production control room after the reconstruction is done.
+In our pipeline, we propose a spatio-temporal positioning module that locates actors on the stage by using depth prior while maintaining 2D image alignment and natural 3D motions.
+ShotMatcher module then tracks the actors under shot changes. Finally, a face-fitting network dynamically recovers the actors’ expressions.
+Experiments on Sitcoms3D and CMU Panoptic datasets show that our pipeline can reassemble TV show scenes with new cameras at different timestamps.
+We also demonstrate that our method can successfully reconstruct challenging web videos, including dynamic action clips, dance videos, and movie clips.
+Furthermore, we demonstrate that our pipeline enables interesting applications such as synthetic shot-making, actor relocation, insertion, deletion, and pose manipulation. Project page: https://nstar1125.github.io/showmak3r/.
+Index Terms: 
+Dynamic scene representation, 3D Gaussian splatting, Human-scene reconstruction, Novel view synthesis
+I Introduction
+Considerable advances in radiance field reconstruction approaches [1, 2] transform how we reconstruct and visualize the scenes. Recent methods aim to bring video clips into 4D space to enable novel viewpoint rendering or scene editing. However, recovering the radiance field from dynamic scenes remains a challenging problem. Approaches in this category have mainly focused on scenarios with multi-view synchronized cameras or fully observed scenes [3, 4, 5].
+The reconstruction gets even harder for entertainment videos, such as TV shows captured by shot-changing (video transition by another camera) monocular cameras. Compared to existing benchmark datasets [6], entertainment videos like TV shows present additional challenges. First, it contains scenes that are inherently hard to reconstruct, such as multiple actors interacting and occluding each other on the cluttered stages or actors showing detailed facial changes to express their emotions. In addition, the videos are filmed with multiple cameras and then edited to appear as a continuous timeline, resulting in sudden shot changes. Furthermore, cameras are mainly positioned in front of the scene, creating partial observations and thus limiting information about the actors’ backsides. Therefore, even the state-of-the-art methods [7, 8] fail to recover consistent dynamic radiance fields due to incorrect human-scene alignment and inconsistent deformation of human movements.
+Recent data-driven approaches [9, 10, 11, 12] show notable performance on reconstructing from monocular web video inputs. However, they focus on estimating point clouds or human meshes, which are not photo-realistic, thus making them unsuitable for post-production.
+Fig. 1: 
+We present ShowMak3r++, a compositional video reconstruction pipeline that positions the actor to a more accurate location and targets more diverse scenarios than our previous work, ShowMak3r.
+In this work, we present a comprehensive total reconstruction pipeline that reconstructs the dynamic radiance field from entertainment videos, enabling editing like how the video clip is made in a production control room.
+We first build a 3D stage and recover parametric models of dynamic actors. Since the estimated humans from the video clip and the reconstructed stage have different coordinate systems,
+we propose spatio-temporal positioning module, which aligns the actors to their correct locations on the stage by leveraging depth estimation while maintaining 2D image alignment and natural 3D motions.
+Spatio-temporal positioning module also aims to solve unseen human poses via interpolation.
+After positioning the actors, we use the ShotMatcher module to perform human association at the shot boundaries to track actors across different shots.
+As the facial change of the actors is a key element in entertainment videos, we implement an implicit face-fitting network to change human expressions across frames to address this dynamically.
+This paper is based on our previous work, ShowMak3r [13], which addresses several key limitations.
+First, ShowMak3r is designed for controlled environments like TV Shows, where aggregating additional background images from different episodes is possible.
+However, this assumption limits its use on general monocular web videos.
+Furthermore, ShowMak3r uses a module called ‘3DLocator’ which relies solely on aligned depth maps for positioning actors. This results in problems such as parts of the actors intersecting with the 3D stage or actors exhibiting unnatural jittering movements in 3D space.
+To address these issues, we propose a new pipeline, ShowMak3r++, which is an extension of our previous work, ShowMak3r. Unlike our previous work, which only targets controlled environments like TV Shows, ShowMak3r++ can successfully reconstruct dynamic scenes from uncontrolled web video environments without relying on additional background images.
+We also propose our new spatio-temporal positioning module that aligns actors to more precise locations by considering 3D trajectories and stage penetrations.
+Experiments with the Sitcom3D and Panoptic dataset [14, 15] show that our pipeline can successfully reconstruct from entertainment videos like TV shows.
+We also compare qualitative results on various web video scenarios, such as dynamic action clips, dance videos, or movie clips, with other web video reconstruction works, proving our method’s validity.
+Furthermore, we demonstrate various applications, including actor relocation, insertion, deletion, and pose manipulations.
+Our contributions can be summarized as below:
+• 
+We introduce a comprehensive pipeline that reconstructs the dynamic radiance field from entertainment videos, enabling editing like a production control room.
+• 
+Our method can be applied to both controlled settings, like TV shows, and uncontrolled web video scenarios, like dynamic action clips, dance videos, or movie clips.
+• 
+We propose spatio-temporal positioning module that accurately aligns actors on the stage while maintaining 2D image alignment and natural 3D motions.
+It even aims to solve unseen poses due to occlusions.
+• 
+We present ShotMatcher that enables continuous tracking of actors under shot change. Our approach associates actors even when they are not visible in certain shots.
+• 
+We implement an implicit face-fitting network to recover and express dynamic facial expressions.
+• 
+Extensive experiments show the validity of our approach and demonstrate possible applications such as actor relocation, insertion, deletion, and pose manipulation.
+II Related Work
+4D Scene Reconstruction.
+Attempts have been made to extend radiance fields [1, 2] into spatio-temporal models [16, 3, 17, 18, 19, 20, 4, 5] for reconstructing 4D scenes from synchronized multi-camera videos. These techniques have since evolved to handle single-view video inputs [21, 17, 22, 23, 24, 8, 25, 26, 27, 28], increasing their applicability across various scenarios. More recently, feed-forward methods that directly generate dynamic point clouds have emerged [9, 10, 11, 29], eliminating the need for per-scene training. However, despite these advancements, current 4D reconstruction methods still struggle with TV show content, which often features limited camera angles, rapid human motion, and abrupt scene transitions.
+3D Avatar Reconstruction from Videos. Human radiance fields [30, 31, 32, 33, 6, 34, 35, 36, 37, 7, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51], which incorporates radiance fields [1, 2] with parametric human models [52, 53], have demonstrated that photo-realistic 3D human avatars can be reconstructed from monocular video. These representations later evolved into generalizable humans radiance fields [54, 55, 56, 57, 58, 59], which eliminated the need for extensive per-avatar training time. More recently, approaches to adopt diffusion models [60, 61] as additional priors [62, 63, 64, 65] for recovering unseen regions have been studied [66, 67].
+When reconstructing 3D humans from TV shows, facial features are particularly crucial. Researchers have proposed utilizing pretrained expression encoders [44] or directly leveraging SMPL-X expression parameters[39] to enhance facial features. However, these approaches typically demand multi-view face images [44, 68] or face challenges in capturing nuanced expressions from TV show videos [39]. To address these limitations, we propose a simple, yet highly effective approach of refining facial expressions through an implicit deformation network.
+Composite Human-Scene Reconstruction. Previous approaches for reconstructing scenes with humans [16, 7, 32, 51] treat backgrounds as static and use separate representations for humans and backgrounds. However, these methods require videos to capture the entire human body, including foot contact with the floor, making them unsuitable for TV show settings.
+Sitcoms3D [14] addresses it by reconstructing sitcom videos through NeRF-W [69] for consistent backgrounds and optimizing SMPL parameters using adjacent shots. However, it lacks human texture and requires identical humans to appear in neighboring shots.
+OmniRe [70] reconstructs outdoor scenes with dynamic objects, including pedestrians and vehicles. However, it relies on LiDAR sensors for geometric data and isn’t designed for scenarios with shot changes.
+In contrast, our method effectively positions actors within the stage without requiring multiple shots, foot contact points, or additional sensors.
+Fig. 2: Overview of our ShowMak3r++ pipeline. Given an entertainment video clip, we perform dense reconstruction of the stage (Sec. III-C), locate SMPL models to the stage while maintaining 2D image alignment and natural 3D motions (Sec. III-D), and if more than a single shot is given, we associate SMPL models across the shots by calculating pairwise distance between actors at shot-boundary (Sec. III-E). Then we recover the detailed appearance of the actors (Sec. III-F). Finally, 3D Gaussians of the stage and the actors are rendered to produce novel frames.
+III Method
+III-A Overview
+In entertainment videos like TV shows, several actors perform on the stage. The TV shows are structured into three hierarchical level semantics: scene, shot, and frame. A scene represents a sequence of related shots that follow a continuous narrative flow [71], a shot captures continuous frames within a single camera [72], and a frame refers to an individual image within the sequence.
+Our work aims to reconstruct dynamic scenes from such frame hierarchy in TV shows.
+Furthermore, we extend our pipeline to be applicable for web video scenarios with uncontrolled environments.
+As shown in Fig. 2, Sec III-C presents how we reconstruct the consistent stage. Sec III-D introduces how our spatio-temporal positioning module positions multiple actors into correct locations on the stage
+while maintaining 2D image alignment and 3D natural motions. Sec III-E explains how our ShotMatcher tracks actors across shot changes.
+Sec III-F shows how we reconstruct dynamic actors and their expressions with our face-fitting network.
+Scene representation.
+Our approach represents the stage and the actors with 3DGS [2], an explicit approach that reconstructs a radiance field with 3D Gaussians. Each Gaussian consists of attributes, including center 𝝁∈ℝ3\boldsymbol{\mu}\in\mathbb{R}^{3}, rotation q∈ℝ4\textbf{q}\in\mathbb{R}^{4}, scale s∈ℝ3\textbf{s}\in\mathbb{R}^{3}, color c∈ℝ3\textbf{c}\in\mathbb{R}^{3}, and opacity o∈ℝo\in\mathbb{R}. The k-th Gaussian is defined as follows:
+gk​(p)=ok​exp−12​(p−𝝁k)T​𝚺k−1​(p−𝝁k),g_{k}(\textbf{p})=o_{k}\text{exp}^{-\frac{1}{2}(\textbf{p}-\boldsymbol{\mu}_{k})^{T}\boldsymbol{\Sigma}_{k}^{-1}(\textbf{p}-\boldsymbol{\mu}_{k})},
+(1)
+where position is p∈ℝ3\textbf{p}\in\mathbb{R}^{3}, and the covariance matrix is 𝚺k=Rk​Sk​SkT​RkT\boldsymbol{\Sigma}_{k}=\textbf{R}_{k}\textbf{S}_{k}\textbf{S}_{k}^{T}\textbf{R}_{k}^{T}. Rk∈S​O​(3)\textbf{R}_{k}\in SO(3) and Sk∈ℝ+3\textbf{S}_{k}\in\mathbb{R}_{+}^{3} are obtained from quaternion of q and scale s. Unlike implicit methods [6], 3D Gaussians 𝒢={gk}k=1​…​K\mathcal{G}=\{g_{k}\}_{k=1...K} have an explicit nature, which makes it effective for reconstructing the stage 𝒢stage\mathcal{G}^{\text{stage}} and multiple actors 𝒢nactor\mathcal{G}_{n}^{\text{actor}} by simply compositing multiple Gaussian sets as 𝒢composite=𝒢stage∪{𝒢nactor}n=1​…​N\mathcal{G}^{\text{composite}}=\mathcal{G}^{\text{stage}}\cup\{\mathcal{G}_{n}^{\text{actor}}\}_{n=1...N}.
+III-B Preprocessing
+Camera parameters from TV Shows.
+In controlled environments like TV shows, we utilize additional background images aggregated from other episodes. These images play a critical role in estimating accurate camera poses and the 3D structure.
+To recover the camera pose πf\pi_{f} of each frame ff in entertainment videos like TV shows, we use Structure-from-Motion systems. We observe that GLOMAP [73] robustly handles panning frames by globally estimating camera poses and the 3D structure of all input images at once. To reduce the effect of transient actors, we mask input images with the binary segmentation map of actors Mfa​c​t​o​rM_{f}^{actor} using SAM [74], and obtain Mfs​t​a​g​eM_{f}^{stage} by inverting Mfa​c​t​o​rM_{f}^{actor}.
+Camera parameters from web videos.
+For uncontrolled environments like web videos, additional background images are often unavailable. This leads to traditional Structure-from-Motion systems [75, 73] producing inaccurate results. To address this issue, we utilize data-driven methods such as Pi3 [76] to acquire the precise camera poses and 3D structure of web videos. To reduce the memory size, we sample K random points per frame. Furthermore, since we only need a point cloud of the stage, we mask out actors by using a binary segmentation map Mfa​c​t​o​rM_{f}^{actor}.
+Guiding depth maps.
+By following the convention, we reconstruct 𝒢stage\mathcal{G}^{\text{stage}} using 3DGS [2] given the camera poses π\pi. However, we observed that vanilla 3DGS struggles with the reconstruction due to the partially observed backgrounds or narrow baselines, which are frequent in entertainment videos. Therefore, we utilize the monocular depth as guidance to compensate the limited observations. After we get dense depth predictions {Dfmono∈ℝH×W|f=1,2,…,F}\{D^{\text{mono}}_{f}\in\mathbb{R}^{H\times W}|f=1,2,...,F\} from a data-driven approach [77], we adjust scale aa and offset bb of each depth map to match the scale of the predicted camera coordinate system.
+Specifically, given the 3D point clouds 𝒫f\mathcal{P}_{f} visible at ff-th frame, we find a∗a^{*} and b∗b^{*} as follows:
+a∗,b∗=arg​mina,b∑𝐩∈𝒫fℒ(p;a,b),a^{*},b^{*}=\argmin_{a,b}\sum_{{\mathbf{p}}\in\mathcal{P}_{f}}\mathcal{L}(\textbf{p};a,b),
+(2)
+where the Huber loss ℒ⁡(p,a,b)\mathcal{L}(p;a,b) with the depth of projected point pzp_{z} for a view π\pi is defined as follows:
+ℒ⁡(p,a,b)={12​(pz−(a​Dmono​(π⁡(p))+b))2if ​|γz|≤δ1,δ1​(|pz−(a​Dmono​(π⁡(p))+b)|−δ12)otherwise\mathcal{L}(\textbf{p};a,b)\!=\!\begin{cases}\frac{1}{2}(p_{z}\!-\!(aD^{\text{mono}}(\pi(\textbf{p}))\!+\!b))^{2}&\hskip-19.91684pt\text{if }|\gamma_{z}|\leq\delta_{1},\\
+\delta_{1}(|p_{z}\!-\!(aD^{\text{mono}}(\pi(\textbf{p}))\!+\!b)|\!-\!\frac{\delta_{1}}{2})&\hskip-5.69046pt\text{otherwise}\end{cases}
+(3)
+where we empirically set δ1=rstage/100\delta_{1}=r_{\text{stage}}/100, where rstager_{\text{stage}} represents the scene radius. γz\gamma_{z} denotes pz−(a​Dmono​(π⁡(p))+b)p_{z}\!-\!(aD^{\text{mono}}(\pi(\textbf{p}))\!+\!b). We then obtain the depth map aligned with the camera coordinate system by calculating Daligned=a∗×Dmono+b∗D^{\text{aligned}}=a^{*}\times D^{\text{mono}}+b^{*}. We iterate the above process for the entire frame.
+Note that the aligned depth map DalignedD^{\text{aligned}} is a key component of our pipeline that boosts stage reconstruction (Sec. III-C) and guides the positioning of the actors (Sec. III-D).
+III-C 3D Stage Reconstruction
+We reconstruct dense Gaussians of the stage 𝒢stage\mathcal{G}^{\text{stage}} using 3DGS [2] with the extended loss that leverages the aligned depth maps DalignedD^{\text{aligned}} obtained from Sec. III-B. We observe that depth guidance provides denser and more reliable reconstruction of the stage compared to using only photometric loss.
+Background images.
+To recover a complete stage, we can leverage optional background images. For example, entertainment videos like sitcoms depict a similar environment over the season, so shots in various episodes show diverse views of the stages, which we can use for the stage reconstruction [14].
+While utilizing additional background images yields a more complete stage, our method remains robust even when they are unavailable, as in web video scenarios.
+Depth-guided dense reconstruction.
+When 𝒢stage\mathcal{G}^{\text{stage}} is being optimized, we can obtain the rendered depth map DrenderD^{\text{render}} at frame ff by utilizing the Gaussian rasterization as follows:
+Drender=∑k=1Kdk​αk​∏k′=1k−1(1−αk′)D^{\text{render}}=\sum^{K}_{k=1}d_{k}\alpha_{k}\prod_{k^{\prime}=1}^{k-1}(1-\alpha_{k^{\prime}})
+(4)
+where dkd_{k} denotes the z-depth, and αk\alpha_{k} is the blending coefficient of the k-th Gaussian in view space.
+Given DrenderD^{\text{render}}, we incorporate depth guidance in the log-L1 form [78] for better convergence of 3DGS as follows:
+ℒdepth=log⁡(1+|Mstage​Drender−Mstage​Daligned|)|Mstage|,\mathcal{L}_{\text{depth}}={\frac{\log\big(1+|M^{\text{stage}}D^{\text{render}}-M^{\text{stage}}D^{\text{aligned}}|\big)}{|M^{\text{stage}}|}},
+(5)
+where Ms​t​a​g​eM^{stage} is background mask obtained from Sec. III-B. We also add total variation loss for fostering the smoothness [78, 79] of rendered depth DrenderD^{\text{render}} as follows:
+ℒTV=1|Drender|​∑𝐮|∂Drender∂𝐮|1\mathcal{L}_{\text{TV}}=\frac{1}{|D^{\text{render}}|}\sum_{\mathbf{u}}\Bigl|\frac{\partial D^{\text{render}}}{\partial\mathbf{u}}\Bigl|_{1}
+(6)
+As a result, our extended loss in addition to vanilla 3DGS losses (ℒc​o​l​o​r\mathcal{L}_{color} and ℒD-SSIM\mathcal{L}_{\text{D-SSIM}}) is defined as follows:
+ℒbackground=(1−λD-SSIM)​ℒcolor+λD-SSIM​ℒD-SSIM+λdepth​ℒdepth+λsmooth​ℒTV,\begin{split}\mathcal{L}_{\text{background}}=&\ (1-\lambda_{\text{D-SSIM}})\mathcal{L}_{\text{color}}+\lambda_{\text{D-SSIM}}\mathcal{L}_{\text{D-SSIM}}\\
+&+\lambda_{\text{depth}}\mathcal{L}_{\text{depth}}+\lambda_{\text{smooth}}\mathcal{L}_{\text{TV}},\end{split}
+(7)
+where we empirically set λD-SSIM=0.2\lambda_{\text{D-SSIM}}\!=\!0.2, λdepth=0.2\lambda_{\text{depth}}\!=\!0.2 and λsmooth=0.5\lambda_{\text{smooth}}\!=\!0.5. We mask actors appearing in depth maps and input images using MstageM^{\text{stage}} for stability when optimizing Eq. (7). An example of 𝒢stage\mathcal{G}^{\text{stage}} is shown in Fig. 2.
+Object removal.
+Fig. 3: An example of transient object removal.
+Since the gathered images have transient objects in the scene, they interfere with the reconstruction process. In particular, objects with no reference frames are hard to reconstruct or remove, which leads to floaters remaining in the background. These artifacts degrade the background quality by a large margin. To mitigate this issue, we annotate these regions and apply image inpainting [80]. Since inpainted areas can be noisy, we apply only the depth loss for robustness. We can successfully recover these regions, as shown in Fig. 3.
+III-D Locating Actors on the Stage
+Estimating human poses from a 2D image is a well-developed problem. We estimate the shape parameter β∈ℝ10\beta\in\mathbb{R}^{10} and pose parameter θ∈ℝ24×3×3\theta\in\mathbb{R}^{24\times 3\times 3} of a SMPL model using the off-the-shelf approach [81]. However, when it comes to locating the humans in the designated 3D coordinate system, it becomes a nontrivial problem.
+Previous approaches proposed optimizing the human scale and pose with two adjacent shots [14] or identifying the foot intersection point between a SMPL model and the ground plane [32, 6, 7]. However, these methods are inadequate for TV show scenarios since consecutive shots do not always feature the same individuals, and actors frequently have their feet out of the frame.
+Spatio-temporal positioning module.
+We propose a spatio-temporal positioning module that positions the posed humans to the reconstructed 3D stage using a single clip.
+Specifically, given i-th SMPL vertex ci\textbf{c}_{i} in canonical space, we can apply an arbitrary human pose to it by applying Rθ\textbf{R}_{\theta}, a linear blending skinning transformation induced by pose θ\theta:
+vi=Rθ​(ci)=∑j=1Jwi,j​(Rθ,j​ci+tθ,j),\textbf{v}_{i}=\textbf{R}_{\theta}(\textbf{c}_{i})=\sum_{j=1}^{J}w_{i,j}(\textbf{R}_{\theta,j}\textbf{c}_{i}+\textbf{t}_{\theta,j}),
+(8)
+where wi,j∈ℝw_{i,j}\in\mathbb{R} is the LBS weights of the jj-th joint and ii-th vertex, and {Rθ,j\textbf{R}_{\theta,j}, tθ,j\textbf{t}_{\theta,j}} are the rotation and translation of jj-th joint determined by predicted SMPL pose parameter θ\theta with JJ being the total number of joints. Then, posed SMPL vertices 𝐯i\mathbf{v}_{i} can be mapped to the stage coordinate as follows:
+𝐯i′​(s,t)=s​vi+t.\mathbf{v}_{i}^{\prime}(s,\textbf{t})=s\textbf{v}_{i}+\textbf{t}.
+(9)
+positioning module finds the optimal scale s∈ℝs\in\mathbb{R} and global translation parameters t∈ℝ3\textbf{t}\in\mathbb{R}^{3} of the posed SMPL.
+Depth loss.
+The core idea of our spatio-temporal positioning module is to align posed SMPL vertices vi′v_{i}^{\prime} to the aligned mono-depth DfalignedD^{\text{aligned}}_{f} (Sec. III-B). Note that this scheme does not assume the same actor between consecutive shots [14], and does not involve the ground plane assumption [6, 7].
+For the alignment, we only consider SMPL’s visible points 𝐯′∈𝒱f\mathbf{v}^{\prime}\in\mathcal{V}_{f} at frame ff since the human regions of the DfalignedD^{\text{aligned}}_{f} indicate the depth of the visible parts.
+We use Huber loss from Eq. (3) between the z-value of the frontal vertices in the camera space and DfalignedD^{\text{aligned}}_{f}.
+ℒ⁡(v′,δ2,s,t)=Huber​(Daligned​(vx′,vy′),vz′)\mathcal{L}(\textbf{v}^{\prime},\delta_{2};s,\textbf{t})=\textrm{Huber}(D^{\text{aligned}}(v^{\prime}_{x},v^{\prime}_{y}),v^{\prime}_{z})
+(10)
+where we empirically set δ2=rstage/20\delta_{2}=r^{\text{stage}}/20.
+We use the optimal s∗s^{*} and t∗\textbf{t}^{*} to place SMPL model into frame ff.
+2D Keypoint loss.
+Maintaining consistency between projected SMPLs and 2D image is important because misalignment degrades the quality of trained actor gaussians.
+To keep SMPLs aligned to the image, we first estimate 2D keypoints by utilizing off-the-shelf 2D human pose detection module [82]. Then we compare them with the projected joints of SMPLs to compute a keypoint loss ℒk​p​t\mathcal{L}_{kpt} and optimize the SMPL pose parameter θ\theta. We use a robust Geman-McClure function [83] as follow:
+ρG​M​(γ,τ)=γ2γ2+τ2\rho_{GM}(\gamma;\tau)=\frac{\gamma^{2}}{\gamma^{2}+\tau^{2}}
+(11)
+ℒk​p​t​(θ,τ,s,t)=∑j=1Jcj​ρG​M​(‖πf​(𝒥j′)−𝒥^j2​D‖1,τ)\mathcal{L}_{kpt}(\theta,\tau;s,\textbf{t})=\sum_{j=1}^{J}c_{j}{\rho}_{GM}(||\mathit{\pi}_{f}(\mathcal{J}^{\prime}_{j})-\hat{\mathcal{J}}^{\mathrm{2D}}_{j}||_{1};\tau)
+(12)
+where 𝒥j′=s​Rθ​(𝒥​(β)j)+t\mathcal{J}^{\prime}_{j}=sR_{\theta}(\mathcal{J}(\beta)_{j})+\textbf{t}, represents the 3D position of the j-th skeleton joint derived from the SMPL shape parameter β\beta, global scale and translation {s,t}\{s,\textbf{t}\}. Here, {𝒥​(⋅)j}\{\mathcal{J}(\cdot)_{j}\} denotes the joint positions of a SMPL model in the canonical space, {𝒥^j2D}\{\hat{\mathcal{J}}^{\textrm{2D}}_{j}\} are the estimated 2D human keypoints, and cjc_{j} represents the confidence score for the j-th keypoint detection. We empirically set τ\tau as 1,000.
+3D Trajectory loss.
+Even when SMPLs are accurately aligned to each 2D image, their motion can still be unnatural in global space, due to depth inconsistencies across frames.
+To ensure smooth actor motion in 3D space while preserving 2D keypoint alignment, we adopt jerk loss [84], which suppresses jittering movement of the actors.
+Jerk loss is defined as the squared difference between successive third-order finite differences of positions.
+ℒt​r​a​j​(𝜽,s,𝐭)\displaystyle\mathcal{L}_{traj}(\boldsymbol{\theta};s,\mathbf{t})
+=1(F−3)​J​∑f=4F∑j=1J‖Δ3​𝒥f,j′‖22,\displaystyle=\frac{1}{(F-3)\,J}\sum_{f=4}^{F}\sum_{j=1}^{J}\bigl\|\,\Delta^{3}\mathcal{J}^{\prime}_{f,j}\,\bigr\|_{2}^{2},
+(13)
+Δ3​𝒥f,j′\displaystyle\hskip 20.00003pt\Delta^{3}\mathcal{J}^{\prime}_{f,j}
+=𝒥f,j′−3​𝒥f−1,j′+3​𝒥f−2,j′−𝒥f−3,j′,\displaystyle=\mathcal{J}^{\prime}_{f,j}-3\mathcal{J}^{\prime}_{f-1,j}+3\mathcal{J}^{\prime}_{f-2,j}-\mathcal{J}^{\prime}_{f-3,j},
+(14)
+Here, 𝒥f,j′\mathcal{J}^{\prime}_{f,j} represents the 3D position of the j-th skeleton joint at frame index ff, and FF is the total number of frames. We denote 𝜽\boldsymbol{\theta} as {θf}f=1..F\{\theta_{f}\}_{f=1..F}. As shown in Fig 4, ℒt​r​a​j\mathcal{L}_{traj} produces a smoother 3D trajectory.
+Fig. 4: 
+Effects of trajectory loss and penetration loss in spatio-temporal positioning module.
+Penetration loss.
+Compositional video reconstruction of both actors and the stage requires their seamless integration.
+To prevent actors from penetrating into the 3D stage, we use penetration loss as follows:
+ℒp​e​n​e​t​(𝒱f′,s,t)=1|𝒱f′|​∑v′∈𝒱f′[vz′−Dr​e​n​d​e​r​(vx′,vy′)]+\mathcal{L}_{penet}(\mathcal{V}^{\prime}_{f};s,\textbf{t})=\frac{1}{|\mathcal{V}^{\prime}_{f}|}\sum_{\textbf{v}^{\prime}\in\mathcal{V}^{\prime}_{f}}[v^{\prime}_{z}-D^{render}(v^{\prime}_{x},v^{\prime}_{y})]_{+}
+(15)
+Dr​e​n​d​e​rD^{render} is a rendered depth map from the 3D stage (Eq. (4)) and [x]+[x]_{+} is m​a​x​(0,x)max(0,x). 𝒱f′\mathcal{V}^{\prime}_{f} are the visible vertices of posed SMPL in image space at frame ff.
+We penalize if the depth of the SMPL vertices exceeds the corresponding stage depth map.
+Since we select vertices that are not occluded by the foreground, penetration loss can handle scenarios where part of the actor is positioned behind stage objects as in Fig. 4.
+Total loss.
+Total loss for positioning the actors can be summarized as follows. We iterate the alignment process for every actor.
+ℒp​o​s=λd​e​p​t​h​ℒd​e​p​t​h+λk​p​t​ℒk​p​t+λt​r​a​j​ℒt​r​a​j+λp​e​n​e​t​ℒp​e​n​e​t\begin{split}\mathcal{L}_{pos}=\ \lambda_{depth}\mathcal{L}_{depth}+\lambda_{kpt}\mathcal{L}_{kpt}\\
++\lambda_{traj}\mathcal{L}_{traj}+\lambda_{penet}\mathcal{L}_{penet}\end{split}
+(16)
+We empirically set λdepth=1.0\lambda_{\text{depth}}\!=\!1.0, λkpt=1.0\lambda_{\text{kpt}}\!=\!1.0, λtraj=0.5\lambda_{\text{traj}}\!=\!0.5, and λpenet=0.001\lambda_{\text{penet}}\!=\!0.001. We use the Adam optimizer and the exponential learning rate scheduler for optimization.
+III-E Tracking Actors across the Shots
+Spatio-temporal positioning module (Sec. III-D) places SMPL actors on the stage for every frame. Using the modern approach [81], the SMPLs are associated across frames. However, it is still necessary to associate the SMPL model with the different shots to avoid creating multiple actors. To address this issue, we propose a ShotMatcher module to associate actors between shot boundaries.
+As shown in Fig. 5, ShotMatcher calculates the pairwise Euclidean distances between the actors’ 3D coordinates in the last frame of a certain shot and the first frame of the consecutive shot. Among all possible actor-to-actor pairs, ShotMatcher chooses the actor pair with the smallest Euclidean distance that falls below a matching threshold. As shown in Fig. 5, the matching threshold is required to exclude the pair with a far distance. Details are described in Algorithm 1.
+Algorithm 1 Actor association algorithm
+ 1:
+  Input:
+• 
+FiF_{i}: last frame of the previous shot
+• 
+Fi+1F_{i+1}: first frame of the subsequent shot
+• 
+A={A1,A2,…,An}A=\{A_{1},A_{2},\dots,A_{n}\}: centers of NN actors in FiF_{i}
+• 
+B={B1,B2,…,Bm}B=\{B_{1},B_{2},\dots,B_{m}\}: centers of MM actors in Fi+1F_{i+1}
+• 
+λ\lambda: matching threshold
+ 2:
+  Output: PP: matched pairs set
+ 3:
+  Begin:
+ 4:
+  PP ←\leftarrow ∅\emptyset
+ 5:
+  BunmatchedB^{\textit{unmatched}} ←\leftarrow BB
+ 6:
+  for Ai∈AA_{i}\in A do
+ 7:
+   m​i​n​_​d​i​s​t​a​n​c​e←∞min\_distance\leftarrow\infty
+ 8:
+   Bselected←B^{\textit{selected}}\leftarrow None
+ 9:
+   for Bj∈BunmatchedB_{j}\in B^{\textit{unmatched}} do
+ 10:
+    d←EuclideanDistance​(Ai,Bj)d\leftarrow\text{EuclideanDistance}(A_{i},B_{j})
+ 11:
+    if d<m​i​n​_​d​i​s​t​a​n​c​ed<min\_distance then
+ 12:
+     m​i​n​_​d​i​s​t​a​n​c​e←dmin\_distance\leftarrow d
+ 13:
+     Bselected←BjB^{\textit{selected}}\leftarrow B_{j}
+ 14:
+    end if
+ 15:
+   end for
+ 16:
+   if m​i​n​_​d​i​s​t​a​n​c​e<λmin\_distance<\lambda then
+ 17:
+    P←P∪{(Ai,Bselected)}P\leftarrow P\cup\{(A_{i},B^{\textit{selected}})\}
+ 18:
+    Bunmatched←Bunmatched−BselectedB^{\textit{unmatched}}\leftarrow B^{\textit{unmatched}}-B^{\textit{selected}}
+ 19:
+   end if
+ 20:
+  end for
+ 21:
+  return PP
+Fig. 5: Results of actor association. ShotMatcher can associate actors even when some individuals do not appear in a shot. If the distance of the matched actors is above the matching threshold, ShotMatcher identifies them as different.
+Pose interpolation and extrapolation.
+Entertainment videos frequently present various occlusion scenarios, such as one actor blocking another, objects obscuring actors, or actors temporarily moving out of the frame. These occlusions interfere with estimating accurate human pose. To address this issue, we analyze SMPL tracking results, identify two stable frames adjacent to the occluded frames, and perform linear interpolation of the actors’ SMPL parameters.
+In entertainment videos like TV shows, one of the main challenges of actor association is the absence of certain actors in some shots. For example, while a wide shot may include all actors on stage, a close-up shot might only feature one or two individuals. To address this, any unmatched actors are filled into the subsequent shots by extrapolating their SMPL parameters from the data at the shot boundary.
+III-F 3D Actor Reconstruction
+In the final step of our pipeline, we introduce our human reconstruction module that makes {𝒢nactor}n=1​…​N\{\mathcal{G}^{\text{actor}}_{n}\}_{n=1...N} using 3DGS, given NN SMPL models associated with different shots, as shown in Fig. 7.
+We first initialize Gaussian centers of 𝒢nactor\mathcal{G}^{\text{actor}}_{n} using each of the SMPL model’s vertices located in the stage coordinate (Sec. III-E). Then, we optimize 𝒢nactor\mathcal{G}^{\text{actor}}_{n} using the 3DGS loss extended with SDS loss ℒSDS\mathcal{L}_{\text{SDS}} [66].
+Photometric loss.
+Since the stage can occlude the actors, we estimate foreground masks from the stage structure by comparing the depth between the rasterized background Gaussians DstagerenderD^{\text{render}}_{\text{stage}} and the rasterized human Gaussians DactorrenderD^{\text{render}}_{\text{actor}} using Eq. (4). If a rendered depth pixel of the actor is smaller than the stage, such pixel is marked as a part of the foreground as follows:
+Mforegd​(𝐮)={1,if ​Dstagerender​(𝐮)>{Dactor,nrender​(𝐮)}n=1​…​N0,otherwise,M^{\text{foregd}}(\mathbf{u})=\begin{cases}1,&\!\!\text{if }D^{\text{render}}_{\text{stage}}(\mathbf{u})\!>\!\big\{D^{\text{render}}_{\text{actor},n}(\mathbf{u})\big\}_{n=1...N}\\
+0,&\!\!\text{otherwise},\end{cases}
+(17)
+where NN denotes the number of humans.
+We then apply the foreground masks to both the rendered actors P=Mforegd⊙IactorrenderP\!=\!M^{\text{foregd}}\odot I_{\text{actor}}^{\text{render}} and input video frame Q=Mforegd⊙IQ\!=\!M^{\text{foregd}}\!\odot\!I, and calculate actor loss ℒactor\mathcal{L}_{\text{actor}} using the two masked images {P,Q}\{P,Q\} for the vanila 3DGS loss [2], where ℒactor\mathcal{L}_{\text{actor}} is calculated for every visible frame of nn-th actor.
+The effect of using a foreground mask is shown in Fig. 6.
+Fig. 6: An effect of using the proposed foreground masking.
+Unobserved area.
+In entertainment videos like TV shows, cameras usually capture the actors from the front, leaving the rest of the part unobserved during the entire video clip. Inspired by [66], we use SDS loss [64] with textual inversion to hallucinate the unseen parts of the actors. We compute SDS loss for each Gaussian sets {𝒢nactor}n=1​…​N\{\mathcal{G}^{\text{actor}}_{n}\}_{n=1...N} with person-specific diffusion ϕn\phi_{n}.
+The final loss of 3DGS for an individual actor is defined as follows:
+ℒtotal=λactor​∑fFℒactor,f+λSDS​ℒSDS​(𝒢nactor,ϕn)\mathcal{L}_{\text{total}}=\lambda_{\text{actor}}\sum_{f}^{F}\mathcal{L}_{\text{actor},f}+\lambda_{\text{SDS}}\mathcal{L}_{\text{SDS}}(\mathcal{G}^{\text{actor}}_{n};\phi_{n})
+(18)
+Refinement.
+In entertainment videos like TV shows, recovering detailed facial expressions are essential for delivering emotion and enhancing realism. We introduce an implicit function-based residual appearance fitting scheme using a Gaussian deformation network [4]. In our scenario, we observe that changing the positions of Gaussians on the face is unsuitable since facial motions are subtle. Instead of moving the Gaussians, we refine colors and opacity to fit the details. Given time tt and the position 𝝁\boldsymbol{\mu} of Gaussians, the color and opacity head of the face-fitting network return each residual value as follows,
+Δ​𝐜​(𝝁,t)\displaystyle\Delta\mathbf{c}(\boldsymbol{\mu},t)
+=Fcolor​(Fθ​(concat​{γ⁡(𝝁),γ⁡(t)}))\displaystyle=F_{\text{color}}\Big(F_{\theta}\big(\text{concat}\{\gamma(\boldsymbol{\mu}),\gamma(t)\}\big)\Big)
+(19)
+Δ​o​(𝝁,t)\displaystyle\Delta o(\boldsymbol{\mu},t)
+=Fopacity​(Fθ​(concat​{γ⁡(𝝁),γ⁡(t)}))\displaystyle=F_{\text{opacity}}\Big(F_{\theta}\big(\text{concat}\{\gamma(\boldsymbol{\mu}),\gamma(t)\}\big)\Big)
+(20)
+where Δ​𝐜\Delta\mathbf{c} and Δ​o\Delta o denotes color and opacity residual, {FθF_{\theta}, FcolorF_{\text{color}}, FopacityF_{\text{opacity}}} indicates learnable MLPs for deformation, and γ⁡(⋅)\gamma(\cdot) is positional encoding.
+Fig. 7: 
+Overview of our actor reconstruction module. Actor gaussians are trained with photometric loss and SDS loss per actor. After warm-up, we jointly train refinement network to enhance details.
+We first train actor Gaussians without the refinement module for 2,000 iterations to reconstruct coarse actors. Then, for the rest of the iterations, we add the color and the opacity residuals to the actor Gaussians obtained from Eq. (18). For nn-th actor, we can update it as follows:
+𝒢n,ta​c​t​o​r={gk,t​(𝝁,𝐬,𝐪,𝐜+Δ​c,o+Δ​o)}k=1​…​K\mathcal{G}^{actor}_{n,t}=\big\{g_{k,t}(\boldsymbol{\mu},\mathbf{s},\mathbf{q},\mathbf{c}+\Delta\textbf{c},o+\Delta o)\big\}_{k=1...K}
+(21)
+Fig. 8: Qualitative comparison on ’The Big Bang Theory’ videos from Sitcoms3D dataset, where each video feature a single actor. Our method demonstrates superiority in accurately positioning actors on the stage. Green points denote the Gaussian centers for the actors.
+Fig. 9: Qualitative comparison of four TV show videos, each featuring multiple actors. We compare our pipeline with both point cloud representation and Gaussian representation baselines. The frame from the input viewpoint is referred to as the ’Reference Frame’. Green points denote the Gaussian centers for the actors.
+Fig. 10: Qualitative result on CMU Panoptic dataset. Not only does our method produce photometric results from novel viewpoints, but it also aligns the human to the correct position. 
+Fig. 11: 
+Qualitative comparison of web videos. Our method can handle various scenarios such as dynamic action clips, dance videos, or movie clips. The left side of (c) shows results from a novel viewpoint, and the right side shows results from a novel frame.
+IV Experiments
+IV-A Experiment Setups
+We evaluate our pipeline on Sitcoms3D and CMU Panoptic dataset [14, 15]. Sitcoms3D dataset consists of 100-200 images per location from several sitcoms, such as ’The Big Bang Theory (2007)’, ’Friends (1994)’, ’Two and a Half Men (2003)’, ’Everybody Loves Raymond (1996)’. These images are sampled across multiple episodes to capture the total structure of the stage.
+We also evaluate our pipeline in uncontrolled settings. We select challenging scenarios from web videos such as ’Ballet’, ’Joker’, ’Parkour’, ’SNU dance’.
+For qualitative comparison, we compare our pipeline with three different types of dynamic scene reconstruction approaches on four sitcoms of the Sitcoms3D dataset [14]. We select HUGS [7], Shape-of-Motion [8],
+MonST3R [9], and MegaSaM [12]
+as baselines, each representing template-based, template-free, and last two as feed-forward methods.
+We also compare the stage reconstruction quality with other 3D reconstruction methods such as Sitcoms3D(NeRF-W [69]), 3DGS [2], GS-W [85], and FSGS [86]. We calculate PSNR, SSIM, and LPIPS metrics with masked human areas excluded for a fair comparison.
+Lastly, to evaluate the effectiveness of our face-fitting network, we compare our method with ExAvatar [39], which also addresses similar challenges of facial expression reconstruction.
+IV-B Qualitative Comparison
+We compare our method with HUGS [7] (template-based), Shape-of-Motion [8] (template-free), MonST3R [9] and MegaSaM [12] (feed-forward). We compare the viewpoints that depict the stage for a fair comparison, since other baselines target reconstruction from a monocular video.
+Single person scenario.
+We compare HUGS, which targets single-person scenarios, with the videos featuring a single individual. HUGS utilizes an SfM system for camera pose estimation, so it can not reconstruct the scene from a monocular video clip without sufficient view changes. Therefore, we provide additional background images to HUGS pipeline for camera pose prediction. Although our approach also utilizes SfM for the pose estimation, our depth guidance-based approach helps reconstruct the 3DGS scenes even with minimal camera movement. As shown in Fig. 8, HUGS struggles to accurately locate actors in TV show videos, whereas our pipeline effectively reconstructs both actors and stages. Note that HUGS assumes the foot is visible and touches the ground, whereas our pipeline does not.
+Multiple people scenario.
+Shape-of-Motion [8], MonST3R [9], and MegaSaM [12] do not rely on template-based models, so we compare them with more challenging multi-people scenarios. We select video clips with a single shot since they assume continuous viewpoints.
+As demonstrated in Fig. 9, both Shape-of-Motion and MonST3R face challenges in deforming dynamic actors in a moving camera, even when videos with a single shot are given.
+MegaSaM predicts better results than MonST3R, but it predicts in point cloud representation, which is not photo-realistic. Additionally, all baselines only consider monocular video settings, making it challenging to utilize additional background images.
+Our method, however, shows robust reconstruction from videos with arbitrary camera translations.
+CMU Panoptic dataset result.
+We evaluate additional qualitative results from CMU Panoptic dataset [15]. This dataset captures multiple people interacting with each other within the multi-view camera system. To simulate a TV show within the dataset, we select 8 cameras (out of the original 31) that capture frontal views of the human subject. These 8 views are used for stage reconstruction, while only one among them is used for actor reconstruction. Fig. 10 illustrates novel view synthesis results, achieving a PSNR of 25.21 on average.
+Web video result.
+As shown in Fig. 11, our method can handle extreme camera movements, challenging human poses, and outdoor scenarios, whereas state-of-the-art reconstruction models like Shape-of-Motion fail.
+We also compare our method with MegaSaM, which utilizes a different representation. Since the output is in point cloud format, the results are not photo-realistic. Also, MegaSaM faces difficulty predicting dynamic human poses because it does not utilize any human priors.
+Additionally, we observe that even ShowMak3r [13] fails under challenging web video scenarios.
+IV-C Quantitative Comparison
+TABLE I: Quantitative comparison of stage reconstruction results: We present the reconstruction metrics for the living room from ’The Big Bang Theory’ in the Sitcoms3D dataset.
+Methods
+PSNR↑\uparrow
+SSIM↑\uparrow
+LPIPS↓\downarrow
+Sitcoms3D [14]
+18.81
+0.62
+0.55
+3DGS [2]
+19.21
+0.64
+0.49
+GS-W [85]
+19.35
+0.65
+0.51
+FSGS [86]
+19.34
+0.65
+0.49
+Ours
+19.65
+0.66
+0.49
+Stage reconstruction. We compare our stage reconstruction quality with other 3D reconstruction methods. For a fair comparison, we do not use object removal (Sec. III-C). Given 165 background images of the TBBT scene in the Sitcoms3D dataset, we reconstruct the background except for 10 randomly picked images for the testing. As shown in Table I, GS-W [85] faces challenges removing transient actors. Also, compared to 3DGS [2], and FSGS [86], masking out actors and using depth priors improves the quality when reconstructing from aggregated sitcom images.
+Actor reconstruction.
+We compare our face-fitting network with ExAvatar [39]. As shown in Fig. 12, while ExAvatar is designed to capture facial expressions, it struggles to recover fine details. In contrast, our simple and practical deformation module enables more precise facial expression adjustments.
+Fig. 12: Ablation study for face-fitting network.
+TABLE II: Quantitative comparison of face reconstruction results. We compare the performance of our face-fitting network against ExAvatar [39]. For this comparison, we crop the facial region.
+Methods
+PSNR↑\uparrow
+SSIM↑\uparrow
+LPIPS↓\downarrow
+ExAvatar [39]
+20.17
+0.64
+0.25
+Ours w/o refinement
+21.52
+0.82
+0.36
+Ours
+24.34
+0.84
+0.28
+IV-D Ablation Study
+To evaluate the performance of spatio-temporal positioning module, we propose two metrics: MTED (Mean Translation Euclidean Distance) and MPED (Mean Pose Euclidean Distance). These metrics calculate the Euclidean Distance of the global translation between two SMPL models and the Euclidean Distance of 3D joints at shot boundaries. We select the scene from TBBT where two subsequent shots have no overlapping background, e.g., the livingroom and the kitchen. As shown in Table III, without spatio-temporal positioning module, fitting fails to align with the correct positions, reducing correlation of the actor between adjacent shots.
+To evaluate the effect of penetration loss, we compare the actor region of input frames with the rendered frames. We select the scene from ‘The Big Bang Theory’ where multiple actors interact heavily with the stage, such as actors sitting on a couch. As shown in Table IV, penetration loss produces better results by preventing actors from penetrating the stage.
+TABLE III: Ablation study for spatio-temporal positioning module. We report Mean Translation Euclidean Distance (MTED) and Mean Pose Euclidean Distance (MPED) across 2 consecutive shots.
+Methods
+MTED↓\downarrow
+MPED↓\downarrow
+Ours w/o positioning module
+1.99
+0.24
+Ours
+1.19
+0.10
+TABLE IV: Ablation study for penetration loss. For comparison, we crop the actor regions.
+Methods
+PSNR↑\uparrow
+SSIM↑\uparrow
+LPIPS↓\downarrow
+Ours w/o penetration loss
+32.99
+0.970
+0.039
+Ours
+33.57
+0.971
+0.038
+IV-E Applications
+Fig. 13: The reconstructed scenes with our pipeline are editable. Existing actors can be removed, repositioned, or replaced. New actors can be added, and their poses can be adjusted.
+In Fig 13, we show the possible applications with our pipeline. Maintaining separate Gaussian sets for each actor and the stage makes it possible to perform edits, such as removing, relocating, and inserting specific actors from the video. Additionally, actor poses can be manipulated by controlling the pose parameters of the SMPL model.
+V Conclusion
+We introduce a unified reconstruction pipeline that targets both controlled settings like TV shows and uncontrolled scenarios like web videos.
+To tackle challenges in these environements,
+we propose the following key modules: (1) Spatio-temporal positioning module, which positions actors on the stage by using depth prior and while maintaining 2D image alignment and natural 3D motions, (2) ShotMatcher, which ensures continuous actor tracking across shot-changes, (3) face-fitting network for dynamic facial expression recovery. Experiments demonstrate that our method effectively reassembles entertainment videos from novel camera viewpoints.
+Limitation and Future Work.
+Our current pipeline can only reconstruct the background of the web videos that have been observed during the video. We plan to address these limitations in future research.
+References
+[1]
+B. Mildenhall, P. P. Srinivasan, M. Tancik, J. T. Barron, R. Ramamoorthi, and R. Ng (2020)
+NeRF: representing scenes as neural radiance fields for view synthesis.
+In European Conference on Computer Vision,
+Cited by: §I,
+§II,
+§II.
+[2]
+B. Kerbl, G. Kopanas, T. Leimkühler, and G. Drettakis (2023)
+3D gaussian splatting for real-time radiance field rendering..
+ACM Transactions on Graphics 42 (4), pp. 139–1.
+Cited by: §I,
+§II,
+§II,
+§III-A,
+§III-B,
+§III-C,
+§III-F,
+§IV-A,
+§IV-C,
+TABLE I.
+[3]
+K. Park, U. Sinha, P. Hedman, J. T. Barron, S. Bouaziz, D. B. Goldman, R. Martin-Brualla, and S. M. Seitz (2021)
+HyperNeRF: a higher-dimensional representation for topologically varying neural radiance fields.
+ACM Transactions on Graphics 40 (6), pp. 1–12.
+Cited by: §I,
+§II.
+[4]
+H. Jung, N. Brasch, J. Song, E. Perez-Pellitero, Y. Zhou, Z. Li, N. Navab, and B. Busam (2023)
+Deformable 3d gaussian splatting for animatable human avatars.
+In arXiv,
+Cited by: Appendix B,
+Appendix B,
+§I,
+§II,
+§III-F.
+[5]
+G. Wu, T. Yi, J. Fang, L. Xie, X. Zhang, W. Wei, W. Liu, Q. Tian, and X. Wang (2024)
+4d gaussian splatting for real-time dynamic scene rendering.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 20310–20320.
+Cited by: §I,
+§II.
+[6]
+W. Jiang, K. M. Yi, G. Samei, O. Tuzel, and A. Ranjan (2022)
+NeuMan: Neural Human Radiance Field from a Single Video.
+In European Conference on Computer Vision, S. Avidan, G. Brostow, M. Cissé, G. M. Farinella, and T. Hassner (Eds.),
+Cham, pp. 402–418.
+External Links: ISBN 978-3-031-19824-3
+Cited by: Appendix C,
+§I,
+§II,
+§III-A,
+§III-D,
+§III-D.
+[7]
+M. Kocabas, J. R. Chang, J. Gabriel, O. Tuzel, and A. Ranjan (2024)
+Hugs: Human gaussian splats.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 505–515.
+Cited by: Appendix C,
+§I,
+§II,
+§II,
+§III-D,
+§III-D,
+§IV-A,
+§IV-B.
+[8]
+Q. Wang, V. Ye, H. Gao, W. Zeng, J. Austin, Z. Li, and A. Kanazawa (2025)
+Shape of motion: 4d reconstruction from a single video.
+In International Conference on Computer Vision (ICCV),
+Cited by: §I,
+§II,
+§IV-A,
+§IV-B,
+§IV-B.
+[9]
+J. Zhang, C. Herrmann, J. Hur, V. Jampani, T. Darrell, F. Cole, D. Sun, and M. Yang (2025)
+Monst3r: a simple approach for estimating geometry in the presence of motion.
+International Conference on Learning Representations.
+Cited by: §I,
+§II,
+§IV-A,
+§IV-B,
+§IV-B.
+[10]
+J. Lu, T. Huang, P. Li, Z. Dou, C. Lin, Z. Cui, Z. Dong, S. Yeung, W. Wang, and Y. Liu (2025)
+Align3r: aligned monocular depth estimation for dynamic videos.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 22820–22830.
+Cited by: §I,
+§II.
+[11]
+Q. Wang*, Y. Zhang*, A. Holynski, A. A. Efros, and A. Kanazawa (2025)
+Continuous 3d perception model with persistent state.
+In CVPR,
+Cited by: §I,
+§II.
+[12]
+Z. Li, R. Tucker, F. Cole, Q. Wang, L. Jin, V. Ye, A. Kanazawa, A. Holynski, and N. Snavely (2025)
+MegaSaM: accurate, fast and robust structure and motion from casual dynamic videos.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 10486–10496.
+Cited by: §I,
+§IV-A,
+§IV-B,
+§IV-B.
+[13]
+S. Kim, S. Do, and J. Park (2025)
+ShowMak3r: compositional tv show reconstruction.
+CVPR.
+Cited by: §I,
+§IV-B.
+[14]
+G. Pavlakos, E. Weber, M. Tancik, and A. Kanazawa (2022)
+The one where they reconstructed 3d humans and environments in tv shows.
+In European Conference on Computer Vision,
+pp. 732–749.
+Cited by: Appendix B,
+§I,
+§II,
+§III-C,
+§III-D,
+§III-D,
+§IV-A,
+TABLE I.
+[15]
+H. Joo, H. Liu, L. Tan, L. Gui, B. Nabbe, I. Matthews, T. Kanade, S. Nobuhara, and Y. Sheikh (2015)
+Panoptic studio: a massively multiview system for social motion capture.
+In Proceedings of IEEE International Conference on Computer Vision,
+pp. 3334–3342.
+Cited by: §I,
+§IV-A,
+§IV-B.
+[16]
+T. Li, M. Slavcheva, M. Zollhoefer, S. Green, C. Lassner, C. Kim, T. Schmidt, S. Lovegrove, M. Goesele, R. Newcombe, et al. (2022)
+Neural 3d video synthesis from multi-view video.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 5521–5531.
+Cited by: §II,
+§II.
+[17]
+Z. Li, Q. Wang, F. Cole, R. Tucker, and N. Snavely (2023)
+Dynibar: neural dynamic image-based rendering.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 4273–4284.
+Cited by: §II.
+[18]
+K. Park, U. Sinha, J. T. Barron, S. Bouaziz, D. B. Goldman, S. M. Seitz, and R. Martin-Brualla (2021)
+Nerfies: deformable neural radiance fields.
+In Proceedings of IEEE International Conference on Computer Vision,
+pp. 5865–5874.
+Cited by: §II.
+[19]
+A. Pumarola, E. Corona, G. Pons-Moll, and F. Moreno-Noguer (2021)
+D-nerf: neural radiance fields for dynamic scenes.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 10318–10327.
+Cited by: §II.
+[20]
+A. Cao and J. Johnson (2023)
+Hexplane: a fast representation for dynamic scenes.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 130–141.
+Cited by: §II.
+[21]
+Z. Li, S. Niklaus, N. Snavely, and O. Wang (2021)
+Neural scene flow fields for space-time view synthesis of dynamic scenes.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 6498–6508.
+Cited by: §II.
+[22]
+J. Lei, Y. Weng, A. Harley, L. Guibas, and K. Daniilidis (2024)
+MoSca: dynamic gaussian fusion from casual videos via 4d motion scaffolds.
+In arXiv,
+Cited by: §II.
+[23]
+C. Stearns, A. Harley, M. Uy, F. Dubost, F. Tombari, G. Wetzstein, and L. Guibas (2024)
+Dynamic gaussian marbles for novel view synthesis of casual monocular videos.
+In SIGGRAPH Asia 2024 Conference Papers,
+pp. 1–11.
+Cited by: §II.
+[24]
+S. Wang, X. Yang, Q. Shen, Z. Jiang, and X. Wang (2025)
+GFlow: recovering 4d world from monocular video.
+In Association for the Advancement of Artificial Intelligence,
+Cited by: §II.
+[25]
+S. Fridovich-Keil, G. Meanti, F. R. Warburg, B. Recht, and A. Kanazawa (2023)
+K-planes: explicit radiance fields in space, time, and appearance.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 12479–12488.
+Cited by: §II.
+[26]
+L. Song, A. Chen, Z. Li, Z. Chen, L. Chen, J. Yuan, Y. Xu, and A. Geiger (2023)
+Nerfplayer: a streamable dynamic scene representation with decomposed neural radiance fields.
+IEEE Transactions on Visualization and Computer Graphics 29 (5), pp. 2732–2742.
+Cited by: §II.
+[27]
+Y. Lin, Z. Dai, S. Zhu, and Y. Yao (2024)
+Gaussian-flow: 4d reconstruction with dynamic 3d gaussian particle.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 21136–21145.
+Cited by: §II.
+[28]
+Y. Lu, Y. Zhou, D. Liu, T. Liang, and Y. Yin (2025)
+BARD-gs: blur-aware reconstruction of dynamic scenes via gaussian splatting.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+Cited by: §II.
+[29]
+Y. Wang, D. Ceylan, and L. Agapito (2025)
+Mem4D: decoupling static and dynamic memory for dynamic scene reconstruction.
+arXiv preprint arXiv:2508.07908.
+Cited by: §II.
+[30]
+C. Weng, B. Curless, P. P. Srinivasan, J. T. Barron, and I. Kemelmacher-Shlizerman (2022)
+HumanNeRF: Free-Viewpoint Rendering of Moving People From Monocular Video.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 16210–16220.
+Cited by: §II.
+[31]
+F. Zhao, W. Yang, J. Zhang, P. Lin, Y. Zhang, J. Yu, and L. Xu (2022)
+Humannerf: Efficiently generated human radiance field from sparse inputs.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 7743–7753.
+Cited by: §II.
+[32]
+C. Guo, T. Jiang, X. Chen, J. Song, and O. Hilliges (2023)
+Vid2Avatar: 3D Avatar Reconstruction From Videos in the Wild via Self-Supervised Scene Decomposition.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 12858–12868.
+Cited by: Appendix C,
+§II,
+§II,
+§III-D.
+[33]
+Z. Yu, W. Cheng, X. Liu, W. Wu, and K. Lin (2023)
+MonoHuman: Animatable Human Neural Field From Monocular Video.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 16943–16953.
+Cited by: §II.
+[34]
+C. Geng, S. Peng, Z. Xu, H. Bao, and X. Zhou (2023)
+Learning Neural Volumetric Representations of Dynamic Humans in Minutes.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 8759–8770.
+Cited by: §II.
+[35]
+L. Hu, H. Zhang, Y. Zhang, B. Zhou, B. Liu, S. Zhang, and L. Nie (2024)
+Gaussianavatar: Towards realistic human avatar modeling from a single video via animatable 3d gaussians.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 634–644.
+Cited by: §II.
+[36]
+S. Hu, T. Hu, and Z. Liu (2024)
+Gauhuman: Articulated gaussian splatting from monocular human videos.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 20418–20431.
+Cited by: §II.
+[37]
+Y. Jiang, Z. Shen, P. Wang, Z. Su, Y. Hong, Y. Zhang, J. Yu, and L. Xu (2024)
+HiFi4G: High-Fidelity Human Performance Rendering via Compact Gaussian Splatting.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 19734–19745.
+Cited by: §II.
+[38]
+Z. Li, Z. Zheng, L. Wang, and Y. Liu (2024)
+Animatable Gaussians: Learning Pose-dependent Gaussian Maps for High-fidelity Human Avatar Modeling.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 19711–19722.
+Cited by: §II.
+[39]
+G. Moon, T. Shiratori, and S. Saito (2024)
+Expressive Whole-Body 3D Gaussian Avatar.
+In European Conference on Computer Vision, A. Leonardis, E. Ricci, S. Roth, O. Russakovsky, T. Sattler, and G. Varol (Eds.),
+Cham, pp. 19–35.
+External Links: ISBN 978-3-031-72940-9
+Cited by: §II,
+§IV-A,
+§IV-C,
+TABLE II,
+TABLE II.
+[40]
+A. Moreau, J. Song, H. Dhamo, R. Shaw, Y. Zhou, and E. Pérez-Pellitero (2024)
+Human Gaussian Splatting: Real-time Rendering of Animatable Avatars.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 788–798.
+Cited by: §II.
+[41]
+H. Pang, H. Zhu, A. Kortylewski, C. Theobalt, and M. Habermann (2024)
+ASH: Animatable Gaussian Splats for Efficient and Photoreal Human Rendering.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 1165–1175.
+Cited by: §II.
+[42]
+S. Qian, T. Kirschstein, L. Schoneveld, D. Davoli, S. Giebenhain, and M. Nießner (2024)
+Gaussianavatars: Photorealistic head avatars with rigged 3d gaussians.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 20299–20309.
+Cited by: §II.
+[43]
+Z. Qian, S. Wang, M. Mihajlovic, A. Geiger, and S. Tang (2024)
+3DGS-Avatar: Animatable Avatars via Deformable 3D Gaussian Splatting.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 5020–5030.
+Cited by: §II.
+[44]
+Z. Shao, D. Wang, Q. Tian, Y. Yang, H. Meng, Z. Cai, B. Dong, Y. Zhang, K. Zhang, and Z. Wang (2025)
+DEGAS: Detailed Expressions on Full-Body Gaussian Avatars.
+In Proceedings of the International Conference on 3D Vision (3DV),
+Cited by: §II.
+[45]
+Z. Shao, Z. Wang, Z. Li, D. Wang, X. Lin, Y. Zhang, M. Fan, and Z. Wang (2024)
+SplattingAvatar: Realistic Real-Time Human Avatars with Mesh-Embedded Gaussian Splatting.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 1606–1616.
+Cited by: §II.
+[46]
+M. Işık, M. Rünz, M. Georgopoulos, T. Khakhulin, J. Starck, L. Agapito, and M. Nießner (2023)
+HumanRF: high-fidelity neural radiance fields for humans in motion.
+ACM Transactions on Graphics 42 (4), pp. 1–12.
+External Links: Document,
+Link
+Cited by: §II.
+[47]
+S. Su, F. Yu, M. Zollhöfer, and H. Rhodin (2021)
+A-nerf: articulated neural radiance fields for learning human shape, appearance, and pose.
+Advances in Neural Information Processing Systems 34, pp. 12278–12291.
+Cited by: §II.
+[48]
+S. Peng, J. Dong, Q. Wang, S. Zhang, Q. Shuai, X. Zhou, and H. Bao (2021)
+Animatable neural radiance fields for modeling dynamic human bodies.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 14314–14323.
+Cited by: §II.
+[49]
+M. C. Buehler, Y. Yuan, X. Li, Y. Huang, K. Nagano, and U. Iqbal (2025)
+Dream, lift, animate: from single images to animatable gaussian avatars.
+External Links: XXXX.XXXXX
+Cited by: §II.
+[50]
+Z. Dong, L. Duan, J. Song, M. J. Black, and A. Geiger (2025)
+MoGA: 3d Generative Avatar Prior for Monocular Gaussian Avatar Reconstruction.
+In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV),
+Cited by: §II.
+[51]
+C. Guo, J. Li, Y. Kant, Y. Sheikh, S. Saito, and C. Cao (2025)
+Vid2Avatar-pro: authentic avatar from videos in the wild via universal prior.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR),
+Cited by: §II,
+§II.
+[52]
+M. Loper, N. Mahmood, J. Romero, G. Pons-Moll, and M. J. Black (2015)
+SMPL: a skinned multi-person linear model.
+ACM Trans. Graph. 34 (6).
+External Links: ISSN 0730-0301,
+Link,
+Document
+Cited by: §II.
+[53]
+G. Pavlakos, V. Choutas, N. Ghorbani, T. Bolkart, A. A. Osman, D. Tzionas, and M. J. Black (2019)
+Expressive body capture: 3d hands, face, and body from a single image.
+In Proceedings of IEEE International Conference on Computer Vision,
+pp. 10975–10985.
+Cited by: §II.
+[54]
+S. Hu, F. Hong, L. Pan, H. Mei, L. Yang, and Z. Liu (2023)
+Sherf: generalizable human nerf from a single image.
+In Proceedings of IEEE International Conference on Computer Vision,
+pp. 9352–9364.
+Cited by: §II.
+[55]
+C. Li, J. Lin, and G. H. Lee (2024)
+Ghunerf: generalizable human nerf from a monocular video.
+In 2024 International Conference on 3D Vision (3DV),
+pp. 923–932.
+Cited by: §II.
+[56]
+A. Dey, D. Yang, R. Agaram, A. Dantcheva, A. I. Comport, S. Sridhar, and J. Martinet (2024)
+Ghnerf: learning generalizable human features with efficient neural radiance fields.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 2812–2821.
+Cited by: §II.
+[57]
+Z. Wang, Y. Kanamori, and Y. Endo (2024)
+EG-humannerf: efficient generalizable human nerf utilizing human prior for sparse view.
+In arXiv,
+Cited by: §II.
+[58]
+J. Mu, S. Sang, N. Vasconcelos, and X. Wang (2023)
+Actorsnerf: animatable few-shot human rendering with generalizable nerfs.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 18391–18401.
+Cited by: §II.
+[59]
+Z. Yu, T. Li, J. Sun, O. Shapira, S. Park, M. Stengel, M. Chan, X. Li, W. Wang, K. Nagano, and S. D. Mello (2025)
+GAIA: generative animatable interactive avatars with expression-conditioned gaussians.
+In ACM SIGGRAPH,
+Cited by: §II.
+[60]
+R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer (2022)
+High-resolution image synthesis with latent diffusion models.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 10684–10695.
+Cited by: §II.
+[61]
+D. Podell, Z. English, K. Lacey, A. Blattmann, T. Dockhorn, J. Müller, J. Penna, and R. Rombach (2024)
+Sdxl: improving latent diffusion models for high-resolution image synthesis.
+In International Conference on Learning Representations,
+Cited by: §II.
+[62]
+Z. Wang, C. Lu, Y. Wang, F. Bao, C. Li, H. Su, and J. Zhu (2023)
+Prolificdreamer: high-fidelity and diverse text-to-3d generation with variational score distillation.
+In Advances in Neural Information Processing Systems,
+Vol. 36, pp. 8406–8441.
+Cited by: §II.
+[63]
+A. Jain, B. Mildenhall, J. T. Barron, P. Abbeel, and B. Poole (2022)
+Zero-shot text-guided object generation with dream fields.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 867–876.
+Cited by: §II.
+[64]
+B. Poole, A. Jain, J. T. Barron, and B. Mildenhall (2023)
+Dreamfusion: text-to-3d using 2d diffusion.
+In International Conference on Learning Representations,
+Cited by: §II,
+§III-F.
+[65]
+A. Graikos, N. Malkin, N. Jojic, and D. Samaras (2022)
+Diffusion models as plug-and-play priors.
+In Advances in Neural Information Processing Systems,
+Vol. 35, pp. 14715–14728.
+Cited by: §II.
+[66]
+I. Lee, B. Kim, and H. Joo (2024)
+Guess the unseen: dynamic 3d scene reconstruction from partial 2d glimpses.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 1062–1071.
+Cited by: §II,
+§III-F,
+§III-F.
+[67]
+A. Dutta, M. Zheng, Z. Gao, B. Planche, A. Choudhuri, T. Chen, A. K. Roy-Chowdhury, and Z. Wu (2025)
+CHROME: clothed human reconstruction with occlusion-resilience and multiview-consistency from a single image.
+In arXiv,
+Cited by: §II.
+[68]
+S. Aneja, S. Weiss, I. Baeza, P. Chandran, G. Zoss, M. Nießner, and D. Bradley (2025)
+ScaffoldAvatar: high-fidelity gaussian avatars with patch expressions.
+ACM Trans. Graph. 44 (4).
+External Links: ISSN 0730-0301
+Cited by: §II.
+[69]
+R. Martin-Brualla, N. Radwan, M. S. Sajjadi, J. T. Barron, A. Dosovitskiy, and D. Duckworth (2021)
+Nerf in the wild: neural radiance fields for unconstrained photo collections.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 7210–7219.
+Cited by: §II,
+§IV-A.
+[70]
+Z. Chen, J. Yang, J. Huang, R. de Lutio, J. M. Esturo, B. Ivanovic, O. Litany, Z. Gojcic, S. Fidler, M. Pavone, et al. (2025)
+OmniRe: omni urban scene reconstruction.
+In International Conference on Learning Representations,
+Cited by: §II.
+[71]
+E. Katz (1979)
+Ephraim katz’s the film encyclopedia.
+ Thomas Y. Crowell.
+Cited by: §III-A.
+[72]
+R. Sklar (1990)
+Film: an international history of the medium.
+ Thames and Hudson.
+Cited by: §III-A.
+[73]
+L. Pan, D. Baráth, M. Pollefeys, and J. L. Schönberger (2024)
+Global structure-from-motion revisited.
+In European Conference on Computer Vision,
+Cited by: §III-B,
+§III-B.
+[74]
+A. Kirillov, E. Mintun, N. Ravi, H. Mao, C. Rolland, L. Gustafson, T. Xiao, S. Whitehead, A. C. Berg, W. Lo, et al. (2023)
+Segment anything.
+In Proceedings of IEEE International Conference on Computer Vision,
+pp. 4015–4026.
+Cited by: §III-B.
+[75]
+J. L. Schonberger and J. Frahm (2016)
+Structure-from-motion revisited.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 4104–4113.
+Cited by: §III-B.
+[76]
+Y. Wang, J. Zhou, H. Zhu, W. Chang, Y. Zhou, Z. Li, J. Chen, J. Pang, C. Shen, and T. He (2025)
+π3\pi^{3}: Scalable permutation-equivariant visual geometry learning.
+External Links: 2507.13347,
+Link
+Cited by: §III-B.
+[77]
+R. Wang, S. Xu, Y. Dong, Y. Deng, J. Xiang, Z. Lv, G. Sun, X. Tong, and J. Yang (2025)
+MoGe-2: accurate monocular geometry with metric scale and sharp details.
+arXiv preprint arXiv:2507.02546.
+Cited by: §III-B.
+[78]
+M. Turkulainen, X. Ren, I. Melekhov, O. Seiskari, E. Rahtu, and J. Kannala (2025)
+DN-splatter: depth and normal priors for gaussian splatting and meshing.
+In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV),
+Cited by: §III-C,
+§III-C.
+[79]
+J. Chung, J. Oh, and K. M. Lee (2024)
+Depth-regularized optimization for 3d gaussian splatting in few-shot images.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 811–820.
+Cited by: §III-C.
+[80]
+J. Zhao, S. Zhou, Z. Wang, P. Yang, and C. C. Loy (2025)
+ObjectClear: complete object removal via object-effect attention.
+In arXiv preprint arXiv:2505.22636,
+Cited by: §III-C.
+[81]
+A. Newell, P. Hu, L. Lipson, S. R. Richter, and V. Koltun (2025)
+CoMotion: concurrent multi-person 3d motion.
+In International Conference on Learning Representations,
+External Links: Link
+Cited by: §III-D,
+§III-E.
+[82]
+Z. Yang, A. Zeng, C. Yuan, and Y. Li (2023)
+Effective whole-body pose estimation with two-stages distillation.
+In Proceedings of the IEEE/CVF International Conference on Computer Vision,
+pp. 4210–4220.
+Cited by: §III-D.
+[83]
+S. Geman (1987)
+Statistical methods for tomographic image restoration.
+Bull. Internat. Statist. Inst. 52, pp. 5–21.
+Cited by: §III-D.
+[84]
+T. Flash and N. Hogan (1985)
+The coordination of arm movements: an experimentally confirmed mathematical model.
+Journal of neuroscience 5 (7), pp. 1688–1703.
+Cited by: §III-D.
+[85]
+D. Zhang, C. Wang, W. Wang, P. Li, M. Qin, and H. Wang (2024)
+Gaussian in the wild: 3d gaussian splatting for unconstrained image collections.
+In European Conference on Computer Vision,
+pp. 341–359.
+Cited by: §IV-A,
+§IV-C,
+TABLE I.
+[86]
+Z. Zhu, Z. Fan, Y. Jiang, and Z. Wang (2024)
+Fsgs: real-time few-shot view synthesis using gaussian splatting.
+In European Conference on Computer Vision,
+pp. 145–163.
+Cited by: §IV-A,
+§IV-C,
+TABLE I.
+VI Biography
+Sangmin Kim 
+is a Ph.D. student of the Interdisciplinary Program in Artificial Intelligence at Seoul National University, Republic of Korea. His research interests include 3D/4D computer vision applications for VFX and post-production.
+Seunguk Do 
+is a Ph.D. student of the Interdisciplinary program in Artificial Intelligence at Seoul National University, Republic of Korea. His research interests include 3D Hunan generative models and multi-modal representation learning,
+especially in the 3D domain.
+Daeun Lee 
+received the BS degree in electrical and computer engineering from Seoul National University (SNU), Seoul, Republic of Korea, in 2025. She is currently working toward the MS degree in computer science engineering at Seoul National University. Her research interests include 3D vision and computer graphics.
+Jaesik Park 
+is an Associate Professor of Computer Science Engineering and an Interdisciplinary Program in AI at Seoul National University. He received his Bachelor’s degree from Hanyang University, and he received his Master’s and Ph.D. degrees from KAIST. He was a staff research scientist at Intel intelligent systems lab, where he co-created Open3D library. Before joining Seoul National University, he was a faculty member at POSTECH. His research interests include text-to-image synthesis, 3D perception, and computer vision topics. He serves as a program committee member at prestigious international conferences, such as CVPR, ECCV, ICCV, ICLR, ICML, ICRA, NeurIPS, and SIGGRAPH Asia.
+Appendix A Overview
+This supplementary material presents additional implementation details and results to support the main paper.
+• 
+In Section B, we explain details of the Face-Fitting network architecture and provide further implementation specifics.
+• 
+Section C shows the results of additional alignment results in controlled environments.
+• 
+Section D shows the results of additional video results in uncontrolled environments.
+Appendix B Implementation Details
+Our unoptimized implementation runs offline, which can be boosted with parallel processing. When processing 100 frames of a single person in TBBT scenes in Sitcoms3D dataset [14], our pipeline takes about 30 minutes for stage reconstruction, 10 minutes for SMPL alignment, 1 hour for custom diffusion training, and 3 hours for actor reconstruction. We utilized a single NVIDIA A6000 GPU for training.
+Spatio-temporal positioning module (Sec. III-D) optimizes global translation t and scale ss for the first 6k iterations using the total alignment loss (Eq. 16).
+Since there are depth inconsistency between frames, we set λd​e​p​t​h\lambda_{depth} in Eq. 16 as zero for the subsequent 2k iterations to ensure the smoothness of the 3D trajectory.
+Face fitting network architecture. Fig. 14 shows the architecture of our face-fitting network (Sec. III-F). We modify the deformation network from D-3DGS [4]. Instead of deforming the position, rotation, and scale of Gaussians, our network adjusts the color and opacity of Gaussians at each time step. In this way, our approach can capture the detailed expression change of the actors.
+The face-fitting network takes Gaussian positions and time embeddings as input. To handle multiple actors, we concatenate each actor Gaussian set as c​o​n​c​a​t​{𝒢nactor}n=1Nconcat\{\mathcal{G}^{\text{actor}}_{n}\}^{N}_{n=1}. Concatenated input is then processed through eight fully connected layers with ReLU activation functions. Additionally, the feature vector from the fourth layer is concatenated with the input. Output is a 256-dimensional feature vector, which is then passed to two separate fully connected layers.
+D-3DGS [4] does not utilize normalization at the end. However, since the opacity and color have a value between 0 and 1, we add a tangent hyperbolic activation function at the end to prevent overflow.
+Fig. 14: The architecture of our face fitting network.
+Appendix C Reconstruction Visualization
+In this section, we present the visualization results of reconstruction process. As shown in Fig. 15, by using spatio-temporal positioning module, actors are correctly aligned to the stage. Additional results are given in Fig. 16. The green points indicate the centers of the actor Gaussians.
+Unlike methods [32, 6, 7] that determine the scale of SMPL by identifying the intersection point between the ground plane and the feet, our approach optimizes scale using aligned depth information. This approach is robust to scenarios where actors are cropped or occluded by objects.
+Fig. 15: Visualization of aligned actors, estimated cameras, and reconstructed 3D stage.
+Appendix D Uncontrolled Environments
+In this section, we present additional results from ShowMak3r++ on videos with uncontrolled environments. We select challenging web videos like ’Parkour’, ’Wonker’, ’La La Land’, and ’Catch me if you can (CMIYC)’, which have dynamic human motions or fast camera movements. After reconstruction, we render the scene from a novel viewpoint and a novel frame. As demonstrated in Fig. 17, ShowMak3r++ shows robust performance even in uncontrolled environments.
+The following links correspond to the web videos used for this paper:
+• 
+Joker:
+www.youtube.com/watch?v=JeyVU4nMWCg
+• 
+Ballet:
+www.youtube.com/watch?v=zV1qLYukTH8
+• 
+SNU dance:
+www.instagram.com/reel/DNSpocSNg_M/?igsh=d3d0OGw1b2g1c3B0
+• 
+Parkour1 and Parkour2:
+www.youtube.com/watch?v=xbqVWZD-sfI
+• 
+Wonker:
+www.youtube.com/watch?v=zcctO0cYFLg
+• 
+La La Land:
+www.youtube.com/watch?v=_8w9rOpV3gc
+• 
+CMIYC:
+www.youtube.com/watch?v=eCWU3a4MhqI
+Fig. 16: Additional results of the aligned actors in controlled environments. We visualize gaussian centers from two different novel viewpoints. Green points denote the Gaussian centers for the actors.
+Fig. 17: Additional results of the web video reconstruction. We select challenging web videos with dynamic human motions or fast camera movements. We render the scene from a novel viewpoint and a novel frame.
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+ L
+ A
+ T
+ E
+ xml
+ .
+ Instructions for reporting errors
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+ Click the "Report Issue" (
+ ) button, located in the page header.
+ Tip: You can select the relevant text first, to include it in your report.
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+ We gratefully acknowledge support from
+ our major funders,
+ member institutions, ,
+ and all contributors.
+ About
+ ·
+ Help
+ ·
+ Contact
+ ·
+ Subscribe
+ ·
+ Copyright
+ ·
+ Privacy
+ ·
+ Accessibility
+ ·
+ Operational Status (opens in new tab)
+ Major funding support from

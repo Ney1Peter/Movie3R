@@ -1,0 +1,70 @@
+\documentclass{article}
+
+\usepackage{iclr2027_conference,times}
+\usepackage[UTF8,scheme=plain,fontset=none]{ctex}
+\setmainfont{NimbusRoman-Regular.otf}[
+  Path=/usr/share/fonts/opentype/urw-base35/,
+  BoldFont=NimbusRoman-Bold.otf,
+  ItalicFont=NimbusRoman-Italic.otf,
+  BoldItalicFont=NimbusRoman-BoldItalic.otf]
+\setsansfont{NimbusSans-Regular.otf}[
+  Path=/usr/share/fonts/opentype/urw-base35/,
+  BoldFont=NimbusSans-Bold.otf,
+  ItalicFont=NimbusSans-Italic.otf,
+  BoldItalicFont=NimbusSans-BoldItalic.otf]
+\setmonofont{NimbusMonoPS-Regular.otf}[
+  Path=/usr/share/fonts/opentype/urw-base35/,
+  BoldFont=NimbusMonoPS-Bold.otf,
+  ItalicFont=NimbusMonoPS-Italic.otf,
+  BoldItalicFont=NimbusMonoPS-BoldItalic.otf]
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{capt-of}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{placeins}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{unicode=true,hidelinks}
+
+\title{Shot3R：基于多镜头状态转移的流式四维人体—场景重建}
+\author{匿名作者\\中文阅读版（与英文 v072 内容对应）}
+
+\newcommand{\method}{Shot3R}
+\newcommand{\humanthree}{Human3R}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\SE}{\mathrm{SE}}
+\newcommand{\SO}{\mathrm{SO}}
+
+\definecolor{shotgreen}{RGB}{0,145,140}
+\definecolor{shotred}{RGB}{210,55,70}
+\definecolor{shotamber}{RGB}{190,120,0}
+\newcommand{\cmark}{\ensuremath{\textcolor{shotgreen}{\checkmark}}}
+\newcommand{\xmark}{\ensuremath{\textcolor{shotred}{\times}}}
+\newcommand{\pmark}{\ensuremath{\textcolor{shotamber}{\triangle}}}
+
+\renewcommand{\refname}{参考文献}
+
+\begin{document}
+\maketitle
+
+\input{sections_zh/fig_teaser}
+\input{sections_zh/01_abstract}
+\input{sections_zh/02_introduction}
+\input{sections_zh/03_related_work}
+\input{sections_zh/04_method}
+\input{sections_zh/05_experiments}
+\input{sections_zh/06_conclusion}
+\clearpage
+\input{sections_zh/07_statements}
+
+\clearpage
+\bibliographystyle{iclr2027_conference}
+\bibliography{references}
+
+\end{document}

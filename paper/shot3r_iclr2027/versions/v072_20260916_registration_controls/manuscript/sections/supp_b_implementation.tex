@@ -1,0 +1,186 @@
+\section{Training and Implementation Details}
+\label{app:implementation}
+
+% 中文段落标题：训练配置。
+% 中文：论文报告的 Shot3R 模型直接从预训练 Human3R 初始化，并在 AvatarReX 的 lbn1/zzr 人物序列与 THuman00/02 上训练。
+% 每个来源包含 8,000 个镜头跳变序列和 2,000 个连续镜头序列。镜头跳变样本依次取 A(t)、A(t+1)、
+% B(t+2)、B(t+3)，连续样本则取同一相机的四个连续帧；两类样本均带有统一世界坐标系中的相机和人体标注。
+\paragraph{Training configuration.}
+The reported \method{} model is initialized directly from pretrained
+\humanthree{} and trained on the lbn1/zzr subjects of AvatarReX and
+THuman00/02. Each source contains 8,000 shot-transition clips and 2,000
+continuous clips. A shot-transition clip follows
+$A(t),A(t+1),B(t+2),B(t+3)$, whereas a continuous clip contains four consecutive frames
+from one camera; both carry camera and human annotations in a shared world
+frame.
+
+% 中文：图像编码器、递归解码器、点图头、基础相机/人体预测头和 Multi-HMR 主干均被冻结。
+% 可训练的镜头对齐模块包括 14.39M 的三 token 对齐块、1.78M 的相机潜变量残差头、2.96M 的人体潜变量残差头，
+% 以及 0.50M 的秩 8 相机/人体预测头 LoRA，共 19.62M 个参数，占完整模型 1.63%。
+The image encoder, recurrent decoder, point-map head, base camera and human heads,
+and Multi-HMR backbone~\citep{baradel2024multihmr} are frozen. The trainable
+shot-alignment module comprises a 14.39M alignment block with three typed
+tokens, a 1.78M camera latent-residual head, a 2.96M human latent-residual head, and 0.50M
+rank-8 LoRA parameters in the camera and human heads~\citep{hu2022lora}: 19.62M parameters
+in total, or 1.63\% of the 1.208B-parameter model. The three alignment tokens
+occupy the 768-dimensional decoder space, and the alignment gate is shared
+with the human residual branch.
+
+% 中文：每轮进行 100 次更新，每个批次包含 10 个四帧序列；AvatarReX 与 THuman 的采样概率为 0.6 和 0.4。
+% 训练共 72 轮、7,200 次优化器更新。AdamW 使用 beta=(0.9,0.95)、权重衰减 0.05、四轮线性预热至 2e-4，
+% 随后余弦衰减至 1e-6，并启用自动混合精度和梯度检查点。
+Each epoch contains 100 updates with ten four-frame sequences per batch;
+AvatarReX and THuman are sampled with probabilities 0.6 and 0.4. Training runs
+for 72 epochs and 7,200 optimizer updates. AdamW uses
+$\beta=(0.9,0.95)$, weight decay 0.05, four-epoch linear warm-up to
+$2\!\times\!10^{-4}$, and cosine decay to $10^{-6}$, with automatic mixed
+precision and gradient checkpointing.
+
+% 中文：相机平移、旋转和人体平移分别由 Smooth-L1、四元数测地线距离和 Smooth-L1 监督。
+% 对齐门控目标来自以 0.5 米和 45 度归一化并截断的未校正相机误差，改进项要求校正误差小于未校正误差，
+% 两个正则项约束相机和人体潜变量残差的大小。
+Let $e$ and $e^{\mathrm{raw}}$ be the corrected and uncorrected camera errors after
+normalizing translation by $0.5$\,m and rotation by $45^\circ$. We optimize the
+shot-alignment module with
+\begin{equation}
+  \begin{split}
+  \mathcal L_{\mathrm{align}}={}&\mathcal L_t+5\mathcal L_R
+  +0.05\operatorname{BCE}\!\left(g,
+  \operatorname{clip}(e^{\mathrm{raw}},0,1)\right)\\
+  &+0.05[e-e^{\mathrm{raw}}]_+
+  +10^{-5}\mathcal R_{\mathrm{cam}}
+  +10\mathcal L_h+10^{-5}\mathcal R_{\mathrm{human}},
+  \end{split}
+  \label{eq:supp-alignment-objective}
+\end{equation}
+where $\mathcal L_t$ and $\mathcal L_h$ are Smooth-L1 camera and human
+translation losses, $\mathcal L_R$ is quaternion geodesic distance, $g$ is
+the learned alignment gate, and the residual terms constrain the camera and
+human latent updates. Camera and human supervision is evaluated across the
+four-frame training sequence; no ground truth is used at inference.
+
+% 中文段落标题：训练收敛。
+% 中文：我们每 6 轮在按数据集（AvatarReX/THuman）和序列类型（镜头跳变/连续）划分的四个固定验证集上评估。
+% 图中训练曲线为每轮目标的全局均值，验证曲线为四个划分中位数损失的均值。星号标记所有实验使用的第 72 轮检查点。
+\paragraph{Training convergence.}
+Validation is run every six epochs on four fixed splits defined by dataset
+(AvatarReX or THuman) and clip type (shot transition or continuous).
+Figure~\ref{fig:final-training-curve}
+plots the global mean training objective and the mean of the four validation
+median losses. The epoch-72 checkpoint is used in all reported experiments.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.84\linewidth]{artifacts/final_training_curve/final_training_curve.pdf}
+  % 中文图注：最终使用的Shot3R模型训练与验证目标。两条曲线分别使用正文所述的全局训练均值和验证划分中位数聚合；
+  % 星号标记全部实验使用的第72轮检查点。
+  \caption{Training and validation objectives of the reported \method{} model.
+  The curves use the aggregation rules defined above; the star marks the
+  epoch-72 checkpoint used throughout.}
+  \label{fig:final-training-curve}
+\end{figure}
+
+\paragraph{Shot-transition detection.}
+% 中文：检测器从连续RGB帧对计算20维颜色、灰度、哈希、边缘、光流、直方图和ORB统计，并维护最近三个帧对的历史。
+% 单层GRU使用32维隐藏状态与线性二分类头；以BCE和AdamW训练120轮，学习率与权重衰减分别为2e-3和2e-3，判定阈值为0.5。
+% 正式双镜头协议中，第一个超过阈值的预测触发状态转换；检测器不访问未来帧、相机标定、人体标注或身份。
+The detector computes 20-dimensional colour, grayscale, hash, edge, optical-flow,
+histogram, and ORB statistics from consecutive RGB frames and retains the most
+recent three frame pairs. A single-layer GRU~\citep{cho2014gru} with a
+32-dimensional hidden state and a linear binary head predicts the transition
+probability. It is trained for 120 epochs using binary cross-entropy and AdamW
+with a learning rate of $2\!\times\!10^{-3}$ and weight decay of
+$2\!\times\!10^{-3}$ (seed 20260805). The decision threshold is 0.5. The
+frozen training ledger contains 408 frame pairs (216
+positive) from eight constructed patterns spanning AvatarReX, THuman, and two
+MVHuman transition settings. In the formal two-shot protocol, the first score
+above threshold triggers the state change. No future frames, camera calibration,
+body annotations, or person identities enter the detector.
+
+% 中文：三个主协议的首次触发均与标注边界一致；Harmony4D在13200帧中没有边界外阳性响应。
+The first trigger coincides with the annotated boundary in all 129 EgoBody,
+90 EgoHumans, and 88 Harmony4D streams. Harmony4D has no off-boundary positive
+response across 13,200 scored frames.
+
+\paragraph{Full-system runtime.}
+% 中文：完整系统效率表在五段固定的 150 帧 Harmony4D 多镜头输入上报告七种方法的墙钟时间。
+% 五段输入在汇总时间前固定，包含 hugging、grappling2、sword2、mma4 和 mma5；每段由两个连续出现的
+% 75 帧单目镜头组成。每个必要预测阶段均使用单张 NVIDIA L20；计时包含各阶段的新进程启动和模型加载，
+% 直到原生预测写盘。对于官方实现拆分出的多个必要阶段，报告其阶段时间之和。
+Table~\ref{tab:end-to-end-runtime} reports full-system wall time for seven
+methods on five fixed 150-frame Harmony4D multi-shot streams. The set was frozen
+before runtime aggregation and contains hugging, grappling2, sword2, mma4, and
+mma5; each input comprises two sequential 75-frame monocular shots. Every
+required prediction stage uses one NVIDIA L20, and timing includes its fresh
+process launch and model loading through native prediction serialization. For
+releases with multiple required stages, we sum their stage times.
+
+% 中文：计时包含模型构建与权重加载，以及发布流程所需的检测、分割、跟踪、相机恢复、时序/全局优化和人体恢复；
+% PromptHMR 和 TRACE 的保留运行还包含逐样本的轻量硬链接输入整理，但不进行图像解码或重新编码。
+% 数据下载与数据集解压、评测、论文格式转换和渲染不计入。FPS 使用五段共 750 帧除以总墙钟时间计算，
+% 秒数报告五段视频的均值和总体标准差。全部 35 次运行均成功，失败不会被静默剔除。
+The scope includes model construction and checkpoint loading, plus any
+detection, segmentation, tracking, camera recovery, temporal/global
+optimization, and human recovery required by the released prediction path.
+The retained PromptHMR and TRACE runs also include lightweight per-case
+hardlink staging, without image decoding or re-encoding. Dataset download and
+archive extraction, metric evaluation, paper-format conversion, and rendering
+are excluded. FPS is the micro-average $750/\sum_i t_i$; seconds report the
+mean and population standard deviation across the five clips. All 35 method--clip
+runs completed successfully; a failed run would not have been silently omitted.
+
+\input{artifacts/runtime_h4d150/end_to_end_runtime_table}
+
+% 完整七方法运行时间表置于补充材料，以下保留更细的受控开销分析。
+
+\paragraph{Controlled reconstruction cost.}
+% 中文：受控核心重建表在一段 100 帧 EgoHumans 视频上单独测量时间和显存。计时包含模型推理、输出解码、
+% 人物关联和坐标变换，但不包含图像读取、缩放和镜头检测。该受控测试用于分离镜头切换操作本身的代价，
+% 不与完整系统 FPS 混合比较。
+Table~\ref{tab:standardized-runtime-memory} separately measures the controlled
+reconstruction component on one 100-frame EgoHumans clip. Timing includes model
+inference, output decoding, person association, and world-coordinate alignment,
+but excludes image loading, resizing, and transition detection. It isolates the
+cost of the transition operation and is not mixed with the full-system FPS in
+Table~\ref{tab:end-to-end-runtime}. A single transition adds 1.066\,s (3.42\%)
+relative to Shot3R without a transition.
+
+\input{artifacts/runtime_memory/runtime_memory_table}
+
+% 中文段落标题：镜头切换数受控实验。
+% 中文：为进一步分离镜头边界数量的影响，我们将同一段固定的 150 帧 EgoBody RGB 输入重复一次，
+% 得到所有设置共享的 300 帧输出时间线，并放置 0、1、3、5 个标注镜头边界。每个边界额外计算一次边界帧，
+% 因此 C 个切换精确执行 300+C 次神经帧计算。软硬件、精度和计时范围与上述受控重建实验一致，
+% 每个设置先预热一次，再运行三次并报告中位数。
+\paragraph{Transition-count control.}
+To isolate the number of shot boundaries, we duplicate one fixed 150-frame
+EgoBody RGB input to form the same 300-output-frame timeline for every
+configuration and place 0, 1, 3, or 5 annotated transitions. Each boundary
+requires one additional evaluation of its boundary frame, so $C$ transitions
+execute exactly $300+C$ neural frames. Hardware, precision, and timing scope
+match the controlled reconstruction test above; each configuration has one
+warm-up followed by three measured repetitions, from which we report the
+median.
+
+\begin{table}[t]
+  \centering
+  % 中文图注：固定 300 个输出帧时，Shot3R 随镜头切换数的受控运行时间与峰值显存。
+  % 峰值为三次正式运行中的最大 PyTorch allocated memory。
+  \caption{Controlled \method{} runtime and peak allocation versus the
+  number of transitions, with 300 output frames. Peak is the maximum PyTorch
+  allocated memory over the three measured runs.}
+  \label{tab:transition-count-runtime}
+  \supptablesize
+  \input{tables/transition_count_runtime}
+\end{table}
+
+% 中文：0—5 次切换的中位时间为 102.6—107.3 秒，没有随切换数单调增长，峰值分配显存也没有增加。
+% 这一结果表明在本测试范围内，最多五个边界的总体吞吐差异小于实测运行波动。
+% 更多切换会将推理拆成较短片段，因此较低的峰值不能用来推断任意长序列的完整系统内存恒定。
+Median time spans 102.6--107.3\,s and does not increase monotonically with the
+number of transitions; peak allocation does not increase either. Thus, within
+this test range, up to five boundary operations do not produce a throughput
+change distinguishable from the measured execution variation. Because more
+transitions also split inference into shorter segments, the lower peaks must
+not be interpreted as constant full-system memory for arbitrarily long
+sequences.

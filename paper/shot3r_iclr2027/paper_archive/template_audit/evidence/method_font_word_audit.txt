@@ -1,0 +1,10 @@
+Audit source: v072 main.pdf, page 31, extracted with pdftohtml XML
+
+Bold table-row Shot3R:
+  ZIEEZM+NimbusRomNo9L-Medi
+
+Regular prose/header Shot3R:
+  OXIGFM+NimbusRomNo9L-Regu
+
+Result: the method macro inherits the Times-compatible Roman family, and
+\textbf{\method{}} selects the corresponding Roman bold face.

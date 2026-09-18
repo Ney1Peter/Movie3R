@@ -1,0 +1,17 @@
+\begin{table}[t]
+  \centering
+  \caption{Controlled reconstruction cost on one 100-frame EgoHumans clip
+  (NVIDIA L20, $512$, batch one, FP32; detector excluded).}
+  \label{tab:runtime-main}
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lrrr}
+    \toprule
+    Method & Time (s) $\downarrow$ & FPS $\uparrow$ & VRAM (GiB) $\downarrow$ \\
+    \midrule
+    \humanthree{} & 31.020 & 3.224 & 5.292 \\
+    \method{}, no transition & 31.125 & 3.213 & 5.359 \\
+    \method{}, one transition & 32.191 & 3.106 & 5.246 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

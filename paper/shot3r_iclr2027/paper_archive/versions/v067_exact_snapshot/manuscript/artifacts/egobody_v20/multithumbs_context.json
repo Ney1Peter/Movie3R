@@ -1,0 +1,42 @@
+{
+  "bridge3r_cs150_values": {
+    "ATE_Sim3_m": 0.016451692923067602,
+    "Accel_mm_frame2": 28.00040132651413,
+    "IDs": 0.03875968992248062,
+    "MPJPE_mm": 70.935326487181,
+    "MPVPE_mm": 78.99906810559138,
+    "W-MPJPE_mm": 258.83269644768603,
+    "WA-MPJPE_mm": 201.6903095894276
+  },
+  "bridge3r_protocol": {
+    "aggregation": "three-case recording means, then equal-weight recording macro",
+    "camera_pairs": "three fixed small/medium/extreme cross-camera cases per recording",
+    "clip": "150 frames: 75 pre-cut + 75 post-cut at 30 FPS",
+    "name": "Bridge3R-EgoBody-CS150-v1",
+    "w_wa": "one shared clip-level Sim(3) across both people"
+  },
+  "comparability": {
+    "direct_leaderboard_comparison": false,
+    "reason": "same-named metrics are literature-scale context only: exact cases, cuts, camera pairs, alignment scope and evaluator are not the Bridge3R-CS150 protocol"
+  },
+  "multi_thumbs_egobody_values": {
+    "ATE_source_defined": 0.1,
+    "Accel_mm_frame2": 6.0,
+    "IDs": 0.0,
+    "MPJPE_mm": 72.0,
+    "MPVPE_mm": 94.9,
+    "W-MPJPE_mm": 99.2,
+    "WA-MPJPE_mm": 72.8
+  },
+  "multi_thumbs_protocol": {
+    "ate_definition": "source-defined ATE; the available main-paper PDF does not establish its alignment convention or unit",
+    "description": "paper-constructed multi-shot EgoBody benchmark with its own edited clips, camera/cut sampling, optimization and evaluator",
+    "reported_runtime": "approximately 10 minutes for a 150-frame 1920x1080 video on one RTX 3090"
+  },
+  "source": {
+    "paper": "Multi-THuMBS: Multi-person Tracking of 3D Human Meshes Beyond Video Shots",
+    "path": "/data/wangzheng/iJCV-CODE/paper/Multi-THuMBS.pdf",
+    "sha256": "8e4a9f8061dc46181134980ddae3f432b39766f93bf255e6ae4553f5721189d2",
+    "table": "main-paper Tables 1 and 2, EgoBody Ours rows"
+  }
+}

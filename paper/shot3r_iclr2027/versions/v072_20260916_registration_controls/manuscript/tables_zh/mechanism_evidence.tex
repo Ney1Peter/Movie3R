@@ -1,0 +1,35 @@
+\begin{table*}[t]
+  \centering
+  \caption{EgoBody 上的对齐—状态传播 $2\!\times\!2$ 受控实验及完整 \method{}。}
+  \label{tab:mechanism-evidence-zh}
+  \scriptsize
+  \setlength{\tabcolsep}{2.0pt}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lccccrrrr}
+    \toprule
+    \multirow{2}{*}{设置} & \multirow{2}{*}{边界信号} &
+    \multicolumn{3}{c}{镜头切换操作} &
+    \multicolumn{4}{c}{EgoBody 指标} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-9}
+    & & 对齐 & \shortstack{传播\\状态} & 人物关联 &
+    W (mm) $\downarrow$ & WA (mm) $\downarrow$ & ATE (m) $\downarrow$ & IDF1 $\uparrow$ \\
+    \midrule
+    \humanthree{} & --- & \xmark & 延续 & \xmark &
+      321.1 & 233.4 & 0.124 & 0.870 \\
+    状态重新初始化 & 标注 & \xmark & 重新初始化 & \xmark &
+      752.6 & 589.4 & 1.141 & 0.834 \\
+    对齐 + 延续状态 & 标注 & \cmark & 延续 & \xmark &
+      293.3 & 227.3 & 0.082 & 0.868 \\
+    对齐 + 重新初始化状态 & 标注 & \cmark & 重新初始化 & \xmark &
+      352.8 & 267.7 & 0.017 & 0.834 \\
+    \textbf{\method{}} & 检测 & \cmark & 重新初始化 & \cmark &
+      \textbf{258.8} & \textbf{201.7} & \textbf{0.016} & \textbf{0.985} \\
+    \bottomrule
+  \end{tabular}%
+  }
+  \vspace{1pt}
+
+  \parbox{0.96\textwidth}{\footnotesize
+  三个受控设置使用标注边界，\humanthree{} 不接收边界信号。两个包含对齐的受控设置均关闭显式人物关联和人物引导共享平移，因此二者只改变对齐后传播的状态。}
+\end{table*}
+

@@ -1,0 +1,13 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrrrrrrrrrrr}
+\toprule
+Method & $N$ & Inf. fail & Eval. unavail. & Coverage & Precision & IDF1 & W & WA & MPJPE & PA & MPVPE & Accel & ATE-Sim3 & ATE-SE3 & RPE-T & RPE-R & IDs & W/WA avail.\\
+\midrule
+Human3R & 116 & 0 & 26 & 63.88\% & 68.85\% & 47.14\% & 1005.1 & 365.7 & 107.6 & 68.2 & 126.4 & 158.1 & 0.547 & 1.673 & \textemdash{} & \textemdash{} & 4.2 & 90/116; 90/116\\
+\textbf{Shot3R (ours)} & 116 & 0 & 26 & 61.57\% & 66.02\% & 57.10\% & 866.8 & 336.9 & 108.5 & 68.7 & 127.8 & 139.7 & 0.032 & 1.423 & \textemdash{} & \textemdash{} & 2.9 & 90/116; 90/116\\
+TRACE (official, subject=4) & 116 & 12 & 26 & 6.11\% & 12.23\% & 6.10\% & 2643.9 & 733.5 & 278.9 & 119.0 & 344.5 & \textemdash{} & \textemdash{} & \textemdash{} & \textemdash{} & \textemdash{} & 0.4 & 45/116; 66/116\\
+PromptHMR (official SPEC) & 116 & 67 & 26 & 5.05\% & 6.35\% & 4.92\% & 1348.8 & 507.0 & 209.3 & 100.8 & 249.3 & \textemdash{} & 1.143 & 10.945 & 0.092 & 1.176 & 0.1 & 18/116; 27/116\\
+PromptHMR (no--SPEC adapter) & 116 & 67 & 26 & 4.96\% & 6.22\% & 4.86\% & 1302.4 & 506.3 & 210.8 & 100.9 & 253.1 & \textemdash{} & 1.153 & 10.951 & 0.112 & 1.175 & 0.2 & 18/116; 27/116\\
+\bottomrule
+\end{tabular}}
+\parbox{0.99\textwidth}{\footnotesize W/WA/MPJPE/PA/MPVPE/Accel are in mm (Accel is mm/frame$^2$); IDs is switches per case. `Inf. fail' counts method inference failures, while `Eval. unavail.' denotes the 26 method-independent cases without a valid shared-world evaluator fit. Shot3R/strict-Human3R body, identity, coverage, and precision values are conditional on the remaining 90 evaluator-available cases. External rows retain all 116 cases in the denominator; their body/world values show accepted-match availability, while Coverage, Precision, IDF1, and failure counts use all cases. TRACE has no independent physical camera trajectory, so its ATE/RPE is N/A. PromptHMR SPEC and no-SPEC are separately audited branches.}

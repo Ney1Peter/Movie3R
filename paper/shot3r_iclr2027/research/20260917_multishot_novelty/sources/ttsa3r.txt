@@ -1,0 +1,1202 @@
+
+TTSA3R: Training-Free Temporal-Spatial Adaptive Persistent State for Streaming 3D Reconstruction
+ Report GitHub Issue
+ ×
+ Title:
+ Content selection saved. Describe the issue below:
+ Description:
+ Submit without GitHub
+ Submit in GitHub
+ arXiv is now an independent nonprofit!
+ Learn more
+ ×
+ Back to arXiv
+ Why HTML?
+ Report Issue
+ Back to Abstract
+ Download PDF
+Abstract
+1 Introduction
+2 Related Work
+3 Method
+3.1 Preliminaries: CUT3R Inference
+3.2 Temporal Adaptive Update Module
+3.3 Spatial Context Update Module
+4 Experiments
+4.1 Video Depth Estimation
+4.2 Camera Pose Estimation
+4.3 3D Reconstruction
+4.4 Ablation Studies and Analysis
+5 Conclusions
+References
+1 Algorithm Details
+2 Analysis of mask fusion strategies
+3 Sensitivity of τ\tau
+4 Reset Baseline Experiments
+5 Inference Efficiency Analysis
+6 Mask Behavior Analysis
+7 More Camera Trajectory Comparisons
+8 More 3D Reconstruction Visualizations
+ License: arXiv.org perpetual non-exclusive license
+arXiv:2601.22615v3 [cs.CV] 24 Jun 2026
+TTSA3R: Training-Free Temporal-Spatial Adaptive Persistent State for Streaming 3D Reconstruction
+Zhijie Zheng
+Affiliation: University of California, Davis
+Xinhao Xiang
+Affiliation: CA 95616, USA
+Jiawei Zhang
+Affiliation: {zhjzheng, xhxiang, jiwzhang}@ucdavis.edu
+Abstract
+Streaming recurrent models enable efficient 3D reconstruction by maintaining persistent state representations. However, they suffer from catastrophic forgetting over long sequences due to balancing historical information with new observations. Recent methods alleviate this by deriving adaptive signals from the attention perspective, but they operate on single dimensions without considering temporal and spatial consistency. To this end, we propose a training-free framework termed TTSA3R that leverages both temporal state evolution and spatial observation quality for adaptive state updates in 3D reconstruction. In particular, we devise a Temporal Adaptive Update Module that regulates update magnitude by analyzing temporal state evolution patterns. Then, a Spatial Contextual Update Module is introduced to localize spatial regions that require updates through observation-state alignment and scene dynamics. These complementary signals are finally fused to determine the state updating strategies. Extensive experiments show that TTSA3R achieves competitive performance on standard short-sequence benchmarks and provides substantially stronger robustness on extended sequences. On NRGBD, as sequences extend from 50 to 250 frames, TTSA3R exhibits only a 1.33× error increase, compared with over 4× degradation for CUT3R. This highlights the practical value of temporal-spatial adaptive updates for long-term reconstruction stability.
+Our code is available at https://github.com/anonus2357/ttsa3r.
+Figure 1: Catastrophic forgetting in streaming 3D reconstruction. Given a sequence of input frames, CUT3R [49] with uniform updates suffers from severe pose drift and geometric distortions over long sequences (left). TTT3R [9] improves robustness but still exhibits artifacts (middle). Our method alleviates these issues through temporal-spatial adaptive updates to achieve coherent 3D reconstruction with accurate camera poses (right).
+1 Introduction
+With the increasing demand for real-time 3D perception, understanding 3D scene structure from videos or images has become essential for applications including robotic manipulation and augmented reality, where spatial awareness enables safe interaction with the physical world. Traditional Structure-from-Motion (SfM) [44, 38, 30] and Multi-View Stereo (MVS) [21, 22, 7] pipelines obtain high-precision 3D reconstruction through iterative optimization but are limited by complex workflows and high computational cost. Recent transformer-based methods like DUSt3R [50] and VGGT [48] have demonstrated strong performance by joint reasoning across all frames with dense global attention [45], producing impressive reconstruction results on standard benchmarks. Nevertheless, the quadratic complexity of dense attention presents a fundamental limitation, as memory requirements scale quadratically with the number of frames, making these approaches impractical for the scenarios with long frame sequence inputs.
+Streaming methods [12, 11, 57, 29, 54] have emerged as an alternative by processing frames incrementally to update the learned states without revisiting previous observations, enabling online reconstruction with reduced computational overhead. Existing approaches include spatial memory-based methods that anchor observations at 3D positions (Spann3R [47], Point3R [54]) and causal transformer architectures with key-value caching (STream3R [26], StreamVGGT [62]), which achieve efficient processing but suffer from unbounded memory growth as sequences extend. Alternatively, the recurrent model CUT3R [49] maintains compact persistent states with constant memory footprint and exhibits competitive accuracy.
+However, extended sequences reveal limited length generalization due to catastrophic forgetting [28, 10, 9]. The uniform state update strategy [49] fails to prevent low-quality observations from overwriting historical information, which leads to accumulated errors and severe geometric distortions, as illustrated in Figure 1. In addition, spatial correspondence between states and observations is equally critical for determining update quality. To be specific, spatial interaction depends on both cross-attention alignment and feature consistency across frames. High cross-attention to regions with changing features indicates active geometric refinement, whereas cross-attention to regions with stable features suggests converged representations. Without jointly modeling these complementary signals, spatially irrelevant updates will corrupt stable geometry and necessary refinements may be missed. Recent methods [9, 39] alleviate this issue through attention-based adaptive update mechanisms. However, these approaches only rely on single attention signals to guide state updates, which limits fine-grained state update control.
+In this work, we present a 3D reconstruction framework TTSA3R that mitigates the aforementioned issue through explicit temporal-spatial adaptive updates. We observe that state degradation stems from indiscriminate updates that fail to distinguish between stable geometry requiring preservation and outdated regions needing refinement. Therefore, effective updates should consider the analyses of both temporal and spatial signals. Specifically, temporal state evolution reveals the magnitude of change; spatial correspondence distinguishes whether high attention indicates active refinement with feature change or stable geometry with feature consistency. To this end, our method introduces dedicated modules to analyze these complementary dimensions, thus enabling fine-grained updates that preserve valuable information while integrating necessary observations.
+To summarize, our main contributions are listed below:
+∙\bullet We propose a novel framework TTSA3R to alleviate long-term catastrophic forgetting for online streaming 3D reconstruction.
+∙\bullet We design a Temporal Adaptive Update Module (TAUM) based on state evolution analysis to track temporal state changes, which enables preservation of stable information and adapts to dynamic change.
+∙\bullet We introduce a Spatial Context Update Module (SCUM) combining cross-attention alignment and feature consistency to identify update-worthy regions, so as to prevent erroneous updates when prior observations lack spatial coverage.
+∙\bullet Extensive experiments on video depth estimation, camera pose estimation, 3D reconstruction and diverse benchmarks demonstrate that our method achieves superior performance compared to state-of-the-art methods with real-time efficiency.
+2 Related Work
+Classical and Neural Rendering 3D Reconstruction. Traditional 3D reconstruction methods employ geometric optimization to recover spatial layout. Structure-from-Motion [41, 1, 52, 34, 37, 13, 36, 31] reconstruct scenes by establishing feature correspondences and refining camera parameters and 3D points. In contrast, Simultaneous Localization and Mapping (SLAM) [16, 18, 15, 33, 4, 23] performs joint localization and mapping in real-time. More recently, neural rendering methods including NeRF[32, 6, 20, 53] and 3DGS[24, 5, 60, 58, 55, 43] achieve photorealistic synthesis through per-scene optimization. However, they cannot generalize to novel scenes without retraining. This limitation motivates the development of generalizable learning-based reconstruction methods.
+Feed-Forward 3D Reconstruction. Recent works develop feed-forward networks [50, 48, 46] for generalizable 3D reconstruction. Pairwise methods such as DUSt3R [50] directly regress pointmaps from image pairs using Vision Transformers, which eliminates the need for explicit feature matching. Building on this, MASt3R [27] extends [50] with pixel-level correspondences, while Fast3R [56] achieves real-time performance through architectural optimizations. For multi-view reconstruction, VGGT [48] processes all input frames jointly through global self-attention to model long-range dependencies across the sequence. FastVGGT [40] further reduces computational cost through a token merging strategy. Despite impressive performance, these feed-forward methods suffer from significant scalability issues. Global attention grows quadratically with the number of frames and processing all frames at once requires memory that increases linearly with sequence length. Consequently, these methods struggle with long input sequences. Therefore, streaming pipelines have emerged to enable continuous reconstruction and maintain fixed memory usage.
+Streaming Online 3D Reconstruction. Current streaming methods provide a real-time and memory-efficient scheme for 3D reconstruction. Spann3R [47] maintains an external spatial memory that stores previous 3D predictions. CUT3R [49] introduces a recurrent transformer with persistent state tokens that accumulate information from sequential observations to achieve constant memory usage. Point3R [54] proposes explicit spatial pointer memory where each pointer is assigned a 3D position and aggregates nearby scene information. STream3R [26] reformulates reconstruction as a decoder-only transformer problem using causal attention. WinT3R [29] proposes a sliding window mechanism combined with a compact camera token pool, which enables direct interaction between adjacent frames. Nevertheless, these methods employ uniform update strategies that apply identical weights to all state tokens, causing accumulated errors and information forgetting during long-sequence reconstruction. To avoid costly training budget, recent research has shifted to training-free approaches with the aim of utilizing adaptive signals during inference to alleviate this problem. TTT3R [9] derives a per-token learning rate from the alignment confidence between the persistent state and the current observation (Sec. 3.3 of [9]), which is computed independently at each timestep. MUT3R [39] aggregates multilayer self-attention to extract motion cues and suppresses dynamic regions through attention gating, and this signal is likewise confined to a single timestep. Neither method explicitly models candidate-state evolution across consecutive frames, limiting their ability to distinguish a token that needs continued refinement from one that has already stabilized. Therefore, we propose to integrate temporal dynamics and spatial context. This decoupled adaptive control balances long-term memory and noise suppression.
+3 Method
+Our framework TTSA3R maintains a fixed-size persistent state that encodes scene geometry and produces per-frame 3D reconstructions. As illustrated in Figure 2, it consists of two main components: Temporal Adaptive Update Module and Spatial Context Update Module. These two modules provide complementary signals that are integrated for fine-grained state updates.
+Figure 2: Overview of our framework. Our method performs streaming 3D reconstruction from sequential frames through adaptively updating persistent state. A shared ViT encoder extracts visual tokens from input frames, which interact with the persistent state via decoders to generate candidate states. Meanwhile, TAUM evaluates temporal state evolution across frames and SCUM measures spatial interaction between states and observations. Both modules produce complementary temporal and spatial masks, which are combined to update the persistent state at per-token granularity. Task-specific heads are utilized to predict depth maps, camera poses and pointmaps.
+3.1 Preliminaries: CUT3R Inference
+We first review the inference mechanism of CUT3R [49], which will be redesigned into an adaptive framework with the novel temporal and spatial update modules in this paper.
+The existing CUT3R model adopts a recurrent architecture that has a compact global persistent state for streaming 3D reconstruction. Given an input image sequence {I1,…,IT}\{I_{1},...,I_{T}\}, each frame ItI_{t} is first encoded by models like ViT [17] into image tokens:
+Ft=Encoder​(It),Ft∈ℝK×CF_{t}=\text{Encoder}(I_{t}),\quad F_{t}\in\mathbb{R}^{K\times C}
+(1)
+where KK denotes the number of patches and CC is the feature dimension.
+Based on encoding results, a shared-weight transformer decoder [51, 50] is used to process the current image tokens FtF_{t} together with the previous global state St−1∈ℝN×CS_{t-1}\in\mathbb{R}^{N\times C} and NN is the number of state tokens. The decoder outputs new state tokens S~t\tilde{S}_{t} and multi-layer features DtD_{t}:
+S~t,Dt=Decoder​(Ft,St−1)\tilde{S}_{t},D_{t}=\text{Decoder}(F_{t},S_{t-1})
+(2)
+where Dt=(Dt(0),…,Dt(L))D_{t}=\left(D_{t}^{(0)},...,D_{t}^{(L)}\right) contains features from different decoder layers and LL is the total decoder depth. These multi-layer features will be fed into a prediction head to obtain geometric outputs:
+Xt,Tt,conft=Head​(Dt)X_{t},T_{t},\text{conf}_{t}=\text{Head}(D_{t})
+(3)
+where XtX_{t} denotes the predicted pointmap, TtT_{t} is the camera pose and conft\text{conf}_{t} represents per-pixel confidence.
+The global persistent state is subsequently updated through masked interpolation:
+St=S~t⊙M+St−1⊙(1−M)S_{t}=\tilde{S}_{t}\odot M+S_{t-1}\odot(1-M)
+(4)
+where M∈{0,1}N×1M\in\{0,1\}^{N\times 1} is a binary mask and ⊙\odot denotes element-wise multiplication. In CUT3R, the mask is uniformly set to all ones, which directly replaces the previous state with new state tokens. Consequently, the model fully adapts to every new frame and constantly overwrites the global state. As sequences become longer, this uniform mechanism leads to catastrophic forgetting where historical information is progressively lost. Such information loss will cause geometric drift and degraded 3D reconstruction quality over extended sequences.
+3.2 Temporal Adaptive Update Module
+To mitigate the catastrophic forgetting problem [28, 10, 9], recent methods [9, 39] capture adaptive updates from attention mechanisms. However, they mainly rely on intra-frame interactions within a single timestep, which lacks the ability to track inter-frame temporal changes. To this end, we propose the Temporal Adaptive Update Module (TAUM) to explicitly model how state representations vary and derive per-token update weights from temporal dynamics.
+The core principle of TAUM is to differentiate update strategies by measuring the temporal stability from state change magnitudes across consecutive frames, which selectively preserves stable information and adapts to changing observations. Specifically, tokens that exhibit minimal variation across frames have likely converged to reliable geometric representations and benefit from preserving historical information to maintain long-term consistency. In contrast, tokens with significant variation indicate either time-varying scenes or unreliable estimates, both of which require aggressive updates to incorporate new observations.
+In this paper, we formalize this principle through a per-token temporal adaptive mask as follows. To be specific, we measure the state evolution magnitude for each token and normalize the magnitude by the global average as:
+Δt\displaystyle\Delta_{t}
+=Norm​(S~t−S~t−1)\displaystyle=\text{Norm}(\tilde{S}_{t}-\tilde{S}_{t-1})
+(5)
+Δ^t\displaystyle\hat{\Delta}_{t}
+=Δt/(1N​∑i=1NΔt(i))\displaystyle=\Delta_{t}\bigg/\left(\frac{1}{N}\sum_{i=1}^{N}\Delta_{t}^{(i)}\right)
+where Norm​(⋅)\text{Norm}(\cdot) computes the per-token L2L_{2}-norm across feature dimensions.
+This normalization is essential because it makes the change relative to the current scene. Without normalization, the same absolute change value would have inconsistent semantic meanings across scenes with varying motion or geometric complexity. Then, we apply sigmoid gating to obtain the temporal mask as:
+Mtemp=σ⁡(Δ^t−τ)M_{\text{temp}}=\sigma(\hat{\Delta}_{t}-\tau)
+(6)
+where τ\tau is a threshold parameter. We set τ=1.5\tau=1.5 for all experiments, with sensitivity analysis provided in reference of Supp. Sec. 3.
+Sigmoid-based gating provides smooth and differentiable control over update intensities. Tokens with normalized changes above τ\tau incorporate new information, while tokens below τ\tau retain their historical representations. Through this token-level adaptive mechanism, our design effectively alleviates the forgetting issue while maintaining the model’s ability to capture dynamic scene changes.
+3.3 Spatial Context Update Module
+While TAUM mitigates temporal forgetting, it relies purely on temporal state tracking and neglects the spatial correspondence between states and observations. For instance, a token may change minimally across frames because prior views lacked coverage, yet current views provide new spatial information. Therefore, we propose the Spatial Context Update Module (SCUM) to provide complementary spatial awareness, as illustrated in Figure 3.
+Specifically, our key insight is that spatial interaction reveals update necessity through two complementary signals. Cross-attention captures alignment confidence [9] between state tokens and image features. Additionally, feature divergence across consecutive frames distinguishes scene changes. Thus, high alignment confidence to regions undergoing substantial scene changes indicates active geometric refinement that requires updates. Otherwise, states will preserve their current representations.
+Figure 3: Illustration of Spatial Context Update Module. Spatial update masks are generated by combining cosine dissimilarity and cross-attention signals through multiplication and sigmoid activation.
+To achieve this, feature divergence is measured via cosine dissimilarity between consecutive frames as:
+Dt=1−CosSim​(Ft,Ft−1)D_{t}=1-\text{CosSim}(F_{t},F_{t-1})
+(7)
+where FtF_{t} denotes image features at timestep tt.
+In the decoder cross-attention, state tokens St−1S_{t-1} are used as queries, while image tokens FtF_{t} are used as keys and values.
+Cross-attention maps from the decoder layers are aggregated to quantify how strongly each state token engages with image observations as:
+At=1L​∑l=1L|CrossAttn(l)​(St−1,Ft)|A_{t}=\frac{1}{L}\sum_{l=1}^{L}|\text{CrossAttn}^{(l)}({S}_{t-1},F_{t})|
+(8)
+where LL is the number of decoder layers. The spatial interaction is computed as the element-wise product of attention and dissimilarity, followed by max pooling across image tokens and sigmoid gating to derive the spatial mask as:
+Mspat=σ⁡(m​a​xspat​(At⊙Dt))M_{\text{spat}}=\sigma(max_{\text{spat}}(A_{t}\odot D_{t}))
+(9)
+The element-wise product ⊙\odot ensures high activation only when both attention and divergence are substantial. Spatial max pooling m​a​xspatmax_{\text{spat}} exploits the observation that each state token typically corresponds to specific image regions. Sigmoid activation normalizes the mask to [0,1][0,1]. SCUM thereby updates tokens that engage with evolving scene geometry while preserving those that correspond to stable regions. This provides spatial awareness that complements TAUM’s temporal perspective.
+Finally, in order to integrate these complementary perspectives, we combine TAUM and SCUM to obtain the adaptive mask as:
+Mfinal=Mtemp⊙MspatM_{\text{final}}=M_{\text{temp}}\odot M_{\text{spat}}
+(10)
+This fusion ensures updates only when both temporal dynamics and spatial correspondence are met. We compare different fusion strategies in Supp. Sec. 2.
+Then, the global state update is illustrated as:
+St=S~t⊙Mfinal+St−1⊙(1−Mfinal)S_{t}=\tilde{S}_{t}\odot M_{\text{final}}+S_{t-1}\odot(1-M_{\text{final}})
+(11)
+By extracting complementary temporal and spatial signals from internal decoder representations, TTSA3R alleviates catastrophic forgetting in streaming 3D reconstruction. This enables the model to maintain long-term consistency across extended sequences while adapting to new observations.
+4 Experiments
+Implementation Details. We conduct experiments on three tasks including video depth estimation, camera pose estimation, and 3D reconstruction. Following the common practice [49, 9, 62], we assess video depth on Sintel [3], Bonn [35], and KITTI [19] datasets, where we report absolute relative error (Abs Rel) and the percentage of pixels with relative error below 1.25 (δ<1.25\delta<1.25). We then evaluate camera pose estimation on Sintel, TUM-dynamics [42], and ScanNet [14] datasets, measuring Absolute Translation Error (ATE), Relative Translation Error (RPEtrans{}_{\text{trans}}), and Relative Rotation Error (RPErot{}_{\text{rot}}) after Sim(3) alignment with ground truth. For 3D reconstruction, we use NRGBD [2] dataset and report accuracy (Acc) as well as normal consistency (NC). We compare against methods grouped by different processing paradigms. Optimization-based methods like DUSt3R-GA [50], MASt3R-GA [27], and MonST3R-GA [59] perform global refinement over images. Full-attention methods such as Easi3R [8] and VGGT [48] process all frames jointly via bidirectional attention. Streaming methods including Spann3R [47], Point3R [54], CUT3R [49], TTT3R [9], STream3R [26], StreamVGGT [62], and MUT3R [39] maintain frame-by-frame inference. All experiments are performed on a single NVIDIA A6000 GPU.
+Table 1: Video Depth Estimation on standard short sequences. We evaluate scale-invariant and metric depth accuracy on Sintel [3], Bonn [35], and KITTI [19] datasets. Methods that require global alignment are denoted as ”GA”. ”Optim”, ”Stream”, and ”FA” refer to optimization-based, streaming, and full-attention methods, respectively. The best and second best results are marked in bold and underline.
+Alignment
+Method
+Type
+Sintel
+Bonn
+KITTI
+Abs Rel ↓\downarrow
+δ<1.25↑\delta<1.25\uparrow
+Abs Rel ↓\downarrow
+δ<1.25↑\delta<1.25\uparrow
+Abs Rel ↓\downarrow
+δ<1.25↑\delta<1.25\uparrow
+Per-sequence scale
+DUSt3R-GA [50]
+Optim
+0.656
+45.2
+0.155
+83.3
+0.144
+81.3
+MASt3R-GA [27]
+Optim
+0.641
+43.9
+0.252
+70.1
+0.183
+74.5
+MonST3R-GA [59]
+Optim
+0.378
+55.8
+0.067
+96.3
+0.168
+74.4
+Easi3R [8]
+FA
+0.377
+55.9
+0.059
+97.0
+0.102
+91.2
+VGGT [48]
+FA
+0.287
+66.1
+0.055
+97.1
+0.070
+96.5
+Spann3R [47]
+Stream
+0.622
+42.6
+0.144
+81.3
+0.198
+73.7
+Point3R [54]
+Stream
+0.452
+48.9
+0.060
+96.0
+0.136
+84.2
+CUT3R [49]
+Stream
+0.421
+47.9
+0.078
+93.7
+0.118
+88.1
+TTT3R [9]
+Stream
+0.405
+48.9
+0.069
+95.4
+0.114
+90.4
+STream3Rα [26]
+Stream
+0.478
+51.1
+0.075
+94.1
+0.116
+89.6
+StreamVGGT [62]
+Stream
+0.323
+65.7
+0.059
+97.2
+0.173
+72.1
+MUT3R [39]
+Stream
+0.451
+48.6
+0.070
+96.2
+0.116
+88.3
+Ours
+Stream
+0.401
+50.0
+0.064
+96.5
+0.110
+91.2
+Metric scale
+MASt3R-GA [27]
+Optim
+1.022
+14.3
+0.272
+70.6
+0.467
+15.2
+CUT3R [49]
+Stream
+1.029
+23.8
+0.103
+88.5
+0.122
+85.5
+Point3R [54]
+Stream
+0.777
+17.1
+0.137
+94.7
+0.191
+73.8
+TTT3R [9]
+Stream
+0.977
+24.5
+0.090
+94.2
+0.110
+89.1
+STream3Rα [26]
+Stream
+1.041
+21.0
+0.084
+94.4
+0.234
+57.6
+MUT3R [39]
+Stream
+0.820
+25.2
+0.086
+96.0
+0.125
+85.8
+Ours
+Stream
+0.960
+24.6
+0.079
+96.6
+0.111
+88.9
+4.1 Video Depth Estimation
+We evaluate video depth on both short and long sequences. Table 1 shows the results on standard benchmarks under two evaluation protocols, which are per-sequence scale and metric scale directly comparing absolute depth values. Under per-sequence scale, our method TTSA3R achieves the best performance among streaming methods on KITTI [19] dataset while remaining competitive on the other two datasets. Moreover, TTSA3R demonstrates superior performance on Bonn [35] dataset and approaches the performance of full-attention pipelines based on metric scale, narrowing the gap between online and offline methods.
+Figure 4: Video depth estimation (long sequences) using metric depth accuracy on Bonn [35] dataset.
+Figure 4 illustrates how video depth evolves as input sequence length increases from 50 to 500 frames. It can be seen that CUT3R [49] exhibits rapid performance degradation beyond 200 frames due to catastrophic forgetting. TTT3R [9] presents improved stability through confidence guided adaptation but still suffers from gradual drift in longer sequences. On the contrary, TTSA3R obtains more robust performance throughout the varying sequences with minor degradation. This illustrates that our temporal-spatial fusion effectively reduces long-term error accumulation and preserves geometric fidelity.
+Table 2: Camera Pose Estimation on standard short sequences. We evaluate three metrics on Sintel [3], TUM-dynamics [42], and ScanNet [14] datasets .
+Method
+Type
+Sintel
+TUM-dynamics
+ScanNet
+ATE ↓\downarrow
+RPE trans ↓\downarrow
+RPE rot ↓\downarrow
+ATE ↓\downarrow
+RPE trans ↓\downarrow
+RPE rot ↓\downarrow
+ATE ↓\downarrow
+RPE trans ↓\downarrow
+RPE rot ↓\downarrow
+Robust-CVD [25]
+Optim
+0.360
+0.154
+3.443
+0.153
+0.026
+3.528
+0.227
+0.064
+7.374
+CasualSAM [61]
+Optim
+0.141
+0.035
+0.615
+0.071
+0.010
+1.712
+0.158
+0.034
+1.618
+DUSt3R-GA [50]
+Optim
+0.417
+0.250
+5.796
+0.083
+0.017
+3.567
+0.081
+0.028
+0.784
+MASt3R-GA [27]
+Optim
+0.185
+0.060
+1.496
+0.038
+0.012
+0.448
+0.078
+0.020
+0.475
+MonST3R-GA [59]
+Optim
+0.111
+0.044
+0.869
+0.098
+0.019
+0.935
+0.077
+0.018
+0.529
+Easi3R [8]
+FA
+0.110
+0.042
+0.758
+0.105
+0.022
+1.064
+0.061
+0.017
+0.525
+VGGT [48]
+FA
+0.172
+0.062
+0.471
+0.012
+0.010
+0.310
+0.035
+0.015
+0.377
+Spann3R [47]
+Stream
+0.329
+0.110
+4.471
+0.056
+0.021
+0.591
+0.096
+0.023
+0.661
+CUT3R [49]
+Stream
+0.213
+0.066
+0.621
+0.046
+0.015
+0.473
+0.099
+0.022
+0.600
+Point3R [54]
+Stream
+0.351
+0.128
+1.822
+0.075
+0.029
+0.642
+0.106
+0.035
+1.946
+TTT3R [9]
+Stream
+0.210
+0.090
+0.722
+0.028
+0.013
+0.380
+0.064
+0.021
+0.637
+MUT3R [39]
+Stream
+0.228
+0.062
+0.751
+0.042
+0.015
+0.445
+-
+-
+-
+Ours
+Stream
+0.210
+0.085
+0.765
+0.026
+0.012
+0.372
+0.057
+0.020
+0.588
+4.2 Camera Pose Estimation
+To validate the effectiveness of our method, we next conduct experiments on camera pose estimation. Table 2 presents the quantitative results across Sintel [3], TUM-dynamics [42], and ScanNet [14] datasets. It is shown that TTSA3R achieves the lowest ATE among streaming methods on TUM-dynamics and ScanNet datasets.
+It outperforms optimization-based pipelines like DUSt3R-GA [50] with global alignment and matches full-attention baselines such as Easi3R [8]. Besides, we also evaluate pose tracking on sequences up to 800 frames for long-term stability assessment, as illustrated in Figure 5. Across both datasets, our method TTSA3R maintains significantly lower pose error and surpasses the other two methods.
+Figure 5: Camera pose estimation (long sequences) on TUM-dynamics [42] (left) and ScanNet [14] (right) datasets.
+4.3 3D Reconstruction
+We further evaluate 3D reconstruction on NRGBD [2] dataset, as shown in Figure 6. Our method exhibits only 1.33x error increase compared to over 4x degradation in baseline CUT3R [49] as sequences extend from 50 to 250 frames. Compared to TTT3R [9], our method shows better performance on all sequence lengths, demonstrating more effective resistance to catastrophic forgetting.
+Moreover, qualitative visualizations of scene reconstruction are provided in Figure 7. It is clear that CUT3R produces severely distorted geometry and less accurate camera trajectory. Although TTT3R mitigates these issues and improves reconstruction quality, the residual artifacts and surface inconsistencies remain visible. Instead, our method generates more coherent reconstruction results with accurate scene structure. This shows that our proposed framework with selective state update strategy successfully achieves the balance between preserving historical information and incorporating new observations.
+Figure 6: 3D reconstruction (long sequences) on NRGBD [2] dataset.
+Figure 7: Qualitative comparison of 3D reconstruction. Our method can produce more complete and accurate reconstructions. Please refer to the Supp. Sec. 8 for more visualization comparisons.
+Figure 8: Qualitative comparison of predicted camera trajectories on TUM-dynamics [42] dataset. The trajectories are visualized along the two axes with maximum variance. Gray dashed lines show ground truth and blue lines show predictions.
+Table 3: Ablation studies of each component. We evaluate video depth estimation on Bonn [35] dataset and camera pose estimation on TUM-dynamics [42] dataset.
+Method
+Bonn
+TUM-dynamics
+Abs Rel ↓\downarrow
+δ<1.25↑\delta<1.25\uparrow
+ATE ↓\downarrow
+RPE rot ↓\downarrow
+Baseline
+0.078
+93.7
+0.046
+0.473
+TAUM
+✓
+0.066
+95.9
+0.028
+0.375
+SCUM
+✓
+0.074
+94.1
+0.040
+0.415
+Ours
+✓
+✓
+0.064
+96.5
+0.026
+0.372
+4.4 Ablation Studies and Analysis
+Effect of Each Component. To assess the contribution of each module, we conduct ablation studies on Bonn [35] and TUM-dynamics [42] datasets using CUT3R [49] as the baseline. As shown in Table 3, when we only add TAUM to the baseline, it achieves 0.066 Abs Rel on video depth and 0.028 ATE on camera pose.
+This indicates that TAUM effectively mitigates error accumulation by adaptively controlling update magnitude based on temporal state evolution, which is particularly beneficial for maintaining trajectory consistency in pose estimation. Adding SCUM alone obtains 0.074 Abs Rel and 0.040 ATE, respectively. This shows that SCUM identifies spatial changing regions for updates based on observation-state alignment, preventing uniform updates across areas. When both modules are integrated into the framework, TTSA3R achieves the best performance with 0.064 Abs Rel and 0.026 ATE. This shows that temporal-spatial adaptive updates effectively alleviate catastrophic forgetting by selectively refining state representation.
+Additional comparisons with periodic state-reset baselines and inference-efficiency analyses are provided in reference to Supp. Secs. 4 and 5.
+Camera Trajectory Analysis. We visualize predicted camera trajectories on TUM-dynamics [42] dataset to analyze pose estimation. Figure 8 presents two representative sequences from indoor scenes with moving persons. It can be seen that the trajectories of CUT3R [49] reveal progressive drift accumulation during continuous motion and abrupt deviations during rapid viewpoint changes. Though recent approaches like TTT3R [9] reduce drift magnitude, noticeable deviations from the reference path remain. These observations reflect how existing recurrent methods lack effective adaptive mechanisms that respond to varying observations and temporal dynamics. Our predicted trajectories closely align with the reference path throughout the sequence.
+The consistent accuracy stems from jointly evaluating temporal state evolution and spatial observation quality during updates, which prevents error propagation in both gradual drift and abrupt viewpoint changes, thus enabling more robust trajectory estimation. Additional comparisons on ScanNet are provided in Supp. Sec. 7.
+5 Conclusions
+In this work, we present a training-free 3D reconstruction framework TTSA3R that mitigates catastrophic forgetting of recurrent models for streaming reconstruction through an adaptive temporal-spatial mechanism. Specifically, the key contribution is a dual-module design that models temporal state dynamics and spatial correspondence, enabling complementary selective updates based on cross-frame evolution and observation quality.
+Thus, this approach enables fine-grained control over memory persistence with real-time inference efficiency. Extensive experiments demonstrate that our method achieves the largest gains on extended sequences and remains competitive with state-of-the-art methods on standard short-sequence benchmarks.
+Limitations. Our method is optimized for extended streaming scenarios with adequate visual overlap. Performance degrades under severe occlusions where correspondence signals become unreliable. Additionally, as a training-free design, the adaptive mechanism is limited by the representational capacity of the base recurrent architecture.
+References
+[1]
+S. Agarwal, Y. Furukawa, N. Snavely, I. Simon, B. Curless, S. M. Seitz, and R. Szeliski (2011)
+Building rome in a day.
+Communications of the ACM 54 (10), pp. 105–112.
+Cited by: §2.
+[2]
+D. Azinović, R. Martin-Brualla, D. B. Goldman, M. Nießner, and J. Thies (2022)
+Neural rgb-d surface reconstruction.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 6290–6301.
+Cited by: Figure 6,
+Figure 6,
+§4.3,
+§4.
+[3]
+D. J. Butler, J. Wulff, G. B. Stanley, and M. J. Black (2012)
+A naturalistic open source movie for optical flow evaluation.
+In European conference on computer vision,
+pp. 611–625.
+Cited by: §4.2,
+Table 1,
+Table 1,
+Table 2,
+Table 2,
+§4.
+[4]
+C. Cadena, L. Carlone, H. Carrillo, Y. Latif, D. Scaramuzza, J. Neira, I. Reid, and J. J. Leonard (2017)
+Past, present, and future of simultaneous localization and mapping: toward the robust-perception age.
+IEEE Transactions on robotics 32 (6), pp. 1309–1332.
+Cited by: §2.
+[5]
+D. Charatan, S. L. Li, A. Tagliasacchi, and V. Sitzmann (2024)
+Pixelsplat: 3d gaussian splats from image pairs for scalable generalizable 3d reconstruction.
+In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition,
+pp. 19457–19467.
+Cited by: §2.
+[6]
+H. Chen, J. Gu, A. Chen, W. Tian, Z. Tu, L. Liu, and H. Su (2023)
+Single-stage diffusion nerf: a unified approach to 3d generation and reconstruction.
+In Proceedings of the IEEE/CVF international conference on computer vision,
+pp. 2416–2425.
+Cited by: §2.
+[7]
+R. Chen, S. Han, J. Xu, and H. Su (2019)
+Point-based multi-view stereo network.
+In Proceedings of the IEEE/CVF international conference on computer vision,
+pp. 1538–1547.
+Cited by: §1.
+[8]
+X. Chen, Y. Chen, Y. Xiu, A. Geiger, and A. Chen (2025)
+Easi3r: estimating disentangled motion from dust3r without training.
+arXiv preprint arXiv:2503.24391.
+Cited by: §4.2,
+Table 1,
+Table 2,
+§4.
+[9]
+X. Chen, Y. Chen, Y. Xiu, A. Geiger, and A. Chen (2025)
+Ttt3r: 3d reconstruction as test-time training.
+arXiv preprint arXiv:2509.26645.
+Cited by: Figure 1,
+Figure 1,
+§1,
+§2,
+§3.2,
+§3.3,
+§4.1,
+§4.3,
+§4.4,
+Table 1,
+Table 1,
+Table 2,
+§4,
+Table 4,
+§5,
+§7,
+§8.
+[10]
+X. Chen, T. Xia, S. Xu, J. Yang, J. Chai, and Z. Cheng (2025)
+SAB3R: semantic-augmented backbone in 3d reconstruction.
+arXiv preprint arXiv:2506.02112.
+Cited by: §1,
+§3.2.
+[11]
+Y. Chen, X. Chen, Y. Xue, A. Chen, Y. Xiu, and G. Pons-Moll (2025)
+Human3r: everyone everywhere all at once.
+arXiv preprint arXiv:2510.06219.
+Cited by: §1.
+[12]
+Z. Chen, M. Qin, T. Yuan, Z. Liu, and H. Zhao (2025)
+Long3r: long sequence streaming 3d reconstruction.
+In Proceedings of the IEEE/CVF International Conference on Computer Vision,
+pp. 5273–5284.
+Cited by: §1.
+[13]
+H. Cui, X. Gao, S. Shen, and Z. Hu (2017)
+HSfM: hybrid structure-from-motion.
+In Proceedings of the IEEE conference on computer vision and pattern recognition,
+pp. 1212–1221.
+Cited by: §2.
+[14]
+A. Dai, A. X. Chang, M. Savva, M. Halber, T. Funkhouser, and M. Nießner (2017)
+Scannet: richly-annotated 3d reconstructions of indoor scenes.
+In Proceedings of the IEEE conference on computer vision and pattern recognition,
+pp. 5828–5839.
+Cited by: Figure 1,
+Figure 1,
+Figure 5,
+Figure 5,
+§4.2,
+Table 2,
+Table 2,
+§4,
+§7.
+[15]
+A. J. Davison, I. D. Reid, N. D. Molton, and O. Stasse (2007)
+MonoSLAM: real-time single camera slam.
+IEEE transactions on pattern analysis and machine intelligence 29 (6), pp. 1052–1067.
+Cited by: §2.
+[16]
+Davison (2003)
+Real-time simultaneous localisation and mapping with a single camera.
+In Proceedings Ninth IEEE International Conference on Computer Vision,
+pp. 1403–1410.
+Cited by: §2.
+[17]
+A. Dosovitskiy (2020)
+An image is worth 16x16 words: transformers for image recognition at scale.
+arXiv preprint arXiv:2010.11929.
+Cited by: §3.1.
+[18]
+H. Durrant-Whyte and T. Bailey (2006)
+Simultaneous localization and mapping: part i.
+IEEE robotics & automation magazine 13 (2), pp. 99–110.
+Cited by: §2.
+[19]
+A. Geiger, P. Lenz, C. Stiller, and R. Urtasun (2013)
+Vision meets robotics: the kitti dataset.
+The international journal of robotics research 32 (11), pp. 1231–1237.
+Cited by: §4.1,
+Table 1,
+Table 1,
+§4,
+Table 4,
+Table 4.
+[20]
+Y. Guo, A. Kumar, C. Zhao, R. Wang, X. Huang, and L. Ren (2024)
+Sup-nerf: a streamlined unification of pose estimation and nerf for monocular 3d object reconstruction.
+In European Conference on Computer Vision,
+pp. 37–53.
+Cited by: §2.
+[21]
+M. Habbecke and L. Kobbelt (2007)
+A surface-growing approach to multi-view stereo reconstruction.
+In 2007 IEEE Conference on Computer Vision and Pattern Recognition,
+pp. 1–8.
+Cited by: §1.
+[22]
+B. Hepp, M. Nießner, and O. Hilliges (2018)
+Plan3d: viewpoint and trajectory optimization for aerial multi-view stereo reconstruction.
+ACM Transactions on Graphics (TOG) 38 (1), pp. 1–17.
+Cited by: §1.
+[23]
+H. Huang, L. Li, H. Cheng, and S. Yeung (2024)
+Photo-slam: real-time simultaneous localization and photorealistic mapping for monocular stereo and rgb-d cameras.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 21584–21593.
+Cited by: §2.
+[24]
+B. Kerbl, G. Kopanas, T. Leimkühler, and G. Drettakis (2023)
+3D gaussian splatting for real-time radiance field rendering.
+ACM Transactions on Graphics 42 (4), pp. 1–14.
+Cited by: §2.
+[25]
+J. Kopf, X. Rong, and J. Huang (2021)
+Robust consistent video depth estimation.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 1611–1621.
+Cited by: Table 2.
+[26]
+Y. Lan, Y. Luo, F. Hong, S. Zhou, H. Chen, Z. Lyu, S. Yang, B. Dai, C. C. Loy, and X. Pan (2025)
+Stream3r: scalable sequential 3d reconstruction with causal transformer.
+arXiv preprint arXiv:2508.10893.
+Cited by: §1,
+§2,
+Table 1,
+Table 1,
+§4.
+[27]
+V. Leroy, Y. Cabon, and J. Revaud (2024)
+Grounding image matching in 3d with mast3r.
+In European Conference on Computer Vision,
+pp. 71–91.
+Cited by: §2,
+Table 1,
+Table 1,
+Table 2,
+§4.
+[28]
+F. Li, P. Hu, Q. Song, and R. Huang (2024)
+Incremental 3d reconstruction through a hybrid explicit-and-implicit representation.
+In 2024 IEEE International Conference on Robotics and Automation (ICRA),
+pp. 15121–15127.
+Cited by: §1,
+§3.2.
+[29]
+Z. Li, J. Zhou, Y. Wang, H. Guo, W. Chang, Y. Zhou, H. Zhu, J. Chen, C. Shen, and T. He (2025)
+WinT3R: window-based streaming reconstruction with camera token pool.
+arXiv preprint arXiv:2509.05296.
+Cited by: §1,
+§2.
+[30]
+P. Lindenberger, P. Sarlin, V. Larsson, and M. Pollefeys (2021)
+Pixel-perfect structure-from-motion with featuremetric refinement.
+In Proceedings of the IEEE/CVF international conference on computer vision,
+pp. 5987–5997.
+Cited by: §1.
+[31]
+S. Liu, Y. Gao, T. Zhang, R. Pautrat, J. L. Schönberger, V. Larsson, and M. Pollefeys (2024)
+Robust incremental structure-from-motion with hybrid features.
+In European Conference on Computer Vision,
+pp. 249–269.
+Cited by: §2.
+[32]
+B. Mildenhall, P. P. Srinivasan, M. Tancik, J. T. Barron, R. Ramamoorthi, and R. Ng (2021)
+Nerf: representing scenes as neural radiance fields for view synthesis.
+Communications of the ACM 65 (1), pp. 99–106.
+Cited by: §2.
+[33]
+R. A. Newcombe, S. J. Lovegrove, and A. J. Davison (2011)
+DTAM: dense tracking and mapping in real-time.
+In 2011 international conference on computer vision,
+pp. 2320–2327.
+Cited by: §2.
+[34]
+K. Ni, D. Steedly, and F. Dellaert (2007)
+Out-of-core bundle adjustment for large-scale 3d reconstruction.
+In 2007 IEEE 11th International Conference on Computer Vision,
+pp. 1–8.
+Cited by: §2.
+[35]
+E. Palazzolo, J. Behley, P. Lottes, P. Giguere, and C. Stachniss (2019)
+ReFusion: 3d reconstruction in dynamic environments for rgb-d cameras exploiting residuals.
+In 2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS),
+pp. 7855–7862.
+Cited by: Table 1,
+Table 1,
+§2,
+Figure 4,
+Figure 4,
+§4.1,
+§4.4,
+Table 1,
+Table 1,
+Table 3,
+Table 3,
+§4.
+[36]
+C. Pinard, L. Chevalley, A. Manzanera, and D. Filliat (2018)
+Learning structure-from-motion from motion.
+In Proceedings of the European Conference on Computer Vision (ECCV) Workshops,
+pp. 0–0.
+Cited by: §2.
+[37]
+J. L. Schonberger and J. Frahm (2016)
+Structure-from-motion revisited.
+In Proceedings of the IEEE conference on computer vision and pattern recognition,
+pp. 4104–4113.
+Cited by: §2.
+[38]
+R. Shah, A. Deshpande, and P. Narayanan (2014)
+Multistage sfm: revisiting incremental structure from motion.
+In 2014 2nd International Conference on 3D Vision,
+Vol. 1, pp. 417–424.
+Cited by: §1.
+[39]
+G. Shen, T. Deng, X. Qin, N. Wang, J. Wang, Y. Wang, Y. Chen, H. Wang, and J. Wang (2025)
+MUT3R: motion-aware updating transformer for dynamic 3d reconstruction.
+arXiv preprint arXiv:2512.03939.
+Cited by: §1,
+§2,
+§3.2,
+Table 1,
+Table 1,
+Table 2,
+§4.
+[40]
+Y. Shen, Z. Zhang, Y. Qu, X. Zheng, J. Ji, S. Zhang, and L. Cao (2025)
+Fastvggt: training-free acceleration of visual geometry transformer.
+arXiv preprint arXiv:2509.02560.
+Cited by: §2.
+[41]
+N. Snavely, S. M. Seitz, and R. Szeliski (2006)
+Photo tourism: exploring photo collections in 3d.
+In ACM siggraph 2006 papers,
+pp. 835–846.
+Cited by: §2.
+[42]
+J. Sturm, N. Engelhard, F. Endres, W. Burgard, and D. Cremers (2012)
+A benchmark for the evaluation of rgb-d slam systems.
+In 2012 IEEE/RSJ international conference on intelligent robots and systems,
+pp. 573–580.
+Cited by: Figure 5,
+Figure 5,
+Figure 8,
+Figure 8,
+§4.2,
+§4.4,
+§4.4,
+Table 2,
+Table 2,
+Table 3,
+Table 3,
+§4.
+[43]
+J. Tang, Y. Gao, D. Yang, L. Yan, Y. Yue, and Y. Yang (2025)
+Dronesplat: 3d gaussian splatting for robust 3d reconstruction from in-the-wild drone imagery.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 833–843.
+Cited by: §2.
+[44]
+L. Torresani, A. Hertzmann, and C. Bregler (2008)
+Nonrigid structure-from-motion: estimating shape and motion with hierarchical priors.
+IEEE transactions on pattern analysis and machine intelligence 30 (5), pp. 878–892.
+Cited by: §1.
+[45]
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin (2017)
+Attention is all you need.
+Advances in neural information processing systems 30.
+Cited by: §1.
+[46]
+C. B. Wang, C. Schmidt, J. Piekenbrinck, and B. Leibe (2025)
+Faster vggt with block-sparse global attention.
+arXiv preprint arXiv:2509.07120.
+Cited by: §2.
+[47]
+H. Wang and L. Agapito (2024)
+3d reconstruction with spatial memory.
+arXiv preprint arXiv:2408.16061.
+Cited by: §1,
+§2,
+Table 1,
+Table 2,
+§4,
+Table 4,
+§5.
+[48]
+J. Wang, M. Chen, N. Karaev, A. Vedaldi, C. Rupprecht, and D. Novotny (2025)
+Vggt: visual geometry grounded transformer.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 5294–5306.
+Cited by: §1,
+§2,
+Table 1,
+Table 2,
+§4.
+[49]
+Q. Wang, Y. Zhang, A. Holynski, A. A. Efros, and A. Kanazawa (2025)
+Continuous 3d perception model with persistent state.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 10510–10522.
+Cited by: Figure 1,
+Figure 1,
+§1,
+§1,
+§2,
+§3.1,
+§4.1,
+§4.3,
+§4.4,
+§4.4,
+Table 1,
+Table 1,
+Table 2,
+§4,
+Table 4,
+§5,
+§7,
+§8.
+[50]
+S. Wang, V. Leroy, Y. Cabon, B. Chidlovskii, and J. Revaud (2024)
+Dust3r: geometric 3d vision made easy.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+pp. 20697–20709.
+Cited by: §1,
+§2,
+§3.1,
+§4.2,
+Table 1,
+Table 2,
+§4.
+[51]
+P. Weinzaepfel, V. Leroy, T. Lucas, R. Brégier, Y. Cabon, V. Arora, L. Antsfeld, B. Chidlovskii, G. Csurka, and J. Revaud (2022)
+Croco: self-supervised pre-training for 3d vision tasks by cross-view completion.
+Advances in Neural Information Processing Systems 35, pp. 3502–3516.
+Cited by: §3.1.
+[52]
+C. Wu (2013)
+Towards linear-time incremental structure from motion.
+In 2013 International Conference on 3D Vision-3DV 2013,
+pp. 127–134.
+Cited by: §2.
+[53]
+R. Wu, B. Mildenhall, P. Henzler, K. Park, R. Gao, D. Watson, P. P. Srinivasan, D. Verbin, J. T. Barron, B. Poole, et al. (2024)
+Reconfusion: 3d reconstruction with diffusion priors.
+In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition,
+pp. 21551–21561.
+Cited by: §2.
+[54]
+Y. Wu, W. Zheng, J. Zhou, and J. Lu (2025)
+Point3R: streaming 3d reconstruction with explicit spatial pointer memory.
+arXiv preprint arXiv:2507.02863.
+Cited by: §1,
+§2,
+Table 1,
+Table 1,
+Table 2,
+§4,
+Table 4,
+§5.
+[55]
+H. Xiang, X. Li, K. Cheng, X. Lai, W. Zhang, Z. Liao, L. Zeng, and X. Liu (2025)
+Gaussianroom: improving 3d gaussian splatting with sdf guidance and monocular cues for indoor scene reconstruction.
+In 2025 IEEE International Conference on Robotics and Automation (ICRA),
+pp. 2686–2693.
+Cited by: §2.
+[56]
+J. Yang, A. Sax, K. J. Liang, M. Henaff, H. Tang, A. Cao, J. Chai, F. Meier, and M. Feiszli (2025)
+Fast3r: towards 3d reconstruction of 1000+ images in one forward pass.
+In Proceedings of the Computer Vision and Pattern Recognition Conference,
+pp. 21924–21935.
+Cited by: §2.
+[57]
+Y. Yuan, Q. Shen, S. Wang, X. Yang, and X. Wang (2025)
+Test3r: learning to reconstruct 3d at test time.
+In The Thirty-ninth Annual Conference on Neural Information Processing Systems,
+Cited by: §1.
+[58]
+Z. Yuan, H. Huang, Z. Xiong, D. Wang, and G. Yang (2025)
+Robust and efficient 3d gaussian splatting for urban scene reconstruction.
+In Proceedings of the IEEE/CVF International Conference on Computer Vision,
+pp. 26209–26219.
+Cited by: §2.
+[59]
+J. Zhang, C. Herrmann, J. Hur, V. Jampani, T. Darrell, F. Cole, D. Sun, and M. Yang (2024)
+Monst3r: a simple approach for estimating geometry in the presence of motion.
+arXiv preprint arXiv:2410.03825.
+Cited by: Table 1,
+Table 2,
+§4.
+[60]
+K. Zhang, S. Bi, H. Tan, Y. Xiangli, N. Zhao, K. Sunkavalli, and Z. Xu (2024)
+Gs-lrm: large reconstruction model for 3d gaussian splatting.
+In European Conference on Computer Vision,
+pp. 1–19.
+Cited by: §2.
+[61]
+Z. Zhang, F. Cole, Z. Li, M. Rubinstein, N. Snavely, and W. T. Freeman (2022)
+Structure and motion from casual videos.
+In European Conference on Computer Vision,
+pp. 20–37.
+Cited by: Table 2.
+[62]
+D. Zhuo, W. Zheng, J. Guo, Y. Wu, J. Zhou, and J. Lu (2025)
+Streaming 4d visual geometry transformer.
+arXiv preprint arXiv:2507.11539.
+Cited by: §1,
+Table 1,
+§4.
+Supplementary Material
+1 Algorithm Details
+In Algorithm 1, we describe the inference procedure of TTSA3R. The framework processes frames sequentially, where the decoder generates candidate states from encoded features and the previous persistent state. For frames beyond the first, TAUM and SCUM compute temporal and spatial masks by evaluating state evolution and spatial interaction respectively. The final update mask is produced by element-wise multiplication of these masks, which selectively updates the persistent state at per-token granularity. This adaptive mechanism helps to preserve stable geometry while integrating new observations across extended sequences.
+Algorithm 1 Pseudo codes of TTSA3R
+ 1:
+ INPUT: Image sequence {I1,…,IT}\{I_{1},\ldots,I_{T}\}
+ 2:
+ OUTPUT: Depth maps {Dt}\{D_{t}\}, Poses {Pt}\{P_{t}\}, 3D Pointmaps {Xt}\{X_{t}\}
+ 3:
+ Initialize state S0S_{0}
+ 4:
+ for t=1t=1 to TT do
+ 5:
+   Ft←Encoder​(It)F_{t}\leftarrow\text{Encoder}(I_{t})
+ 6:
+   S~t,Dect←Decoder​(St−1,Ft)\tilde{S}_{t},\text{Dec}_{t}\leftarrow\text{Decoder}(S_{t-1},F_{t})
+ 7:
+   Dt,Pt,Xt←TaskHeads​(Dect,Ft)D_{t},P_{t},X_{t}\leftarrow\text{TaskHeads}(\text{Dec}_{t},F_{t})
+ 8:
+   if t>1t>1 then
+ 9:
+    Mtemp←TAUM​(S~t,S~t−1)M_{\text{temp}}\leftarrow\text{TAUM}(\tilde{S}_{t},\tilde{S}_{t-1})
+ 10:
+    Mspatial←SCUM​(Ft,Ft−1,Attention​(St−1,Ft))M_{\text{spatial}}\leftarrow\text{SCUM}(F_{t},F_{t-1},\text{Attention}(S_{t-1},F_{t}))
+ 11:
+    Mt←Mtemp×MspatialM_{t}\leftarrow M_{\text{temp}}\times M_{\text{spatial}}
+ 12:
+    St←Mt⊙S~t+(1−Mt)⊙St−1S_{t}\leftarrow M_{t}\odot\tilde{S}_{t}+(1-M_{t})\odot S_{t-1}
+ 13:
+   else
+ 14:
+    St←S~tS_{t}\leftarrow\tilde{S}_{t}
+ 15:
+   end if
+ 16:
+ end for
+Figure 1: Qualitative comparison of predicted camera trajectories on ScanNet [14] dataset. The trajectories are visualized along the two axes with maximum variance. Gray dashed lines show ground truth and blue lines show predictions.
+Figure 2: Qualitative comparison of In-the-wild Video reconstruction.
+2 Analysis of mask fusion strategies
+To demonstrate our design choice of mask fusion strategy, we compare four different approaches on the Bonn [35] dataset, as shown in Table 1. Firstly, we adopt the average strategy that produces intermediate mask values of temporal and spatial masks, and obtain 0.097 Abs Rel and 90.3% accuracy. Then, we take the maximum of both masks and this results in overly aggressive behavior with 0.102 Abs Rel and 88.7% accuracy. Furthermore, the minimum strategy achieves 0.085 Abs Rel with 95.7% accuracy, presenting excessively conservative. Finally, we adopt element-wise multiplication, where both signals must indicate update necessity. This achieves the best performance of 0.079 Abs Rel and 96.6% accuracy. These results show that multiplication effectively balances preservation of stable geometry and integration of new observations.
+Table 1: Ablation on mask fusion strategies. We evaluate video depth estimation on Bonn [35] dataset using metric scale.
+Method
+Fusion Type
+BONN
+Avg
+Max
+Min
+Mul (Ours)
+Abs Rel ↓\downarrow
+δ<1.25↑\delta<1.25\uparrow
+1
+✓
+0.097
+90.3
+2
+✓
+0.102
+88.7
+3
+✓
+0.085
+95.7
+4
+✓
+0.079
+96.6
+Table 2: Sensitivity Analysis of Parameter τ\tau.
+τ\tau
+BONN
+TUM-dynamics
+AbsRel↓\downarrow
+δ1.25↑\delta_{1.25}\uparrow
+ATE↓\downarrow
+RPErot↓\downarrow
+0.5
+0.068
+95.5
+0.030
+0.378
+1.0
+0.064
+96.6
+0.027
+0.373
+1.5
+0.064
+96.5
+0.026
+0.372
+2.0
+0.064
+96.5
+0.026
+0.372
+2.5
+0.064
+96.5
+0.026
+0.378
+3 Sensitivity of τ\tau
+Table 2 shows stable performance for τ∈[1.0,2.5]\tau\in[1.0,2.5], with only τ=0.5\tau{=}0.5 showing degradation from over-aggressive updates. τ\tau is the threshold in Eq. 6 11
+ 1
+ Equations are from the main paper that controls the temporal update gate. The choice τ=1.5\tau{=}1.5 is principled: Δ^t\hat{\Delta}_{t} is normalized by its global mean (Eq. 5), so τ=1.5\tau{=}1.5 consistently selects tokens with above-average temporal changes across all scenes and datasets.
+4 Reset Baseline Experiments
+Table 3 compares our method against reset-based baselines (N=100N{=}100) on TUM-dynamics (1000 frames) and BONN (500 frames). We adopt N=100N{=}100, the optimal interval identified by TTT3R. We reset the recurrent state to its initial value every NN frames and stitch the resulting per-chunk poses into a unified world frame via metric camera poses, without any optimization. Formally, Tklocal​(t)T_{k}^{\text{local}}(t) denotes the camera pose at frame tt within chunk kk, expressed in that chunk’s own reset-origin frame. Let tkt_{k} denote the first frame of chunk kk. We obtain the global pose by chaining consecutive chunks at their boundary:
+Tkglobal​(t)=Tk−1global​(tk−1)⋅[Tklocal​(tk)]−1⋅Tklocal​(t)T_{k}^{\text{global}}(t)=T_{k-1}^{\text{global}}(t_{k}{-}1)\cdot\big[T_{k}^{\text{local}}(t_{k})\big]^{-1}\cdot T_{k}^{\text{local}}(t)
+(12)
+This anchors each new chunk to the last estimated global pose of the previous chunk and exploits the physical continuity of camera motion across the reset boundary. BONN depth is evaluated under metric scale. This evaluation preserves absolute scale and reveals the effect of state drift.
+It can be seen that periodic reset consistently improves pose estimation for all baselines. CUT3R’s ATE improves from 0.174 to 0.124 and TTT3R’s ATE improves from 0.111 to 0.097. This indicates that our implementation correctly reproduces the TTT3R reset protocol and that state drift is a genuine problem in long sequences. However, Ours without reset already reaches an ATE of 0.092, lower than 0.124 for CUT3R with reset and 0.097 for TTT3R with reset. This shows that our adaptive gating suppresses state drift more effectively than a periodic hard reset. Nevertheless, reset further improves our method: BONN metric depth decreases from 0.098 to 0.090 and TUM pose ATE decreases from 0.092 to 0.079. The two strategies are therefore complementary rather than redundant when combined. These results demonstrate that the gains of our method stem from the adaptive update mechanism itself, not merely from limiting state retention over long horizons.
+Table 3: Reset baseline comparison (N=100N{=}100) on long sequences.
+Method
+BONN
+TUM-dynamics
+AbsRel↓\downarrow
+δ1.25↑\delta_{1.25}\uparrow
+ATE↓\downarrow
+RPErot↓\downarrow
+CUT3R++reset
+0.102
+90.9
+0.124
+0.407
+TTT3R++reset
+0.094
+93.4
+0.097
+0.382
+Ours++reset
+0.090
+94.5
+0.079
+0.384
+CUT3R
+0.100
+90.6
+0.174
+0.548
+TTT3R
+0.101
+91.9
+0.111
+0.452
+Ours
+0.098
+93.0
+0.092
+0.441
+5 Inference Efficiency Analysis
+We evaluate computational efficiency by measuring inference speed and GPU memory consumption on video depth estimation. As shown in Table 4, spatial memory-based methods Spann3R [47] and Point3R [54] suffer from substantial memory overhead. Conversely, CUT3R [49] preserves constant memory but its performance degrades on extended sequences. TTSA3R matches TTT3R’s [9] efficiency at 18.0 FPS and 6 GB memory consumption without introducing extra learnable parameters or forward passes. These results demonstrate that our method achieves a competitive efficiency-memory trade-off among existing streaming methods.
+Table 4: Comparison of inference efficiency. We compare GPU memory used and FPS of different methods using 512×144512\times 144 image resolution on KITTI [19] dataset. The best and second best results are marked in bold and underline.
+Method
+FPS ↑\uparrow
+GPU Memory (GB) ↓\downarrow
+Spann3R [47]
+13.6
+11
+Point3R [54]
+5.0
+10
+CUT3R [49]
+20.5
+8
+TTT3R [9]
+18.0
+6
+Ours
+18.0
+6
+6 Mask Behavior Analysis
+Figure 3 visualizes TAUM, SCUM, and the final fused mask on a representative BONN sequence. TAUM produces scattered high-activation tokens at regions with substantial temporal state change. SCUM concentrates activation at regions with strong spatial correspondence between state and observation. The final mask retains only tokens where both temporal and spatial signals agree, which shows a sparser and more targeted update pattern than either individual mask. This selective sparsity matches the intended design of AND-logic fusion, where updates occur only when both temporal change and spatial relevance are present.
+Figure 3: Representative Mask Visualization on BONN dataset.
+7 More Camera Trajectory Comparisons
+To further illustrate the robustness of our method on extended sequences, we present additional camera trajectory comparisons on ScanNet [14] dataset in Figure 1. The results reveal distinct performance patterns: uniform updates lead to progressive error accumulation, while attention-based adaptation improves stability yet remains insufficient for complex motion scenarios. Specifically, severe drift becomes evident in CUT3R [49] trajectories as sequences extend, with deviations particularly pronounced in the first, second and fourth scenes featuring intricate camera movements. TTT3R [9] reduces this drift but cannot eliminate deviations in challenging scenarios. Our framework TTSA3R with temporal-spatial adaptive updates successfully maintains trajectory accuracy throughout these sequences, demonstrating its effectiveness in alleviating long-term catastrophic forgetting.
+8 More 3D Reconstruction Visualizations
+More 3D reconstruction visualizations on in-the-wild videos are provided in Figure 2. The results reveal distinct failure patterns of the baseline methods. In the left column showing a courtyard scene, CUT3R [49] exhibits severe geometric collapse with fragmented staircase surfaces and TTT3R [9] partially recovers the structure but warped steps remain visible. The right column presents an indoor office scene where CUT3R similarly corrupts geometry and merges furniture into irregular boundaries. TTT3R improves surface quality but cannot fully eliminate edge inconsistencies. Our method retains structural integrity across both scenarios and accurately preserves fine-grained details throughout the sequences.
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+ L
+ A
+ T
+ E
+ xml
+ .
+ Instructions for reporting errors
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+ Click the "Report Issue" (
+ ) button, located in the page header.
+ Tip: You can select the relevant text first, to include it in your report.
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+ We gratefully acknowledge support from
+ our major funders,
+ member institutions, ,
+ and all contributors.
+ About
+ ·
+ Help
+ ·
+ Contact
+ ·
+ Subscribe
+ ·
+ Copyright
+ ·
+ Privacy
+ ·
+ Accessibility
+ ·
+ Operational Status (opens in new tab)
+ Major funding support from

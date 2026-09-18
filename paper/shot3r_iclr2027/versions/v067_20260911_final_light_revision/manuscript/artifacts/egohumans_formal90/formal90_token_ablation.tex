@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & W-MPJPE$\downarrow$ & WA-MPJPE$\downarrow$ & MPJPE$\downarrow$ & Human seam$\downarrow$ & IDF1$\uparrow$ & Coverage$\uparrow$\\
+\midrule
+Human3R & 1005.1 & 365.7 & 107.6 & 1.723 & 0.471 & 0.639\\
+Semantic token only & 879.2 & 342.5 & 108.5 & 1.205 & 0.560 & 0.616\\
+Alignment token only & 853.5 & 323.9 & 108.5 & 1.151 & 0.574 & 0.616\\
+Semantic + alignment tokens & 867.9 & 333.5 & 108.5 & 1.220 & 0.571 & 0.616\\
+\textbf{Shot3R} & 866.8 & 336.9 & 108.5 & 1.227 & 0.571 & 0.616\\
+\bottomrule
+\end{tabular}}
+\caption{Correction-token ablation on EgoHumans. Every row uses the same fixed 90-clip protocol. W/WA/MPJPE, IDF1, and coverage use all 90 clips. Human seam is available for 68 strict-streaming clips and 60 clips for each reset-based learned setting.}
+\label{tab:egohumans-token}
+\end{table}

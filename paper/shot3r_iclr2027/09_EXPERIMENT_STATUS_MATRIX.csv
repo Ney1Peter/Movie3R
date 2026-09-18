@@ -1,0 +1,19 @@
+id,priority,item,status,reason,planned_destination
+E01,P0,Cross-dataset viewpoint interaction,completed,20000-draw joint recording/capture-cluster bootstrap generated and cited,Main+Supplement
+E02,P0,EgoBody versus MVHuman detector audit,completed,First-trigger timing and off-boundary positive rate generated from retained traces,Main+Supplement
+E03,P0,Mechanism table timing separation,completed,Oracle controls and causal deployment are explicitly separated,Main
+E04,P0,EgoHumans and Harmony4D association denominators,completed,Conditional and full-continuation denominators plus zero runtime abstention are visible,Main+Supplement
+E05,P0,AI Ethics Reproducibility statements,completed,Independent sections are included before references,Main
+E06,P1,Runtime disclosure,completed,One-clip detector-excluded scope is explicit and no speed ranking is claimed,Main+Supplement
+E07,P1,Lambda development-only sensitivity,completed,All fixed development rows remain visible and are not used to select test results,Supplement
+E08,P1,Token masking sensitivity,completed,Same-checkpoint sensitivity is retained and explicitly not called retraining,Supplement
+E09,P1,Independent token retraining,deferred,Training data are incomplete and one run costs about 29.5 hours,Future work
+E10,P1,Second reconstruction backbone,deferred,No frozen compatible protocol or implementation,Future work
+E11,P1,Natural edited videos,deferred,No licensed frozen evaluation set,Future work
+E12,P1,Large-scale multi-cut expansion,deferred,Only retained controlled multi-cut evidence is complete,Future work
+E13,P1,Blind user study,deferred,Requires participant protocol and approval,Future work
+E14,P0,Change formal denominators,rejected,Would invalidate the frozen protocol,None
+E15,P0,Merge paper-only HumanMM numbers into ranking,rejected,No shared code evaluator or input protocol,Context only
+E16,P0,Temporal-offset and motion-stratified translation,deferred,No pre-specified retained protocol isolates motion from gauge residual,Future work
+E17,P0,Detector-inclusive multi-clip runtime,deferred,Retained benchmark is one clip and excludes detector and preprocessing,Future work
+E18,P0,Full training hardware duration and multiseed variance,deferred,Final metadata does not reliably recover all requested fields,Future work

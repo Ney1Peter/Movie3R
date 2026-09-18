@@ -1,0 +1,9 @@
+metric,metric_display,definition,Bridge3R_CS150,Multi-THuMBS_EgoBody_Ours,directly_comparable
+W-MPJPE_mm,W-MPJPE_mm,same-named literature-scale context; protocols differ,258.83269644768603,99.2,False
+WA-MPJPE_mm,WA-MPJPE_mm,same-named literature-scale context; protocols differ,201.6903095894276,72.8,False
+MPJPE_mm,MPJPE_mm,same-named literature-scale context; protocols differ,70.935326487181,72.0,False
+MPVPE_mm,MPVPE_mm,same-named literature-scale context; protocols differ,78.99906810559138,94.9,False
+Accel_mm_frame2,Accel_mm_frame2,same-named literature-scale context; protocols differ,28.00040132651413,6.0,False
+IDs,IDs,same-named literature-scale context; protocols differ,0.03875968992248062,0.0,False
+ATE_Sim3_m,Bridge3R ATE-Sim3 (m),Bridge3R-CS150 Sim(3)-aligned camera trajectory error,0.016451692923067602,,False
+ATE_source_defined,Multi-THuMBS ATE (source-defined),source reports 0.1; alignment convention/unit are not established by the available main-paper PDF,,0.1,False

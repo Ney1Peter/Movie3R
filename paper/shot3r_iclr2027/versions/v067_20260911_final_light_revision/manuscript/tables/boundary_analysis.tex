@@ -1,0 +1,67 @@
+\begin{table*}[t]
+  \centering
+  % 中文图注：人物关联准确率、镜头切换检测与受控重建开销。
+  \caption{Association accuracy, shot-transition detection, and controlled reconstruction cost.}
+  \label{tab:boundary-analysis}
+  \scriptsize
+
+  \begin{minipage}[t]{0.30\textwidth}
+    \centering
+    % 中文面板标题：人物关联。
+    \textbf{(a) Person association}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrr}
+      \toprule
+      Dataset & Pair acc. $\uparrow$ & ID cont. $\uparrow$ \\
+      \midrule
+      EgoHumans & 88.62\% & 38.65\% \\
+      Harmony4D & 96.60\% & 80.68\% \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.35\textwidth}
+    \centering
+    % 中文面板标题：首次镜头切换触发。
+    \textbf{(b) First transition trigger}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrr}
+      \toprule
+      Dataset & Exact & Early \\
+      \midrule
+      EgoBody & 129/129 & 0/129 \\
+      EgoHumans & 90/90 & 0/90 \\
+      Harmony4D & 88/88 & 0/88 \\
+      MVHuman & 10/50 & 40/50 \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.33\textwidth}
+    \centering
+    % 中文面板标题：100 帧核心重建开销。
+    \textbf{(c) Reconstruction cost (100 frames)}\par\smallskip
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lrr}
+      \toprule
+      Configuration & Time (s) $\downarrow$ & FPS $\uparrow$ \\
+      \midrule
+      \humanthree{} & 31.020 & \textbf{3.224} \\
+      \method{} (0 transitions) & 31.125 & 3.213 \\
+      \method{} (1 transition) & 32.191 & 3.106 \\
+      \bottomrule
+    \end{tabular}%
+    }
+  \end{minipage}
+
+  \vspace{3pt}
+  % 中文表下注释：检测数值为首次触发位置的样本数。MVHuman是单独的弱纹理压力测试。
+  % 计时在 NVIDIA L20、512 分辨率、batch size 1、FP32 下完成，不包含输入读取、缩放和切换检测器，
+  % 因此不同于正文运行时间图中的完整系统 FPS。
+  \parbox{0.97\textwidth}{\footnotesize Transition counts report the location
+  of the first detector trigger; MVHuman is a separate weak-texture stress
+  setting. Reconstruction cost is measured on an NVIDIA
+  L20 at resolution 512, batch size 1, and FP32; it excludes input loading,
+  resizing, and the transition detector, and is therefore distinct from the
+  full-system timing in Figure~\ref{fig:runtime-comparison}.}
+\end{table*}

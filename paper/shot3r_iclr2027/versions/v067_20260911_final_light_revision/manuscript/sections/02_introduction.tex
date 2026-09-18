@@ -1,0 +1,76 @@
+% 中文节标题：引言
+\section{Introduction}
+
+% 中文：从一段由多个镜头组成的单目视频中恢复全局一致的多人体运动，需要在相机视角突然变化时连接不同镜头中的人体轨迹。
+% 镜头切换会打破相机运动连续性，并显著改变人体外观，使各镜头的重建落入不一致的世界坐标系，人物身份也可能随之断裂。
+Reconstructing globally consistent multi-person motion from a monocular video
+composed of multiple shots requires connecting human trajectories across
+abrupt camera changes~\citep{pavlakos2022multishot,zhang2025humanmm,on2026multithumbs}.
+A shot transition breaks camera-motion continuity and can substantially alter
+human appearance, leaving individual-shot reconstructions in incompatible
+world frames and fragmenting person identities.
+
+% 中文：本文中的多镜头是指单目视频中按时间依次出现的镜头片段；Shot3R 每次只接收一帧，从不联合观察同一时刻的同步多视角输入。
+Here, \emph{multi-shot} denotes temporally successive segments of a monocular
+video. \method{} receives one frame at a time and never jointly observes
+synchronized views of the same scene state.
+
+% 中文：已有多镜头方法通常联合处理相邻镜头或优化完整观测序列，因而不能在帧到达时递归地产生结果。
+% 流式方法顺序处理输入，以固定大小状态维护历史，并避免逐视频全局优化，但现有方法通常假设观测连续。
+Prior multi-shot methods typically process adjacent shots jointly or refine an
+observed sequence~\citep{zhang2025humanmm,on2026multithumbs}. They therefore do
+not recurrently produce estimates as frames arrive. Streaming reconstruction
+instead processes inputs in order, maintains history in a fixed-size state,
+and avoids per-video global optimization, but existing formulations generally
+assume continuous observations~\citep{wang2025cut3r,chen2026human3r,zhao2026onlinehmr}.
+
+% 中文：镜头切换由此暴露出递归历史的相互冲突作用：历史为镜头间对齐提供参照，但继续传播同一状态可能引起镜头内相机漂移；
+% 重新初始化避免了这种状态延续，却会失去跨镜头参照。核心观察是应将对齐与后续递归作为两个独立决策。
+Shot transitions thus expose conflicting effects of recurrent history.
+History provides a reference for inter-shot alignment, but propagating the
+same state can induce within-shot camera drift; reinitialization avoids this
+carry-over but loses the cross-shot reference. Our key
+observation is that alignment and subsequent recurrence should therefore be
+treated as separate decisions: the preceding state may be read temporarily to
+estimate the inter-shot relation, while an independently reinitialized state
+drives reconstruction in the new shot. A same-checkpoint control confirms that state carry-over induces
+time-varying camera drift within the new shot, beyond a fixed coordinate offset
+(Section~\ref{sec:ablation}).
+
+% 中文：基于这一观察，我们提出Shot3R。在镜头边界，历史条件对齐路径利用旧状态和当前图像估计镜头间变换，随后丢弃其临时状态；
+% 独立重新初始化的路径产生唯一继续传播的状态。预测几何建立跨镜头人物对应，一个共享变换将相机和人体共同映射到已有世界坐标系。
+We introduce \method{} to realize this separation. At a shot boundary, a
+history-conditioned alignment path uses the preceding state and current image
+to estimate the inter-shot transform, then discards its temporary state. An
+independently reinitialized path supplies the only state propagated forward.
+Geometry-based person association links identities, and one shared transform
+maps cameras and humans into the existing world frame. The procedure accesses
+no future frame, revises no emitted result, and performs no per-video
+optimization.
+
+% 中文：多个多人体基准上的实验表明，Shot3R在保持流式推理的同时改善世界坐标人体重建、相机一致性与身份连续性，并在大视角变化下取得更明显的优势。
+Experiments across multiple multi-person benchmarks show that \method{}
+improves world-frame human reconstruction, camera consistency, and identity
+continuity while retaining streaming inference, with larger gains under
+substantial viewpoint changes.
+
+% 中文：本文贡献如下。
+Our contributions are:
+\begin{itemize}
+  % 中文：识别并通过实验刻画镜头切换处递归历史的相互冲突作用：切换前历史为镜头间对齐提供参照，继续传播同一状态可能引起镜头内相机漂移，
+  % 而单独重新初始化会失去跨镜头参照。
+  \item We identify and empirically characterize the conflicting roles of
+  recurrent history at shot transitions: pre-transition history provides an
+  alignment reference, propagating the same state can induce within-shot
+  camera drift, and reinitialization alone loses the cross-shot reference.
+
+  % 中文：提出通过临时历史条件对齐路径与独立重新初始化递归路径实现解耦，并以几何人物关联和共享变换维持空间与身份一致性。
+  \item We realize this separation with a temporary history-conditioned
+  alignment path and an independently reinitialized recurrent path, supported
+  by geometry-based association and a shared camera--human transform.
+
+  % 中文：在多人体基准上改善世界坐标人体重建、相机一致性和身份连续性，在大视角变化下优势更明显，并保持无需未来帧与逐视频优化的流式推理。
+  \item We improve world-frame human reconstruction, camera consistency, and
+  identity continuity across multi-person benchmarks, with larger gains under
+  substantial viewpoint changes and no future frames or per-video optimization.
+\end{itemize}

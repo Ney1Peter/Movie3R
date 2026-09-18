@@ -1,0 +1,93 @@
+{
+  "schema_version": "bridge3r-anonymous-qualitative-provenance-v1",
+  "created_on": "2026-08-30",
+  "selection": {
+    "status": "metric-selected qualitative example",
+    "representative_claimed": false,
+    "generative_editing_used": false,
+    "geometry_borrowed_between_methods": false,
+    "rule": [
+      "retain cases with at least 150 degrees of camera rotation",
+      "require same-case and same-frame outputs from Strict Human3R, TRACE, PromptHMR with SPEC, and BRIDGE3R",
+      "require BRIDGE3R to improve over Strict Human3R in W-MPJPE, WA-MPJPE, and IDF1",
+      "prefer a case where BRIDGE3R is best on all three metrics among the four displayed methods",
+      "use camera-rotation span only as the final tie-break"
+    ]
+  },
+  "case": {
+    "dataset": "EgoHumans",
+    "case_id": "ego_test_legoassemble_003_legoassemble_extreme_cam03_cam04_b00301",
+    "camera_rotation_span_deg": 176.74916252624004,
+    "people": 3,
+    "cut_frame": 50,
+    "pre_cut_frame": 49,
+    "post_cut_frame": 50
+  },
+  "case_level_metrics": {
+    "strict_human3r": {
+      "w_mpjpe_mm": 393.1,
+      "wa_mpjpe_mm": 208.1,
+      "idf1": 0.514
+    },
+    "trace_official": {
+      "w_mpjpe_mm": 2359.0,
+      "wa_mpjpe_mm": 895.5,
+      "idf1": 0.143
+    },
+    "prompthmr_official_spec": {
+      "w_mpjpe_mm": 1056.1,
+      "wa_mpjpe_mm": 971.8,
+      "idf1": 0.422
+    },
+    "bridge3r": {
+      "w_mpjpe_mm": 337.0,
+      "wa_mpjpe_mm": 182.1,
+      "idf1": 0.951
+    }
+  },
+  "interface_boundaries": {
+    "strict_human3r_and_bridge3r_scene": "method-native frozen-checkpoint replay",
+    "trace_scene_available": false,
+    "prompthmr_scene_available": false,
+    "trace_camera": "diagnostic body-root proxy, not an official physical camera trajectory",
+    "ground_truth_used_to_construct_predictions": false
+  },
+  "packaged_panels": [
+    {
+      "label": "pre-cut RGB",
+      "path": "qualitative_real_large_view_panels/rgb_pre_local000004_original0049.png",
+      "sha256": "42376ff28775eeac6d17beab39bfffa3518f1be45f2878fa108d0fd58be095cc"
+    },
+    {
+      "label": "post-cut RGB",
+      "path": "qualitative_real_large_view_panels/rgb_post_local000005_original0050.png",
+      "sha256": "b1b412fd00eab404fa577eb9c8b4911893a536da084208a9c5b4a55b4db96d75"
+    },
+    {
+      "label": "Strict Human3R post-cut scene-and-camera rendering",
+      "path": "qualitative_real_large_view_panels/strict_scene_camera_post_local000005_original0050.png",
+      "sha256": "85f76d95a86500a1604b53b815b68df445e72a31d6b8f07fec2f9bda485256d4"
+    },
+    {
+      "label": "TRACE official post-cut rendering",
+      "path": "qualitative_real_large_view_panels/trace_post_render_local000005_original0050.png",
+      "sha256": "32658465f9bfc53371ba7a0a6fbe27b36ad491d2c0dc84f4e4c85e2feda87935"
+    },
+    {
+      "label": "PromptHMR official SPEC post-cut rendering",
+      "path": "qualitative_real_large_view_panels/prompthmr_spec_post_render_local000005_original0050.png",
+      "sha256": "263d86e31dcb1428112d58376c1540c768ea20374b77270de28624d5f023125e"
+    },
+    {
+      "label": "BRIDGE3R post-cut scene-and-camera rendering",
+      "path": "qualitative_real_large_view_panels/bridge3r_scene_camera_post_local000005_original0050.png",
+      "sha256": "ffd6c0e0399de0ca13c23048aa92e61fcf9b1c85ff83c361fbf8de5ebf60f436"
+    }
+  ],
+  "editable_figure": {
+    "svg": "qualitative_real_large_view.svg",
+    "svg_sha256": "3cdf80389f8168eb6c3772f5ccdcd0c765a4919639746be60b0bb87dacc0d3c2",
+    "pdf": "qualitative_real_large_view.pdf",
+    "pdf_sha256": "8ba5164aebb6a9c9daea178f6de4a71f13fcd876cf312f09db96e45fcb310456"
+  }
+}

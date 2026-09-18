@@ -1,0 +1,24 @@
+% Derived from the retained 90-case, 27-capture paired analysis.
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Retrospective paired analysis of Shot3R against Human3R
+  on the fixed EgoHumans 90-clip set. Positive gain favours Shot3R; the
+  interval uses a hierarchical paired bootstrap that first resamples captures
+  and then resamples clips within each selected capture; $p_{\mathrm{sf}}$ is a
+  two-sided capture-cluster sign-flip test. Point estimates remain the 90-clip
+  case macro used in the main table. All metrics use 90 paired clips from 27
+  capture clusters. The analysis was not used for model selection.}
+  \label{tab:egohumans-strict-paired}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Metric & Mean gain $\uparrow$ & 95\% CI & Median gain & Win/tie/loss & $p_{\mathrm{sf}}$ \\
+    \midrule
+    W-MPJPE & 138.3 & [0.5, 322.9] & 4.9 & 50/0/40 & 0.035713 \\
+    WA-MPJPE & 28.9 & [-6.8, 68.7] & 11.5 & 54/0/36 & 0.057267 \\
+    ATE-Sim3 & 0.515 & [0.258, 0.925] & 0.194 & 87/0/3 & $<10^{-6}$ \\
+    IDF1 & 0.100 & [0.046, 0.152] & 0.030 & 51/13/26 & 0.000799 \\
+    Coverage & -0.023 & [-0.058, 0.008] & 0.000 & 12/38/40 & 0.122279 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

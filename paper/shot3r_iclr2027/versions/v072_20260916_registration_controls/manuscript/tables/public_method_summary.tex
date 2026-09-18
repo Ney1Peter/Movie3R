@@ -1,0 +1,28 @@
+\begin{table}[t]
+  \centering
+  \caption{Executable public-method references on identical RGB clips. W/WA
+  (mm) are computed over the evaluable clips counted in parentheses; IDF1 and
+  Coverage use all clips, so rows with different counts are not directly comparable.}
+  \label{tab:public-method-summary}
+  \scriptsize
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{llrrrr}
+    \toprule
+    Dataset & Method & W (evaluable) $\downarrow$ & WA (evaluable) $\downarrow$ & IDF1 $\uparrow$ & Coverage $\uparrow$ \\
+    \midrule
+    \multirow{3}{*}{EgoBody ($N=129$)}
+      & TRACE & 576.4 (22) & 276.4 (35) & 0.036 & 0.035 \\
+      & PromptHMR (SPEC) & 741.4 (64) & 336.1 (87) & 0.195 & 0.202 \\
+      & OnlineHMR & 961.2 (97) & 418.1 (97) & 0.375 & 0.424 \\
+    \midrule
+    \multirow{3}{*}{EgoHumans ($N=90$)}
+      & TRACE & 2464.6 (43) & 749.5 (59) & 0.070 & 0.072 \\
+      & PromptHMR (SPEC) & 1193.3 (17) & 487.7 (25) & 0.061 & 0.062 \\
+      & OnlineHMR & 1311.7 (50) & 405.5 (50) & 0.142 & 0.211 \\
+    \midrule
+    Harmony4D ($N=88$)
+      & OnlineHMR & 750.8 (30) & 335.9 (30) & 0.068 & 0.159 \\
+    \bottomrule
+  \end{tabular}}
+  \vspace{-0.5em}
+\end{table}

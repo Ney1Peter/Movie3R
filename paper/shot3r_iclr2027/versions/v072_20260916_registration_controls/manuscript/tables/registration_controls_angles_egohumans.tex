@@ -1,0 +1,42 @@
+\begin{table*}[t]
+  \centering
+  \caption{EgoHumans geometric controls in the four predefined viewpoint
+  strata. W/WA are in mm and ATE in m. Failure is the fitting-failure rate
+  before the mandatory R0 fallback.}
+  \label{tab:supp-registration-angle-eh}
+  \supptablesize
+  \setlength{\tabcolsep}{2.9pt}
+  \begin{tabular}{llrrrr}
+    \toprule
+    Stratum & Method & W $\downarrow$ & WA $\downarrow$ & ATE $\downarrow$ & Failure $\downarrow$ \\
+    \midrule
+    \multirow{5}{*}{Small ($N=24$)}
+      & \humanthree{} per-shot reset & 1093.6 & 499.3 & 2.113 & -- \\
+      & $+$ pelvis translation & 1158.9 & 442.2 & 1.355 & 0.0\% \\
+      & $+$ human-joint SE(3) & 872.3 & \textbf{351.0} & 0.870 & 16.7\% \\
+      & $+$ scene FPFH+ICP & 1136.2 & 497.9 & 1.953 & 75.0\% \\
+      & \method{} & \textbf{850.9} & 357.1 & \textbf{0.610} & -- \\
+    \midrule
+    \multirow{5}{*}{Medium ($N=22$)}
+      & \humanthree{} per-shot reset & 1271.4 & 513.1 & 4.559 & -- \\
+      & $+$ pelvis translation & 1262.3 & 505.9 & 3.724 & 0.0\% \\
+      & $+$ human-joint SE(3) & 986.1 & 345.9 & 1.584 & 13.6\% \\
+      & $+$ scene FPFH+ICP & 1381.3 & 518.3 & 3.964 & 59.1\% \\
+      & \method{} & \textbf{801.2} & \textbf{341.5} & \textbf{1.301} & -- \\
+    \midrule
+    \multirow{5}{*}{Large ($N=22$)}
+      & \humanthree{} per-shot reset & 1303.0 & 449.5 & 5.031 & -- \\
+      & $+$ pelvis translation & 1242.1 & 455.6 & 3.693 & 0.0\% \\
+      & $+$ human-joint SE(3) & \textbf{928.2} & 346.7 & 1.685 & 22.7\% \\
+      & $+$ scene FPFH+ICP & 1660.0 & 456.8 & 4.193 & 40.9\% \\
+      & \method{} & 930.7 & \textbf{331.1} & \textbf{1.529} & -- \\
+    \midrule
+    \multirow{5}{*}{Extreme ($N=22$)}
+      & \humanthree{} per-shot reset & 1338.5 & 502.6 & 6.153 & -- \\
+      & $+$ pelvis translation & 1312.6 & 486.9 & 4.712 & 0.0\% \\
+      & $+$ human-joint SE(3) & \textbf{803.5} & \textbf{314.9} & 2.864 & 18.2\% \\
+      & $+$ scene FPFH+ICP & 1335.2 & 483.6 & 5.451 & 59.1\% \\
+      & \method{} & 886.1 & 315.9 & \textbf{2.326} & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

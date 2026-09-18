@@ -1,0 +1,20 @@
+\begin{table}[t]
+  \centering
+  % 中文图注：全部视角及预定义极端或最远视角子集上相对于 Human3R 的改进。
+  \caption{Gains over \humanthree{} for all views and predefined
+  extreme/farthest-view subsets.}
+  \label{tab:viewpoint-results}
+  \small
+  \setlength{\tabcolsep}{3.5pt}
+  % 中文列名：视角子集；W 降幅；WA 降幅；IDF1 提升。
+  \begin{tabular}{lrrr}
+    \toprule
+    View subset & W reduction $\uparrow$ & WA reduction $\uparrow$ &
+    IDF1 gain $\uparrow$ \\
+    \midrule
+    All views & 9.5\% & 8.8\% & $+0.099$ \\
+    Extreme/farthest & \textbf{19.1\%} & \textbf{18.7\%} &
+    $\mathbf{+0.195}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

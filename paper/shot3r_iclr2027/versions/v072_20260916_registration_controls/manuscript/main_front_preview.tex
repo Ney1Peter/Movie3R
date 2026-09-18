@@ -1,0 +1,62 @@
+\documentclass{article}
+
+\usepackage{iclr2027_conference,times}
+\usepackage{iftex}
+\ifXeTeX
+  \usepackage{fontspec}
+  \setmainfont{NimbusRoman-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusRoman-Bold.otf,
+    ItalicFont=NimbusRoman-Italic.otf,
+    BoldItalicFont=NimbusRoman-BoldItalic.otf]
+  \setsansfont{NimbusSans-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusSans-Bold.otf,
+    ItalicFont=NimbusSans-Italic.otf,
+    BoldItalicFont=NimbusSans-BoldItalic.otf]
+  \setmonofont{NimbusMonoPS-Regular.otf}[
+    Path=/usr/share/fonts/opentype/urw-base35/,
+    BoldFont=NimbusMonoPS-Bold.otf,
+    ItalicFont=NimbusMonoPS-Italic.otf,
+    BoldItalicFont=NimbusMonoPS-BoldItalic.otf]
+\fi
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{capt-of}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{placeins}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+\input{sections/00_metadata}
+
+\definecolor{shotgreen}{RGB}{0,145,140}
+\definecolor{shotred}{RGB}{210,55,70}
+\definecolor{shotamber}{RGB}{190,120,0}
+\newcommand{\cmark}{\ensuremath{\textcolor{shotgreen}{\checkmark}}}
+\newcommand{\xmark}{\ensuremath{\textcolor{shotred}{\times}}}
+\newcommand{\pmark}{\ensuremath{\textcolor{shotamber}{\triangle}}}
+
+\begin{document}
+% Preview-only references to sections intentionally omitted from this build.
+\makeatletter
+\@namedef{r@sec:ablation}{{4.3}{9}{Analysis and Ablation Studies}{}{}}
+\@namedef{r@app:method-details}{{C}{22}{Additional Method Details}{}{}}
+\makeatother
+\maketitle
+
+\input{sections/fig_teaser}
+\input{sections/01_abstract}
+\input{sections/02_introduction}
+\input{sections/03_related_work}
+\input{sections/04_method}
+
+\clearpage
+\bibliographystyle{iclr2027_conference}
+\bibliography{references}
+
+\end{document}

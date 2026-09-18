@@ -1,0 +1,51 @@
+% Derived from formal90_component_paired_statistics.json.
+\begin{table*}[t]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3.4pt}
+  \caption{Retrospective paired sensitivity of the complete Shot3R setting
+  against four component masks on EgoHumans formal-90. Gain is defined so that
+  positive values favour the complete setting. W/WA/ATE/IDF1/coverage use 90
+  clips from 27 capture clusters; human seam uses 60 clips from 22 clusters.
+  MPJPE and MPVPE are unchanged to the displayed precision. Intervals are
+  capture-cluster bootstraps; the unadjusted retrospective comparisons were
+  not used to select another test setting.}
+  \label{tab:egohumans-component-paired}
+  \begin{tabular}{llrrrr}
+    \toprule
+    Comparator & Metric & Complete & Comparator & Paired gain & 95\% CI \\
+    \midrule
+    \multirow{6}{*}{Without learned correction branch}
+      & W-MPJPE & 866.8 & 867.2 & 0.3 & [-63.0, 63.1] \\
+      & WA-MPJPE & 336.9 & 338.1 & 1.2 & [-22.8, 29.5] \\
+      & ATE-SE3 & 1.4232 & 1.5294 & 0.1062 & [-0.1294, 0.3655] \\
+      & Human seam & 1.2271 & 1.1867 & -0.0404 & [-0.3228, 0.2032] \\
+      & IDF1 & 0.5710 & 0.5612 & 0.0098 & [-0.0064, 0.0302] \\
+      & Coverage & 0.6157 & 0.6157 & 0.0000 & [0.0000, 0.0000] \\
+    \midrule
+    \multirow{6}{*}{Alignment token only}
+      & W-MPJPE & 866.8 & 853.5 & -13.3 & [-48.8, 18.0] \\
+      & WA-MPJPE & 336.9 & 323.9 & -12.9 & [-28.7, -1.3] \\
+      & ATE-SE3 & 1.4232 & 1.4130 & -0.0102 & [-0.1110, 0.1029] \\
+      & Human seam & 1.2271 & 1.1507 & -0.0764 & [-0.2554, 0.0671] \\
+      & IDF1 & 0.5710 & 0.5740 & -0.0030 & [-0.0198, 0.0071] \\
+      & Coverage & 0.6157 & 0.6157 & 0.0000 & [0.0000, 0.0000] \\
+    \midrule
+    \multirow{6}{*}{Without head LoRA}
+      & W-MPJPE & 866.8 & 854.6 & -12.2 & [-25.0, 1.6] \\
+      & WA-MPJPE & 336.9 & 331.2 & -5.7 & [-12.5, 1.7] \\
+      & ATE-SE3 & 1.4232 & 1.3611 & -0.0621 & [-0.1129, -0.0116] \\
+      & Human seam & 1.2271 & 1.1728 & -0.0543 & [-0.1106, 0.0038] \\
+      & IDF1 & 0.5710 & 0.5698 & 0.0011 & [-0.0064, 0.0124] \\
+      & Coverage & 0.6157 & 0.6157 & 0.0000 & [0.0000, 0.0000] \\
+    \midrule
+    \multirow{6}{*}{Without camera residual}
+      & W-MPJPE & 866.8 & 853.1 & -13.7 & [-53.9, 17.8] \\
+      & WA-MPJPE & 336.9 & 332.4 & -4.4 & [-12.0, 3.0] \\
+      & ATE-SE3 & 1.4232 & 1.4039 & -0.0193 & [-0.0691, 0.0389] \\
+      & Human seam & 1.2271 & 1.1632 & -0.0639 & [-0.2577, 0.0797] \\
+      & IDF1 & 0.5710 & 0.5660 & 0.0049 & [-0.0012, 0.0165] \\
+      & Coverage & 0.6157 & 0.6157 & 0.0000 & [0.0000, 0.0000] \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

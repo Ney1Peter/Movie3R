@@ -1,0 +1,65 @@
+\section{Evaluation Protocols}
+\label{app:protocol}
+
+\paragraph{Datasets.}
+% 中文：三个主要基准均由同步多相机采集构造成按时间顺序输入的单目视频；模型在任意时刻只接收一个视角。
+% EgoBody、EgoHumans 和 Harmony4D 分别包含 129、90 和 88 段两镜头视频。
+The three main benchmarks are constructed from synchronized multi-camera
+captures, but are presented to every method as temporally ordered monocular
+videos: only one view is observed at any time. EgoBody, EgoHumans, and
+Harmony4D contain 129, 90, and 88 two-shot videos, respectively. Table~\ref{tab:protocol}
+summarizes the three evaluation sets.
+
+\input{tables/protocol_overview}
+
+\paragraph{Input and supervision.}
+% 中文：同一数据集内的所有方法接收完全相同的 RGB 顺序。相机标定、三维人体、人物身份和真实切换位置只用于评测，
+% 不输入模型；仅正文受控消融中的两个中间设置使用真实切换位置。
+All methods within a dataset receive the same RGB sequence. Camera
+calibration, 3D bodies, person identities, and annotated transition locations
+are used only for evaluation and are not given to the model. The only
+exceptions are the two controlled intermediate configurations in
+Table~\ref{tab:mechanism-evidence}, which use annotated transition timing to examine the effects of state
+reinitialization and alignment under a controlled boundary setting.
+
+\paragraph{Metrics.}
+% 中文：W-MPJPE 使用最早的有效观测确定一次 Sim(3) 对齐，并将其固定到后续帧；WA-MPJPE 使用全部有效观测进行对齐。
+% 相机误差使用 ATE，IDF1 衡量身份连续性，Coverage 衡量有效人体预测的覆盖率。
+W-MPJPE (W) estimates a Sim(3) transform from the earliest valid observations
+and keeps it fixed for subsequent frames; WA-MPJPE (WA) estimates Sim(3) from
+all valid observations. We additionally report camera absolute trajectory
+error (ATE), IDF1 for identity consistency, and Coverage for the fraction of
+ground-truth person instances represented by valid predictions. Because the
+alignment definitions differ across datasets, absolute errors are compared
+only within the same dataset.
+
+% 中文：EgoBody 先在每个采集序列内聚合，再对 43 个采集序列取平均；EgoHumans 和 Harmony4D 按视频取平均。
+% 只有在有效人体匹配上定义的几何误差会同时报告有效样本数或 Coverage。
+EgoBody is aggregated within each recording and then averaged over its 43
+recordings. EgoHumans and Harmony4D use clip-level means. Geometry errors that
+require a valid person match are always accompanied by their number of valid
+clips or by Coverage.
+
+\paragraph{Public methods and offline reference.}
+% 中文：OnlineHMR、TRACE 和 PromptHMR 均使用作者公开实现以及与 Shot3R 相同的 RGB 序列。
+% OnlineHMR 提供独立相机轨迹；TRACE 和 PromptHMR 的公开输出在本文协议下只评测人体结果。
+% JOSH 使用带 Pi3X 初始化的官方发布实现，在三个主要协议上离线处理完整序列；不向其提供真实相机、
+% 人物身份、人体形状、镜头边界或逐镜头对齐，也不人工拼接身份。所有输入使用同一配置，失败保留在完整分母中。
+% TRAM 使用其发布的完整预测流程纳入效率评测；该运行不作为三数据集精度比较的一部分。
+OnlineHMR, TRACE, and PromptHMR are evaluated with their released
+implementations on the same RGB sequences as Shot3R. OnlineHMR provides a
+separate camera trajectory; the released TRACE and PromptHMR outputs are
+evaluated for human reconstruction under our protocol. Parenthesized counts
+in Table~\ref{tab:multi-person} show the number of clips with valid geometry.
+OnlineHMR combines semi-online tracking with a global camera backend, whereas
+PromptHMR processes the complete video; these temporal differences are not
+treated as equivalent to Shot3R's streaming inference. JOSH uses its released
+implementation with Pi3X initialization and one fixed configuration across all three
+main protocols. It receives each complete RGB sequence offline, but no
+ground-truth camera, identity, body shape, transition, or shot-wise transform;
+we do not manually stitch identities. Failures remain in complete-dataset
+identity and Coverage denominators, and unavailable errors are not imputed.
+TRAM is run with its released full prediction path for the efficiency study;
+this profiling run is not included in the three-dataset accuracy comparison.
+
+\input{tables/method_scope}

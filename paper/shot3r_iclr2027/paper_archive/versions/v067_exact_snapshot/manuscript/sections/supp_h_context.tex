@@ -1,0 +1,30 @@
+\section{Literature-Protocol Context}
+
+HumanMM and Multi-THuMBS address related multi-shot settings, but their
+reported numbers use source-defined data, temporal access, and evaluators. We
+therefore compare task attributes rather than inserting non-shared numbers into
+the same-input tables.
+
+\begin{table*}[t]
+  \centering
+  \caption{Protocol and implementation context, last checked on 6 September 2026.
+  ``Reported'' describes the source paper rather than a same-input result.
+  Released methods are included in numerical tables only when their outputs
+  pass the stated availability checks.}
+  \label{tab:protocol-context}
+  \scriptsize
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lllllllll}
+    \toprule
+    Work & Executable status & Temporal access & Multi-person & Physical camera & Cross-cut identity & Sequence refinement & Use here \\
+    \midrule
+    HumanMM~\citep{zhang2025humanmm} & processing/baselines unavailable & multi-shot integration & no & reported & not applicable & reported & protocol only \\
+    Multi-THuMBS~\citep{on2026multithumbs} & no author-linked executable found & whole-sequence & yes & registration & reported & yes & protocol only \\
+    TRACE~\citep{sun2023trace} & released; executed & video tracking & yes & no independent trajectory & native tracks & no geometric sequence optimisation & availability-aware \\
+    PromptHMR~\citep{wang2025prompthmr} & released; executed & offline full video & yes & interface-dependent & native tracks & full-video inference & availability-aware \\
+    OnlineHMR~\citep{zhao2026onlinehmr} & released; executed & semi-online tracking / global camera & yes & independent trajectory & native tracks & global camera backend & availability-aware \\
+    JOSH~\citep{liu2026josh} & released; executed & offline full video & yes & independent trajectory & native tracks & per-video joint optimization & all three protocols \\
+    \method{} & authors' implementation & causal through first post-cut frame & yes & yes & prediction-only & no future-frame optimisation & paired execution \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

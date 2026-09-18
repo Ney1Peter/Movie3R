@@ -1,0 +1,41 @@
+[
+  {
+    "method": "m0_strict_human3r",
+    "display": "Strict Human3R",
+    "regime": "causal",
+    "metrics": {
+      "pa_mpjpe_body12_mm": 57.72554388290885,
+      "first_shot_anchor_mpjpe_body12_mm": 492.9029588777193,
+      "seam_root_excess_mm": 776.030953224924,
+      "seam_orientation_excess_deg": 59.63684033145219,
+      "post_camera_relative_rotation_deg": 59.090062567067214
+    },
+    "coverage": 0.9999333333333333
+  },
+  {
+    "method": "m15_bridge3r_fixed_v19",
+    "display": "Bridge3R (fixed, causal)",
+    "regime": "causal",
+    "metrics": {
+      "pa_mpjpe_body12_mm": 57.59438800505557,
+      "first_shot_anchor_mpjpe_body12_mm": 556.3027730658059,
+      "seam_root_excess_mm": 821.4699580828351,
+      "seam_orientation_excess_deg": 50.053192271439855,
+      "post_camera_relative_rotation_deg": 49.537606780826216
+    },
+    "coverage": 0.9999333333333333
+  },
+  {
+    "method": "prompthmr_official",
+    "display": "PromptHMR (official, offline)",
+    "regime": "offline",
+    "metrics": {
+      "pa_mpjpe_body12_mm": 51.73554762098944,
+      "first_shot_anchor_mpjpe_body12_mm": 462.58982644594965,
+      "seam_root_excess_mm": 55.440041363081846,
+      "seam_orientation_excess_deg": 43.795481180073075,
+      "post_camera_relative_rotation_deg": 94.02437261965544
+    },
+    "coverage": 1.0
+  }
+]

@@ -1,0 +1,30 @@
+% 中文节标题：结论
+\section{Conclusion}
+
+% 中文：本文研究镜头切换处递归历史的相互冲突作用。切换前历史为建立连续镜头之间的关系提供参照，但将同一状态继续传播到新镜头可能
+% 引起随时间变化的镜头内漂移，而单独重新初始化又会丢失跨镜头参照。
+% Shot3R仅在临时路径中使用先前状态完成镜头间对齐，并由独立重新初始化的状态负责后续递归。
+% 基于几何的人物关联建立跨镜头身份对应，共享变换将相机、人体和场景预测映射到统一世界坐标系。
+We studied the conflicting roles of recurrent history at shot transitions:
+pre-transition history provides a reference for relating successive shots,
+yet propagating the same state can induce time-varying drift within the new
+shot, while reinitialization alone loses the cross-shot reference. \method{}
+uses history only in a temporary alignment path, while an
+independently reinitialized state drives subsequent recurrence. Geometry-based
+association connects identities, and a shared transform maps camera, human,
+and scene predictions into the common world frame.
+
+% 中文：受控实验支持将镜头间对齐与递归状态传播视为两个独立决策。在三个多人体基准上，Shot3R改善世界坐标人体重建、
+% 相机一致性和身份连续性，并在大幅视角变化下取得最明显的提升；这些改善不需要未来帧或逐视频优化。
+% 更进一步，我们的结果表明，递归历史可以作为镜头间对齐的临时坐标参照，而不必作为新镜头的递归状态继续传播。
+% 复杂剪辑、人物反复进出和快速视觉变化仍然是开放问题。
+Controlled experiments support treating alignment and state propagation as
+separate decisions. Across all three benchmarks, \method{} improves WA-MPJPE,
+camera trajectory accuracy, and IDF1 over continuous-state recurrence; its
+gains are most pronounced under large viewpoint changes. These improvements
+require neither future frames nor per-video optimization and add only 3.8\%
+time over \humanthree{} in the standardized one-transition reconstruction
+test. More broadly, our results suggest that recurrent history can serve as a
+temporary coordinate reference for inter-shot alignment without being
+propagated as the recurrent state of the new shot. Complex edits, repeated
+entrances and exits, and rapid visual changes remain open challenges.
